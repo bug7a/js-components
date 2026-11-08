@@ -167,6 +167,36 @@ const sleep = function (ms) {
     return new Promise(function (resolve) { setTimeout(resolve, ms); });
 };
 
+// A page of the checks never opens a program of the computer. WHY: compare-pages pressed every button of the panel of
+//     04-templates, and every "Send an e-mail" (location.href = "mailto:...") opened a draft in Mail. A navigation to
+//     such an address is cancelled (the Navigation API sees location.href, a link and a form), a link of one is not
+//     followed, and window.open of one does nothing. It runs in the page, before its scripts.
+const blockOuterLinks = function () {
+    const isOuter = function (url) {
+        const text = String(url || "");
+        return /^[a-z][a-z0-9+.-]*:/i.test(text) && !/^(https?|about|blob|data|javascript|file):/i.test(text);
+    };
+    if (window.navigation) {
+        window.navigation.addEventListener("navigate", function (event) {
+            if (isOuter(event.destination.url)) event.preventDefault();
+        });
+    }
+    document.addEventListener("click", function (event) {
+        const link = (event.target && event.target.closest) ? event.target.closest("a[href]") : null;
+        if (link && isOuter(link.getAttribute("href"))) event.preventDefault();
+    }, true);
+    const realOpen = window.open;
+    window.open = function (url) {
+        if (isOuter(url)) return null;
+        return realOpen.apply(window, arguments);
+    };
+};
+
+// Every page a tool opens: await chrome.guardPage(page) before its goto().
+const guardPage = function (page) {
+    return page.evaluateOnNewDocument(blockOuterLinks);
+};
+
 // The header comment of a tool, for its --help.
 const helpText = function (toolFile) {
     const header = fs.readFileSync(toolFile, "utf8").split("*/")[1];
@@ -176,5 +206,5 @@ const helpText = function (toolFile) {
 module.exports = {
     ROOT, SAMPLES_FOLDER, OLD_PATH,
     runGit, readGitLines, isInCommit,
-    listSamples, toPagePath, startServer, launchChrome, sleep, helpText,
+    listSamples, toPagePath, startServer, launchChrome, guardPage, sleep, helpText,
 };

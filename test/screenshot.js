@@ -231,6 +231,7 @@ const takePicture = async function (browser, url, options) {
     const context = await browser.createBrowserContext();
     try {
         const page = await context.newPage();
+        await chrome.guardPage(page);
         const log = [];
         watchPage(page, log);
         await page.setViewport({ width: options.width, height: options.height, deviceScaleFactor: options.scale });
@@ -286,6 +287,7 @@ const sideBySide = async function (browser, before, after, beforeLabel, scale) {
     const context = await browser.createBrowserContext();
     try {
         const page = await context.newPage();
+        await chrome.guardPage(page);
         const half = function (picture, label) {
             const source = "data:image/png;base64," + Buffer.from(picture).toString("base64");
             return '<div class="side"><div class="label">' + label + '</div><img src="' + source + '"></div>';

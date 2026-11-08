@@ -187,6 +187,7 @@ const clickAndRead = async function (page, id) {
 // Every object of a page that takes the focus, clicked; the page is opened again now and then
 const checkPage = async function (browser, port, pagePath) {
     const page = await browser.newPage();
+    await chrome.guardPage(page);
     page.on("dialog", function (dialog) { dialog.dismiss().catch(function () {}); });
     await page.setViewport({ width: 1280, height: 900 });
     const url = "http://127.0.0.1:" + port + "/" + pagePath;

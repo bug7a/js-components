@@ -58,6 +58,7 @@ const runPage = async function (browser, url) {
     const errors = [];
     try {
         const page = await context.newPage();
+        await chrome.guardPage(page);
         page.on("pageerror", function (error) { errors.push("PAGE ERROR " + error.message); });
         await page.setViewport(WINDOW);
         await page.goto(url, { waitUntil: "load", timeout: LOAD_TIMEOUT });

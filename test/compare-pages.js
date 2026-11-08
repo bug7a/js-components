@@ -15,6 +15,12 @@ The old page loads the old basic/ and comp/ too, so a change in a component is m
     node test/compare-pages.js --width 1280 tabs.htm    at this width only: a quick check (a big page in half the time)
                                                         (any width; under 500 px the window is 844 high, else 800)
     node test/compare-pages.js old.htm=new.htm          a page that got a new name: old.htm of the commit, new.htm now
+    node test/compare-pages.js --run "openPageByKey('roles')" 04-templates/ozden-panel/index.htm
+                                                        --run: JavaScript after the load (a page of a panel, a tab, a
+                                                        dialog), in the old page and in the new one, before the picture
+    node test/compare-pages.js --init "localStorage.setItem('appid_login', '{}')" ...
+                                                        --init: JavaScript before the scripts of the page (a login
+                                                        that the page keeps in localStorage); with --run, in that order
 
 The results:
     SAME    no difference (a difference that goes away when the page is opened again was only timing)
@@ -295,17 +301,24 @@ const typeEverywhere = async function (page, fieldCount, lines) {
 };
 
 // WHY a new context for every run: localStorage of one run (a login page) must not reach the next.
-const runPage = async function (browser, url, size) {
+// steps: { init, run }: JavaScript before the scripts of the page, and after its load (the same in the old page).
+const runPage = async function (browser, url, size, steps) {
     const context = await browser.createBrowserContext();
     try {
         const page = await context.newPage();
+        await chrome.guardPage(page);
         const log = [];
         await page.setRequestInterception(true);
         watchPage(page, log);
         await page.setViewport(size);
         await page.evaluateOnNewDocument(preparePage);
+        if (steps.init) await page.evaluateOnNewDocument(steps.init);
         await page.goto(url, { waitUntil: "load", timeout: LOAD_TIMEOUT });
         await sleep(LOAD_WAIT);
+        if (steps.run) {
+            await page.evaluate(steps.run);
+            await sleep(LOAD_WAIT); // WHY: what it opened has its first animations too
+        }
 
         await page.evaluate(function () { window.__compare.holdEndlessAnimations(); });
         const picture = await page.screenshot({ captureBeyondViewport: false });
@@ -490,8 +503,8 @@ const compareAtSize = async function (browser, port, pair, size) {
     const newRuns = [];
 
     for (let attempt = 1; attempt <= TRIES; attempt++) {
-        oldRun = await runPage(browser, oldUrl, size);
-        newRun = await runPage(browser, newUrl, size);
+        oldRun = await runPage(browser, oldUrl, size, pair.steps);
+        newRun = await runPage(browser, newUrl, size, pair.steps);
         oldRuns.push(oldRun);
         newRuns.push(newRun);
         differences = await compareRuns(browser, oldRun, newRun);
@@ -507,8 +520,8 @@ const compareAtSize = async function (browser, port, pair, size) {
     }
 
     // Does the page differ from itself in the same parts? Every run of the old page and of the new one counts.
-    newRuns.push(await runPage(browser, newUrl, size));
-    newRuns.push(await runPage(browser, newUrl, size));
+    newRuns.push(await runPage(browser, newUrl, size, pair.steps));
+    newRuns.push(await runPage(browser, newUrl, size, pair.steps));
     const oldLiveParts = await findLiveParts(browser, oldRuns);
     const newLiveParts = await findLiveParts(browser, newRuns);
     const liveParts = oldLiveParts.concat(newLiveParts);
@@ -622,6 +635,7 @@ const measurePictureChange = async function (browser, oldPicture, newPicture, li
     const context = await browser.createBrowserContext();
     try {
         const page = await context.newPage();
+        await chrome.guardPage(page);
         const toSource = function (picture) { return "data:image/png;base64," + Buffer.from(picture).toString("base64"); };
         return await page.evaluate(findPictureChange, toSource(oldPicture), toSource(newPicture), limits);
     } finally {
@@ -687,9 +701,11 @@ const readWidth = function (text) {
 };
 
 const readOptions = function (args) {
-    const options = { base: "HEAD", isAll: false, isHelp: false, pages: [], widths: [] };
+    const options = { base: "HEAD", isAll: false, isHelp: false, pages: [], widths: [], steps: { init: "", run: "" } };
     for (let i = 0; i < args.length; i++) {
         if (args[i] === "--base") options.base = args[++i];
+        else if (args[i] === "--init") options.steps.init = args[++i] || "";
+        else if (args[i] === "--run") options.steps.run = args[++i] || "";
         else if (args[i] === "--all") options.isAll = true;
         else if (args[i] === "--width") options.widths.push(readWidth(args[++i]));
         else if (args[i] === "--help") options.isHelp = true;
@@ -699,9 +715,10 @@ const readOptions = function (args) {
 };
 
 const choosePages = function (options) {
-    if (options.isAll) return listSamples().map(toPagePair);
-    if (options.pages.length > 0) return options.pages;
-    return findChangedPages(options.base).map(toPagePair);
+    let pairs = options.pages;
+    if (options.isAll) pairs = listSamples().map(toPagePair);
+    else if (pairs.length === 0) pairs = findChangedPages(options.base).map(toPagePair);
+    return pairs.map(function (pair) { return Object.assign({}, pair, { steps: options.steps }); });
 };
 
 const chooseSizes = function (options) {
