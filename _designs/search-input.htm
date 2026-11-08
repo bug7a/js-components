@@ -16,14 +16,53 @@
 
         /* Bismillah */
 
-        // DRAFT DESIGN of comp/search-input.js (SearchInput): the "light" package and a "dark" twin of it, every state
-        // side by side. light: SearchInput.styles.light (a standard search box: white, a thin gray edge, round 8, 44 px,
-        // a line search icon, a gray round clear button, a dark 2 px edge while typing). dark: a proposal, SearchInput
-        // has no dark package yet (ozdenDark is the dark of ozden): the same shape in the dark colors of the kit
-        // (#232322, white lines, white icons). Plain basic.js objects (no SearchInput here); under the mouse and while
-        // typing are still frames of those moments. The light values are copies: keep them in step with
-        // search-input.js when it changes.
+        // DRAFT DESIGN of comp/search-input.js (SearchInput): the NEW "light" and "dark" looks of the kit, every state
+        // side by side. A new design, not a copy of a package: it will take the place of "light" and be the "dark" the
+        // component does not have yet. A 44 px white field with one thin line and round 10 corners, a 15 px text, a line
+        // search icon, a soft round clear button; while typing the edge turns to the accent of the kit (2 px). Plain
+        // basic.js objects (no SearchInput here); under the mouse and while typing are still frames of those moments.
+        // The tokens at the top are the same in every draft of the new look.
         // http://127.0.0.1:5505/_basic-designer/index.htm?page=_designs/search-input.htm
+
+        // THE TOKENS OF THE NEW LIGHT / DARK LOOK (the same in every draft of it)
+        const LIGHT_TOKENS = {
+            page: "#FFFFFF", // the page the component sits on
+            surface: "#FFFFFF", // a field, a list, the face of a button
+            soft: "#F2F3F0", // under the mouse, the ground of an icon, a quiet field
+            softer: "#E6E7E3", // pressed, a track
+            line: Black(0.12), // the edge of a surface
+            lineStrong: Black(0.3), // the edge under the mouse
+            text: Black(0.88),
+            textSoft: Black(0.55),
+            textFaint: Black(0.38), // a placeholder
+            accent: "#3D7A6B", // the one color: a selected row, a fill, the main button, the edge while typing
+            accentHover: "#356C5E",
+            accentPress: "#2E5F53",
+            accentSoft: "#E4EFEB", // a tint of the accent on the surface
+            onAccent: "#FFFFFF", // a text or a mark on the accent
+            danger: "#D9534F",
+            warning: "#E5885E",
+            focusRing: "rgba(61, 122, 107, 0.5)", // the ring of the keyboard focus
+        };
+        const DARK_TOKENS = {
+            page: "#1A1A19",
+            surface: "#232322",
+            soft: "#2C2C2B",
+            softer: "#363635",
+            line: White(0.12),
+            lineStrong: White(0.32),
+            text: White(0.9),
+            textSoft: White(0.55),
+            textFaint: White(0.38),
+            accent: "#65A293",
+            accentHover: "#74B0A2",
+            accentPress: "#5A9385",
+            accentSoft: "rgba(101, 162, 147, 0.2)",
+            onAccent: "#0F1F1B",
+            danger: "#E0605A",
+            warning: "#F0A07A",
+            focusRing: "rgba(101, 162, 147, 0.55)",
+        };
 
         const PAGE_COLOR = "#F4F5F2"; // the ground of the draft, not of the fields
         const PAGE_TEXT = { title: Black(0.8), note: Black(0.5), state: Black(0.45), stateTitle: Black(0.4) }; // the texts of the draft
@@ -33,54 +72,54 @@
         const CARD_PADDING = 24;
         const COLUMN_GAP = 24;
 
-        // THE SIZES (the light package; the same in both looks)
+        // THE SIZES (the same in both looks)
         const SIZE = {
             width: 300,
             height: 44,
-            round: 8,
-            fontSize: 16,
-            textOffsetY: -2, // the text a little up: the small letters of Open Sans sit low in their line
-            searchIcon: { size: 20, left: 16, gap: 8 }, // searchIconSize, searchIconLeft, searchIconGap
-            clearIcon: { size: 20, right: 16 }, // (20 px) clearIconRight
-            iconsSpace: 80, // the width of the box that is not for the text (SearchInput: ICONS_SPACE)
+            round: 10,
+            fontSize: 15,
+            textOffsetY: -1, // the text a little up: the small letters of Open Sans sit low in their line
+            searchIcon: { size: 18, left: 14, gap: 8 }, // searchIconSize, searchIconLeft, searchIconGap
+            clearIcon: { size: 20, right: 12 }, // (20 px) clearIconRight
+            textEndSpace: 6, // px between the end of the text and the clear icon
             textUnderEnd: 20, // while not typing a cut text goes this far under the clear icon (SearchInput.TEXT_UNDER_END)
             textFadeWidth: 24, // a cut text fades out over this width (textFadeWidth)
             focusEdgeWidth: 2, // the edge while typing: the 1 px edge and a 1 px line inside it (focusBorderWidth)
             hoverRingWidth: 1, // animated: the line inside the edge under the mouse
             focusRingWidth: 2, // animated: the line while typing
-            caretHeight: 20,
+            caretHeight: 18,
         };
         const ANIMATED_ICON = { hoverScale: 1.08, focusScale: 1.06, focusTilt: -12, opacityGain: 0.25 }; // animated: the search icon under the mouse (x2 while typing)
 
-        // THE LIGHT LOOK (SearchInput.styles.light)
+        // THE LIGHT LOOK: a white field, one thin line, the accent while typing
         const LIGHT = {
-            page: { color: "white", textColor: Black(0.45) }, // the light page the fields sit on
-            field: { color: "white", border: 1, borderColor: Black(0.2), bottomLine: "1px solid " + Black(0.2) }, // color, border, borderColor, borderBottomStyle
-            focusBorderColor: Black(0.6), // the edge while typing
-            text: { color: Black(0.85), placeholderColor: Black(0.45), caretColor: Black(0.85) }, // textColor, placeholderColor
+            page: { color: LIGHT_TOKENS.page, textColor: LIGHT_TOKENS.textSoft },
+            field: { color: LIGHT_TOKENS.surface, border: 1, borderColor: LIGHT_TOKENS.line, bottomLine: "1px solid " + LIGHT_TOKENS.line }, // color, border, borderColor, borderBottomStyle
+            focusBorderColor: LIGHT_TOKENS.accent, // the edge while typing (focusBorderColor)
+            text: { color: LIGHT_TOKENS.text, placeholderColor: LIGHT_TOKENS.textFaint, caretColor: LIGHT_TOKENS.text }, // textColor, placeholderColor
             searchIcon: { color: "#000000", opacity: 0.55 }, // the line icon (its color is in the drawing), searchIconOpacity
-            clearIcon: { circleColor: "#8C8C8C", crossColor: "#FFFFFF", opacity: 1 }, // the gray round button (its colors are in the drawing), clearIconOpacity
-            animated: { hoverRingColor: Black(0.08), focusRingColor: Black(0.16) }, // animated: 1 (hoverRingColor, focusRingColor)
+            clearIcon: { circleColor: "#A3A3A0", crossColor: "#FFFFFF", opacity: 1 }, // the round button (its colors are in the drawing), clearIconOpacity
+            animated: { hoverRingColor: Black(0.08), focusRingColor: LIGHT_TOKENS.focusRing }, // animated: 1 (hoverRingColor, focusRingColor)
         };
 
-        // THE DARK LOOK (a proposal: the dark twin of light, in the colors of the dark fields of the kit)
+        // THE DARK LOOK: the same shape on the dark surface, light text and icons
         const DARK = {
-            page: { color: "#1A1A19", textColor: White(0.5) }, // the dark card of the kit
-            field: { color: "#232322", border: 1, borderColor: White(0.12), bottomLine: "1px solid " + White(0.12) },
-            focusBorderColor: White(0.6),
-            text: { color: White(0.9), placeholderColor: White(0.4), caretColor: White(0.9) },
+            page: { color: DARK_TOKENS.page, textColor: DARK_TOKENS.textSoft },
+            field: { color: DARK_TOKENS.surface, border: 1, borderColor: DARK_TOKENS.line, bottomLine: "1px solid " + DARK_TOKENS.line },
+            focusBorderColor: DARK_TOKENS.accent,
+            text: { color: DARK_TOKENS.text, placeholderColor: DARK_TOKENS.textFaint, caretColor: DARK_TOKENS.text },
             searchIcon: { color: "#FFFFFF", opacity: 0.55 },
-            clearIcon: { circleColor: "#8C8C8C", crossColor: "#232322", opacity: 1 }, // the same gray button, the cross in the color of the field
-            animated: { hoverRingColor: White(0.08), focusRingColor: White(0.16) },
+            clearIcon: { circleColor: "#7A7A78", crossColor: "#141414", opacity: 1 },
+            animated: { hoverRingColor: White(0.08), focusRingColor: DARK_TOKENS.focusRing },
         };
 
         // THE STATES (one row each)
         const STATES = [
             { name: "Empty (the placeholder)", text: "" },
             { name: "With a text (the clear icon shows)", text: "fishing boat" },
-            { name: "Typing (focus): the 2 px edge of focusBorderColor", text: "fishing boat", focus: 1 },
+            { name: "Typing (focus): the 2 px edge in the accent", text: "fishing boat", focus: 1 },
             { name: "Under the mouse, animated: 1 (a thin line inside the edge, the icon a little bigger and clearer)", text: "", hover: 1, animated: 1 },
-            { name: "Typing, animated: 1 (the line of focusRingColor, the icon tilted)", text: "fishing", focus: 1, animated: 1 },
+            { name: "Typing, animated: 1 (the line of the focus ring, the icon tilted)", text: "fishing", focus: 1, animated: 1 },
             { name: "A long text, not typing: it goes on under the clear icon and fades out there", text: "Search results for the fishing company of the north sea" },
         ];
 
@@ -93,14 +132,14 @@
 
                 VGroup({ width: "max-content", height: "auto", align: "left top", gap: 22, padding: 40, clipContent: 0 });
 
-                    Label({ text: "SearchInput · light / dark · draft (comp/search-input.js)", fontSize: 20, bold: 1, textColor: PAGE_TEXT.title });
-                    Label({ text: "light is SearchInput.styles.light; dark is a proposal (the component has no dark package yet). Every row is a state.", fontSize: 13, textColor: PAGE_TEXT.note });
+                    Label({ text: "SearchInput · the new light / dark · draft (comp/search-input.js)", fontSize: 20, bold: 1, textColor: PAGE_TEXT.title });
+                    Label({ text: "A new design for the light package and for the dark one the component does not have yet. Every row is a state.", fontSize: 13, textColor: PAGE_TEXT.note });
 
                     // GROUP: The names of the states, then a card for every look
                     HGroup({ width: "auto", height: "auto", align: "left top", gap: COLUMN_GAP, clipContent: 0 });
                         drawStateColumn();
-                        drawLookCard(LIGHT, "light");
-                        drawLookCard(DARK, "dark (a proposal)");
+                        drawLookCard(LIGHT, "light (new)");
+                        drawLookCard(DARK, "dark (new)");
                     endGroup();
 
                 endGroup();
@@ -200,7 +239,7 @@
         const drawText = function (look, state) {
             const left = SIZE.searchIcon.left + SIZE.searchIcon.size + SIZE.searchIcon.gap;
             const underEnd = state.focus ? 0 : SIZE.textUnderEnd;
-            const width = SIZE.width - SIZE.iconsSpace + underEnd;
+            const width = SIZE.width - left - SIZE.clearIcon.right - SIZE.clearIcon.size - SIZE.textEndSpace + underEnd;
             const hasText = !!state.text;
             const text = HGroup({ left: left, top: 0, width: width, height: "100%", align: "left center", gap: 1, clipContent: 1 });
             text.css = { transform: "translateY(" + SIZE.textOffsetY + "px)", maskImage: getTextFade(underEnd), webkitMaskImage: getTextFade(underEnd) };
@@ -224,7 +263,7 @@
             return icon;
         };
 
-        // *** THE ICONS (the icons of the light package; the colors are in the drawing)
+        // *** THE ICONS (lines of 24 x 24; the colors are in the drawing)
 
         const getSearchIconFile = function (color) {
             return "data:image/svg+xml;utf8," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="' + color + '" stroke-width="2" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L20 20"/><\/svg>');
