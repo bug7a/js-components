@@ -29,6 +29,7 @@ differs, then the changes of all its lines, word by word, the most common first:
     the changes of all 80 lines: - "cursor: pointer;" x64, + "cursor: pointer;" x16
 
 It presses and types, nothing else: hover, drag and the keyboard are not measured.
+Before the screenshot an endless animation (a turning ring, pulsing dots) is stopped at its start, in both pages.
 It needs Chrome and puppeteer-core (npm install puppeteer-core; CHROME_PATH for another place of Chrome).
 WHY one browser, one page at a time: three browsers side by side gave 22 false differences in 122 pages.
 */
@@ -158,6 +159,21 @@ const preparePage = function () {
     };
 
     window.__compare = {
+
+        // WHY: an endless animation (a turning ring, pulsing dots) is at another moment in every picture.
+        holdEndlessAnimations: function () {
+            document.getAnimations().forEach(function (animation) {
+                if (animation.effect.getComputedTiming().endTime !== Infinity) return;
+                animation.pause();
+                animation.currentTime = 0;
+            });
+            // An animation of an SVG (SMIL) is not in getAnimations().
+            document.querySelectorAll("svg").forEach(function (svg) {
+                if (!svg.querySelector("[repeatCount='indefinite']")) return;
+                svg.pauseAnimations();
+                svg.setCurrentTime(0);
+            });
+        },
 
         dumpDom: function () {
             const lines = [];
@@ -290,6 +306,7 @@ const runPage = async function (browser, url, size) {
         await page.goto(url, { waitUntil: "load", timeout: LOAD_TIMEOUT });
         await sleep(LOAD_WAIT);
 
+        await page.evaluate(function () { window.__compare.holdEndlessAnimations(); });
         const picture = await page.screenshot({ captureBeyondViewport: false });
         const dom = await page.evaluate(function () { return window.__compare.dumpDom(); });
         const counts = await page.evaluate(function () { return window.__compare.collectTargets(); });
