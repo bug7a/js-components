@@ -14,6 +14,8 @@
 #   ./_commit-files.sh -m "..." test/x.htm=/tmp/x.htm    test/x.htm with the text of /tmp/x.htm (Ex: HEAD and only my
 #                                                        lines of a page that other sessions change too)
 #   ./_commit-files.sh --dry-run -m "..." a.js           what would be committed (its diff); nothing is committed
+#   ./_commit-files.sh -m "..." new.js --delete old.js   old.js leaves the repository (a moved file: the new path, and
+#                                                        --delete the old one; it must not be in the folder any more)
 #
 # The paths are from the root of the repository; a version file (file=version) and the message file from the
 # folder you are in. It prints the files of the commit and the commit. After it the shared index follows HEAD
@@ -33,6 +35,7 @@ MESSAGE=""
 MESSAGE_FILE=""
 IS_DRY_RUN=0
 ENTRIES=()
+DELETIONS=()
 
 # A path from the folder of the caller (an absolute path stays as it is)
 fromCaller() {
@@ -47,6 +50,7 @@ while [ $# -gt 0 ]; do
         -m) MESSAGE="${2:-}"; shift 2 ;;
         -F) MESSAGE_FILE="$(fromCaller "${2:-}")"; shift 2 ;;
         --dry-run) IS_DRY_RUN=1; shift ;;
+        --delete) DELETIONS+=("${2:-}"); shift 2 ;;
         -h|--help) sed -n '4,/^$/p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
         *) ENTRIES+=("$1"); shift ;;
     esac
@@ -56,7 +60,7 @@ if [ -z "$MESSAGE" ] && [ -z "$MESSAGE_FILE" ] && [ "$IS_DRY_RUN" = 0 ]; then
     echo "A message is needed: -m \"...\" or -F file"
     exit 2
 fi
-if [ ${#ENTRIES[@]} -eq 0 ]; then
+if [ ${#ENTRIES[@]} -eq 0 ] && [ ${#DELETIONS[@]} -eq 0 ]; then
     echo "No file to commit."
     exit 2
 fi
@@ -68,7 +72,8 @@ export GIT_INDEX_FILE="$TEMP_DIR/index"
 git read-tree "$START_HEAD"
 
 PATHS=()
-for entry in "${ENTRIES[@]}"; do
+# WHY ${X[@]+"${X[@]}"}: an empty array is an unbound variable for "set -u" in the bash of macOS (3.2)
+for entry in ${ENTRIES[@]+"${ENTRIES[@]}"}; do
     path="${entry%%=*}"
     source="$path"
     [ "$entry" != "$path" ] && source="$(fromCaller "${entry#*=}")"
@@ -85,6 +90,19 @@ for entry in "${ENTRIES[@]}"; do
     # WHY --path: the attributes of the path in the repository count, also for a version file in /tmp
     blob="$(git hash-object -w --path="$path" -- "$source")" || exit 2
     git update-index --add --cacheinfo "$mode,$blob,$path" || exit 2
+    PATHS+=("$path")
+done
+
+for path in ${DELETIONS[@]+"${DELETIONS[@]}"}; do
+    if [ -e "$path" ]; then
+        echo "Still in the folder (move or delete it first): $path"
+        exit 2
+    fi
+    if [ -z "$(git ls-tree "$START_HEAD" -- "$path")" ]; then
+        echo "Not in HEAD: $path"
+        exit 2
+    fi
+    git update-index --force-remove -- "$path" || exit 2
     PATHS+=("$path")
 done
 
