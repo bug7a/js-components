@@ -131,6 +131,8 @@ const maskStrings = function (text) {
         if (quote) {
             // WHY not masked: the end of a line comment is the start of the next line (a key there is read)
             if (quote === "//" && letter === "\n") { quote = ""; continue; }
+            // WHY: a quote of the HTML of a page ("don't") is no string of the code; a string of " or ' ends with its line
+            if ((quote === "\"" || quote === "'") && letter === "\n") { quote = ""; continue; }
             mask[i] = 1;
             if (letter === "\\") { mask[i + 1] = 1; i++; }
             else if (letter === quote) quote = "";
@@ -195,20 +197,37 @@ const findKeysInCalls = function (text, entry, callNames) {
     const callPattern = new RegExp("(?<![\\w$.])(" + callNames.join("|") + ")(\\.[\\w$]+)?\\s*\\(", "g");
     const keyPattern = new RegExp("(?<![\\w$.])" + entry.oldName + "\\s*:", "g");
     let call;
+    const mask = maskStrings(text);
     while ((call = callPattern.exec(text))) {
         const range = readCallArguments(text, call.index + call[0].length - 1);
         const argumentsText = text.slice(range.start, range.end);
         let key;
         keyPattern.lastIndex = 0;
-        while ((key = keyPattern.exec(argumentsText))) places.push(range.start + key.index);
+        while ((key = keyPattern.exec(argumentsText))) {
+            const index = range.start + key.index;
+            if (depthInCall(text, mask, range.start, index) === 2) places.push(index);
+        }
     }
     return places;
+};
+
+// The depth of a place in a call: 1 in its parentheses, 2 in an object given to it (TinySelect({ title })).
+// WHY: a deeper key is another thing (the title of the style of SparkLineBox: style: { title: { fontSize } })
+const depthInCall = function (text, mask, openIndex, index) {
+    let depth = 0;
+    for (let i = openIndex; i < index; i++) {
+        if (mask[i]) continue;
+        if ("({[".indexOf(text[i]) !== -1) depth++;
+        else if (")}]".indexOf(text[i]) !== -1) depth--;
+    }
+    return depth;
 };
 
 // The places of a name with a capital letter: a key (inputValue:) or after a dot (field.inputValue)
 const findNamedPlaces = function (text, entry) {
     const places = [];
-    const pattern = new RegExp("(?:\\.\\s*" + entry.oldName + "(?![\\w$])|(?<![\\w$.])" + entry.oldName + "\\s*:)", "g");
+    // WHY no space after the dot: the dot at the end of a comment, then the name on the next line, is no name of an object
+    const pattern = new RegExp("(?:\\." + entry.oldName + "(?![\\w$])|(?<![\\w$.])" + entry.oldName + "\\s*:)", "g");
     let match;
     while ((match = pattern.exec(text))) places.push(match.index);
     return places;
@@ -296,6 +315,7 @@ const dropRepeats = function (found) {
 
 const isPage = function (relativePath) {
     if (relativePath.endsWith(".min.js")) return false;
+    if (path.basename(relativePath).startsWith("delete-")) return false; // WHY: an obsolete file is not changed (CLAUDE.md)
     return PAGE_ENDINGS.some(function (ending) { return relativePath.endsWith(ending); });
 };
 
