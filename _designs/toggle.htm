@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Toggle light / dark draft</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- LIBRARY FILES (a draft: no component, only basic.js objects) -->
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Bold.ttf" as="font" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="../basic/basic.css">
+    <script src="../basic/basic.js" type="text/javascript" charset="utf-8"></script>
+
+    <script>
+
+        /* Bismillah */
+
+        // DRAFT DESIGN of comp/toggle.js (Toggle): the "light" and "dark" looks, every state side by side.
+        // light: the default look of Toggle today (the package "modern": a whitesmoke track that turns blue, a small gray
+        // knob that grows when on); Toggle has no package named "light" yet. dark: Toggle.styles.dark (a black track
+        // that turns green, a soft knob), its missing keys filled from ToggleDefaults. Plain basic.js objects (no Toggle
+        // here); under the mouse, pressed and the keyboard focus are still frames of those moments. The values are
+        // copies: keep them in step with toggle.js when it changes.
+        // http://127.0.0.1:5505/_basic-designer/index.htm?page=_designs/toggle.htm
+
+        const PAGE_COLOR = "#F4F5F2"; // the ground of the draft, not of the toggles
+        const PAGE_TEXT = { title: Black(0.8), note: Black(0.5), state: Black(0.45), stateTitle: Black(0.4) }; // the texts of the draft
+        const STATE_COLUMN_WIDTH = 250;
+        const CELL_WIDTH = 120;
+        const ROW_HEIGHT = 56;
+        const HEADER_HEIGHT = 24;
+        const CARD_PADDING = 24;
+        const COLUMN_GAP = 24;
+
+        // THE SIZES (ToggleDefaults; the same in both looks)
+        const SIZE = { width: 70, height: 40, spacing: 3, offKnobScale: 0.6 }; // spacing: between the track and the knob; offKnobScale: the knob when off (offButtonScale)
+        const KNOB_SIZE = SIZE.height - 2 * SIZE.spacing; // 34
+        const KNOB_DISTANCE = SIZE.width - 2 * SIZE.spacing - KNOB_SIZE; // 30: how far the knob slides when on
+        const FOCUS_RING = { color: "rgba(95, 158, 160, 0.8)", width: 2 }; // the ring of basic.js (focusRingColor ""), inside the edge of the track
+        const HOVER_BRIGHTNESS = "103%"; // the track under the mouse
+        const DISABLED = { brightness: "90%", opacity: 0.75 }; // the track darker, the whole toggle a little transparent
+        const PRESSED_KNOB = { scaleX: 1.1, scaleY: 0.92 }; // animated, with marks: the knob is flatter while it is pressed
+        const MARK_PATHS = { check: "M5 12.5l4.5 4.5L19 7.5", cross: "M6.5 6.5l11 11M17.5 6.5l-11 11" }; // Toggle.MARK_PATHS (24 x 24)
+
+        // THE LIGHT LOOK (the default of Toggle: ToggleDefaults + Toggle.styles.modern)
+        const LIGHT = {
+            page: { color: "white", textColor: Black(0.45) }, // the light page the toggles sit on
+            track: { color: "whitesmoke", selectedColor: "#689BD2", border: 1, borderColor: Black(0.05), selectedBorderColor: Black(0.2), round: 100 }, // backgroundStyle
+            knob: { color: Black(0.15), selectedColor: White(0.95), round: 100, shadow: "none", selectedShadow: "-4px 0px 6px -1px rgba(0, 0, 0, 0.5), 0px 0px 0px 1px rgba(0, 0, 0, 0.2)" }, // buttonStyle
+            mark: { size: 16, lineWidth: 3.5, fontSize: 12, color: Black(0.5), selectedColor: White(0.95) }, // markStyle: off / on
+        };
+
+        // THE DARK LOOK (Toggle.styles.dark; the knob shadows and the marks are the defaults: the package sets none)
+        const DARK = {
+            page: { color: "#1A1A19", textColor: White(0.5) }, // the dark card of the toggle sample
+            track: { color: "black", selectedColor: "#2C5A38", border: 1, borderColor: White(0.25), selectedBorderColor: "", round: 100 }, // "": the line of borderColor stays when on
+            knob: { color: White(0.25), selectedColor: White(0.75), round: 100, shadow: "none", selectedShadow: "-1px 0px 4px rgba(0, 0, 0, 0.15)" },
+            mark: { size: 16, lineWidth: 3.5, fontSize: 12, color: Black(0.5), selectedColor: White(0.95) }, // (the default: an off mark is black on the black track)
+        };
+
+        // THE STATES (one row each)
+        const STATES = [
+            { name: "Off", on: 0 },
+            { name: "On", on: 1 },
+            { name: "Under the mouse (hover), off", on: 0, hover: 1 },
+            { name: "Under the mouse (hover), on", on: 1, hover: 1 },
+            { name: "Keyboard focus, on", on: 1, focus: 1 },
+            { name: "Disabled, off", on: 0, disabled: 1 },
+            { name: "Disabled, on", on: 1, disabled: 1 },
+            { name: "Marks on the track: on (onMark \"check\")", on: 1, onMark: "check", offMark: "cross" },
+            { name: "Marks on the track: off (offMark \"cross\")", on: 0, onMark: "check", offMark: "cross" },
+            { name: "Marks in the knob: on (markPlace \"knob\")", on: 1, onMark: "check", offMark: "cross", markPlace: "knob" },
+            { name: "Marks in the knob: off", on: 0, onMark: "check", offMark: "cross", markPlace: "knob" },
+            { name: "Text marks: ON / OFF", on: 1, onMark: "ON", offMark: "OFF" },
+            { name: "Pressed, with marks (animated: the knob is flatter)", on: 1, onMark: "check", offMark: "cross", pressed: 1 },
+        ];
+
+        const start = function () {
+
+            page.color = PAGE_COLOR;
+
+            // BOX: Scrolling page
+            startBox(0, 0, "100%", "100%", { color: "transparent", scrollY: 1, scrollX: 1 });
+
+                VGroup({ width: "max-content", height: "auto", align: "left top", gap: 22, padding: 40, clipContent: 0 });
+
+                    Label({ text: "Toggle · light / dark · draft (comp/toggle.js)", fontSize: 20, bold: 1, textColor: PAGE_TEXT.title });
+                    Label({ text: "light is the default look of Toggle today (the package \"modern\"); dark is Toggle.styles.dark. Every row is a state.", fontSize: 13, textColor: PAGE_TEXT.note });
+
+                    // GROUP: The names of the states, then a card for every look
+                    HGroup({ width: "auto", height: "auto", align: "left top", gap: COLUMN_GAP, clipContent: 0 });
+                        drawStateColumn();
+                        drawLookCard(LIGHT, "light (the default: modern)");
+                        drawLookCard(DARK, "dark");
+                    endGroup();
+
+                endGroup();
+
+            endBox();
+
+        };
+
+        // GROUP: The names of the states, one per row (the rows of the cards have the same heights)
+        const drawStateColumn = function () {
+            const column = VGroup({ width: STATE_COLUMN_WIDTH, height: "auto", align: "left top", gap: 0, padding: [0, CARD_PADDING] });
+                Label({ height: HEADER_HEIGHT, text: "state", fontSize: 12, textColor: PAGE_TEXT.stateTitle });
+                STATES.forEach(function (state) {
+                    HGroup({ width: "100%", height: ROW_HEIGHT, align: "left center" });
+                        Label({ width: "100%", text: state.name, fontSize: 12, textColor: PAGE_TEXT.state, css: { lineHeight: "1.3" } });
+                    endGroup();
+                });
+            endGroup();
+            return column;
+        };
+
+        // GROUP: A card in the color of the page of a look: its name, then one row per state
+        const drawLookCard = function (look, name) {
+            const card = VGroup({ width: "auto", height: "auto", align: "left top", gap: 0, padding: CARD_PADDING, color: look.page.color, round: 10, border: 1, borderColor: Black(0.08), clipContent: 0 });
+                Label({ height: HEADER_HEIGHT, text: name, fontSize: 13, bold: 1, textColor: look.page.textColor, css: { whiteSpace: "nowrap" } });
+                STATES.forEach(function (state) {
+                    // GROUP: A row: the toggle in this state
+                    HGroup({ width: CELL_WIDTH, height: ROW_HEIGHT, align: "left center", clipContent: 0 });
+                        drawToggle(look, state);
+                    endGroup();
+                });
+            endGroup();
+            return card;
+        };
+
+        // BOX: A toggle in one state: the track, the marks on it, the knob (and the marks in it)
+        const drawToggle = function (look, state) {
+            const isOn = !!state.on;
+            const toggle = Box({ width: SIZE.width, height: SIZE.height, color: "transparent", round: look.track.round, clipContent: 0, position: "relative" });
+            toggle.shrink = 0;
+            if (state.disabled) toggle.opacity = DISABLED.opacity;
+            if (state.focus) toggle.css = { outline: FOCUS_RING.width + "px solid " + FOCUS_RING.color, outlineOffset: "-" + FOCUS_RING.width + "px" };
+            createIn(toggle, function () {
+                drawTrack(look, state, isOn);
+                if (state.markPlace !== "knob") drawTrackMark(look, state, isOn);
+                drawKnob(look, state, isOn);
+            });
+            return toggle;
+        };
+
+        // BOX: The track (backgroundStyle): its color and its line when off / on; brighter under the mouse, darker when disabled
+        const drawTrack = function (look, state, isOn) {
+            const _t = look.track;
+            const track = Box(0, 0, "100%", "100%", { color: isOn ? _t.selectedColor : _t.color, border: _t.border, borderColor: getTrackBorderColor(_t, isOn), round: _t.round });
+            track.css = { filter: getTrackFilter(state) };
+            return track;
+        };
+
+        const getTrackBorderColor = function (track, isOn) {
+            if (isOn && track.selectedBorderColor) return track.selectedBorderColor;
+            return track.borderColor;
+        };
+
+        const getTrackFilter = function (state) {
+            if (state.disabled) return "brightness(" + DISABLED.brightness + ")";
+            if (state.hover) return "brightness(" + HOVER_BRIGHTNESS + ")";
+            return "none";
+        };
+
+        // BOX: The knob (buttonStyle): at the left and smaller when off, slid to the right when on; the marks of markPlace "knob" are in it
+        const drawKnob = function (look, state, isOn) {
+            const _k = look.knob;
+            const knob = Box(SIZE.spacing, SIZE.spacing, KNOB_SIZE, KNOB_SIZE, { color: isOn ? _k.selectedColor : _k.color, round: _k.round, boxShadow: isOn ? _k.selectedShadow : _k.shadow, clipContent: 0 });
+            knob.css = { transform: getKnobTransform(state, isOn) };
+            if (state.markPlace === "knob") createIn(knob, function () { drawMark(look, state, isOn, 0, "100%"); });
+            return knob;
+        };
+
+        // As the component: the size (offButtonScale when off), then the move; pressed (animated, with marks): flatter
+        const getKnobTransform = function (state, isOn) {
+            const moved = "translateX(" + (isOn ? KNOB_DISTANCE : 0) + "px)";
+            if (state.pressed) return moved + " scale(" + PRESSED_KNOB.scaleX + ", " + PRESSED_KNOB.scaleY + ")";
+            return "scale(" + (isOn ? 1 : SIZE.offKnobScale) + ") " + moved;
+        };
+
+        // The mark on the free side of the track: the on mark at the left (the knob is at the right), the off mark at the right
+        const drawTrackMark = function (look, state, isOn) {
+            const left = isOn ? SIZE.spacing : SIZE.spacing + KNOB_SIZE;
+            return drawMark(look, state, isOn, left, KNOB_DISTANCE);
+        };
+
+        // GROUP: A mark (a check, a cross or a text) in its color, in the middle of its place
+        const drawMark = function (look, state, isOn, left, width) {
+            const mark = isOn ? state.onMark : state.offMark;
+            if (!mark) return null;
+            const _m = look.mark;
+            const color = isOn ? _m.selectedColor : _m.color;
+            const place = HGroup({ left: left, top: 0, width: width, height: "100%", align: "center center", clipContent: 0 });
+                if (MARK_PATHS[mark]) Icon({ width: _m.size, height: _m.size }).load(getMarkIcon(MARK_PATHS[mark], color, _m.lineWidth));
+                else Label({ text: mark, fontSize: _m.fontSize, bold: 1, textColor: color, css: { whiteSpace: "nowrap" } });
+            endGroup();
+            return place;
+        };
+
+        // The picture of a mark (Toggle.getMarkIcon): a line of markStyle.lineWidth in its color
+        const getMarkIcon = function (path, color, lineWidth) {
+            const svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="' + color + '" stroke-width="' + lineWidth + '" stroke-linecap="round" stroke-linejoin="round"><path d="' + path + '"/><\/svg>';
+            return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
+        };
+
+    </script>
+
+</head>
+
+<body>
+</body>
+
+</html>
