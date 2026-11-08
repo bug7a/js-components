@@ -101,9 +101,9 @@ Bir bileşenin parametreleri kitin geri kalanındaki adları taşır: bir sayfay
 
 - Bir parametre yeni bir ad alınca eski adı bir süre çalışır: bileşen eski adlarını `Comp.OLD_NAMES` içinde (`{ eskiAd: "yeniAd" }`) tutar ve `startObject()`'ten hemen sonra `basic.keepOldNames(box, Comp.OLD_NAMES, "Comp")` çağırır (basic.js v26.11.08). Eski adı kullanan bir sayfada konsol yeni adı bir kez söyler.
 - Yeni kod eski adları kullanmaz. Bir şablona ya da bir projeye dokunulunca onun sayfaları yeni adlara geçer. Hiçbir sayfa kullanmayınca ad listeden silinir; liste boşalınca çağrı da silinir.
-- Bir olayın argümanları da değişirse (`onEdit(input)` → `onChange(self, input)`) köprü bunu kuramaz: bileşen eski fonksiyonu eski biçimde çağıran küçük bir sarmalayıcı yazar (`comp/form.js`), ya da değişiklik ayrı bir iş olur.
+- Değer de değiştiyse (argümanları başka bir olay: `onEdit(input)` → `onChange(self, input)`; tersine dönen bir değer: `disabled` → `enabled`) listedeki kayıt `{ name: "onChange", wrap: function (eski) { return yeni; } }` olur: eski adla verilen ya da sonradan atanan değer yolda sarılır, eski fonksiyon eski biçimde çağrılır (`comp/slider.js`, `comp/tiny-select.js`).
 - Bir verinin anahtarı (bir sunucuya giden JSON) parametre değildir: değişirse o veriyi okuyan bozulur; ayrı bir karar ister (Form'un `inputValue`'su).
-- Hangi bileşenin hangi adları değişti, hangi klasörler henüz geçmedi: `context/repo-map.md`, "Parameter names".
+- Hangi bileşenin hangi adları değişti: `context/repo-map.md`, "Parameter names". Hangi sayfalar henüz geçmedi: `node test/old-names.js` (bir klasör de verilebilir).
 
 ---
 
