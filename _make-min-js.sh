@@ -57,6 +57,16 @@ collectSources() {
     done
 }
 
+# The license notice of a source in one line ("/*! Copyright ... | Apache-2.0 | Webpage */"); "" when it has none.
+noticeOf() {
+    local copyright license webpage
+    copyright="$(grep -m1 -E '^[[:space:]]*Copyright [0-9]' "$1" | sed -E 's/^[[:space:]]+//')"
+    [ -n "$copyright" ] || return 0
+    license="$(grep -m1 -E '^[[:space:]]*SPDX-License-Identifier:' "$1" | sed -E 's/^[[:space:]]*SPDX-License-Identifier:[[:space:]]*//')"
+    webpage="$(grep -m1 -E '^[[:space:]]*Webpage:' "$1" | sed -E 's/^[[:space:]]*Webpage:[[:space:]]*//')"
+    printf '/*! %s%s%s */' "$copyright" "${license:+ | $license}" "${webpage:+ | $webpage}"
+}
+
 # Writes the .min.js of one source. Returns 1 when terser or the syntax check fails.
 buildOne() {
     local src="$1" min="${1%.js}.min.js" comments="$KEEP_COMMENTS" tempDir temp
@@ -75,7 +85,16 @@ buildOne() {
         echo "   FAILED (broken output): $src"; rm -rf "$tempDir"; return 1
     fi
 
-    cat "$temp" > "$min"   # not mv: the file keeps its permissions
+    # WHY: terser keeps only the Bismillah line of a header: the license notice goes with every copy (Apache 2.0, 4c)
+    local notice
+    notice="$(noticeOf "$src")"
+    if [ -z "$notice" ] || grep -q "Copyright [0-9]" "$temp"; then
+        cat "$temp" > "$min"   # not mv: the file keeps its permissions
+    elif [ "$(head -n 1 "$temp")" = "/* Bismillah */" ]; then
+        { head -n 1 "$temp"; echo "$notice"; tail -n +2 "$temp"; } > "$min"
+    else
+        { echo "$notice"; cat "$temp"; } > "$min"
+    fi
     rm -rf "$tempDir"
     printf "   %-34s %6s -> %s bytes\n" "$min" "$(wc -c < "$src" | tr -d ' ')" "$(wc -c < "$min" | tr -d ' ')"
     return 0

@@ -32,9 +32,19 @@ echo "  basic/     ok"
 # COMP
 rm -rf "$SITE/comp"
 mkdir -p "$SITE/comp"
+# WHY the notice: terser keeps only the Bismillah line of a header (as _make-min-js.sh does)
+addNotice() {
+    local source="$1" min="$2" notice
+    notice="$(grep -m1 -E '^[[:space:]]*Copyright [0-9]' "$source" | sed -E 's/^[[:space:]]+//')"
+    [ -n "$notice" ] || return 0
+    notice="/*! $notice | Apache-2.0 | https://bug7a.github.io/js-components/ */"
+    { head -n 1 "$min"; echo "$notice"; tail -n +2 "$min"; } > "$min.tmp" && mv "$min.tmp" "$min"
+}
+
 # WHY from the source: the components have no .min twins in the repository (2026-10-30)
 for name in web-view search-results toast; do
     npx --yes terser "$REPO/comp/$name.js" --compress --mangle --comments "/Bismillah/" -o "$SITE/comp/$name.min.js"
+    addNotice "$REPO/comp/$name.js" "$SITE/comp/$name.min.js"
     node --check "$SITE/comp/$name.min.js"
 done
 echo "  comp/      ok"

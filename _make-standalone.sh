@@ -467,14 +467,38 @@ const writeGzipFiles = function () {
     // COMP
     fs.rmSync(COMP_OUT, { recursive: true, force: true });
 
+    // The license notice of a source in one line ("/*! Copyright ... | Apache-2.0 | Webpage */"); "" when it has none
+    const noticeOf = function (code) {
+        const lineOf = function (pattern) {
+            const found = code.match(pattern);
+            return found ? found[1].trim() : "";
+        };
+        const copyright = lineOf(/^\s*(Copyright \d.*)$/m);
+        if (!copyright) return "";
+        const parts = [copyright, lineOf(/^\s*SPDX-License-Identifier:\s*(.*)$/m), lineOf(/^\s*Webpage:\s*(.*)$/m)];
+        return "/*! " + parts.filter(Boolean).join(" | ") + " */";
+    };
+
+    // WHY: terser keeps only the Bismillah line of a header: the license notice goes with every copy (Apache 2.0, 4c).
+    // shownNotices: the notices already in the same file (components.min.js has the same notice once)
+    const withNotice = function (minCode, code, shownNotices) {
+        const notice = noticeOf(code);
+        if (!notice || /Copyright \d/.test(minCode) || shownNotices.has(notice)) return minCode;
+        shownNotices.add(notice);
+        const BISMILLAH = "/* Bismillah */\n";
+        if (!minCode.startsWith(BISMILLAH)) return notice + "\n" + minCode;
+        return BISMILLAH + notice + "\n" + minCode.slice(BISMILLAH.length);
+    };
+
     // A source as a .min code; its icon folders are copied into comp/ and the paths in the code point there
-    const minifyComponent = async function (source) {
-        const result = await terser.minify(fs.readFileSync(path.join(REPO, source), "utf8"), {
+    const minifyComponent = async function (source, shownNotices = new Set()) {
+        const code = fs.readFileSync(path.join(REPO, source), "utf8");
+        const result = await terser.minify(code, {
             compress: true,
             mangle: true,
             format: { comments: keepComments },
         });
-        return result.code.replace(ICON_FOLDER_PATH, function (all, quote, gen, folder) {
+        return withNotice(result.code, code, shownNotices).replace(ICON_FOLDER_PATH, function (all, quote, gen, folder) {
             const from = path.join(REPO, gen, folder);
             if (!fs.existsSync(from) || !fs.statSync(from).isDirectory()) return all;
             copyFolder(from, path.join(COMP_OUT, folder));
@@ -488,8 +512,9 @@ const writeGzipFiles = function () {
         fs.mkdirSync(COMP_OUT, { recursive: true });
         if (isOneFile) {
             const codes = [];
+            const shownNotices = new Set();
             for (const source of oneFileOrder) {
-                codes.push(await minifyComponent(source));
+                codes.push(await minifyComponent(source, shownNotices));
                 sourcesLines.push(ONE_FILE_NAME + " <- " + source);
             }
             // WHY ";": a file that ends without one must not run into the next
