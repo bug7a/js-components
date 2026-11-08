@@ -516,7 +516,7 @@ const FilePicker = function (params = {}) {
 
         let addedCount = 0;
         // WHY directory too: a folder is many files; directory: 1 without multiple: 1 kept only the first file of the
-        //     folder and said "Only one file can be selected." (sample 3 of select-file.htm)
+        //     folder and said "Only one file can be selected." (sample 3 of file-picker.htm)
         const isMultiple = (box.multiple == 1 || box.directory == 1);
         if (!isMultiple) {
             if (newFiles.length > 1) {
@@ -674,8 +674,8 @@ const FilePicker = function (params = {}) {
             box.icon.css.marginBottom = ICON_SPACE + "px";
             box.icon.clipContent = 0;
             // WHY: an svg of the page may come without a size of its own.
-            basic.addCss("select-file-icon", ".select-file-icon svg { display: block; width: 100%; height: 100%; }");
-            box.icon.elem.classList.add("select-file-icon");
+            basic.addCss("file-picker-icon", ".file-picker-icon svg { display: block; width: 100%; height: 100%; }");
+            box.icon.elem.classList.add("file-picker-icon");
             box.setIconSvg(box.iconSvg);
 
             if (box.showIcon != 1) box.icon.visible = 0;

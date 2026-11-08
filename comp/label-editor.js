@@ -25,7 +25,7 @@ UI COMPONENT TEMPLATE
 
 NEEDS: basic.js v26.10.27 (its "dark" package is a package of params).
 NEEDS (load them before this file):
-comp/side-panel.js, comp/stepper.js, comp/select-color.js, comp/tabs.js, comp/check-box.js
+comp/side-panel.js, comp/stepper.js, comp/color-picker.js, comp/tabs.js, comp/check-box.js
 
 USAGE:
 const editor = LabelEditor({

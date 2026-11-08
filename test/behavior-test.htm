@@ -29,7 +29,7 @@
         <script src="../comp/form.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/tabs.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/select-box.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../comp/select-date.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/date-picker.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/smart-button.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/left-menu.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/app-bar.js" type="text/javascript" charset="utf-8"></script>
@@ -49,7 +49,7 @@
         <script src="../comp/action-button.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/search-results.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/sortable-list.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../comp/select-file.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/file-picker.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/property-panel.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/context-menu.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/numeric-keyboard.js" type="text/javascript" charset="utf-8"></script>
@@ -66,8 +66,8 @@
         <script src="../comp/period-bar.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/action-tab-bar.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/line-progress-bar.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../comp/select-time.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../comp/select-color.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/time-picker.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/color-picker.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/page-control.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/tree-view.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/web-view.js" type="text/javascript" charset="utf-8"></script>
@@ -379,7 +379,7 @@
             list.remove();
         });
 
-        // *** SELECT FILE (comp/select-file.js)
+        // *** SELECT FILE (comp/file-picker.js)
 
         test("FilePicker: a low zone hides what does not fit, first the icon, and no text is squeezed", async function () {
             const isShown = (object) => object.elem.offsetHeight > 0;
