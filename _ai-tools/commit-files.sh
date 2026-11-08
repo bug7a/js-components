@@ -1,20 +1,20 @@
 #!/bin/bash
 # Bismillah
 #
+# commit-files - v26.11
 # Commit some files without the shared index.
-# v26.11 - Bugra Ozden
 #
 # The sessions that work in this folder at the same time share one index: a "git add" of one goes into the
 # commit of another. This script makes the commit in a temporary index, from HEAD and the given files only,
 # and moves main only when HEAD is still the commit it started from.
 #
 # USAGE:
-#   ./_commit-files.sh -m "message" a.js b.htm           a.js and b.htm as they are in the folder
-#   ./_commit-files.sh -F message.txt a.js               the message from a file (a text of more lines)
-#   ./_commit-files.sh -m "..." test/x.htm=/tmp/x.htm    test/x.htm with the text of /tmp/x.htm (Ex: HEAD and only my
+#   ./_ai-tools/commit-files.sh -m "message" a.js b.htm           a.js and b.htm as they are in the folder
+#   ./_ai-tools/commit-files.sh -F message.txt a.js               the message from a file (a text of more lines)
+#   ./_ai-tools/commit-files.sh -m "..." test/x.htm=/tmp/x.htm    test/x.htm with the text of /tmp/x.htm (Ex: HEAD and only my
 #                                                        lines of a page that other sessions change too)
-#   ./_commit-files.sh --dry-run -m "..." a.js           what would be committed (its diff); nothing is committed
-#   ./_commit-files.sh -m "..." new.js --delete old.js   old.js leaves the repository (a moved file: the new path, and
+#   ./_ai-tools/commit-files.sh --dry-run -m "..." a.js           what would be committed (its diff); nothing is committed
+#   ./_ai-tools/commit-files.sh -m "..." new.js --delete old.js   old.js leaves the repository (a moved file: the new path, and
 #                                                        --delete the old one; it must not be in the folder any more)
 #
 # The paths are from the root of the repository; a version file (file=version) and the message file from the
@@ -26,10 +26,18 @@
 # WHY not git commit: it commits the shared index, with what others added to it.
 # WHY commit-tree and update-ref with the old HEAD: a commit of another session between the start and the end
 #     would be undone without a word (the tree is made from the HEAD of the start).
+#
+# Started Date: November 2026
+# Webpage: https://bug7a.github.io/js-components/
+#
+# Copyright 2020-2026 Bugra Ozden <bugra.ozden@gmail.com> (https://bug7a.github.io/)
+# Licensed under the Apache License, Version 2.0
+# SPDX-License-Identifier: Apache-2.0
 
 set -u
 CALLER_DIR="$(pwd)"
-cd "$(dirname "$0")" || exit 1
+# The root of the repository (this script is in its _ai-tools folder)
+cd "$(git -C "$(dirname "$0")" rev-parse --show-toplevel)" || exit 1
 
 MESSAGE=""
 MESSAGE_FILE=""

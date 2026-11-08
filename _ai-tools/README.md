@@ -11,12 +11,13 @@ session has them wherever the repository is (another computer, a session in the 
 
 | Script | What it does |
 |---|---|
-| `version-of.py` | The version of a file to commit with `./_commit-files.sh` (`file=version`): HEAD with only my changes of the folder's file (`--with "a text of my lines"` or `--lines A-B`). It lists every change as "mine" or "left" and checks that all the changes give the folder's file again. |
+| `commit-files.sh` | A commit of the given files only, made in a temporary index: the sessions that work at the same time share one index, and a `git add` of one went into the commit of another. `file=version` commits a version of a file (HEAD with only my lines), `--delete` takes a file out, `--dry-run` shows the diff. `CLAUDE.md` ("Commit") says when. |
+| `version-of.py` | The version of a file to commit with `./_ai-tools/commit-files.sh` (`file=version`): HEAD with only my changes of the folder's file (`--with "a text of my lines"` or `--lines A-B`). It lists every change as "mine" or "left" and checks that all the changes give the folder's file again. |
 | `edit_text.py` | Text edits that never miss in silence: `replace(text, old, new, count)` and `replace_word(...)` stop when the count is not right; `load()` / `save()` keep the line ends (CRLF stays CRLF). A module for a python3 script. |
 
 ```bash
 python3 _ai-tools/version-of.py test/behavior-test.htm --with "SmartTable: a click on a row" -o /tmp/x/behavior-test.htm
-./_commit-files.sh -F message.txt comp/smart-table.js test/behavior-test.htm=/tmp/x/behavior-test.htm
+./_ai-tools/commit-files.sh -F message.txt comp/smart-table.js test/behavior-test.htm=/tmp/x/behavior-test.htm
 ```
 
 ```python
@@ -25,6 +26,3 @@ from edit_text import load, save, replace
 text = replace(load("comp/form.js"), "onSendClick: function(json) {},", "onSendClick: function(self, json) {},")
 save("comp/form.js", text)
 ```
-
-`_commit-files.sh` stays at the root: the commit rule of `CLAUDE.md` names it, and the sessions that run at the same
-time call it there.

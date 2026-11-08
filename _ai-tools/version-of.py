@@ -1,6 +1,6 @@
 # Bismillah
 """version-of - v26.11
-The version of a file to commit with ./_commit-files.sh (file=version): the file as it is in HEAD, with only those
+The version of a file to commit with ./_ai-tools/commit-files.sh (file=version): the file as it is in HEAD, with only those
 changes of the folder's file that are mine.
 
 WHY: the sessions share one folder; a file that others change too (Ex: test/behavior-test.htm) is committed with HEAD and
@@ -8,7 +8,7 @@ my lines only, and that version was made by hand in every job (a lost blank line
 
 Usage (from the root of the repository):
     python3 _ai-tools/version-of.py test/behavior-test.htm --with "SmartTable: a click on a row" -o /tmp/x/version.htm
-    ./_commit-files.sh -F message.txt comp/smart-table.js test/behavior-test.htm=/tmp/x/version.htm
+    ./_ai-tools/commit-files.sh -F message.txt comp/smart-table.js test/behavior-test.htm=/tmp/x/version.htm
 
     --with TEXT     a change is mine when one of its lines has this text (more --with: any of them)
     --lines A-B     a change is mine when it touches these lines of the folder's file (1-based; more: any of them)
