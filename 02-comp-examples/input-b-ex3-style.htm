@@ -35,13 +35,13 @@
                 // INPUT: #1
                 const myInput1 = InputB({
                     key: "1",
-                    isRequired: 1,
+                    required: 1,
                     placeholder: "Jack",
                     leftPadding: 20,
                     backgroundColor: "transparent",
-                    selectedBackgroundColor: "whitesmoke",
+                    focusBackgroundColor: "whitesmoke",
                     lineColor: "transparent",
-                    selectedLineColor: "transparent",
+                    focusLineColor: "transparent",
                 });
                 myInput1.setTitle("FIRST NAME");
                 myInput1.background.border = 1;
@@ -54,14 +54,14 @@
                     placeholder: "175",
                     descriptionText: "The vertical size...",
                     unitText: "cm",
-                    isRequired: 0,
+                    required: 0,
                     backgroundColor: "whitesmoke",
-                    selectedBackgroundColor: "whitesmoke",
+                    focusBackgroundColor: "whitesmoke",
                     lineColor: "transparent",
-                    selectedLineColor: "lightgray",
+                    focusLineColor: "lightgray",
                 });
-                myInput2.onEdit = function () {
-                    console.log(myInput2.getInputValue());
+                myInput2.onChange = function () {
+                    console.log(myInput2.getValue());
                 };
 
                 // INPUT: #3
@@ -70,23 +70,23 @@
                     placeholder: "Sample",
                     titleText: "INPUT TITLE",
                     descriptionText: "Its a style example for input fields.",
-                    isRequired: 0,
-                    maxChar: 20,
+                    required: 0,
+                    maxLength: 20,
                     leftPadding: 20,
                     rightPadding: 20,
                     unitText: "",
                     backgroundColor: "transparent",
-                    selectedBackgroundColor: "transparent",
+                    focusBackgroundColor: "transparent",
                     lineColor: "transparent",
-                    selectedLineColor: "transparent",
+                    focusLineColor: "transparent",
                 });
                 myInput3.inputGroup.gap = 4;
                 myInput3.input.color = "whitesmoke";
                 myInput3.input.border = 1;
                 myInput3.input.borderColor = "lightgray";
                 myInput3.input.inputElement.style.padding = "0px 12px";
-                myInput3.onEdit = function () {
-                    console.log(myInput3.getInputValue());
+                myInput3.onChange = function () {
+                    console.log(myInput3.getValue());
                 };
 
             endAutoLayout(); // END GROUP

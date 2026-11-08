@@ -34,19 +34,19 @@
                 const myInput = EmailInputB({
                     key: "1",
                     width: 350,
-                    isRequired: 1,
+                    required: 1,
                     titleText: "EMAIL",
                     placeholder: "example@site.com",
                     warningText: "Invalid email format",
                     warningColor: "#E5885E",
-                    maxChar: 40,
+                    maxLength: 40,
                 });
 
             endAutoLayout(); // END GROUP
 
             // Get value
-            myInput.onEdit = function () {
-                console.log(myInput.getInputValue());
+            myInput.onChange = function () {
+                console.log(myInput.getValue());
             };
 
         };

@@ -20,22 +20,22 @@ Webpage: https://bug7a.github.io/js-components/
 
 // Default values
 const PasswordInputBDefaults = {
-    isRequired: 1,
+    required: 1,
     requiredText: "Password must be entered",
     type: "password",
     titleText: "PASSWORD",
     placeholder: "Enter your password",
     warningText: "",
     warningColor: "#E5885E",
-    maxChar: 25,
+    maxLength: 25,
     showPassword: 0,
     showShowPasswordButton: 1, // enable show/hide icon by default
     showPasswordIconFile: "../comp/password-input-b/show-btn.png",
     hidePasswordIconFile: "../comp/password-input-b/hide-btn.png",
-    showTooltipMessage: "Show Password",
-    hideTooltipMessage: "Hide Password",
-    minChar: 6,
-    minCharWarningText: "Password must be at least 6 characters",
+    showPasswordHintText: "Show Password",
+    hidePasswordHintText: "Hide Password",
+    minLength: 6,
+    minLengthWarningText: "Password must be at least 6 characters",
     mustUseNumber: 1,
     mustUseNumberWarningText: "Password must contain at least one number",
     mustUseLetter: 1,
@@ -46,7 +46,7 @@ const PasswordInputBDefaults = {
     mustUseLowercaseWarningText: "Password must contain at least one lowercase letter",
     mustUseSpecialChar: 0,
     mustUseSpecialCharWarningText: "Password must contain at least one special character",
-    showPasswordIconInvert: 0, 
+    invertIconColor: 0, 
 };
 
 const PasswordInputB = function(params = {}) {
@@ -58,10 +58,13 @@ const PasswordInputB = function(params = {}) {
     mergeIntoIfMissing(params, PasswordInputBDefaults);
 
     // Edit params:
-    params.createLeftBox = 1; // WHY: to add show/hide password button
+    // WHY the old names first: showLeftBox is forced, an old createLeftBox of the page would win over it
+    basic.renameOldParams(params, InputB.OLD_NAMES, "InputB");
+    params.showLeftBox = 1; // WHY: to add show/hide password button
 
     // BOX: Component container
     let box = startExtendedObject(InputB, params);
+    basic.keepOldNames(box, PasswordInputB.OLD_NAMES, "PasswordInputB"); // the pages made with the old names, for a while
 
     // *** PRIVATE VARIABLES:
 
@@ -71,10 +74,10 @@ const PasswordInputB = function(params = {}) {
 
     // *** PUBLIC FUNCTIONS:
     box.isValid = function() { // OVERRIDE
-        const value = box.getInputValue();
+        const value = box.getValue();
         // 1. Minimum karakter kontrolü
-        if (value.length < box.minChar) {
-            box.setWarningText(box.minCharWarningText);
+        if (value.length < box.minLength) {
+            box.setWarningText(box.minLengthWarningText);
             return 0;
         }
         // 2. Rakam kontrolü
@@ -111,7 +114,7 @@ const PasswordInputB = function(params = {}) {
         box.showPassword = isShown ? 1 : 0;
         box.input.inputElement.type = isShown ? "text" : "password";
         // The button shows what a click does:
-        box.btnShowPassword.tooltip.setHintText(isShown ? box.hideTooltipMessage : box.showTooltipMessage);
+        box.btnShowPassword.tooltip.setHintText(isShown ? box.hidePasswordHintText : box.showPasswordHintText);
         box.btnShowPassword.load(isShown ? box.hidePasswordIconFile : box.showPasswordIconFile);
     };
     
@@ -141,7 +144,7 @@ const PasswordInputB = function(params = {}) {
         that.clickable = 1;
         that.cursor = "pointer";
         // WHY selectStyle too: a dark package has white icons there, and the black eye could not be seen on its field.
-        if (box.showPasswordIconInvert == 1 || box.selectStyle.invertIconColor == 1) {
+        if (box.invertIconColor == 1 || box.selectStyle.invertIconColor == 1) {
             box.btnShowPassword.css.filter = "invert(100%)";
         }
 
@@ -175,4 +178,13 @@ const PasswordInputB = function(params = {}) {
 
     return endExtendedObject(box);
 
+};
+
+// THE OLD NAMES (basic.keepOldNames; the old names of InputB are in InputB.OLD_NAMES). Delete a name when no page uses it.
+PasswordInputB.OLD_NAMES = {
+    minChar: "minLength",
+    minCharWarningText: "minLengthWarningText",
+    showTooltipMessage: "showPasswordHintText",
+    hideTooltipMessage: "hidePasswordHintText",
+    showPasswordIconInvert: "invertIconColor",
 };

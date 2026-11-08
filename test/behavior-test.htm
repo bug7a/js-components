@@ -1045,8 +1045,8 @@
         });
 
         test("InputB minimal: a warning colors the edge of the field; a package wins over the defaults of TextareaB; ink colors the edge", async function () {
-            const field = EmailInputB({ styleName: "minimal", titleText: "E-mail", inputValue: "bugra@" });
-            const plain = EmailInputB({ titleText: "E-mail", inputValue: "bugra@" });
+            const field = EmailInputB({ styleName: "minimal", titleText: "E-mail", value: "bugra@" });
+            const plain = EmailInputB({ titleText: "E-mail", value: "bugra@" });
             const note = TextareaB({ styleName: "minimal", titleText: "Note" });
             const send = SmartButton({ styleName: "minimal", tone: "ink", labelText: "Send" });
             await basic.nextFrame();
@@ -1162,7 +1162,7 @@
         });
 
         test("InputB minimal with no title: the field starts at the top and the box is as high as the field (the field of Dialog.prompt)", async function () {
-            const untitled = InputB({ styleName: "minimal", titleText: "", inputValue: "report.pdf" });
+            const untitled = InputB({ styleName: "minimal", titleText: "", value: "report.pdf" });
             const titled = InputB({ styleName: "minimal", titleText: "Name" });
             await basic.nextFrame();
             const untitledTop = untitled.background.elem.offsetTop;
@@ -1547,9 +1547,9 @@
         test("Form: a press that is not a click does not send; a click sends once", async function () {
             let sends = 0;
             const form = Form({ onSendClick: function () { sends++; } });
-            const input = InputB({ titleText: "Name", isRequired: 1 });
+            const input = InputB({ titleText: "Name", required: 1 });
             form.addInput(input);
-            input.setInputValue("Ali");
+            input.setValue("Ali");
             input.input.inputElement.dispatchEvent(new Event("input", { bubbles: true }));
             await wait(50);
             const button = form.btnSend.elem;
@@ -1564,7 +1564,7 @@
 
         test("Form: the hint of the passive send button is as round as the list of the missing entries (and the hints of the fields)", async function () {
             const form = Form({});
-            const input = InputB({ titleText: "Name", isRequired: 1 });
+            const input = InputB({ titleText: "Name", required: 1 });
             form.addInput(input);
             const password = PasswordInputB({ titleText: "Password" });
             await wait(50);
@@ -1578,6 +1578,29 @@
                 hintRadius === listRadius && hintRadius === form.hintRound + "px" && isFieldRound, "hint: " + hintRadius + ", list: " + listRadius + ", fields: " + rounds.join(", "));
             form.remove();
             password.remove();
+        });
+
+        test("Form: onChange(self, input) on an edit; the old onEdit(input) is still called with the input", async function () {
+            let changed = [];
+            const form = Form({ onChange: function (self, input) { changed = [self, input]; } });
+            const input = InputB({ titleText: "Name" });
+            form.addInput(input);
+            input.input.inputElement.value = "A";
+            input.input.inputElement.dispatchEvent(new Event("input", { bubbles: true }));
+            const isNewCalled = changed[0] === form && changed[1] === input;
+            form.remove();
+            const realWarn = console.warn;
+            console.warn = function () { };
+            let editedInput = null;
+            const oldForm = Form({ onEdit: function (input) { editedInput = input; } });
+            console.warn = realWarn;
+            const oldInput = InputB({ titleText: "Name" });
+            oldForm.addInput(oldInput);
+            oldInput.input.inputElement.value = "B";
+            oldInput.input.inputElement.dispatchEvent(new Event("input", { bubbles: true }));
+            check("Form: onChange(self, input) on an edit; the old onEdit(input) is still called with the input",
+                isNewCalled && editedInput === oldInput, "onChange: " + isNewCalled + ", onEdit: " + (editedInput === oldInput));
+            oldForm.remove();
         });
 
         // *** INPUT B (comp/input-b.js)
@@ -1596,6 +1619,34 @@
             email.remove();
         });
 
+        test("InputB: the old names of the params, properties, methods and events still work (basic.keepOldNames)", async function () {
+            const realWarn = console.warn;
+            const warnings = [];
+            console.warn = function (text) { warnings.push(String(text)); };
+            let changeCount = 0;
+            const field = InputB({ titleText: "Name", inputValue: "Ali", isRequired: 1, maxChar: 12, selectedLineColor: "#3987E5" });
+            field.onEdit = function () { changeCount++; }; // an event set later with its old name
+            const inputElement = field.input.inputElement;
+            inputElement.value = "Veli";
+            inputElement.dispatchEvent(new Event("input", { bubbles: true }));
+            const isParamsMoved = field.value === "Veli" && field.required === 1 && field.maxLength === 12 && inputElement.maxLength === 12 && field.focusLineColor === "#3987E5";
+            field.setInputValue("Ayşe");
+            const isMethodsKept = field.getInputValue() === "Ayşe" && field.getValue() === "Ayşe" && field.inputValue === "Ayşe";
+            // WHY a child: an old name of the page must win over a default of the child (EmailInputB: required 1)
+            const email = EmailInputB({ isRequired: 0, maxChar: 50 });
+            const password = PasswordInputB({ minChar: 3, showTooltipMessage: "Show it" });
+            password.input.inputElement.value = "ab1";
+            const isChildKept = email.required === 0 && email.maxLength === 50 && password.minLength === 3 && password.isValid() === 1 && password.showPasswordHintText === "Show it";
+            console.warn = realWarn;
+            const isNamed = warnings.indexOf('InputB: "inputValue" is an old name, use "value"') > -1 && warnings.indexOf('PasswordInputB: "minChar" is an old name, use "minLength"') > -1;
+            check("InputB: the old names of the params, properties, methods and events still work (basic.keepOldNames)",
+                isParamsMoved && changeCount === 1 && isMethodsKept && isChildKept && isNamed,
+                "params: " + isParamsMoved + ", onEdit: " + changeCount + ", methods: " + isMethodsKept + ", children: " + isChildKept + ", console: " + warnings.length);
+            field.remove();
+            email.remove();
+            password.remove();
+        });
+
         // *** PHONE INPUT (comp/phone-input-b.js)
 
         test("PhoneInputB: a pasted number keeps all its digits", async function () {
@@ -1608,7 +1659,7 @@
                 transfer.setData("text", text);
                 el.dispatchEvent(new ClipboardEvent("paste", { bubbles: true, cancelable: true, clipboardData: transfer }));
                 results.push(el.value);
-                phone.setInputValue("");
+                phone.setValue("");
             });
             const isAllRight = results.every(function (value) { return value === "+90 (555) 123-4567"; });
             check("PhoneInputB: a pasted number keeps all its digits", isAllRight, results.join(" | "));
@@ -1618,7 +1669,7 @@
         // *** URL INPUT (comp/url-input-b.js)
 
         test("URLInputB: a path with an 's' is valid, an empty required field is not sent", async function () {
-            const url = URLInputB({ titleText: "Site", isRequired: 1 });
+            const url = URLInputB({ titleText: "Site", required: 1 });
             const results = [];
             ["example.com/news", "example.com/a b"].forEach(function (text) {
                 url.input.text = text;
@@ -1626,24 +1677,24 @@
             });
             url.input.text = "";
             check("URLInputB: a path with an 's' is valid and a path with a space is not", results[0] === 1 && results[1] === 0, results.join(", "));
-            check("URLInputB: an empty field gives an empty value (not the protocol alone)", url.getInputValue() === "", "\"" + url.getInputValue() + "\"");
+            check("URLInputB: an empty field gives an empty value (not the protocol alone)", url.getValue() === "", "\"" + url.getValue() + "\"");
             url.remove();
         });
 
         // *** TEXTAREA B (comp/textarea-b.js)
 
-        test("TextareaB: setPlaceholder and setMaxChar change its textarea", async function () {
+        test("TextareaB: setPlaceholder and setMaxLength change its textarea", async function () {
             const area = TextareaB({ titleText: "Note" });
             let error = "";
             try {
                 area.setPlaceholder("Write a note");
-                area.setMaxChar(500);
+                area.setMaxLength(500);
             } catch (e) {
                 error = e.message; // WHY: they wrote to box.input, which a TextareaB does not have
             }
             const el = area.textareaElem;
-            const isChanged = el.placeholder === "Write a note" && el.maxLength === 500 && area.maxChar === 500;
-            check("TextareaB: setPlaceholder and setMaxChar change its textarea", !error && isChanged, error || ("placeholder: " + el.placeholder + ", maxLength: " + el.maxLength));
+            const isChanged = el.placeholder === "Write a note" && el.maxLength === 500 && area.maxLength === 500;
+            check("TextareaB: setPlaceholder and setMaxLength change its textarea", !error && isChanged, error || ("placeholder: " + el.placeholder + ", maxLength: " + el.maxLength));
             area.remove();
         });
 
@@ -3342,10 +3393,10 @@
 
         test("EmailInputB: setRequired() and the start value keep the warning of an invalid e-mail", async function () {
             const typed = EmailInputB({ width: 300 });
-            typed.setInputValue("abc");
+            typed.setValue("abc");
             const beforeRequired = typed.status;
             typed.setRequired(1);
-            const started = EmailInputB({ width: 300, inputValue: "not-an-email" });
+            const started = EmailInputB({ width: 300, value: "not-an-email" });
             check("EmailInputB: setRequired() and the start value keep the warning of an invalid e-mail", beforeRequired === 2 && typed.status === 2 && started.status === 2, "typed: " + beforeRequired + " -> " + typed.status + ", start value: " + started.status);
             typed.remove();
             started.remove();
@@ -3369,9 +3420,9 @@
             button.elem.click();
             key(button.elem, "keydown", "Enter");
             const passiveLogins = logins;
-            login.loginEmail.setInputValue("a@b.co");
-            login.loginPassword.setInputValue("123456");
-            login.loginEmail.onEdit();
+            login.loginEmail.setValue("a@b.co");
+            login.loginPassword.setValue("123456");
+            login.loginEmail.onChange();
             button.elem.click();
             check("LoginPageV2: buttonStyleName makes LOGIN a SmartButton; passive it does not log in (a click, Enter), active it does",
                 isSmartButton && passiveLogins === 0 && logins === 1 && button.enabled == 1, "SmartButton (passive at first): " + isSmartButton + ", logins while passive: " + passiveLogins + ", after: " + logins);
@@ -3423,10 +3474,10 @@
 
         test("URLInputB: the value it gives can be put back, also as the start value", async function () {
             const url = URLInputB({ width: 360 });
-            url.setInputValue("https://www.example.com/news");
-            url.setInputValue(url.getInputValue());
-            const started = URLInputB({ width: 360, inputValue: "https://www.example.com" });
-            check("URLInputB: the value it gives can be put back, also as the start value", url.getInputValue() === "https://www.example.com/news" && url.status === 0 && started.getInputValue() === "https://www.example.com" && started.status === 0, url.getInputValue() + " (" + url.status + "), " + started.getInputValue() + " (" + started.status + ")");
+            url.setValue("https://www.example.com/news");
+            url.setValue(url.getValue());
+            const started = URLInputB({ width: 360, value: "https://www.example.com" });
+            check("URLInputB: the value it gives can be put back, also as the start value", url.getValue() === "https://www.example.com/news" && url.status === 0 && started.getValue() === "https://www.example.com" && started.status === 0, url.getValue() + " (" + url.status + "), " + started.getValue() + " (" + started.status + ")");
             url.remove();
             started.remove();
         });
@@ -3450,7 +3501,7 @@
             const group = VGroup({ width: 400, height: 200, visible: 0 });
                 const note = TextareaB({ width: 360, height: 140, titleText: "Note" });
             endGroup();
-            note.setInputValue("A saved note.");
+            note.setValue("A saved note.");
             group.visible = 1;
             await wait(200);
             const textHeight = note.textareaElem.getBoundingClientRect().height;
@@ -4588,14 +4639,14 @@
         });
 
         test("PhoneInputB: setCountryCode() keeps the number, a number filled without its code keeps its digits", async function () {
-            const phone = PhoneInputB({ width: 300, inputValue: "+90 (555) 123-4567" });
+            const phone = PhoneInputB({ width: 300, value: "+90 (555) 123-4567" });
             phone.setCountryCode("+1");
-            const changed = phone.getInputValue();
+            const changed = phone.getValue();
             const filled = PhoneInputB({ width: 300 });
             const el = filled.input.inputElement;
             el.value = "5551234567"; // (autofill: the digits, with no code)
             el.dispatchEvent(new Event("input", { bubbles: true }));
-            check("PhoneInputB: setCountryCode() keeps the number, a number filled without its code keeps its digits", changed === "+1 (555) 123-4567" && filled.getInputValue() === "+90 (555) 123-4567", changed + ", " + filled.getInputValue());
+            check("PhoneInputB: setCountryCode() keeps the number, a number filled without its code keeps its digits", changed === "+1 (555) 123-4567" && filled.getValue() === "+90 (555) 123-4567", changed + ", " + filled.getValue());
             phone.remove();
             filled.remove();
         });

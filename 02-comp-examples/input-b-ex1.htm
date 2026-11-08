@@ -38,25 +38,25 @@
                     rightPadding: 60,
                     titleText: "FIRST NAME",
                     placeholder: "Jack",
-                    inputValue: "",
-                    maxChar: 30,
-                    createDescription: 0,
+                    value: "",
+                    maxLength: 30,
+                    showDescription: 0,
                     descriptionText: "",
 
                     backgroundColor: "#F6F6F6",
-                    selectedBackgroundColor: "#F3F4E0",
+                    focusBackgroundColor: "#F3F4E0",
                     lineColor: "#141414",
-                    selectedLineColor: "#65A293",
+                    focusLineColor: "#65A293",
 
-                    isRequired: 1,
+                    required: 1,
                     requiredText: "Required",
                     requiredColor: "white",
                     warningText: "Invalid value format",
                     warningColor: "#E5885E",
 
-                    createLeftBox: 1,
-                    createRightBox: 0,
-                    createUnit: 0,
+                    showLeftBox: 1,
+                    showRightBox: 0,
+                    showUnit: 0,
                     unitText: "",
                     unitStyle: {
                         padding: [12, 4],
@@ -70,16 +70,16 @@
 
             endAutoLayout(); // END GROUP
 
-            // Other functions of InputB: setTitle(), setDescription() (needs createDescription: 1), setMaxChar(),
-            // setPlaceholder(), setBackgroundColor(), setSelectedBackgroundColor(), setLineColor(),
-            // setSelectedLineColor(), setRequired(), setRequiredText()
+            // Other functions of InputB: setTitle(), setDescription() (needs showDescription: 1), setMaxLength(),
+            // setPlaceholder(), setBackgroundColor(), setFocusBackgroundColor(), setLineColor(),
+            // setFocusLineColor(), setRequired(), setRequiredText()
 
             // Get value
-            myInput.onEdit = function () {
-                console.log(myInput.getInputValue());
+            myInput.onChange = function () {
+                console.log(myInput.getValue());
             };
 
-            // *** ADD AN ICON into INPUT (createLeftBox: 1, leftPadding: 80)
+            // *** ADD AN ICON into INPUT (showLeftBox: 1, leftPadding: 80)
             myInput.leftBox.align = "top left";
             myInput.leftBox.padding = [20, 20];
 

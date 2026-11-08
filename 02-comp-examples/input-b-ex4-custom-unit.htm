@@ -34,16 +34,16 @@
                     key: "1",
                     titleText: "TITLE",
                     placeholder: "Placeholder",
-                    maxChar: 10,
+                    maxLength: 10,
 
                     backgroundColor: "transparent",
-                    selectedBackgroundColor: "transparent",
+                    focusBackgroundColor: "transparent",
                     lineColor: "#DDD",
-                    selectedLineColor: "#373836",
-                    isRequired: 0,
-                    createLeftBox: 0,
-                    createRightBox: 1,
-                    createUnit: 0,
+                    focusLineColor: "#373836",
+                    required: 0,
+                    showLeftBox: 0,
+                    showRightBox: 1,
+                    showUnit: 0,
                     unitText: "",
                     unitStyle: {
                         padding: [12, 4],
@@ -70,8 +70,8 @@
             unitXL.padding = [8, 2];
 
             // Get value
-            myInput.onEdit = function () {
-                console.log(myInput.getInputValue());
+            myInput.onChange = function () {
+                console.log(myInput.getValue());
             };
 
         };

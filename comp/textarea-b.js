@@ -28,13 +28,13 @@ const TextareaBDefaults = {
     type: "textarea",
     titleText: "MESSAGE",
     placeholder: "How can we help you?",
-    isRequired: 1,
+    required: 1,
     minCharCount: 80, // 0, 80
     showCount: 1, // 0, 1
     lengthText: "length: ",
     warningText: "The entered text must be longer than 80",
     warningColor: "#E5885E",
-    maxChar: 255,
+    maxLength: 255,
     height: 170, // 170 (4line)
     rightPadding: 5,
     unitStyle: {
@@ -65,6 +65,8 @@ const TextareaB = function(params = {}) {
     //     defaults here, as over the defaults of InputB
     // WHY its own rightPadding: on the right of a TextareaB is its scroll bar, not the room of the warning ball of a
     //     one-line field (the rightPadding of a package pushed the scroll bar to the middle)
+    // WHY the old names first: the params forced below (showDescription, showUnit) would lose to an old name of the page
+    basic.renameOldParams(params, InputB.OLD_NAMES, "InputB");
     const givenRightPadding = params.rightPadding;
     basic.applyStylePackage(params, InputB.styles, InputBDefaults);
     params.rightPadding = (givenRightPadding !== undefined) ? givenRightPadding : TextareaBDefaults.rightPadding;
@@ -72,11 +74,11 @@ const TextareaB = function(params = {}) {
 
     // Control params
     params.createInput = 0; // WHY: A <textarea> is made here instead of the Input of InputB.
-    params.createDescription = 0;
+    params.showDescription = 0;
     params.descriptionText = "";
 
     if (params.showCount != 0) {
-        params.createUnit = 1;
+        params.showUnit = 1;
     }
 
     // BOX: Component container
@@ -93,7 +95,7 @@ const TextareaB = function(params = {}) {
     const refreshCount = function() {
         if (!box.showCount) return;
 
-        const currentLength = box.getInputValue().length;
+        const currentLength = box.getValue().length;
         box.setUnitText(`${box.lengthText}${currentLength}`);
         box.unit.opacity = (currentLength > box.minCharCount) ? 0 : 1;
     }
@@ -110,11 +112,11 @@ const TextareaB = function(params = {}) {
     };
 
     // *** PUBLIC FUNCTIONS:
-    box.setInputValue = function(value) { // OVERRIDE
+    box.setValue = function(value) { // OVERRIDE
         if (value != textareaElem.value) {
-            box.inputValue = value;
+            box.value = value;
             textareaElem.value = value;
-            // WHY: Same as InputB.setInputValue. Without it, a required textarea cleared by code (after a form is sent) showed no required icon.
+            // WHY: Same as InputB.setValue. Without it, a required textarea cleared by code (after a form is sent) showed no required icon.
             box.checkIfInputIsRequiredAndEmpty();
             box.showWarningIfNotValid(box.isValid());
             refreshCount();
@@ -122,7 +124,7 @@ const TextareaB = function(params = {}) {
         }
     };
 
-    box.getInputValue = function() { // OVERRIDE
+    box.getValue = function() { // OVERRIDE
         return textareaElem.value;
     };
 
@@ -132,13 +134,13 @@ const TextareaB = function(params = {}) {
         textareaElem.placeholder = text;
     };
 
-    box.setMaxChar = function(count) { // OVERRIDE
-        box.maxChar = count;
+    box.setMaxLength = function(count) { // OVERRIDE
+        box.maxLength = count;
         textareaElem.maxLength = count;
     };
 
     box.isValid = function() { // OVERRIDE
-        return (box.getInputValue().length > box.minCharCount) ? 1 : 0;
+        return (box.getValue().length > box.minCharCount) ? 1 : 0;
     };
     
     // UNDER ITS TITLE (titlePosition "above"), from the right edge of the field: the scroll bar right inside the edge,
@@ -178,10 +180,10 @@ const TextareaB = function(params = {}) {
         // WHY: The <textarea> is made here, not by InputB, so the text colors of InputB were never given to it:
         //      on a dark package (dark, ozdenDark) the typed text was dark on a dark field.
         box.applyTextColors(textareaElem);
-        textareaElem.maxLength = box.maxChar;
+        textareaElem.maxLength = box.maxLength;
         box.inputBox.elem.appendChild(textareaElem);
         box.inputBox.clickable = 1;
-        textareaElem.value = box.inputValue;
+        textareaElem.value = box.value;
         box.inputBox.scrollY = 1;
 
         // SCROLL BAR:
@@ -213,7 +215,7 @@ const TextareaB = function(params = {}) {
         refreshCount();
         autoGrow(textareaElem);
 
-        box.onEdit();
+        box.onChange(box);
 
     }
     textareaElem.addEventListener("input", function(){ box.inputFunc() });

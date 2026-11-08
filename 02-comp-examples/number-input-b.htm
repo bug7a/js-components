@@ -36,7 +36,7 @@
                     width: 350,
                     titleText: "NUMERIC",
                     placeholder: "(auto)",
-                    maxChar: 35,
+                    maxLength: 35,
                     allowNegative: 1,
                     allowDecimal: 1,
                     decimalSeparator: ".", // or ","
@@ -46,8 +46,8 @@
             endAutoLayout(); // END GROUP
 
             // Get value
-            myInput.onEdit = function () {
-                console.log(myInput.getInputValue());
+            myInput.onChange = function () {
+                console.log(myInput.getValue());
             };
 
         };

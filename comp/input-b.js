@@ -29,9 +29,9 @@ WebSite: https://bug7a.github.io/js-components
 
 - input.isValid(value);
 
-- input.setInputValue("Text");           // Set value programmatically
+- input.setValue("Text");           // Set value programmatically
 
-- input.getInputValue();                  // Get current value
+- input.getValue();                  // Get current value
 
 - input.setPlaceholder("Text");          // Change placeholder
 
@@ -41,15 +41,22 @@ WebSite: https://bug7a.github.io/js-components
 
 - input.setRequired(1);                   // Mark as required
 
+- input.setMaxLength(40);                 // The most letters of the value
+
 - input.setWarningText("Warning text");  // Set invalid input warning
 
 - input.setRequiredIcon("icons/required.svg"); // Icon for required state (warningBallType: "icon")
 
 - input.setWarningIcon("icons/warning.svg");   // Icon for invalid state (warningBallType: "icon")
 
+- onChange(self): the user changed the text (not at create time, not by setValue()). onFocus(self), onBlur(self).
+
+- THE OLD NAMES (inputValue, isRequired, maxChar, onEdit, getInputValue()... in InputB.OLD_NAMES) work for a while,
+  for the pages made with them; the console names the new name once. New code uses the new names.
+
 - warningBallType: "color" | "icon"
 -- "color": Top-right colored ball (requiredColor / warningColor).
--- "icon": Top-right icon (requiredIcon / warningIcon). Empty path uses the built-in icon.
+-- "icon": Top-right icon (requiredIconFile / warningIconFile). Empty path uses the built-in icon.
 
 - tooltipStyle: { color, hintColor, textColor, border, borderColor, round, fontSize }
 -- hintColor: the bubble of a button of the field (the show password button of PasswordInputB) when color is "".
@@ -67,11 +74,11 @@ WebSite: https://bug7a.github.io/js-components
   defaults: a key the package sets (warningColor, unitStyle, rightPadding) wins over them.
 -- The look of InputB is in flat params (backgroundColor, lineColor, titleTextColor...), not in one
    "style" object. So its packages are packages of params (basic.js v26.10.27: a package with a
-   "style" key): any param can be in it, also an image (requiredIcon, warningIcon).
+   "style" key): any param can be in it, also an image (requiredIconFile, warningIconFile).
    Order: your params > the package > InputBDefaults.
 -- InputB({ styleName: "dark" })
--- InputB({ styleName: "dark", selectedLineColor: "#588ABE" })   // one param of the package changed
--- InputB.styles.myStyle = { style: {}, backgroundColor: "#FFF8E8", requiredIcon: "icons/star.svg" };
+-- InputB({ styleName: "dark", focusLineColor: "#588ABE" })   // one param of the package changed
+-- InputB.styles.myStyle = { style: {}, backgroundColor: "#FFF8E8", requiredIconFile: "icons/star.svg" };
    (style: {} marks a package of params; without it the keys would go into params.style)
 
 */
@@ -98,18 +105,18 @@ const InputBDefaults = {
     titleGap: 4, // px between the title and the field (titlePosition "above")
     titleText: "INPUT NAME",
     placeholder: "input value",
-    inputValue: "",
-    maxChar: 30,
-    createDescription: 0,
+    value: "",
+    maxLength: 30,
+    showDescription: 0,
     descriptionText: "",
 
     backgroundColor: "#F6F6F6",
-    selectedBackgroundColor: "#F3F4E0",
+    focusBackgroundColor: "#F3F4E0",
     hoverBackgroundColor: "", // the field under the mouse (not while it is selected). "": no change
     lineColor: "#373836",
-    selectedLineColor: "#65A293",
+    focusLineColor: "#65A293",
     backBorderColor: Black(0),
-    selectedBackBorderColor: Black(0),
+    focusBackBorderColor: Black(0),
     hoverBackBorderColor: "", // the edge under the mouse (not while it is selected). "": no change
     backBorderTopRound: 2,
     backBorderBottomRound: 0,
@@ -123,7 +130,7 @@ const InputBDefaults = {
     descriptionTextColor: "#999999",
     warningBallBorderColor: "#373836",
 
-    isRequired: 0,
+    required: 0,
     requiredText: "Required",
     requiredColor: "white",
     warningText: "Invalid value format",
@@ -135,8 +142,8 @@ const InputBDefaults = {
     warningBallBorder: 2, // px: the edge of the colored ball (warningBallBorderColor)
     warningBorderColor: "", // the edge of the field while it shows a warning (not while typing). "": no change
     warningIconSize: 20,
-    requiredIcon: "", // image path or data URI. "": built-in icon
-    warningIcon: "", // image path or data URI. "": built-in icon
+    requiredIconFile: "", // image path or data URI. "": built-in icon
+    warningIconFile: "", // image path or data URI. "": built-in icon
     requiredIconColor: "#373836", // built-in required icon color (built-in warning icon uses warningColor)
 
     // The tooltip of the warning ball (required / warning text), and of the buttons of the field (the show password
@@ -161,9 +168,9 @@ const InputBDefaults = {
         listBorderColor: "rgba(0, 0, 0, 0.6)",
     },
 
-    createLeftBox: 0,
-    createRightBox: 0,
-    createUnit: 0,
+    showLeftBox: 0,
+    showRightBox: 0,
+    showUnit: 0,
     createInput: 1,
     unitText: "",
     unitStyle: {
@@ -174,9 +181,9 @@ const InputBDefaults = {
         fontSize: 14,
     },
 
-    onFocus: function() {},
-    onBlur: function() {},
-    onEdit: function() {},
+    onFocus: function(self) {},
+    onBlur: function(self) {},
+    onChange: function(self) {}, // the user changed the text (not at create time, not by setValue())
 
 };
 
@@ -192,15 +199,16 @@ const InputB = function(params = {}) {
 
     // BOX: Component container
     const box = startObject(params);
+    basic.keepOldNames(box, InputB.OLD_NAMES, "InputB"); // the pages made with the old names, for a while
 
     // *** DATA CONTROL:
     if (box.descriptionText != "") {
-        box.createDescription = 1;
+        box.showDescription = 1;
     }
 
-    if (box.createUnit == 1 || box.unitText != "") {
-        box.createUnit = 1;
-        box.createRightBox = 1;
+    if (box.showUnit == 1 || box.unitText != "") {
+        box.showUnit = 1;
+        box.showRightBox = 1;
     }
 
     // *** PRIVATE VARIABLES:
@@ -259,9 +267,9 @@ const InputB = function(params = {}) {
 
     const getWarningIconFile = function(kind) {
         if (kind == "required") {
-            return box.requiredIcon || createBuiltInIcon("required", box.requiredIconColor);
+            return box.requiredIconFile || createBuiltInIcon("required", box.requiredIconColor);
         }
-        return box.warningIcon || createBuiltInIcon("warning", box.warningColor);
+        return box.warningIconFile || createBuiltInIcon("warning", box.warningColor);
     };
 
     // kind: "required" or "warning"
@@ -288,7 +296,7 @@ const InputB = function(params = {}) {
 
     const showWarning = function() {
         // (the status first: the ball is shown only while there is a warning)
-        if (box.isRequired && box.getInputValue().length === 0) {
+        if (box.required && box.getValue().length === 0) {
             box.status = 1;
             showWarningBallOf("required", box.requiredText, box.requiredColor);
             return;
@@ -306,12 +314,12 @@ const InputB = function(params = {}) {
 
     // *** PUBLIC FUNCTIONS:
 
-    // A child component formats the value here: it reads getInputValue() and puts it back with setInputValue().
+    // A child component formats the value here: it reads getValue() and puts it back with setValue().
     box.applyFormattedValueToInput = function(value) {
     }
 
     box.checkIfInputIsRequiredAndEmpty = function() {
-        if (box.isRequired && box.getInputValue().length === 0) {
+        if (box.required && box.getValue().length === 0) {
             showWarning();
             return;
         }
@@ -331,7 +339,7 @@ const InputB = function(params = {}) {
     };
 
     box.showWarningIfNotValid = function(isValid) {
-        if (box.getInputValue().length === 0) return;
+        if (box.getValue().length === 0) return;
 
         if (isValid) {
             hideWarning();
@@ -364,8 +372,8 @@ const InputB = function(params = {}) {
     };
     
     // Sets the maximum number of characters allowed in the input
-    box.setMaxChar = function(count) {
-        box.maxChar = count;
+    box.setMaxLength = function(count) {
+        box.maxLength = count;
         box.input.inputElement.maxLength = count;
     };
 
@@ -376,9 +384,9 @@ const InputB = function(params = {}) {
     };
 
     // Sets the input's current value programmatically
-    box.setInputValue = function(value) {
+    box.setValue = function(value) {
         if (value != box.input.text) {
-            box.inputValue = value;
+            box.value = value;
             box.input.text = value;
             box.checkIfInputIsRequiredAndEmpty();
             box.showWarningIfNotValid(box.isValid());
@@ -386,7 +394,7 @@ const InputB = function(params = {}) {
     };
 
     // Returns the current value inside the input field
-    box.getInputValue = function() {
+    box.getValue = function() {
         return box.input.text;
     };
 
@@ -395,7 +403,7 @@ const InputB = function(params = {}) {
 
     // A selected field keeps its own color; under the mouse it takes hoverBackgroundColor
     const getBackgroundColor = function() {
-        if (isFieldFocused) return box.selectedBackgroundColor;
+        if (isFieldFocused) return box.focusBackgroundColor;
         if (isFieldHover && box.hoverBackgroundColor) return box.hoverBackgroundColor;
         return box.backgroundColor;
     };
@@ -409,7 +417,7 @@ const InputB = function(params = {}) {
 
     // The edge: selected, with a warning (warningBorderColor), under the mouse (hoverBackBorderColor), or its own
     const getBackBorderColor = function() {
-        if (isFieldFocused) return box.selectedBackBorderColor;
+        if (isFieldFocused) return box.focusBackBorderColor;
         if (box.status == 2 && box.warningBorderColor) return box.warningBorderColor;
         if (isFieldHover && box.hoverBackBorderColor) return box.hoverBackBorderColor;
         return box.backBorderColor;
@@ -425,7 +433,7 @@ const InputB = function(params = {}) {
         isFieldFocused = isFocused ? 1 : 0;
         box.background.color = getBackgroundColor();
         paintBackBorder();
-        box.line.color = (isFocused) ? box.selectedLineColor : box.lineColor;
+        box.line.color = (isFocused) ? box.focusLineColor : box.lineColor;
     };
 
     // The text colors of a field element (<input> or <textarea>): inputTextColor, placeholderColor, inputColorScheme.
@@ -443,8 +451,8 @@ const InputB = function(params = {}) {
     };
 
     // Sets the background color of the input when selected/focused
-    box.setSelectedBackgroundColor = function(color) {
-        box.selectedBackgroundColor = color;
+    box.setFocusBackgroundColor = function(color) {
+        box.focusBackgroundColor = color;
     };
 
     // Sets the line color displayed under the input by default
@@ -454,13 +462,13 @@ const InputB = function(params = {}) {
     };
 
     // Sets the underline color when input is selected/focused
-    box.setSelectedLineColor = function(color) {
-        box.selectedLineColor = color;
+    box.setFocusLineColor = function(color) {
+        box.focusLineColor = color;
     };
 
     // Enables required field validation and sets the custom message
     box.setRequired = function(isRequired) {
-        box.isRequired = isRequired ? 1 : 0;
+        box.required = isRequired ? 1 : 0;
         box.checkInputValue();
     };
 
@@ -480,13 +488,13 @@ const InputB = function(params = {}) {
 
     // Sets the icon shown when input is required and empty (warningBallType: "icon")
     box.setRequiredIcon = function(path) {
-        box.requiredIcon = path;
+        box.requiredIconFile = path;
         if (box.warningBallType == "icon" && box.status == 1) applyWarningBallStyle("required");
     };
 
     // Sets the icon shown when input value is not valid (warningBallType: "icon")
     box.setWarningIcon = function(path) {
-        box.warningIcon = path;
+        box.warningIconFile = path;
         if (box.warningBallType == "icon" && box.status == 2) applyWarningBallStyle("warning");
     };
 
@@ -553,7 +561,7 @@ const InputB = function(params = {}) {
             // INPUT: Main object
             if(box.createInput == 1) {
                 box.input = Input({
-                    text: box.inputValue,
+                    text: box.value,
                     minimal: 1,
                     fontSize: box.inputFontSize,
                     height: box.inputHeight,
@@ -564,7 +572,7 @@ const InputB = function(params = {}) {
                 that.inputElement.style.padding = "0px 0px";
                 that.inputElement.placeholder = box.placeholder;
                 box.applyTextColors(that.inputElement);
-                that.inputElement.maxLength = box.maxChar;
+                that.inputElement.maxLength = box.maxLength;
                 that.inputElement.setAttribute("aria-label", box.titleText);
             } else {
                 box.inputBox = Box({
@@ -575,7 +583,7 @@ const InputB = function(params = {}) {
             }
 
             // LABEL: Description
-            if (box.createDescription == 1) {
+            if (box.showDescription == 1) {
                 box.description = Label({
                     text: box.descriptionText,
                     fontSize: box.descriptionFontSize,
@@ -588,7 +596,7 @@ const InputB = function(params = {}) {
         endAutoLayout();
 
         // GROUP: right box
-        if (box.createRightBox == 1) {
+        if (box.showRightBox == 1) {
         box.rightBox = AutoLayout({
             flow: "horizontal",
             align: "right bottom",
@@ -597,7 +605,7 @@ const InputB = function(params = {}) {
         });
 
             // LABEL: Unit
-            if (box.createUnit == 1) {
+            if (box.showUnit == 1) {
             box.unit = Label(box.unitStyle);
             box.unit.text = box.unitText;
             }
@@ -607,7 +615,7 @@ const InputB = function(params = {}) {
         }
 
         // GROUP: left box
-        if (box.createLeftBox == 1) {
+        if (box.showLeftBox == 1) {
         box.leftBox = AutoLayout({
             flow: "horizontal",
             align: "left center",
@@ -673,13 +681,13 @@ const InputB = function(params = {}) {
 
         box.focusFunc = function () {
             box.paintFocus(1);
-            box.onFocus();
+            box.onFocus(box);
         }
         inputElem.addEventListener("focus", function(){ box.focusFunc() });
 
         box.blurFunc = function () {
             box.paintFocus(0);
-            box.onBlur();
+            box.onBlur(box);
         }
         inputElem.addEventListener("blur", function(){ box.blurFunc() });
 
@@ -687,8 +695,8 @@ const InputB = function(params = {}) {
             box.applyFormattedValueToInput();
             box.checkIfInputIsRequiredAndEmpty();
             box.showWarningIfNotValid(box.isValid());
-            box.inputValue = inputElem.value;
-            box.onEdit();
+            box.value = inputElem.value;
+            box.onChange(box);
         }
         inputElem.addEventListener("input", function(){ box.inputFunc() });
 
@@ -714,6 +722,29 @@ InputB.setPlaceholderColor = function(inputElement, color) {
     inputElement.style.setProperty("--input-b-placeholder", color);
 };
 
+// THE OLD NAMES of the params, the properties and the methods (basic.keepOldNames): the pages made with them keep
+// working until they move to the new names. Delete a name when no page uses it any more.
+InputB.OLD_NAMES = {
+    inputValue: "value",
+    isRequired: "required",
+    maxChar: "maxLength",
+    createDescription: "showDescription",
+    createUnit: "showUnit",
+    createLeftBox: "showLeftBox",
+    createRightBox: "showRightBox",
+    requiredIcon: "requiredIconFile",
+    warningIcon: "warningIconFile",
+    selectedBackgroundColor: "focusBackgroundColor",
+    selectedLineColor: "focusLineColor",
+    selectedBackBorderColor: "focusBackBorderColor",
+    onEdit: "onChange",
+    getInputValue: "getValue",
+    setInputValue: "setValue",
+    setMaxChar: "setMaxLength",
+    setSelectedBackgroundColor: "setFocusBackgroundColor",
+    setSelectedLineColor: "setFocusLineColor",
+};
+
 // *** STYLE PACKAGES:
 // WHY style: {} in every package: InputB has no "style" object, its look is in flat params. A package with
 //      a "style" key is a package of params (basic.applyStylePackage, v26.10.27): its keys fill the params
@@ -728,11 +759,11 @@ InputB.styles = {
     dark: {
         style: {},
         backgroundColor: "#232322", // classic #F6F6F6
-        selectedBackgroundColor: "#2A2C27", // classic #F3F4E0: the same soft green tint, on dark
+        focusBackgroundColor: "#2A2C27", // classic #F3F4E0: the same soft green tint, on dark
         lineColor: White(0.75), // classic #373836: the strong line under the field
-        selectedLineColor: "#65A293", // the same accent
+        focusLineColor: "#65A293", // the same accent
         backBorderColor: Black(0),
-        selectedBackBorderColor: Black(0),
+        focusBackBorderColor: Black(0),
 
         titleTextColor: White(0.6), // classic #555555
         inputTextColor: White(0.9), // classic #373836
@@ -769,12 +800,12 @@ InputB.styles = {
     ozden: {
         style: {},
         backgroundColor: "#F6F6F6",
-        selectedBackgroundColor: "#FFFFFF", // F6F6F6
+        focusBackgroundColor: "#FFFFFF", // F6F6F6
         hoverBackgroundColor: "#F6F6F6", // a little darker under the mouse EFEFEF
         lineColor: Black(0),
-        selectedLineColor: Black(0),
+        focusLineColor: Black(0),
         backBorderColor: Black(0.05), // a faint edge
-        selectedBackBorderColor: Black(0.4),
+        focusBackBorderColor: Black(0.4),
         backBorderTopRound: 8,
         backBorderBottomRound: 8,
         titleBold: 1, // as ozdenDark
@@ -796,12 +827,12 @@ InputB.styles = {
     ozdenDark: {
         style: {},
         backgroundColor: "rgba(255, 255, 255, 0.04)", // FIELD_BG
-        selectedBackgroundColor: "rgba(255, 255, 255, 0.07)", // FIELD_BG_SELECTED
+        focusBackgroundColor: "rgba(255, 255, 255, 0.07)", // FIELD_BG_SELECTED
         hoverBackgroundColor: "rgba(255, 255, 255, 0.04)", // a little lighter under the mouse
         lineColor: Black(0),
-        selectedLineColor: Black(0),
+        focusLineColor: Black(0),
         backBorderColor: "rgba(255, 255, 255, 0.10)", // FIELD_LINE
-        selectedBackBorderColor: White(0.45), // the focus line: a white one
+        focusBackBorderColor: White(0.45), // the focus line: a white one
         backBorderTopRound: 10,
         backBorderBottomRound: 10,
 
@@ -858,12 +889,12 @@ InputB.createMinimalStyle = function (colors) {
         titlePosition: "above",
         titleGap: 4,
         backgroundColor: "transparent",
-        selectedBackgroundColor: "transparent",
+        focusBackgroundColor: "transparent",
         hoverBackgroundColor: "",
         lineColor: "transparent",
-        selectedLineColor: "transparent",
+        focusLineColor: "transparent",
         backBorderColor: colors.edge, // WHY edge: the line that shows the field (3:1 at least, as WCAG asks of a control)
-        selectedBackBorderColor: colors.ink,
+        focusBackBorderColor: colors.ink,
         hoverBackBorderColor: colors.edgeHover,
         backBorderTopRound: 4,
         backBorderBottomRound: 4,
@@ -883,7 +914,7 @@ InputB.createMinimalStyle = function (colors) {
         requiredIconColor: colors.softText,
         tooltipStyle: { color: colors.ground, hintColor: colors.ground, textColor: colors.text, border: 1, borderColor: colors.line, round: 4, fontSize: 12 },
         selectStyle: { color: "transparent", invertIconColor: colors.invertIcons, listBackgroundColor: colors.ground, listTextColor: colors.text, listOverTextColor: colors.ink, listBorderColor: colors.line },
-        showPasswordIconInvert: colors.invertIcons,
+        invertIconColor: colors.invertIcons,
         unitStyle: { padding: [6, 1], color: "transparent", textColor: colors.softText, round: 4, fontSize: 11 },
         // TextareaB: a thin scroll bar in the color of the text, with no dots
         scrollBarStyle: { bar_color: colors.scrollBar, bar_mouseOverColor: colors.scrollBar, bar_width: 3, bar_mouseOverWidth: 4, bar_opacity: 0.45, bar_mouseOverOpacity: 0.9, bar_padding: 2, showDots: 0 },

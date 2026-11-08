@@ -76,8 +76,8 @@ const LoginPageDefaults = {
     waitingCoverColor: "rgba(0, 0, 0, 0.6)", // The cover of box.waiting (LoadingScreen)
     waitingClock: "ozden", // The clock of box.waiting: "ozden" (a white face) or "ozdenDark" (LoadingScreen.clocks)
     signupPasswordParams: {
-        minChar: 8,
-        minCharWarningText: "Password must be at least 8 characters",
+        minLength: 8,
+        minLengthWarningText: "Password must be at least 8 characters",
         mustUseNumber: 1,
         mustUseLetter: 1,
         mustUseUppercase: 0,
@@ -205,20 +205,20 @@ const LoginPage = function(params = {}) {
                             rightPadding: 16,
                             backgroundColor: box.input_backgroundColor,
                             lineColor: box.input_lineColor,
-                            selectedBackgroundColor: box.input_selectedBackgroundColor,
-                            selectedLineColor: box.primaryColor,
+                            focusBackgroundColor: box.input_selectedBackgroundColor,
+                            focusLineColor: box.primaryColor,
                         };
 
                         box.loginEmail = EmailInputB({
                             ...common,
                             titleText: "EMAIL",
                             placeholder: "example@site.com",
-                            isRequired: 0,
-                            maxChar: 60,
-                            inputValue: "",
+                            required: 0,
+                            maxLength: 60,
+                            value: "",
                         });
                         styleInput(that);
-                        that.onEdit = function() {
+                        that.onChange = function() {
                             checkLoginForm();
                         };
 
@@ -226,22 +226,22 @@ const LoginPage = function(params = {}) {
                             ...common,
                             titleText: "PASSWORD",
                             placeholder: "Enter your password",
-                            maxChar: 60,
+                            maxLength: 60,
                             showShowPasswordButton: 1,
-                            isRequired: 0,
+                            required: 0,
                             showPasswordIconFile: box.showPasswordIconFile,
                             hidePasswordIconFile: box.hidePasswordIconFile,
-                            inputValue: "",
-                            minChar: 0,
+                            value: "",
+                            minLength: 0,
                             mustUseNumber: 0,
                             mustUseLetter: 0,
                             mustUseUppercase: 0,
                             mustUseLowercase: 0,
                             mustUseSpecialChar: 0,
-                            showPasswordIconInvert: box.showPasswordIconInvert,
+                            invertIconColor: box.showPasswordIconInvert,
                         });
                         styleInput(that);
-                        that.onEdit = function() {
+                        that.onChange = function() {
                             checkLoginForm();
                         };
 
@@ -296,11 +296,11 @@ const LoginPage = function(params = {}) {
                             ...common,
                             titleText: "EMAIL",
                             placeholder: "example@site.com",
-                            isRequired: 1,
-                            maxChar: 60,
+                            required: 1,
+                            maxLength: 60,
                         });
                         styleInput(that);
-                        that.onEdit = function() {
+                        that.onChange = function() {
                             checkSignupForm();
                         };
 
@@ -308,15 +308,15 @@ const LoginPage = function(params = {}) {
                             ...common,
                             titleText: "PASSWORD",
                             placeholder: "Create a password",
-                            maxChar: 60,
+                            maxLength: 60,
                             showPasswordIconFile: box.showPasswordIconFile,
                             hidePasswordIconFile: box.hidePasswordIconFile,
                             showShowPasswordButton: 1,
                             ...box.signupPasswordParams,
-                            showPasswordIconInvert: box.showPasswordIconInvert,
+                            invertIconColor: box.showPasswordIconInvert,
                         });
                         styleInput(that);
-                        that.onEdit = function() {
+                        that.onChange = function() {
                             checkSignupForm();
                         };
 
@@ -324,15 +324,15 @@ const LoginPage = function(params = {}) {
                             ...common,
                             titleText: "CONFIRM PASSWORD",
                             placeholder: "Re-enter password",
-                            maxChar: 60,
+                            maxLength: 60,
                             showPasswordIconFile: box.showPasswordIconFile,
                             hidePasswordIconFile: box.hidePasswordIconFile,
                             showShowPasswordButton: 1,
                             ...box.signupPasswordParams,
-                            showPasswordIconInvert: box.showPasswordIconInvert,
+                            invertIconColor: box.showPasswordIconInvert,
                         });
                         styleInput(that);
-                        that.onEdit = function() {
+                        that.onChange = function() {
                             checkSignupForm();
                         };
 
@@ -614,8 +614,8 @@ const LoginPage = function(params = {}) {
 
     const checkLoginForm = function() {
 
-        const hasEmail = box.loginEmail.getInputValue().length > 0;
-        const hasPassword = box.loginPassword.getInputValue().length > 0;
+        const hasEmail = box.loginEmail.getValue().length > 0;
+        const hasPassword = box.loginPassword.getValue().length > 0;
         const isEmailValid = (box.loginEmail.status === 0);
 
         setButtonActive(box.loginBtn, hasEmail && hasPassword && isEmailValid);

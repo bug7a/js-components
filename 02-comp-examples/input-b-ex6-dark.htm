@@ -61,7 +61,7 @@
                             width: "100%",
                             titleText: "FULL NAME",
                             placeholder: "Your name",
-                            isRequired: 1,
+                            required: 1,
                         });
 
                         addCaption("UNIT AND DESCRIPTION");
@@ -80,23 +80,23 @@
                             width: "100%",
                             titleText: "CODE",
                             placeholder: "4 digits",
-                            inputValue: "12a",
+                            value: "12a",
                             warningText: "Only digits",
                             warningBallType: "icon",
-                            maxChar: 4,
+                            maxLength: 4,
                         });
                         codeInput.isValid = function () {
-                            return /^\d*$/.test(codeInput.getInputValue());
+                            return /^\d*$/.test(codeInput.getValue());
                         };
                         codeInput.showWarningIfNotValid(codeInput.isValid());
 
-                        addCaption("ONE PARAM OF THE PACKAGE CHANGED (selectedLineColor)");
+                        addCaption("ONE PARAM OF THE PACKAGE CHANGED (focusLineColor)");
                         InputB({
                             styleName: "dark",
                             width: "100%",
                             titleText: "E-MAIL",
                             placeholder: "name@example.com",
-                            selectedLineColor: "#3987E5",
+                            focusLineColor: "#3987E5",
                         });
 
                     endGroup();

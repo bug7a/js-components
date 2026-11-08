@@ -35,12 +35,12 @@
                 const myInput = URLInputB({
                     key: "1",
                     width: 400,
-                    isRequired: 1,
+                    required: 1,
                     titleText: "URL",
                     placeholder: "example.com",
                     warningText: "Invalid URL format",
                     warningColor: "#E5885E",
-                    maxChar: 255,
+                    maxLength: 255,
                     rightPadding: 20,
                     tinySelectParams: {
                         title: "",
@@ -63,8 +63,8 @@
             endAutoLayout(); // END GROUP
 
             // Get value
-            myInput.onEdit = function () {
-                console.log(myInput.getInputValue());
+            myInput.onChange = function () {
+                console.log(myInput.getValue());
             };
 
         };

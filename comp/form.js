@@ -35,11 +35,20 @@ const FormDefaults = {
     // px: the round corners of the hints of the form: the list of the missing entries and the hint of the passive
     // send button (one value, so they have the same corners)
     hintRound: 4,
-    onEdit: function(input) {},
+    onChange: function(self, input) {}, // the user changed an input of the form
     onSendClick: function(json) {},
 };
 
 const Form = function(params = {}) {
+
+    // THE OLD NAME, for a while: onEdit(input) is onChange(self, input) now.
+    // WHY not basic.keepOldNames: the arguments changed too, so the old function is called in the old way.
+    if (typeof params.onEdit === "function") {
+        const oldOnEdit = params.onEdit;
+        delete params.onEdit;
+        params.onChange = function(self, input) { oldOnEdit(input); };
+        console.warn('Form: "onEdit" is an old name, use "onChange" (self, input)');
+    }
 
     // Merge params:
     mergeIntoIfMissing(params, FormDefaults);
@@ -241,7 +250,7 @@ const Form = function(params = {}) {
             itemData.key = item.key;
             itemData.type = item.type;
             itemData.titleText = item.titleText;
-            itemData.inputValue = item.getInputValue();
+            itemData.inputValue = item.getValue(); // WHY "inputValue": the name the receiver of the form reads
 
             result.push(itemData);
 
@@ -384,9 +393,9 @@ const Form = function(params = {}) {
     // The form is checked again on every edit, focus and blur of the input.
     const watchInput = function(input) {
 
-        input.onEdit = function() {
+        input.onChange = function() {
             checkForm();
-            box.onEdit(input);
+            box.onChange(box, input);
         };
 
         input.onFocus = function() {

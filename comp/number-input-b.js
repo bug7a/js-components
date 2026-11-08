@@ -21,10 +21,10 @@ Webpage: https://bug7a.github.io/js-components/
 
 // Default values
 const NumberInputBDefaults = {
-    isRequired: 0,
+    required: 0,
     type: "number",
     titleText: "NUMERIC",
-    maxChar: 35,
+    maxLength: 35,
     placeholder: "(auto)",
     allowNegative: 0,
     allowDecimal: 1,
@@ -62,7 +62,7 @@ const NumberInputB = function(params = {}) {
     // *** PUBLIC FUNCTIONS:
     box.applyFormattedValueToInput = function() { // OVERRIDE
 
-        let value = box.getInputValue();
+        let value = box.getValue();
 
         // 1. Geçerli karakter kümesini oluştur
         let allowedChars = "0-9";
@@ -108,7 +108,7 @@ const NumberInputB = function(params = {}) {
             value = "-0" + box.decimalSeparator;
         }
 
-        box.setInputValue(value); // Put back formatted value.
+        box.setValue(value); // Put back formatted value.
 
     }
     

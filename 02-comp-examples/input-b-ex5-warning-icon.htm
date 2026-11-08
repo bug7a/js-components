@@ -31,7 +31,7 @@
                 // INPUT: #1 Colored ball (default)
                 InputB({
                     key: "1",
-                    isRequired: 1,
+                    required: 1,
                     titleText: "COLOR BALL (DEFAULT)",
                     placeholder: "Jack",
                 });
@@ -39,7 +39,7 @@
                 // INPUT: #2 Built-in icons
                 EmailInputB({
                     key: "2",
-                    isRequired: 1,
+                    required: 1,
                     titleText: "BUILT-IN ICON",
                     placeholder: "example@site.com",
                     warningText: "Invalid email format",
@@ -49,15 +49,15 @@
                 // INPUT: #3 Custom icons (image path or data URI)
                 EmailInputB({
                     key: "3",
-                    isRequired: 1,
+                    required: 1,
                     titleText: "CUSTOM ICON",
                     placeholder: "example@site.com",
                     warningText: "Invalid email format",
                     warningBallType: "icon",
                     warningIconSize: 22,
                     requiredIconColor: "#588ABE",
-                    // requiredIcon: "icons/required.svg",
-                    // warningIcon: "icons/warning.svg",
+                    // requiredIconFile: "icons/required.svg",
+                    // warningIconFile: "icons/warning.svg",
                 });
 
             endAutoLayout(); // END GROUP

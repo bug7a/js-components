@@ -19,7 +19,7 @@ Webpage: https://bug7a.github.io/js-components/
 
 /*
 
-- input.getInputValueAsNumber();
+- input.getValueAsNumber();
 -- To get number with out groupSeparators
 
 */
@@ -28,10 +28,10 @@ Webpage: https://bug7a.github.io/js-components/
 
 // Default values
 const CurrencyInputBDefaults = {
-    isRequired: 0,
+    required: 0,
     titleText: "CURRENCY",
     placeholder: "(auto)",
-    maxChar: 35,
+    maxLength: 35,
     allowNegative: 1,
     allowDecimal: 1,
     decimalSeparator: ".", // or ","
@@ -43,6 +43,7 @@ const CurrencyInputBDefaults = {
 const CurrencyInputB = function(params = {}) {
 
     const box = startExtendedObject(InputB, CurrencyInputBDefaults, params);
+    basic.keepOldNames(box, CurrencyInputB.OLD_NAMES, "CurrencyInputB"); // the pages made with the old names, for a while
 
     // *** PRIVATE VARIABLES:
     const inputElem = box.input.inputElement;
@@ -124,15 +125,15 @@ const CurrencyInputB = function(params = {}) {
     }
 
     // *** PUBLIC FUNCTIONS:
-    box.getInputValueAsNumber = function() {
-        return clearGroupFormat(box.getInputValue());
+    box.getValueAsNumber = function() {
+        return clearGroupFormat(box.getValue());
     }
 
     box.applyFormattedValueToInput = function() { // OVERRIDE
 
         rememberCursorPosition();
 
-        let value = clearGroupFormat(box.getInputValue());
+        let value = clearGroupFormat(box.getValue());
 
         // 1. Geçerli karakter kümesini oluştur
         let allowedChars = "0-9";
@@ -179,7 +180,7 @@ const CurrencyInputB = function(params = {}) {
         }
 
         value = formatWithGrouping(value);
-        box.setInputValue(value); // Put back formatted value.
+        box.setValue(value); // Put back formatted value.
         restoreCursorPosition();
 
     };
@@ -192,4 +193,9 @@ const CurrencyInputB = function(params = {}) {
     }
 
     return endExtendedObject(box);
+};
+
+// THE OLD NAMES (basic.keepOldNames; the old names of InputB are in InputB.OLD_NAMES). Delete a name when no page uses it.
+CurrencyInputB.OLD_NAMES = {
+    getInputValueAsNumber: "getValueAsNumber",
 };

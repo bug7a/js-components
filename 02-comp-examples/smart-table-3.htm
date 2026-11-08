@@ -136,10 +136,10 @@
         const fillForm = function (data) {
 
             selectedId = data.id;
-            inputId.setInputValue(String(data.id));
-            inputName.setInputValue(data.name);
-            inputEmail.setInputValue(data.email);
-            inputActive.setInputValue(String(data.active));
+            inputId.setValue(String(data.id));
+            inputName.setValue(data.name);
+            inputEmail.setValue(data.email);
+            inputActive.setValue(String(data.active));
             lblStatus.text = "Selected ID: " + data.id;
             btnEdit.enabled = 1;
             btnDelete.clickable = 1;
@@ -151,10 +151,10 @@
         const clearForm = function () {
 
             selectedId = null;
-            inputId.setInputValue("");
-            inputName.setInputValue("");
-            inputEmail.setInputValue("");
-            inputActive.setInputValue("");
+            inputId.setValue("");
+            inputName.setValue("");
+            inputEmail.setValue("");
+            inputActive.setValue("");
             lblStatus.text = "No record selected";
             btnEdit.enabled = 0;
             btnDelete.clickable = 0;
@@ -169,16 +169,16 @@
                 height: "auto",
                 leftPadding: 20,
                 rightPadding: 20,
-                createDescription: 0,
+                showDescription: 0,
                 backgroundColor: "#F6F6F6",
-                selectedBackgroundColor: "#FFFFFF",
+                focusBackgroundColor: "#FFFFFF",
                 lineColor: "transparent",
-                selectedLineColor: "#65A293",
-                createLeftBox: 0,
-                createRightBox: 0,
-                createUnit: 0,
-                inputValue: "",
-                maxChar: 100,
+                focusLineColor: "#65A293",
+                showLeftBox: 0,
+                showRightBox: 0,
+                showUnit: 0,
+                value: "",
+                maxLength: 100,
             };
 
             // ID (read-only)
@@ -203,7 +203,7 @@
             inputEmail = EmailInputB({
                 key: "email",
                 ...inputStyle,
-                isRequired: 0,
+                required: 0,
                 titleText: "EMAIL",
                 placeholder: "Enter email",
                 warningText: "Invalid email format",
@@ -216,15 +216,15 @@
                 ...inputStyle,
                 titleText: "ACTIVE",
                 placeholder: "1 or 0",
-                maxChar: 1,
+                maxLength: 1,
                 allowNegative: 0,
                 allowDecimal: 0,
             });
 
             // Only 0 or 1: anything else becomes 1
-            inputActive.onEdit = function () {
-                const value = inputActive.getInputValue();
-                if (!(value == 1 || value == 0)) inputActive.setInputValue("1");
+            inputActive.onChange = function () {
+                const value = inputActive.getValue();
+                if (!(value == 1 || value == 0)) inputActive.setValue("1");
             };
 
         };
@@ -270,9 +270,9 @@
                 const index = findSelectedIndex();
                 if (index === -1) return;
 
-                itemDataList[index].name = inputName.getInputValue();
-                itemDataList[index].email = inputEmail.getInputValue();
-                itemDataList[index].active = parseInt(inputActive.getInputValue()) || 0;
+                itemDataList[index].name = inputName.getValue();
+                itemDataList[index].email = inputEmail.getValue();
+                itemDataList[index].active = parseInt(inputActive.getValue()) || 0;
                 smartTable1.setItemDataList(itemDataList);
                 lblStatus.text = "Updated ID: " + selectedId;
             });

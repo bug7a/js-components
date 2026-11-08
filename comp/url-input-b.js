@@ -21,12 +21,12 @@ Webpage: https://bug7a.github.io/js-components/
 // Default values
 const URLInputBDefaults = {
     width: 400,
-    isRequired: 1,
+    required: 1,
     titleText: "URL",
     placeholder: "example.com",
     warningText: "Invalid URL format",
     warningColor: "#E5885E",
-    maxChar: 255,
+    maxLength: 255,
     rightPadding: 20,
     tinySelectParams: {
         title: "",
@@ -85,12 +85,12 @@ const URLInputB = function(params = {}) {
         //     an "s" was not valid ("/news") and a path with a space was
         const regex = /^(([a-zA-Z0-9-]+)\.)+[a-zA-Z]{2,}(:\d{2,5})?(\/\S*)?$/; // domain.com, :3000, /path?query=1
 
-        // WHY: box.getInputValue() verisi "http..." li olduğu için direk input (box.input.text) verisini kullanıyorum.
+        // WHY: getValue() gives the protocol too ("https://..."): the text alone is box.input.text
         return (regex.test(box.input.text)) ? 1 : 0;
 
     };
 
-    box.getInputValue = function() { // *** OVERRIDE ***
+    box.getValue = function() { // *** OVERRIDE ***
         // WHY "": an empty field was "https://www." (the protocol alone): never "Required", and a form sent it
         if (box.input.text === "") return "";
         return box.tinySelect.list[box.tinySelect.selectedIndex].label + box.input.text;
@@ -107,18 +107,18 @@ const URLInputB = function(params = {}) {
         return found;
     };
 
-    const superSetInputValue = box.setInputValue;
-    // WHY: getInputValue() gives the protocol and the text; the setInputValue of InputB wrote them all into the text,
+    const superSetValue = box.setValue;
+    // WHY: getValue() gives the protocol and the text; the setValue of InputB wrote them all into the text,
     //      so a saved value came back as "https://www.https://www.example.com" and could not be sent
-    box.setInputValue = function(value) { // *** OVERRIDE ***
+    box.setValue = function(value) { // *** OVERRIDE ***
         const text = String(value ?? "");
         const index = findProtocolIndex(text);
         if (index === -1) {
-            superSetInputValue(text);
+            superSetValue(text);
             return;
         }
         box.tinySelect.setSelectedIndex(index, 1);
-        superSetInputValue(text.slice(box.tinySelect.list[index].label.length));
+        superSetValue(text.slice(box.tinySelect.list[index].label.length));
     };
 
     // *** OBJECT VIEW:
@@ -131,7 +131,7 @@ const URLInputB = function(params = {}) {
             box.tinySelect.lblLabel.css.fontFamily = "opensans";
 
             box.input = Input({
-                text: box.inputValue,
+                text: box.value,
                 minimal: 1,
                 fontSize: 20,
                 height: 40,
@@ -141,7 +141,7 @@ const URLInputB = function(params = {}) {
             that.inputElement.style.padding = "0px 4px";
             that.inputElement.placeholder = box.placeholder;
             box.applyTextColors(that.inputElement);
-            that.inputElement.maxLength = box.maxChar;
+            that.inputElement.maxLength = box.maxLength;
             that.inputElement.setAttribute("aria-label", box.titleText);
 
         endAutoLayout();
@@ -166,12 +166,12 @@ const URLInputB = function(params = {}) {
         box.applyFormattedValueToInput();
         box.checkIfInputIsRequiredAndEmpty();
         box.showWarningIfNotValid(box.isValid());
-        box.onEdit();
+        box.onChange(box);
     }
     inputElem.addEventListener("input", function(){ box.inputFunc() });
 
-    // WHY: a start value with its protocol (as getInputValue() gives it) was put whole into the text
-    if (findProtocolIndex(box.input.text) > -1) box.setInputValue(box.input.text);
+    // WHY: a start value with its protocol (as getValue() gives it) was put whole into the text
+    if (findProtocolIndex(box.input.text) > -1) box.setValue(box.input.text);
     box.checkInputValue(); // WHY: the valid check too (the start value was only checked for required)
 
     return endExtendedObject(box);

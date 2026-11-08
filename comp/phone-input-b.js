@@ -19,7 +19,7 @@ Webpage: https://bug7a.github.io/js-components/
 
 /*
 
-- input.getInputValue();
+- input.getValue();
 -- Returns "" while no digit is written. (The field holds only its mask: "+90 (___) ___-____")
 -- So an optional field with no number is not wrong, a required one shows "Required",
    and a form does not send the mask.
@@ -30,7 +30,7 @@ Webpage: https://bug7a.github.io/js-components/
 
 // Default values:
 const PhoneInputBDefaults = {
-    isRequired: 1,
+    required: 1,
     titleText: "PHONE NUMBER",
     placeholder: "(auto)",
     warningText: "Invalid phone number format",
@@ -149,7 +149,7 @@ const PhoneInputB = function(params = {}) {
         // WHY: Backspace e bastığında da, güncellesin.
         box.checkIfInputIsRequiredAndEmpty();
         box.showWarningIfNotValid(box.isValid());
-        box.onEdit(); // WHY: Silme işleminde edit tetiklenmeli.
+        box.onChange(box); // WHY: a delete changes the value too
     };
 
     // *** PUBLIC FUNCTIONS:
@@ -157,7 +157,7 @@ const PhoneInputB = function(params = {}) {
     // Girilen numarayı box.phoneMask a uygun hale getir.
     box.applyFormattedValueToInput = function() { // OVERRIDE
 
-        let value = inputElem.value; // WHY: The field itself, also when it holds only the mask. (getInputValue() is "" then.)
+        let value = inputElem.value; // WHY: The field itself, also when it holds only the mask. (getValue() is "" then.)
 
         // 1. The country code at the start of the field goes: the one in the field, or the new one (the longest).
         // WHY: the first countryCode.length characters went without a look: "+90 (555) 123-4567" became
@@ -177,7 +177,7 @@ const PhoneInputB = function(params = {}) {
         digits = digits.substring(0, maxDigits);
 
         // 3. Şimdi countryCode + phoneMask formatına uygun şekilde doldur
-        box.setInputValue(fillMaskWithDigits(getFullMask(), digits));
+        box.setValue(fillMaskWithDigits(getFullMask(), digits));
         codeInField = box.countryCode;
         setCursorToFirstUnderscore();
 
@@ -196,13 +196,13 @@ const PhoneInputB = function(params = {}) {
     // WHY: The mask is written into the field on focus, and it is not a value. Before, an empty field with
     //      the mask was "not valid": a form counted an optional phone as a missing entry while the cursor
     //      was in it, a required one showed "Invalid" instead of "Required", and the mask could be sent.
-    box.getInputValue = function() { // OVERRIDE
+    box.getValue = function() { // OVERRIDE
         const value = box.input.text;
         return (value === getFullMask()) ? "" : value;
     };
 
     box.isValid = function() { // OVERRIDE
-        const value = box.getInputValue();
+        const value = box.getValue();
         if (!value || value.indexOf("_") !== -1) {
             return 0;
         }
@@ -216,7 +216,7 @@ const PhoneInputB = function(params = {}) {
         box.checkIfInputIsRequiredAndEmpty();
         box.showWarningIfNotValid(box.isValid());
         setCursorToFirstUnderscore();
-        box.inputValue = inputElem.value;
+        box.value = inputElem.value;
 
     };
 
@@ -252,8 +252,8 @@ const PhoneInputB = function(params = {}) {
         box.blurFunc = function() {
             box.paintFocus(0);
 
-            if (inputElem.value == getFullMask()) { // WHY: The field itself. (getInputValue() is "" for the mask.)
-                box.setInputValue("");
+            if (inputElem.value == getFullMask()) { // WHY: The field itself. (getValue() is "" for the mask.)
+                box.setValue("");
             }
 
             box.onBlur();
@@ -279,17 +279,17 @@ const PhoneInputB = function(params = {}) {
             const text = (event.clipboardData) ? event.clipboardData.getData("text") : "";
             if (!text) return;
             event.preventDefault();
-            box.setInputValue(fillMaskWithDigits(getFullMask(), getPastedDigits(text)));
+            box.setValue(fillMaskWithDigits(getFullMask(), getPastedDigits(text)));
             setCursorToFirstUnderscore();
             box.checkIfInputIsRequiredAndEmpty();
             box.showWarningIfNotValid(box.isValid());
-            box.onEdit();
+            box.onChange(box);
         });
 
         // input event'inde, cursor yanlış yerdeyse düzelt
         box.inputFunc = function () { // If needed, you can override function on ExtendedObject.
             box.refreshInput();
-            box.onEdit();
+            box.onChange(box);
         };
 
     }

@@ -36,7 +36,7 @@
                 // INPUT: #1
                 const myInput1 = InputB({
                     key: "1",
-                    isRequired: 1,
+                    required: 1,
                     placeholder: "Jack",
                     leftPadding: 20,
                 });
@@ -49,13 +49,13 @@
                     placeholder: "175",
                     descriptionText: "The vertical size...",
                     unitText: "cm",
-                    maxChar: 3,
-                    isRequired: 0,
+                    maxLength: 3,
+                    required: 0,
                     allowNegative: 0,
                     allowDecimal: 0,
                 });
-                myInput2.onEdit = function () {
-                    console.log(myInput2.getInputValue());
+                myInput2.onChange = function () {
+                    console.log(myInput2.getValue());
                 };
 
                 // INPUT: #3
@@ -64,16 +64,16 @@
                     placeholder: "",
                     titleText: "COUNT",
                     descriptionText: "As you type something, it will write the number of characters.",
-                    isRequired: 1,
-                    maxChar: 20,
+                    required: 1,
+                    maxLength: 20,
                     unitText: "0/20",
                     unitStyle: {
                         fontSize: 16,
                     },
                 });
-                myInput3.onEdit = function () {
+                myInput3.onChange = function () {
                     const currentLength = myInput3.input.text.length;
-                    myInput3.setUnitText(`${currentLength}/${myInput3.maxChar}`);
+                    myInput3.setUnitText(`${currentLength}/${myInput3.maxLength}`);
                 };
 
             endAutoLayout(); // END GROUP

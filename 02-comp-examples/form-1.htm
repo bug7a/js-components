@@ -66,16 +66,16 @@
                 styleName: "ozden",
                 titleText: "YOUR NAME",
                 placeholder: "Jack Brown",
-                isRequired: 1,
-                maxChar: 50,
+                required: 1,
+                maxLength: 50,
             });
             const emailInput = EmailInputB({
                 key: "email",
                 styleName: "ozden",
                 titleText: "YOUR EMAIL",
                 placeholder: "example@site.com",
-                isRequired: 1,
-                maxChar: 50,
+                required: 1,
+                maxLength: 50,
             });
             form.addDoubleInput(nameInput, emailInput);
 
@@ -85,8 +85,8 @@
                 styleName: "ozden",
                 titleText: "SUBJECT",
                 placeholder: "Optional",
-                isRequired: 0,
-                maxChar: 80,
+                required: 0,
+                maxLength: 80,
             });
             form.addInput(subjectInput);
 

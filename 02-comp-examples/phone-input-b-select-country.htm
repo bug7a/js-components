@@ -80,7 +80,7 @@
                     // INPUT: Phone
                     myInput = PhoneInputB({
                         key: "1",
-                        isRequired: 1,
+                        required: 1,
                         titleText: "PHONE NUMBER",
                         placeholder: "(auto)",
                         warningText: "Invalid phone number format",
@@ -96,8 +96,8 @@
             endAutoLayout(); // End Page
 
             // Get value
-            myInput.onEdit = function () {
-                console.log(myInput.getInputValue());
+            myInput.onChange = function () {
+                console.log(myInput.getValue());
             };
 
         };
@@ -151,7 +151,7 @@
             myInput.setCountryCode(country.code);
             myInput.setPhoneMask(country.phoneMask);
             myInput.setUnitText(country.shortName);
-            myInput.setInputValue("");
+            myInput.setValue("");
             myInput.fillAutoPlaceholder();
         };
 

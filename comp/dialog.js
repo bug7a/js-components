@@ -233,8 +233,8 @@ const Dialog = function (params = {}) {
                 width: "100%",
                 titleText: field.titleText,
                 placeholder: field.placeholder,
-                inputValue: field.value,
-                isRequired: field.required ? 1 : 0,
+                value: field.value,
+                required: field.required ? 1 : 0,
             });
         } else {
             input = Input({ width: "100%", height: INPUT_HEIGHT, placeholder: field.placeholder || field.titleText, value: field.value });
@@ -244,7 +244,7 @@ const Dialog = function (params = {}) {
     };
 
     const getFieldValue = function (item) {
-        if (item.input.getInputValue) return item.input.getInputValue();
+        if (item.input.getValue) return item.input.getValue();
         return item.input.value;
     };
 

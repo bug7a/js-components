@@ -33,7 +33,7 @@
                 // INPUT: #1
                 const myInput = PhoneInputB({
                     key: "1",
-                    isRequired: 1,
+                    required: 1,
                     titleText: "PHONE NUMBER",
                     placeholder: "(auto)",
                     warningText: "Invalid phone number format",
@@ -46,8 +46,8 @@
             endAutoLayout(); // END GROUP
 
             // Get value
-            myInput.onEdit = function () {
-                console.log(myInput.getInputValue());
+            myInput.onChange = function () {
+                console.log(myInput.getValue());
             };
 
         };

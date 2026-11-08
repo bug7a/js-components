@@ -21,13 +21,13 @@ Webpage: https://bug7a.github.io/js-components/
 
 // Default values
 const EmailInputBDefaults = {
-    isRequired: 1,
+    required: 1,
     type: "email",
     titleText: "EMAIL",
     placeholder: "example@site.com",
     warningText: "Invalid email format",
     warningColor: "#E5885E",
-    maxChar: 40,
+    maxLength: 40,
 };
 
 const EmailInputB = function(params = {}) {
@@ -50,7 +50,7 @@ const EmailInputB = function(params = {}) {
 
     // *** PUBLIC FUNCTIONS:
     box.isValid = function() { // OVERRIDE
-        return EMAIL_PATTERN.test(box.getInputValue()) ? 1 : 0;
+        return EMAIL_PATTERN.test(box.getValue()) ? 1 : 0;
     };
     
     // *** OBJECT VIEW:

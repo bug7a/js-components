@@ -34,10 +34,10 @@
                 const myInput = CurrencyInputB({
                     key: "1",
                     width: 350,
-                    isRequired: 0,
+                    required: 0,
                     titleText: "CURRENCY",
                     placeholder: "(auto)",
-                    maxChar: 35,
+                    maxLength: 35,
                     allowNegative: 1,
                     allowDecimal: 1,
                     decimalSeparator: ".", // or ","
@@ -49,8 +49,8 @@
             endAutoLayout(); // END GROUP
 
             // Get value
-            myInput.onEdit = function () {
-                console.log(myInput.getInputValue());
+            myInput.onChange = function () {
+                console.log(myInput.getValue());
             };
 
         };

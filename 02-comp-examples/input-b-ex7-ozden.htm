@@ -90,7 +90,7 @@
                 width: "100%",
                 titleText: "FIRST NAME",
                 placeholder: "Jack",
-                isRequired: 1,
+                required: 1,
             });
 
             const emailInput = EmailInputB({
@@ -98,9 +98,9 @@
                 width: "100%",
                 titleText: "YOUR EMAIL",
                 placeholder: "example@site.com",
-                inputValue: "jack@",
+                value: "jack@",
                 warningText: "Invalid email format",
-                maxChar: 35,
+                maxLength: 35,
             });
             emailInput.showWarningIfNotValid(emailInput.isValid());
 
@@ -109,7 +109,7 @@
                 width: "100%",
                 titleText: "PHONE NUMBER",
                 placeholder: "(auto)",
-                isRequired: 0,
+                required: 0,
                 countryCode: "+90",
                 phoneMask: " (___) ___-____",
                 unitText: "TR",
@@ -119,7 +119,7 @@
                 styleName: styleName,
                 width: "100%",
                 titleText: "WEBSITE",
-                isRequired: 0,
+                required: 0,
             });
 
             TextareaB({
@@ -128,11 +128,11 @@
                 height: 170,
                 titleText: "MESSAGE",
                 placeholder: "How can we help you?",
-                isRequired: 1,
+                required: 1,
                 minCharCount: 80,
                 showCount: 1,
                 lengthText: "length: ",
-                maxChar: 255,
+                maxLength: 255,
                 rightPadding: 5,
             });
 
