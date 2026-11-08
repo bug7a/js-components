@@ -475,6 +475,7 @@ const SettingsPage = function(params = {}) {
             group: group,
             value: value,
             labelText: labelText,
+            allowHtml: 1, // WHY: a panel color shows a swatch of HTML before its name
             style: {
                 mark: { width: 20, height: 20, color: "transparent", borderColor: Ink(0.35) },
                 checkedMark: { color: "transparent", borderColor: ACCENT_COLOR },
