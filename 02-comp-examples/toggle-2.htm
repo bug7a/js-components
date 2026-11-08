@@ -13,6 +13,7 @@
 
     <!-- COMPONENT FILES -->
     <script src="../comp/toggle.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/scroll-area.js" type="text/javascript" charset="utf-8"></script>
 
     <script>
 
@@ -32,74 +33,64 @@
 
             page.color = "#F4F5F2";
 
-            // BOX: Full screen scrollable container
-            // WHY: page does not scroll. Scrollable content must be inside a Box with scrollY: 1.
-            startBox(0, 0, "100%", "100%", {
-                color: "transparent",
-                scrollY: 1,
+            // SCROLL AREA: The page
+            // WHY: page does not scroll. A ScrollArea fills the window; its content scrolls when it is taller.
+            ScrollArea({
+                align: "center top",
+                gap: 24,
+                padding: [16, 40],
             });
 
-                // GROUP: Page layout
-                VGroup({
-                    width: "100%",
-                    height: "auto", // Grows with content, so the Box can scroll.
-                    align: "center top",
-                    gap: 24,
-                    padding: [16, 40],
+                // LABEL: Title
+                Label({
+                    text: "Toggle",
+                    fontSize: 26,
+                    fontFamily: "opensans-bold",
                 });
 
-                    // LABEL: Title
-                    Label({
-                        text: "Toggle",
-                        fontSize: 26,
-                        fontFamily: "opensans-bold",
-                    });
+                // SAMPLE 1: modern
+                startCard(
+                    "1. styleName: \"modern\" (the default)",
+                    "70 x 40: the knob is smaller when off (offButtonScale: 0.6)."
+                );
+                    HGroup({ width: "100%", height: "auto", align: "left center", gap: 24, wrap: 1, clipContent: 0 });
+                        addToggle("", { value: 0 });
+                        addToggle("", { value: 1 });
+                    endGroup();
+                endCard();
 
-                    // SAMPLE 1: modern
-                    startCard(
-                        "1. styleName: \"modern\" (the default)",
-                        "70 x 40: the knob is smaller when off (offButtonScale: 0.6)."
-                    );
-                        HGroup({ width: "100%", height: "auto", align: "left center", gap: 24, wrap: 1, clipContent: 0 });
-                            addToggle("", { value: 0 });
-                            addToggle("", { value: 1 });
-                        endGroup();
-                    endCard();
+                // SAMPLE 2: classic
+                startCard(
+                    "2. styleName: \"classic\"",
+                    "For a 600 px design: 60 x 40, a white knob of the same size on and off, with a shadow."
+                );
+                    HGroup({ width: "100%", height: "auto", align: "left center", gap: 24, wrap: 1, clipContent: 0 });
+                        addToggle("", { styleName: "classic", value: 0 });
+                        addToggle("", { styleName: "classic", value: 1 });
+                    endGroup();
+                endCard();
 
-                    // SAMPLE 2: classic
-                    startCard(
-                        "2. styleName: \"classic\"",
-                        "For a 600 px design: 60 x 40, a white knob of the same size on and off, with a shadow."
-                    );
-                        HGroup({ width: "100%", height: "auto", align: "left center", gap: 24, wrap: 1, clipContent: 0 });
-                            addToggle("", { styleName: "classic", value: 0 });
-                            addToggle("", { styleName: "classic", value: 1 });
-                        endGroup();
-                    endCard();
+                // SAMPLE 3: classic with your own color
+                startCard(
+                    "3. classic with your own color",
+                    "backgroundStyle: { selectedColor } wins over the package; its other keys stay."
+                );
+                    HGroup({ width: "100%", height: "auto", align: "left center", gap: 24, wrap: 1, clipContent: 0 });
+                        addToggle("Green", { styleName: "classic", value: 1, backgroundStyle: { selectedColor: GREEN } });
+                        addToggle("Coral", { styleName: "classic", value: 1, backgroundStyle: { selectedColor: CORAL } });
+                        addToggle("Ink", { styleName: "classic", value: 1, backgroundStyle: { selectedColor: INK } });
+                    endGroup();
+                endCard();
 
-                    // SAMPLE 3: classic with your own color
-                    startCard(
-                        "3. classic with your own color",
-                        "backgroundStyle: { selectedColor } wins over the package; its other keys stay."
-                    );
-                        HGroup({ width: "100%", height: "auto", align: "left center", gap: 24, wrap: 1, clipContent: 0 });
-                            addToggle("Green", { styleName: "classic", value: 1, backgroundStyle: { selectedColor: GREEN } });
-                            addToggle("Coral", { styleName: "classic", value: 1, backgroundStyle: { selectedColor: CORAL } });
-                            addToggle("Ink", { styleName: "classic", value: 1, backgroundStyle: { selectedColor: INK } });
-                        endGroup();
-                    endCard();
+                // SAMPLE 4: API
+                startCard("4. API", "switch(), setValue(0 / 1), onChange: the text under each toggle shows self.value.");
+                    HGroup({ width: "100%", height: "auto", align: "left center", gap: 8, wrap: 1 });
+                        addSampleButton("Switch all", function (toggle) { toggle.switch(); });
+                        addSampleButton("All off", function (toggle) { toggle.setValue(0); });
+                    endGroup();
+                endCard();
 
-                    // SAMPLE 4: API
-                    startCard("4. API", "switch(), setValue(0 / 1), onChange: the text under each toggle shows self.value.");
-                        HGroup({ width: "100%", height: "auto", align: "left center", gap: 8, wrap: 1 });
-                            addSampleButton("Switch all", function (toggle) { toggle.switch(); });
-                            addSampleButton("All off", function (toggle) { toggle.setValue(0); });
-                        endGroup();
-                    endCard();
-
-                endGroup();
-
-            endBox();
+            endGroup();
 
         };
 

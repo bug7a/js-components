@@ -14,6 +14,7 @@
 
     <!-- COMPONENT FILES -->
     <script src="../comp/date-picker.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/scroll-area.js" type="text/javascript" charset="utf-8"></script>
 
     <script>
 
@@ -27,170 +28,160 @@
 
             page.color = "whitesmoke";
 
-            // BOX: Full screen scrollable container
-            // WHY: page does not scroll. Scrollable content must be inside a Box with scrollY: 1.
-            startBox(0, 0, "100%", "100%", {
-                color: "transparent",
-                scrollY: 1,
+            // SCROLL AREA: The page
+            // WHY: page does not scroll. A ScrollArea fills the window; its content scrolls when it is taller.
+            ScrollArea({
+                align: "center top",
+                gap: 30,
+                padding: 50,
             });
 
-                // GROUP: Page layout
-                VGroup({
-                    width: "100%",
-                    height: "auto", // Grows with content, so the Box can scroll.
-                    align: "center top",
-                    gap: 30,
-                    padding: 50,
+                // LABEL: Title
+                Label({
+                    text: "Date Picker",
+                    fontSize: 26,
+                    fontFamily: "opensans-bold",
                 });
 
-                    // LABEL: Title
-                    Label({
-                        text: "Date Picker",
-                        fontSize: 26,
-                        fontFamily: "opensans-bold",
+                // SAMPLE 1: Default (popup)
+                startCard("1. Default");
+
+                    DatePicker({
+                        width: 260,
+                        placeholder: "Birth date",
+                        maxDate: new Date(), // No future dates
+                        onChange: function (self) {
+                            println("Birth date: " + self.value);
+                            lblBirth.text = "value: \"" + self.value + "\", text: \"" + self.dateText + "\"";
+                        },
                     });
 
-                    // SAMPLE 1: Default (popup)
-                    startCard("1. Default");
+                    lblBirth = Label({
+                        text: "Tip: Click the month title to select a year.",
+                        fontSize: 14,
+                        textColor: Black(0.5),
+                    });
 
-                        DatePicker({
-                            width: 260,
-                            placeholder: "Birth date",
-                            maxDate: new Date(), // No future dates
+                endCard();
+
+                // SAMPLE 2: Turkish, format, min/max
+                startCard("2. Türkçe, Min / Max (Rezervasyon)");
+
+                    // GROUP: Check-in, check-out
+                    HGroup({
+                        width: "auto",
+                        height: "auto",
+                        gap: 12,
+                    });
+
+                        dateCheckIn = DatePicker({
+                            width: 170,
+                            language: "tr",
+                            placeholder: "Giriş",
+                            minDate: new Date(),
                             onChange: function (self) {
-                                println("Birth date: " + self.value);
-                                lblBirth.text = "value: \"" + self.value + "\", text: \"" + self.dateText + "\"";
+                                // Check-out must be after check-in.
+                                const nextDay = (self.date) ? addDays(self.date, 1) : new Date();
+                                dateCheckOut.setMinDate(nextDay);
+                                if (dateCheckOut.date && self.date && dateCheckOut.date <= self.date) {
+                                    dateCheckOut.setDate(null, 1);
+                                }
+                                refreshStay();
                             },
                         });
 
-                        lblBirth = Label({
-                            text: "Tip: Click the month title to select a year.",
-                            fontSize: 14,
-                            textColor: Black(0.5),
+                        dateCheckOut = DatePicker({
+                            width: 170,
+                            language: "tr",
+                            placeholder: "Çıkış",
+                            minDate: addDays(new Date(), 1),
+                            onChange: refreshStay,
                         });
 
-                    endCard();
+                    endGroup();
 
-                    // SAMPLE 2: Turkish, format, min/max
-                    startCard("2. Türkçe, Min / Max (Rezervasyon)");
+                    lblStay = Label({
+                        text: "",
+                        fontSize: 14,
+                        textColor: Black(0.5),
+                    });
 
-                        // GROUP: Check-in, check-out
-                        HGroup({
-                            width: "auto",
-                            height: "auto",
-                            gap: 12,
+                endCard();
+
+                // SAMPLE 3: Inline calendar with custom style
+                startCard("3. Inline (Custom Style)");
+
+                    dateInline = DatePicker({
+                        inline: 1,
+                        date: new Date(),
+                        firstDayOfWeek: 0, // Sunday
+                        format: "dddd, MMMM D, YYYY",
+                        showClearButton: 0,
+                        onChange: function (self) {
+                            lblInline.text = self.dateText;
+                        },
+                        style: {
+                            panel: { border: 0, padding: 4, shadow: "none" },
+                            day: { size: 40, round: 10, hoverColor: "#DFEFE6" },
+                            today: { borderColor: "#5DB182" },
+                            selectedDay: { color: "#5DB182" },
+                            footerButton: { textColor: "#3E8E62" },
+                        },
+                    });
+
+                    lblInline = Label({
+                        text: dateInline.dateText,
+                        fontSize: 14,
+                        textColor: Black(0.5),
+                    });
+
+                endCard();
+
+                // SAMPLE 4: Public functions
+                startCard("4. Functions");
+
+                    dateDisabled = DatePicker({
+                        width: 260,
+                        format: "D MMM YYYY",
+                        date: "2026-01-15",
+                        enabled: 0,
+                    });
+
+                    // GROUP: Buttons
+                    HGroup({
+                        width: "auto",
+                        height: "auto",
+                        gap: 8,
+                    });
+
+                        Button({ text: "Enable", width: 90, height: 36, fontSize: 14, color: "lightgray" });
+                        that.on("click", function (self) {
+                            dateDisabled.setEnabled(dateDisabled.enabled ? 0 : 1);
+                            self.text = (dateDisabled.enabled) ? "Disable" : "Enable";
                         });
 
-                            dateCheckIn = DatePicker({
-                                width: 170,
-                                language: "tr",
-                                placeholder: "Giriş",
-                                minDate: new Date(),
-                                onChange: function (self) {
-                                    // Check-out must be after check-in.
-                                    const nextDay = (self.date) ? addDays(self.date, 1) : new Date();
-                                    dateCheckOut.setMinDate(nextDay);
-                                    if (dateCheckOut.date && self.date && dateCheckOut.date <= self.date) {
-                                        dateCheckOut.setDate(null, 1);
-                                    }
-                                    refreshStay();
-                                },
-                            });
-
-                            dateCheckOut = DatePicker({
-                                width: 170,
-                                language: "tr",
-                                placeholder: "Çıkış",
-                                minDate: addDays(new Date(), 1),
-                                onChange: refreshStay,
-                            });
-
-                        endGroup();
-
-                        lblStay = Label({
-                            text: "",
-                            fontSize: 14,
-                            textColor: Black(0.5),
+                        Button({ text: "Today", width: 90, height: 36, fontSize: 14 });
+                        that.on("click", function () {
+                            dateDisabled.setDate(new Date());
                         });
 
-                    endCard();
-
-                    // SAMPLE 3: Inline calendar with custom style
-                    startCard("3. Inline (Custom Style)");
-
-                        dateInline = DatePicker({
-                            inline: 1,
-                            date: new Date(),
-                            firstDayOfWeek: 0, // Sunday
-                            format: "dddd, MMMM D, YYYY",
-                            showClearButton: 0,
-                            onChange: function (self) {
-                                lblInline.text = self.dateText;
-                            },
-                            style: {
-                                panel: { border: 0, padding: 4, shadow: "none" },
-                                day: { size: 40, round: 10, hoverColor: "#DFEFE6" },
-                                today: { borderColor: "#5DB182" },
-                                selectedDay: { color: "#5DB182" },
-                                footerButton: { textColor: "#3E8E62" },
-                            },
+                        Button({ text: "Open", width: 90, height: 36, fontSize: 14 });
+                        that.on("click", function () {
+                            dateDisabled.open(); // Only works if enabled
                         });
 
-                        lblInline = Label({
-                            text: dateInline.dateText,
-                            fontSize: 14,
-                            textColor: Black(0.5),
-                        });
+                    endGroup();
 
-                    endCard();
+                    Label({
+                        text: "DatePicker.format(new Date(), \"D MMMM YYYY, dddd\", \"tr\"):<br><b>"
+                            + DatePicker.format(new Date(), "D MMMM YYYY, dddd", "tr") + "</b>",
+                        fontSize: 14,
+                        textColor: Black(0.5),
+                    });
 
-                    // SAMPLE 4: Public functions
-                    startCard("4. Functions");
+                endCard();
 
-                        dateDisabled = DatePicker({
-                            width: 260,
-                            format: "D MMM YYYY",
-                            date: "2026-01-15",
-                            enabled: 0,
-                        });
-
-                        // GROUP: Buttons
-                        HGroup({
-                            width: "auto",
-                            height: "auto",
-                            gap: 8,
-                        });
-
-                            Button({ text: "Enable", width: 90, height: 36, fontSize: 14, color: "lightgray" });
-                            that.on("click", function (self) {
-                                dateDisabled.setEnabled(dateDisabled.enabled ? 0 : 1);
-                                self.text = (dateDisabled.enabled) ? "Disable" : "Enable";
-                            });
-
-                            Button({ text: "Today", width: 90, height: 36, fontSize: 14 });
-                            that.on("click", function () {
-                                dateDisabled.setDate(new Date());
-                            });
-
-                            Button({ text: "Open", width: 90, height: 36, fontSize: 14 });
-                            that.on("click", function () {
-                                dateDisabled.open(); // Only works if enabled
-                            });
-
-                        endGroup();
-
-                        Label({
-                            text: "DatePicker.format(new Date(), \"D MMMM YYYY, dddd\", \"tr\"):<br><b>"
-                                + DatePicker.format(new Date(), "D MMMM YYYY, dddd", "tr") + "</b>",
-                            fontSize: 14,
-                            textColor: Black(0.5),
-                        });
-
-                    endCard();
-
-                endGroup();
-
-            endBox();
+            endGroup();
 
             refreshStay();
 

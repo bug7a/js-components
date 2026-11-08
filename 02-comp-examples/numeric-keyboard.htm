@@ -51,6 +51,8 @@
         page.color = "white";
 
         ScrollArea({ align: "center top", gap: 40, padding: 30, scrollX: 1 });
+        // WHY max-content: on a phone the keyboards stay side by side, and the page scrolls sideways.
+        that.content.width = "max-content";
 
             Label({ text: "NumericKeyboard", fontSize: 26, bold: 1, textColor: Black(0.8) });
 

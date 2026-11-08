@@ -21,6 +21,7 @@
     <script src="../comp/tabs.js" type="text/javascript" charset="utf-8"></script>
     <script src="../comp/check-box.js" type="text/javascript" charset="utf-8"></script>
     <script src="../comp/label-editor.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/scroll-area.js" type="text/javascript" charset="utf-8"></script>
 
     <script>
 
@@ -34,102 +35,90 @@
 
             page.color = "#F4F5F2";
 
-            // BOX: Full screen scrollable container
-            // WHY: page does not scroll. Scrollable content must be inside a Box with scrollY: 1.
-            const pageBox = startBox(0, 0, "100%", "100%", {
-                color: "transparent",
-                scrollY: 1,
+            // SCROLL AREA: The page
+            // WHY: page does not scroll. A ScrollArea fills the window; its content scrolls when it is taller.
+            ScrollArea({
+                align: "center top",
+                gap: 30,
+                padding: 40,
             });
 
-                // GROUP: Page layout
-                VGroup({
-                    width: "100%",
-                    height: "auto", // Grows with content, so the Box can scroll.
-                    align: "center top",
-                    gap: 30,
-                    padding: 40,
+                // LABEL: Title
+                Label({
+                    text: "LabelEditor",
+                    fontSize: 26,
+                    fontFamily: "opensans-bold",
                 });
 
-                    // LABEL: Title
-                    Label({
-                        text: "LabelEditor",
-                        fontSize: 26,
-                        fontFamily: "opensans-bold",
+                // SAMPLE 1: Default
+                startCard(
+                    "1. Default (the saved styles are kept in this browser)",
+                    "Click \"+ Add label\", then click a label: its properties open at the right side of the screen. Write a style name and Save. Select another label and click the style chip to apply it. Saving the same name again updates every label that uses it."
+                );
+
+                    edtLabels = LabelEditor({
+                        width: "100%",
+                        height: 560,
+                        storageKey: "label-editor-sample-styles",
+                        savedStyles: [
+                            { name: "Title", props: { fontSize: 26, bold: 1, textColor: "#1F2328" } },
+                            { name: "Note", props: { fontSize: 13, italic: 1, textColor: "#8A5A00", color: "#FFF3C4", padding: 10, round: 6, fullWidth: 1 } },
+                            { name: "Tag", props: { fontSize: 12, bold: 1, textColor: "#FFFFFF", color: "#2F6FB0", padding: 6, round: 20 } },
+                        ],
+                        labels: [
+                            { text: "Monthly report", fontSize: 26, bold: 1, textColor: "#1F2328", styleName: "Title" },
+                            { text: "Sales grew 12% this month. The Izmir branch had its best month so far." },
+                            { text: "NEW", fontSize: 12, bold: 1, textColor: "#FFFFFF", color: "#2F6FB0", padding: 6, round: 20, styleName: "Tag" },
+                            { text: "Check the supplier payments before Friday.", fontSize: 13, italic: 1, textColor: "#8A5A00", color: "#FFF3C4", padding: 10, round: 6, fullWidth: 1, styleName: "Note" },
+                        ],
+                        onChange: function (self) { showInfo(); },
+                        onStylesChange: function (self) { showInfo(); },
                     });
 
-                    // SAMPLE 1: Default
-                    startCard(
-                        "1. Default (the saved styles are kept in this browser)",
-                        "Click \"+ Add label\", then click a label: its properties open at the right side of the screen. Write a style name and Save. Select another label and click the style chip to apply it. Saving the same name again updates every label that uses it."
-                    );
+                    lblInfo = addInfoLabel("");
 
-                        edtLabels = LabelEditor({
-                            width: "100%",
-                            height: 560,
-                            storageKey: "label-editor-sample-styles",
-                            savedStyles: [
-                                { name: "Title", props: { fontSize: 26, bold: 1, textColor: "#1F2328" } },
-                                { name: "Note", props: { fontSize: 13, italic: 1, textColor: "#8A5A00", color: "#FFF3C4", padding: 10, round: 6, fullWidth: 1 } },
-                                { name: "Tag", props: { fontSize: 12, bold: 1, textColor: "#FFFFFF", color: "#2F6FB0", padding: 6, round: 20 } },
-                            ],
-                            labels: [
-                                { text: "Monthly report", fontSize: 26, bold: 1, textColor: "#1F2328", styleName: "Title" },
-                                { text: "Sales grew 12% this month. The Izmir branch had its best month so far." },
-                                { text: "NEW", fontSize: 12, bold: 1, textColor: "#FFFFFF", color: "#2F6FB0", padding: 6, round: 20, styleName: "Tag" },
-                                { text: "Check the supplier payments before Friday.", fontSize: 13, italic: 1, textColor: "#8A5A00", color: "#FFF3C4", padding: 10, round: 6, fullWidth: 1, styleName: "Note" },
-                            ],
-                            onChange: function (self) { showInfo(); },
-                            onStylesChange: function (self) { showInfo(); },
+                    // GROUP: Buttons
+                    HGroup({ width: "100%", height: "auto", gap: 8, wrap: 1 });
+                        addSampleButton("Print JSON", function () {
+                            println(JSON.stringify(edtLabels.getLabels(), null, 2));
+                            lblInfo.text = "getLabels() is printed to the console.";
                         });
+                        addSampleButton("Reset styles", function () {
+                            edtLabels.setSavedStyles([{ name: "Title", props: { fontSize: 26, bold: 1, textColor: "#1F2328" } }]);
+                            showInfo();
+                        }, 1);
+                    endGroup();
 
-                        lblInfo = addInfoLabel("");
+                endCard();
 
-                        // GROUP: Buttons
-                        HGroup({ width: "100%", height: "auto", gap: 8, wrap: 1 });
-                            addSampleButton("Print JSON", function () {
-                                println(JSON.stringify(edtLabels.getLabels(), null, 2));
-                                lblInfo.text = "getLabels() is printed to the console.";
-                            });
-                            addSampleButton("Reset styles", function () {
-                                edtLabels.setSavedStyles([{ name: "Title", props: { fontSize: 26, bold: 1, textColor: "#1F2328" } }]);
-                                showInfo();
-                            }, 1);
-                        endGroup();
+                // SAMPLE 2: Dark, Turkish texts
+                startCard(
+                    "2. Dark style and Turkish texts",
+                    "styleName: \"dark\", texts: { ... }. Without storageKey the saved styles live only on this page."
+                );
 
-                    endCard();
+                    edtTurkish = LabelEditor({
+                        width: "100%",
+                        height: 460,
+                        styleName: "dark",
+                        newLabel: { text: "Etiket {n}" }, // the dark package gives the light text color
+                        texts: {
+                            title: "Etiketler", addButton: "+ Label ekle", empty: "Henüz etiket yok. \"Label ekle\" ile başlayın.",
+                            panelTitle: "Özellikler", text: "Yazı", fontSize: "Yazı boyutu", fontStyle: "Yazı stili", bold: "Kalın", italic: "İtalik",
+                            align: "Hizalama", left: "Sol", center: "Orta", right: "Sağ", width: "Genişlik", widthAuto: "Otomatik", widthFull: "Tam",
+                            textColor: "Yazı rengi", background: "Arka plan", none: "Yok", colorOn: "Renk", backgroundColor: "Arka plan rengi", padding: "İç boşluk", round: "Köşe", border: "Kenarlık", borderColor: "Kenarlık rengi",
+                            savedStyles: "Kayıtlı stiller", styleNamePlaceholder: "Stil adı", save: "Kaydet",
+                            noStyles: "Henüz kayıtlı stil yok. Bir etiketi düzenleyin, bir ad yazıp kaydedin.",
+                            applyHint: "Seçili etikete uygulamak için bir stile tıklayın.", currentStyle: "Stil: {name}", changed: "(değişti)", noStyle: "Stil yok",
+                            duplicate: "Çoğalt", remove: "Sil", removeStyle: "Stili sil",
+                        },
+                    });
+                    edtTurkish.addLabel({ text: "Merhaba", fontSize: 22, bold: 1, textColor: "#8FD1BF" });
+                    edtTurkish.addLabel({ text: "Bir etikete tıklayın, sağdaki panelden düzenleyin." , textColor: "#E8E8E6" });
 
-                    // SAMPLE 2: Dark, Turkish texts
-                    startCard(
-                        "2. Dark style and Turkish texts",
-                        "styleName: \"dark\", texts: { ... }. Without storageKey the saved styles live only on this page."
-                    );
+                endCard();
 
-                        edtTurkish = LabelEditor({
-                            width: "100%",
-                            height: 460,
-                            styleName: "dark",
-                            newLabel: { text: "Etiket {n}" }, // the dark package gives the light text color
-                            texts: {
-                                title: "Etiketler", addButton: "+ Label ekle", empty: "Henüz etiket yok. \"Label ekle\" ile başlayın.",
-                                panelTitle: "Özellikler", text: "Yazı", fontSize: "Yazı boyutu", fontStyle: "Yazı stili", bold: "Kalın", italic: "İtalik",
-                                align: "Hizalama", left: "Sol", center: "Orta", right: "Sağ", width: "Genişlik", widthAuto: "Otomatik", widthFull: "Tam",
-                                textColor: "Yazı rengi", background: "Arka plan", none: "Yok", colorOn: "Renk", backgroundColor: "Arka plan rengi", padding: "İç boşluk", round: "Köşe", border: "Kenarlık", borderColor: "Kenarlık rengi",
-                                savedStyles: "Kayıtlı stiller", styleNamePlaceholder: "Stil adı", save: "Kaydet",
-                                noStyles: "Henüz kayıtlı stil yok. Bir etiketi düzenleyin, bir ad yazıp kaydedin.",
-                                applyHint: "Seçili etikete uygulamak için bir stile tıklayın.", currentStyle: "Stil: {name}", changed: "(değişti)", noStyle: "Stil yok",
-                                duplicate: "Çoğalt", remove: "Sil", removeStyle: "Stili sil",
-                            },
-                        });
-                        edtTurkish.addLabel({ text: "Merhaba", fontSize: 22, bold: 1, textColor: "#8FD1BF" });
-                        edtTurkish.addLabel({ text: "Bir etikete tıklayın, sağdaki panelden düzenleyin." , textColor: "#E8E8E6" });
-
-                    endCard();
-
-                endGroup();
-
-            endBox();
-
-            ScrollBar({ scrollableBox: pageBox });
+            endGroup();
 
             showInfo();
 

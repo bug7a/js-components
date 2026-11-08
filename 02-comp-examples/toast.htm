@@ -14,6 +14,7 @@
 
     <!-- COMPONENT FILES -->
     <script src="../comp/toast.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/scroll-area.js" type="text/javascript" charset="utf-8"></script>
 
     <script>
 
@@ -31,164 +32,154 @@
             page.color = "#F4F5F2";
             Toast.setOptions({ theme: "light" });
 
-            // BOX: Full screen scrollable container
-            // WHY: page does not scroll. Scrollable content must be inside a Box with scrollY: 1.
-            startBox(0, 0, "100%", "100%", {
-                color: "transparent",
-                scrollY: 1,
+            // SCROLL AREA: The page
+            // WHY: page does not scroll. A ScrollArea fills the window; its content scrolls when it is taller.
+            ScrollArea({
+                align: "center top",
+                gap: 20,
+                padding: 40,
             });
 
-                // GROUP: Page layout
-                VGroup({
-                    width: "100%",
-                    height: "auto", // Grows with content, so the Box can scroll.
-                    align: "center top",
-                    gap: 20,
-                    padding: 40,
-                });
+                lblTitle = Label({ text: "Toast", fontSize: 26, fontFamily: "opensans-bold", textColor: "#1B1B1A" });
 
-                    lblTitle = Label({ text: "Toast", fontSize: 26, fontFamily: "opensans-bold", textColor: "#1B1B1A" });
+                // SAMPLE 1: Types
+                startCard("1. Types (success, error, warning, info, loading)");
 
-                    // SAMPLE 1: Types
-                    startCard("1. Types (success, error, warning, info, loading)");
+                    startButtonRow();
+                        smallButton("Success", function () { Toast.success("Changes are saved."); });
+                        smallButton("Error", function () {
+                            Toast.error("Could not connect to the server. Check your internet connection.", { titleText: "Connection error" });
+                        });
+                        smallButton("Warning", function () { Toast.warning("Only 2 products are left in stock."); });
+                        smallButton("Info", function () { Toast.info("A new version is available."); });
+                        smallButton("Loading (stays)", function () {
+                            Toast.show({ type: "loading", messageText: "Waiting for the server..." });
+                        });
+                    endGroup();
 
-                        startButtonRow();
-                            smallButton("Success", function () { Toast.success("Changes are saved."); });
-                            smallButton("Error", function () {
-                                Toast.error("Could not connect to the server. Check your internet connection.", { titleText: "Connection error" });
-                            });
-                            smallButton("Warning", function () { Toast.warning("Only 2 products are left in stock."); });
-                            smallButton("Info", function () { Toast.info("A new version is available."); });
-                            smallButton("Loading (stays)", function () {
-                                Toast.show({ type: "loading", messageText: "Waiting for the server..." });
-                            });
-                        endGroup();
+                    infoLabel("Move the mouse on a toast: the time stops. The error toast stays longer (7 s).");
 
-                        infoLabel("Move the mouse on a toast: the time stops. The error toast stays longer (7 s).");
+                endCard();
 
-                    endCard();
+                // SAMPLE 2: Action
+                startCard("2. Action button (Undo)");
 
-                    // SAMPLE 2: Action
-                    startCard("2. Action button (Undo)");
+                    lblUndo = infoLabel("Files: <b>" + fileCount + "</b>");
 
-                        lblUndo = infoLabel("Files: <b>" + fileCount + "</b>");
-
-                        startButtonRow();
-                            smallButton("Delete a file", function () {
-                                if (fileCount == 0) {
-                                    Toast.warning("There are no files to delete.");
-                                    return;
-                                }
-                                fileCount--;
-                                lblUndo.text = "Files: <b>" + fileCount + "</b>";
-                                Toast.show({
-                                    type: "info",
-                                    titleText: "File is deleted",
-                                    messageText: "report-" + (fileCount + 1) + ".pdf",
-                                    duration: 6000,
-                                    action: {
-                                        text: "Undo",
-                                        onClick: function () {
-                                            fileCount++;
-                                            lblUndo.text = "Files: <b>" + fileCount + "</b> (restored)";
-                                        },
+                    startButtonRow();
+                        smallButton("Delete a file", function () {
+                            if (fileCount == 0) {
+                                Toast.warning("There are no files to delete.");
+                                return;
+                            }
+                            fileCount--;
+                            lblUndo.text = "Files: <b>" + fileCount + "</b>";
+                            Toast.show({
+                                type: "info",
+                                titleText: "File is deleted",
+                                messageText: "report-" + (fileCount + 1) + ".pdf",
+                                duration: 6000,
+                                action: {
+                                    text: "Undo",
+                                    onClick: function () {
+                                        fileCount++;
+                                        lblUndo.text = "Files: <b>" + fileCount + "</b> (restored)";
                                     },
-                                });
+                                },
                             });
-                        endGroup();
+                        });
+                    endGroup();
 
-                    endCard();
+                endCard();
 
-                    // SAMPLE 3: Promise and update
-                    startCard("3. Toast.promise() and toast.update()");
+                // SAMPLE 3: Promise and update
+                startCard("3. Toast.promise() and toast.update()");
 
-                        startButtonRow();
-                            smallButton("Save (works)", function () {
-                                Toast.promise(fakeRequest(1500, true), {
-                                    loading: "Saving the settings...",
-                                    success: function (data) { return "Saved at " + data + "."; },
-                                    error: "Could not save.",
-                                });
+                    startButtonRow();
+                        smallButton("Save (works)", function () {
+                            Toast.promise(fakeRequest(1500, true), {
+                                loading: "Saving the settings...",
+                                success: function (data) { return "Saved at " + data + "."; },
+                                error: "Could not save.",
                             });
-                            smallButton("Save (fails)", function () {
-                                Toast.promise(fakeRequest(1500, false), {
-                                    loading: "Saving the settings...",
-                                    success: "Saved.",
-                                    error: function (error) { return "Could not save: " + error.message; },
-                                });
+                        });
+                        smallButton("Save (fails)", function () {
+                            Toast.promise(fakeRequest(1500, false), {
+                                loading: "Saving the settings...",
+                                success: "Saved.",
+                                error: function (error) { return "Could not save: " + error.message; },
                             });
-                            smallButton("Upload with progress", function () {
-                                const toast = Toast.show({ type: "loading", titleText: "Uploading photos.zip", messageText: "0%" });
-                                let percent = 0;
-                                const timer = setInterval(function () {
-                                    percent += 20;
-                                    if (percent < 100) {
-                                        toast.update({ type: "loading", titleText: "Uploading photos.zip", messageText: percent + "%" });
-                                    } else {
-                                        clearInterval(timer);
-                                        toast.update({ type: "success", titleText: "Upload is complete", messageText: "photos.zip (24 MB)" });
-                                    }
-                                }, 500);
-                            });
-                        endGroup();
-
-                    endCard();
-
-                    // SAMPLE 4: Same key
-                    startCard("4. Same key: update instead of adding again");
-
-                        lblCopyCount = infoLabel("Press many times. Only one toast is shown, and its time starts again.");
-
-                        startButtonRow();
-                            smallButton("Copy link", function () {
-                                copyCount++;
-                                const countText = (copyCount > 1) ? " (" + copyCount + " times)" : "";
-                                Toast.show({ key: "copy", type: "success", messageText: "Link is copied." + countText });
-                            });
-                            smallButton("Without key", function () {
-                                Toast.success("Link is copied.");
-                            });
-                        endGroup();
-
-                    endCard();
-
-                    // SAMPLE 5: Options
-                    startCard("5. Position, theme and limit");
-
-                        lblPosition = infoLabel("Position: <b>" + Toast.options.position + "</b>");
-
-                        startButtonRow();
-                            Toast.POSITIONS.forEach(function (position) {
-                                smallButton(position, function () {
-                                    Toast.setOptions({ position: position });
-                                    lblPosition.text = "Position: <b>" + position + "</b>";
-                                    Toast.info("Toasts are shown here now.");
-                                });
-                            });
-                        endGroup();
-
-                        startButtonRow();
-                            smallButton("Dark / light theme", function () {
-                                isDark = (isDark) ? 0 : 1;
-                                setPageTheme();
-                                Toast.info("Theme: " + ((isDark) ? "dark" : "light"));
-                            });
-                            smallButton("Show 8 (max 5)", function () {
-                                for (let i = 1; i <= 8; i++) {
-                                    Toast.info("Message " + i, { duration: 8000 });
+                        });
+                        smallButton("Upload with progress", function () {
+                            const toast = Toast.show({ type: "loading", titleText: "Uploading photos.zip", messageText: "0%" });
+                            let percent = 0;
+                            const timer = setInterval(function () {
+                                percent += 20;
+                                if (percent < 100) {
+                                    toast.update({ type: "loading", titleText: "Uploading photos.zip", messageText: percent + "%" });
+                                } else {
+                                    clearInterval(timer);
+                                    toast.update({ type: "success", titleText: "Upload is complete", messageText: "photos.zip (24 MB)" });
                                 }
+                            }, 500);
+                        });
+                    endGroup();
+
+                endCard();
+
+                // SAMPLE 4: Same key
+                startCard("4. Same key: update instead of adding again");
+
+                    lblCopyCount = infoLabel("Press many times. Only one toast is shown, and its time starts again.");
+
+                    startButtonRow();
+                        smallButton("Copy link", function () {
+                            copyCount++;
+                            const countText = (copyCount > 1) ? " (" + copyCount + " times)" : "";
+                            Toast.show({ key: "copy", type: "success", messageText: "Link is copied." + countText });
+                        });
+                        smallButton("Without key", function () {
+                            Toast.success("Link is copied.");
+                        });
+                    endGroup();
+
+                endCard();
+
+                // SAMPLE 5: Options
+                startCard("5. Position, theme and limit");
+
+                    lblPosition = infoLabel("Position: <b>" + Toast.options.position + "</b>");
+
+                    startButtonRow();
+                        Toast.POSITIONS.forEach(function (position) {
+                            smallButton(position, function () {
+                                Toast.setOptions({ position: position });
+                                lblPosition.text = "Position: <b>" + position + "</b>";
+                                Toast.info("Toasts are shown here now.");
                             });
-                            smallButton("Sticky (duration: 0)", function () {
-                                Toast.warning("This toast stays until you close it.", { duration: 0 });
-                            });
-                            smallButton("Close all", function () { Toast.closeAll(); });
-                        endGroup();
+                        });
+                    endGroup();
 
-                    endCard();
+                    startButtonRow();
+                        smallButton("Dark / light theme", function () {
+                            isDark = (isDark) ? 0 : 1;
+                            setPageTheme();
+                            Toast.info("Theme: " + ((isDark) ? "dark" : "light"));
+                        });
+                        smallButton("Show 8 (max 5)", function () {
+                            for (let i = 1; i <= 8; i++) {
+                                Toast.info("Message " + i, { duration: 8000 });
+                            }
+                        });
+                        smallButton("Sticky (duration: 0)", function () {
+                            Toast.warning("This toast stays until you close it.", { duration: 0 });
+                        });
+                        smallButton("Close all", function () { Toast.closeAll(); });
+                    endGroup();
 
-                endGroup();
+                endCard();
 
-            endBox();
+            endGroup();
 
         };
 

@@ -16,6 +16,7 @@
     <!-- COMPONENT FILES -->
     <script src="../comp/search-input.js" type="text/javascript" charset="utf-8"></script>
     <script src="../comp/select-box.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/scroll-area.js" type="text/javascript" charset="utf-8"></script>
 
     <script>
 
@@ -45,184 +46,175 @@
 
             page.color = "#F4F5F2";
 
-            // BOX: Full screen scrollable container
-            // WHY: page does not scroll. Scrollable content must be inside a Box with scrollY: 1.
-            startBox(0, 0, "100%", "100%", {
-                color: "transparent",
-                scrollY: 1,
+            // SCROLL AREA: The page
+            // WHY: page does not scroll. A ScrollArea fills the window; its content scrolls when it is taller.
+            ScrollArea({
+                align: "center top",
+                gap: 20,
+                padding: 40,
+                useScrollBar: 0,
             });
 
-                // GROUP: Page layout
-                VGroup({
-                    width: "100%",
-                    height: "auto", // Grows with content, so the Box can scroll.
-                    align: "center top",
-                    gap: 20,
-                    padding: 40,
-                });
+                Label({ text: "Select Box", fontSize: 26, fontFamily: "opensans-bold", textColor: "#1B1B1A" });
 
-                    Label({ text: "Select Box", fontSize: 26, fontFamily: "opensans-bold", textColor: "#1B1B1A" });
+                // SAMPLE 1: Basic
+                startCard("1. Basic (short list: no search), clearable");
 
-                    // SAMPLE 1: Basic
-                    startCard("1. Basic (short list: no search), clearable");
+                    SelectBox({
+                        width: 280,
+                        css: { maxWidth: "100%" }, // WHY: on a phone the card is narrower than this width
+                        options: ["Apple", "Banana", "Cherry", "Grape", "Orange"],
+                        value: "Banana",
+                        clearable: 1,
+                        placeholder: "Select a fruit",
+                        onChange: function (self) {
+                            lblFruit.text = "Value: <b>" + self.value + "</b>";
+                        },
+                    });
 
-                        SelectBox({
-                            width: 280,
-                            css: { maxWidth: "100%" }, // WHY: on a phone the card is narrower than this width
-                            options: ["Apple", "Banana", "Cherry", "Grape", "Orange"],
-                            value: "Banana",
-                            clearable: 1,
-                            placeholder: "Select a fruit",
-                            onChange: function (self) {
-                                lblFruit.text = "Value: <b>" + self.value + "</b>";
-                            },
+                    lblFruit = infoLabel("Value: <b>Banana</b> (onChange is not called on create)");
+
+                endCard();
+
+                // SAMPLE 2: Search, groups, descriptions
+                startCard("2. Search, groups and descriptions (Tab to it and type a letter)");
+
+                    SelectBox({
+                        width: "100%",
+                        options: [
+                            { value: "tr", label: "Turkey", description: "Ankara · +90", group: "Europe / Asia" },
+                            { value: "de", label: "Germany", description: "Berlin · +49", group: "Europe" },
+                            { value: "fr", label: "France", description: "Paris · +33", group: "Europe" },
+                            { value: "nl", label: "Netherlands", description: "Amsterdam · +31", group: "Europe" },
+                            { value: "it", label: "Italy", description: "Rome · +39", group: "Europe" },
+                            { value: "jp", label: "Japan", description: "Tokyo · +81", group: "Asia" },
+                            { value: "kr", label: "South Korea", description: "Seoul · +82", group: "Asia" },
+                            { value: "in", label: "India", description: "New Delhi · +91", group: "Asia" },
+                            { value: "us", label: "United States", description: "Washington, D.C. · +1", group: "America" },
+                            { value: "br", label: "Brazil", description: "Brasília · +55", group: "America" },
+                            { value: "ca", label: "Canada", description: "Ottawa · +1", group: "America" },
+                        ],
+                        placeholder: "Select a country",
+                        searchPlaceholder: "Search country, city or code",
+                        onChange: function (self) {
+                            const option = self.getSelectedOptions()[0];
+                            if (!option) {
+                                lblCountry.text = "Nothing selected";
+                                return;
+                            }
+                            lblCountry.text = "Selected: <b>" + option.label + "</b> (" + option.value + ")";
+                        },
+                    });
+
+                    lblCountry = infoLabel("Search looks at the name, description and group. Try: \"asia\", \"par\" or \"+49\".");
+
+                endCard();
+
+                // SAMPLE 3: Multiple
+                startCard("3. Multiple (select all, clear)");
+
+                    SelectBox({
+                        width: "100%",
+                        multiple: 1,
+                        clearable: 1,
+                        options: ["JavaScript", "TypeScript", "HTML", "CSS", "Node.js", "SQL", "Python", "Figma", "Git", "Docker"],
+                        value: ["JavaScript", "CSS"],
+                        placeholder: "Select skills",
+                        onChange: function (self) {
+                            lblSkills.text = "Value: <b>" + JSON.stringify(self.getValue()) + "</b>";
+                        },
+                    });
+
+                    lblSkills = infoLabel("Value: <b>[\"JavaScript\",\"CSS\"]</b>");
+
+                endCard();
+
+                // SAMPLE 4: Icons and disabled options
+                startCard("4. Icons and disabled options");
+
+                    SelectBox({
+                        width: 320,
+                        css: { maxWidth: "100%" }, // WHY: on a phone the card is narrower than this width
+                        options: [
+                            { value: "card", label: "Credit card", description: "Visa, Mastercard", iconFile: PAYMENT_ICONS.card },
+                            { value: "bank", label: "Bank transfer", description: "1-2 business days", iconFile: PAYMENT_ICONS.bank },
+                            { value: "cash", label: "Cash on delivery", description: "Not available for this address", iconFile: PAYMENT_ICONS.cash, disabled: 1 },
+                            { value: "wallet", label: "Wallet", description: "Balance: $24.50", iconFile: PAYMENT_ICONS.wallet },
+                        ],
+                        value: "card",
+                        onChange: function (self) {
+                            lblPayment.text = "Value: <b>" + self.value + "</b>";
+                        },
+                    });
+
+                    lblPayment = infoLabel("\"Cash on delivery\" can not be selected. Arrow keys skip it.");
+
+                endCard();
+
+                // SAMPLE 5: Dark
+                startDarkCard("5. Dark style (styleName: \"dark\")");
+
+                    SelectBox({
+                        width: 300,
+                        css: { maxWidth: "100%" }, // WHY: on a phone the card is narrower than this width
+                        options: [
+                            { value: "active", label: "Active", description: "Visible in the store" },
+                            { value: "draft", label: "Draft", description: "Only the team can see it" },
+                            { value: "archived", label: "Archived", description: "Old product" },
+                        ],
+                        value: "draft",
+                        styleName: "dark",
+                        onChange: function (self) {
+                            lblDark.text = "Status: <b>" + self.value + "</b>";
+                        },
+                    });
+
+                    lblDark = Label({ text: "Status: <b>draft</b>", fontSize: 13, textColor: White(0.6) });
+
+                endCard();
+
+                // SAMPLE 6: Big list and functions
+                startCard("6. Big list (2000 options) and functions");
+
+                    const bigOptions = createCustomerOptions();
+
+                    selectBig = SelectBox({
+                        width: "100%",
+                        options: bigOptions,
+                        placeholder: "Search 2000 customers",
+                        clearable: 1,
+                        onChange: function (self) {
+                            lblBig.text = "Value: <b>" + self.value + "</b>";
+                        },
+                    });
+
+                    lblBig = infoLabel("Only the first 300 matches are drawn. Type to find the others (Ex: 1999).");
+
+                    HGroup({ width: "100%", height: "auto", align: "left center", gap: 8, wrap: 1 });
+
+                        smallButton("setValue(1500)", function () {
+                            selectBig.setValue(1500);
                         });
 
-                        lblFruit = infoLabel("Value: <b>Banana</b> (onChange is not called on create)");
-
-                    endCard();
-
-                    // SAMPLE 2: Search, groups, descriptions
-                    startCard("2. Search, groups and descriptions (Tab to it and type a letter)");
-
-                        SelectBox({
-                            width: "100%",
-                            options: [
-                                { value: "tr", label: "Turkey", description: "Ankara · +90", group: "Europe / Asia" },
-                                { value: "de", label: "Germany", description: "Berlin · +49", group: "Europe" },
-                                { value: "fr", label: "France", description: "Paris · +33", group: "Europe" },
-                                { value: "nl", label: "Netherlands", description: "Amsterdam · +31", group: "Europe" },
-                                { value: "it", label: "Italy", description: "Rome · +39", group: "Europe" },
-                                { value: "jp", label: "Japan", description: "Tokyo · +81", group: "Asia" },
-                                { value: "kr", label: "South Korea", description: "Seoul · +82", group: "Asia" },
-                                { value: "in", label: "India", description: "New Delhi · +91", group: "Asia" },
-                                { value: "us", label: "United States", description: "Washington, D.C. · +1", group: "America" },
-                                { value: "br", label: "Brazil", description: "Brasília · +55", group: "America" },
-                                { value: "ca", label: "Canada", description: "Ottawa · +1", group: "America" },
-                            ],
-                            placeholder: "Select a country",
-                            searchPlaceholder: "Search country, city or code",
-                            onChange: function (self) {
-                                const option = self.getSelectedOptions()[0];
-                                if (!option) {
-                                    lblCountry.text = "Nothing selected";
-                                    return;
-                                }
-                                lblCountry.text = "Selected: <b>" + option.label + "</b> (" + option.value + ")";
-                            },
+                        smallButton("setValue(7, silent)", function () {
+                            selectBig.setValue(7, 1);
+                            lblBig.text = "Value set to 7 without onChange.";
                         });
 
-                        lblCountry = infoLabel("Search looks at the name, description and group. Try: \"asia\", \"par\" or \"+49\".");
-
-                    endCard();
-
-                    // SAMPLE 3: Multiple
-                    startCard("3. Multiple (select all, clear)");
-
-                        SelectBox({
-                            width: "100%",
-                            multiple: 1,
-                            clearable: 1,
-                            options: ["JavaScript", "TypeScript", "HTML", "CSS", "Node.js", "SQL", "Python", "Figma", "Git", "Docker"],
-                            value: ["JavaScript", "CSS"],
-                            placeholder: "Select skills",
-                            onChange: function (self) {
-                                lblSkills.text = "Value: <b>" + JSON.stringify(self.getValue()) + "</b>";
-                            },
+                        smallButton("Enable / disable", function () {
+                            selectBig.setEnabled(selectBig.enabled ? 0 : 1);
                         });
 
-                        lblSkills = infoLabel("Value: <b>[\"JavaScript\",\"CSS\"]</b>");
-
-                    endCard();
-
-                    // SAMPLE 4: Icons and disabled options
-                    startCard("4. Icons and disabled options");
-
-                        SelectBox({
-                            width: 320,
-                            css: { maxWidth: "100%" }, // WHY: on a phone the card is narrower than this width
-                            options: [
-                                { value: "card", label: "Credit card", description: "Visa, Mastercard", iconFile: PAYMENT_ICONS.card },
-                                { value: "bank", label: "Bank transfer", description: "1-2 business days", iconFile: PAYMENT_ICONS.bank },
-                                { value: "cash", label: "Cash on delivery", description: "Not available for this address", iconFile: PAYMENT_ICONS.cash, disabled: 1 },
-                                { value: "wallet", label: "Wallet", description: "Balance: $24.50", iconFile: PAYMENT_ICONS.wallet },
-                            ],
-                            value: "card",
-                            onChange: function (self) {
-                                lblPayment.text = "Value: <b>" + self.value + "</b>";
-                            },
+                        smallButton("setOptions(first 10)", function () {
+                            selectBig.setOptions(bigOptions.slice(0, 10));
+                            lblBig.text = "10 options (no search). Value kept if it is in them: <b>" + selectBig.value + "</b>";
                         });
 
-                        lblPayment = infoLabel("\"Cash on delivery\" can not be selected. Arrow keys skip it.");
+                    endGroup();
 
-                    endCard();
+                endCard();
 
-                    // SAMPLE 5: Dark
-                    startDarkCard("5. Dark style (styleName: \"dark\")");
-
-                        SelectBox({
-                            width: 300,
-                            css: { maxWidth: "100%" }, // WHY: on a phone the card is narrower than this width
-                            options: [
-                                { value: "active", label: "Active", description: "Visible in the store" },
-                                { value: "draft", label: "Draft", description: "Only the team can see it" },
-                                { value: "archived", label: "Archived", description: "Old product" },
-                            ],
-                            value: "draft",
-                            styleName: "dark",
-                            onChange: function (self) {
-                                lblDark.text = "Status: <b>" + self.value + "</b>";
-                            },
-                        });
-
-                        lblDark = Label({ text: "Status: <b>draft</b>", fontSize: 13, textColor: White(0.6) });
-
-                    endCard();
-
-                    // SAMPLE 6: Big list and functions
-                    startCard("6. Big list (2000 options) and functions");
-
-                        const bigOptions = createCustomerOptions();
-
-                        selectBig = SelectBox({
-                            width: "100%",
-                            options: bigOptions,
-                            placeholder: "Search 2000 customers",
-                            clearable: 1,
-                            onChange: function (self) {
-                                lblBig.text = "Value: <b>" + self.value + "</b>";
-                            },
-                        });
-
-                        lblBig = infoLabel("Only the first 300 matches are drawn. Type to find the others (Ex: 1999).");
-
-                        HGroup({ width: "100%", height: "auto", align: "left center", gap: 8, wrap: 1 });
-
-                            smallButton("setValue(1500)", function () {
-                                selectBig.setValue(1500);
-                            });
-
-                            smallButton("setValue(7, silent)", function () {
-                                selectBig.setValue(7, 1);
-                                lblBig.text = "Value set to 7 without onChange.";
-                            });
-
-                            smallButton("Enable / disable", function () {
-                                selectBig.setEnabled(selectBig.enabled ? 0 : 1);
-                            });
-
-                            smallButton("setOptions(first 10)", function () {
-                                selectBig.setOptions(bigOptions.slice(0, 10));
-                                lblBig.text = "10 options (no search). Value kept if it is in them: <b>" + selectBig.value + "</b>";
-                            });
-
-                        endGroup();
-
-                    endCard();
-
-                endGroup();
-
-            endBox();
+            endGroup();
 
         };
 

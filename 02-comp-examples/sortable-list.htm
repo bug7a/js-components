@@ -15,6 +15,7 @@
 
     <!-- COMPONENT FILES -->
     <script src="../comp/sortable-list.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/scroll-area.js" type="text/javascript" charset="utf-8"></script>
 
     <script>
 
@@ -29,219 +30,207 @@
 
             page.color = "#F4F5F2";
 
-            // BOX: Full screen scrollable container
-            // WHY: page does not scroll. Scrollable content must be inside a Box with scrollY: 1.
-            const pageBox = startBox(0, 0, "100%", "100%", {
-                color: "transparent",
-                scrollY: 1,
+            // SCROLL AREA: The page
+            // WHY: page does not scroll. A ScrollArea fills the window; its content scrolls when it is taller.
+            ScrollArea({
+                align: "center top",
+                gap: 30,
+                padding: 50,
             });
 
-                // GROUP: Page layout
-                VGroup({
-                    width: "100%",
-                    height: "auto", // Grows with content, so the Box can scroll.
-                    align: "center top",
-                    gap: 30,
-                    padding: 50,
+                // LABEL: Title
+                Label({
+                    text: "SortableList",
+                    fontSize: 26,
+                    fontFamily: "opensans-bold",
                 });
 
-                    // LABEL: Title
-                    Label({
-                        text: "SortableList",
-                        fontSize: 26,
-                        fontFamily: "opensans-bold",
+                // SAMPLE 1: Default
+                startCard(
+                    "1. Default",
+                    "Drag a row by its grip. Near the top or bottom edge the list scrolls. Keyboard: Tab to a row, Space to grab, arrow keys to move, Space to drop, Escape to cancel. Alt + arrow moves at once."
+                );
+
+                    SortableList({
+                        width: "100%",
+                        height: 300,
+                        items: [
+                            "Daily sales", "Stock levels", "Collections", "Branch comparison",
+                            "Top customers", "Returns", "Staff performance", "Supplier payments",
+                        ],
+                        onChange: function (self, item, fromIndex, toIndex) {
+                            const order = self.getItems().join(", ");
+                            lblReports.text = "\"" + item + "\" moved " + (fromIndex + 1) + " → " + (toIndex + 1) + ". Order: " + order;
+                        },
                     });
 
-                    // SAMPLE 1: Default
-                    startCard(
-                        "1. Default",
-                        "Drag a row by its grip. Near the top or bottom edge the list scrolls. Keyboard: Tab to a row, Space to grab, arrow keys to move, Space to drop, Escape to cancel. Alt + arrow moves at once."
-                    );
+                    lblReports = addInfoLabel("Move a row to see the new order.");
 
-                        SortableList({
-                            width: "100%",
-                            height: 300,
-                            items: [
-                                "Daily sales", "Stock levels", "Collections", "Branch comparison",
-                                "Top customers", "Returns", "Staff performance", "Supplier payments",
-                            ],
-                            onChange: function (self, item, fromIndex, toIndex) {
-                                const order = self.getItems().join(", ");
-                                lblReports.text = "\"" + item + "\" moved " + (fromIndex + 1) + " → " + (toIndex + 1) + ". Order: " + order;
-                            },
-                        });
+                endCard();
 
-                        lblReports = addInfoLabel("Move a row to see the new order.");
+                // SAMPLE 2: Objects, locked row, buttons, remove
+                startCard(
+                    "2. Descriptions, a locked row, buttons and remove",
+                    "Items are objects { key, text, desc, locked }. \"Home\" is locked: it does not move and the others can not pass it. showButtons: 1, removable: 1 (also the Delete key)."
+                );
 
-                    endCard();
+                    SortableList({
+                        width: "100%",
+                        height: "auto",
+                        showButtons: 1,
+                        removable: 1,
+                        showNumbers: 0,
+                        items: [
+                            { key: "home", text: "Home", description: "Always the first page", locked: 1 },
+                            { key: "orders", text: "Orders", description: "New and open orders" },
+                            { key: "reports", text: "Reports", description: "Sales, stock and collections" },
+                            { key: "customers", text: "Customers", description: "Accounts and contacts" },
+                            { key: "settings", text: "Settings", description: "Users, roles and theme" },
+                        ],
+                        onChange: function (self) { lblMenu.text = "Keys: " + self.getKeys().join(", "); },
+                        onRemove: function (self, item) {
+                            lblMenu.text = "Removed: " + item.text + ". Keys: " + self.getKeys().join(", ");
+                        },
+                    });
 
-                    // SAMPLE 2: Objects, locked row, buttons, remove
-                    startCard(
-                        "2. Descriptions, a locked row, buttons and remove",
-                        "Items are objects { key, text, desc, locked }. \"Home\" is locked: it does not move and the others can not pass it. showButtons: 1, removable: 1 (also the Delete key)."
-                    );
+                    lblMenu = addInfoLabel("Keys: home, orders, reports, customers, settings");
+
+                endCard();
+
+                // SAMPLE 3: Modern, drag by the row
+                startCard(
+                    "3. Modern style, drag by the whole row",
+                    "styleName: \"modern\", dragBy: \"row\", showHandle: 0, height: \"auto\" (the list grows with its rows)."
+                );
+
+                    SortableList({
+                        width: "100%",
+                        height: "auto",
+                        styleName: "modern",
+                        dragBy: "row",
+                        showHandle: 0,
+                        items: [
+                            "Fix the login page",
+                            "Send the offer to the client",
+                            "Update the price list",
+                            "Prepare the monthly report",
+                        ],
+                    });
+
+                endCard();
+
+                // SAMPLE 4: Dark style, own row view
+                startCard(
+                    "4. Dark style and createItemView",
+                    "createItemView(item, index, self) draws the content of each row (here a color dot, a name and a badge)."
+                );
+
+                    // GROUP: Dark background
+                    VGroup({
+                        width: "100%",
+                        height: "auto",
+                        align: "left top",
+                        padding: 16,
+                        color: "#1C1C1B",
+                        round: 10,
+                        css: { alignItems: "stretch" },
+                    });
 
                         SortableList({
                             width: "100%",
                             height: "auto",
+                            styleName: "dark",
                             showButtons: 1,
-                            removable: 1,
-                            showNumbers: 0,
                             items: [
-                                { key: "home", text: "Home", description: "Always the first page", locked: 1 },
-                                { key: "orders", text: "Orders", description: "New and open orders" },
-                                { key: "reports", text: "Reports", description: "Sales, stock and collections" },
-                                { key: "customers", text: "Customers", description: "Accounts and contacts" },
-                                { key: "settings", text: "Settings", description: "Users, roles and theme" },
+                                { key: "p1", text: "Production line A", status: "Running", color: "#65A293" },
+                                { key: "p2", text: "Cold room 2", status: "Warning", color: "#E0B04F" },
+                                { key: "p3", text: "Packaging", status: "Stopped", color: "#D96450" },
+                                { key: "p4", text: "Warehouse", status: "Running", color: "#65A293" },
                             ],
-                            onChange: function (self) { lblMenu.text = "Keys: " + self.getKeys().join(", "); },
-                            onRemove: function (self, item) {
-                                lblMenu.text = "Removed: " + item.text + ". Keys: " + self.getKeys().join(", ");
+                            createItemView: function (item) {
+                                HGroup({ width: "100%", height: "auto", align: "left center", gap: 10 });
+                                    Box({ width: 10, height: 10, round: 10, color: item.color, shrink: 0 });
+                                    Label({
+                                        plainText: item.text,
+                                        fontSize: 15,
+                                        textColor: "rgba(255, 255, 255, 0.9)",
+                                        ellipsis: 1,
+                                        css: { flex: "1 1 0", minWidth: "0" },
+                                    });
+                                    Label({
+                                        plainText: item.status,
+                                        fontSize: 11,
+                                        textColor: item.color,
+                                        padding: [8, 3],
+                                        round: 20,
+                                        border: 1,
+                                        borderColor: item.color,
+                                        shrink: 0,
+                                    });
+                                endGroup();
                             },
                         });
 
-                        lblMenu = addInfoLabel("Keys: home, orders, reports, customers, settings");
+                    endGroup();
 
-                    endCard();
+                endCard();
 
-                    // SAMPLE 3: Modern, drag by the row
-                    startCard(
-                        "3. Modern style, drag by the whole row",
-                        "styleName: \"modern\", dragBy: \"row\", showHandle: 0, height: \"auto\" (the list grows with its rows)."
-                    );
+                // SAMPLE 5: API
+                startCard("5. API", "setItems(), addItem(), removeItem(), moveItem(), getItems(), getKeys(), setEnabled()");
 
-                        SortableList({
-                            width: "100%",
-                            height: "auto",
-                            styleName: "modern",
-                            dragBy: "row",
-                            showHandle: 0,
-                            items: [
-                                "Fix the login page",
-                                "Send the offer to the client",
-                                "Update the price list",
-                                "Prepare the monthly report",
-                            ],
+                    lstApi = SortableList({
+                        width: "100%",
+                        height: 240,
+                        removable: 1,
+                        items: ["One", "Two", "Three"],
+                        onChange: showApiState,
+                        onRemove: showApiState,
+                    });
+
+                    // GROUP: Buttons
+                    HGroup({ width: "100%", height: "auto", gap: 8, wrap: 1 });
+
+                        addSampleButton("Add", function () {
+                            newItemCount++;
+                            lstApi.addItem("New " + newItemCount);
+                            showApiState();
                         });
 
-                    endCard();
+                        addSampleButton("Add at top", function () {
+                            newItemCount++;
+                            lstApi.addItem("New " + newItemCount, 0);
+                            showApiState();
+                        }, 1);
 
-                    // SAMPLE 4: Dark style, own row view
-                    startCard(
-                        "4. Dark style and createItemView",
-                        "createItemView(item, index, self) draws the content of each row (here a color dot, a name and a badge)."
-                    );
+                        addSampleButton("Last → first", function () {
+                            lstApi.moveItem(lstApi.getItems().length - 1, 0);
+                        }, 1);
 
-                        // GROUP: Dark background
-                        VGroup({
-                            width: "100%",
-                            height: "auto",
-                            align: "left top",
-                            padding: 16,
-                            color: "#1C1C1B",
-                            round: 10,
-                            css: { alignItems: "stretch" },
-                        });
+                        addSampleButton("Remove first", function () {
+                            lstApi.removeItem(0);
+                        }, 1);
 
-                            SortableList({
-                                width: "100%",
-                                height: "auto",
-                                styleName: "dark",
-                                showButtons: 1,
-                                items: [
-                                    { key: "p1", text: "Production line A", status: "Running", color: "#65A293" },
-                                    { key: "p2", text: "Cold room 2", status: "Warning", color: "#E0B04F" },
-                                    { key: "p3", text: "Packaging", status: "Stopped", color: "#D96450" },
-                                    { key: "p4", text: "Warehouse", status: "Running", color: "#65A293" },
-                                ],
-                                createItemView: function (item) {
-                                    HGroup({ width: "100%", height: "auto", align: "left center", gap: 10 });
-                                        Box({ width: 10, height: 10, round: 10, color: item.color, shrink: 0 });
-                                        Label({
-                                            plainText: item.text,
-                                            fontSize: 15,
-                                            textColor: "rgba(255, 255, 255, 0.9)",
-                                            ellipsis: 1,
-                                            css: { flex: "1 1 0", minWidth: "0" },
-                                        });
-                                        Label({
-                                            plainText: item.status,
-                                            fontSize: 11,
-                                            textColor: item.color,
-                                            padding: [8, 3],
-                                            round: 20,
-                                            border: 1,
-                                            borderColor: item.color,
-                                            shrink: 0,
-                                        });
-                                    endGroup();
-                                },
-                            });
+                        addSampleButton("Reset", function () {
+                            lstApi.setItems(["One", "Two", "Three"]);
+                            showApiState();
+                        }, 1);
 
-                        endGroup();
+                        addSampleButton("Clear", function () {
+                            lstApi.setItems([]);
+                            showApiState();
+                        }, 1);
 
-                    endCard();
+                        addSampleButton("On / Off", function () {
+                            lstApi.setEnabled(!lstApi.enabled);
+                        }, 1);
 
-                    // SAMPLE 5: API
-                    startCard("5. API", "setItems(), addItem(), removeItem(), moveItem(), getItems(), getKeys(), setEnabled()");
+                    endGroup();
 
-                        lstApi = SortableList({
-                            width: "100%",
-                            height: 240,
-                            removable: 1,
-                            items: ["One", "Two", "Three"],
-                            onChange: showApiState,
-                            onRemove: showApiState,
-                        });
+                    lblApi = addInfoLabel("Items: One, Two, Three");
 
-                        // GROUP: Buttons
-                        HGroup({ width: "100%", height: "auto", gap: 8, wrap: 1 });
+                endCard();
 
-                            addSampleButton("Add", function () {
-                                newItemCount++;
-                                lstApi.addItem("New " + newItemCount);
-                                showApiState();
-                            });
-
-                            addSampleButton("Add at top", function () {
-                                newItemCount++;
-                                lstApi.addItem("New " + newItemCount, 0);
-                                showApiState();
-                            }, 1);
-
-                            addSampleButton("Last → first", function () {
-                                lstApi.moveItem(lstApi.getItems().length - 1, 0);
-                            }, 1);
-
-                            addSampleButton("Remove first", function () {
-                                lstApi.removeItem(0);
-                            }, 1);
-
-                            addSampleButton("Reset", function () {
-                                lstApi.setItems(["One", "Two", "Three"]);
-                                showApiState();
-                            }, 1);
-
-                            addSampleButton("Clear", function () {
-                                lstApi.setItems([]);
-                                showApiState();
-                            }, 1);
-
-                            addSampleButton("On / Off", function () {
-                                lstApi.setEnabled(!lstApi.enabled);
-                            }, 1);
-
-                        endGroup();
-
-                        lblApi = addInfoLabel("Items: One, Two, Three");
-
-                    endCard();
-
-                endGroup();
-
-            endBox();
-
-            ScrollBar({ scrollableBox: pageBox });
+            endGroup();
 
         };
 

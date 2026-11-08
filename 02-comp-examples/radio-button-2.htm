@@ -13,6 +13,7 @@
 
     <!-- COMPONENT FILES -->
     <script src="../comp/radio-button.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/scroll-area.js" type="text/javascript" charset="utf-8"></script>
 
     <script>
 
@@ -55,136 +56,126 @@
 
             page.color = "whitesmoke";
 
-            // BOX: Full screen scrollable container
-            // WHY: page does not scroll. Scrollable content must be inside a Box with scrollY: 1.
-            startBox(0, 0, "100%", "100%", {
-                color: "transparent",
-                scrollY: 1,
+            // SCROLL AREA: The page
+            // WHY: page does not scroll. A ScrollArea fills the window; its content scrolls when it is taller.
+            ScrollArea({
+                align: "center top",
+                gap: 30,
+                padding: 50,
             });
 
-                // GROUP: Page layout
-                VGroup({
-                    width: "100%",
-                    height: "auto", // Grows with content, so the Box can scroll.
-                    align: "center top",
-                    gap: 30,
-                    padding: 50,
+                // LABEL: Title
+                Label({
+                    text: "Radio Button 2",
+                    fontSize: 26,
+                    fontFamily: "opensans-bold",
                 });
 
-                    // LABEL: Title
-                    Label({
-                        text: "Radio Button 2",
-                        fontSize: 26,
-                        fontFamily: "opensans-bold",
+                Label({
+                    text: "Custom style: matches the check box style in check-box-2.htm",
+                    fontSize: 14,
+                    textColor: Black(0.5),
+                });
+
+                // SAMPLE 1: Shipping options (full width rows)
+                startCard("1. Shipping");
+
+                    shippingList.forEach(function (data, index) {
+                        RadioButton({
+                            width: "100%",
+                            group: "shipping",
+                            value: data.value,
+                            labelText: data.text,
+                            checked: (index == 0) ? 1 : 0,
+                            onChange: refreshShipping,
+                            styleName: "modern",
+                            style: getCustomStyle(),
+                        });
                     });
 
-                    Label({
-                        text: "Custom style: matches the check box style in check-box-2.htm",
+                    lblShipping = Label({
+                        text: "",
                         fontSize: 14,
                         textColor: Black(0.5),
+                        padding: [12, 8],
                     });
 
-                    // SAMPLE 1: Shipping options (full width rows)
-                    startCard("1. Shipping");
+                endCard();
 
-                        shippingList.forEach(function (data, index) {
-                            RadioButton({
-                                width: "100%",
-                                group: "shipping",
-                                value: data.value,
-                                labelText: data.text,
-                                checked: (index == 0) ? 1 : 0,
-                                onChange: refreshShipping,
-                                styleName: "modern",
-                                style: getCustomStyle(),
-                            });
+                // SAMPLE 2: States
+                startCard("2. States");
+
+                    RadioButton({
+                        width: "100%",
+                        group: "plan",
+                        value: "free",
+                        labelText: "Free",
+                        checked: 1,
+                        onChange: refreshPlan,
+                        styleName: "modern",
+                        style: getCustomStyle(),
+                    });
+
+                    RadioButton({
+                        width: "100%",
+                        group: "plan",
+                        value: "pro",
+                        labelText: "Pro",
+                        onChange: refreshPlan,
+                        styleName: "modern",
+                        style: getCustomStyle(),
+                    });
+
+                    rdoPremium = RadioButton({
+                        width: "100%",
+                        group: "plan",
+                        value: "premium",
+                        labelText: "Premium (disabled)",
+                        enabled: 0,
+                        onChange: refreshPlan,
+                        styleName: "modern",
+                        style: getCustomStyle(),
+                    });
+
+                    // GROUP: Enable premium
+                    HGroup({ width: "auto", height: "auto", gap: 8, padding: [12, 4] });
+
+                        Button({ text: "Enable Premium", width: 150, height: 36, fontSize: 14, color: "lightgray" });
+                        that.on("click", function (self) {
+                            rdoPremium.setEnabled(rdoPremium.enabled ? 0 : 1);
+                            rdoPremium.setLabelText("Premium" + (rdoPremium.enabled ? "" : " (disabled)"));
+                            self.text = (rdoPremium.enabled ? "Disable" : "Enable") + " Premium";
                         });
 
-                        lblShipping = Label({
-                            text: "",
-                            fontSize: 14,
-                            textColor: Black(0.5),
-                            padding: [12, 8],
-                        });
+                    endGroup();
 
-                    endCard();
+                    lblPlan = Label({
+                        text: "",
+                        fontSize: 14,
+                        textColor: Black(0.5),
+                        padding: [12, 8],
+                    });
 
-                    // SAMPLE 2: States
-                    startCard("2. States");
+                    RadioButton({
+                        width: "100%",
+                        group: "side",
+                        labelText: "Label on the left",
+                        labelPosition: "left",
+                        checked: 1,
+                        styleName: "modern",
+                        style: getCustomStyle(),
+                    });
 
-                        RadioButton({
-                            width: "100%",
-                            group: "plan",
-                            value: "free",
-                            labelText: "Free",
-                            checked: 1,
-                            onChange: refreshPlan,
-                            styleName: "modern",
-                            style: getCustomStyle(),
-                        });
+                    // Without label (auto width)
+                    HGroup({ width: "auto", height: "auto", gap: 4 });
+                        RadioButton({ group: "mini", styleName: "modern", style: getCustomStyle() });
+                        RadioButton({ group: "mini", checked: 1, styleName: "modern", style: getCustomStyle() });
+                        RadioButton({ group: "mini", styleName: "modern", style: getCustomStyle() });
+                    endGroup();
 
-                        RadioButton({
-                            width: "100%",
-                            group: "plan",
-                            value: "pro",
-                            labelText: "Pro",
-                            onChange: refreshPlan,
-                            styleName: "modern",
-                            style: getCustomStyle(),
-                        });
+                endCard();
 
-                        rdoPremium = RadioButton({
-                            width: "100%",
-                            group: "plan",
-                            value: "premium",
-                            labelText: "Premium (disabled)",
-                            enabled: 0,
-                            onChange: refreshPlan,
-                            styleName: "modern",
-                            style: getCustomStyle(),
-                        });
-
-                        // GROUP: Enable premium
-                        HGroup({ width: "auto", height: "auto", gap: 8, padding: [12, 4] });
-
-                            Button({ text: "Enable Premium", width: 150, height: 36, fontSize: 14, color: "lightgray" });
-                            that.on("click", function (self) {
-                                rdoPremium.setEnabled(rdoPremium.enabled ? 0 : 1);
-                                rdoPremium.setLabelText("Premium" + (rdoPremium.enabled ? "" : " (disabled)"));
-                                self.text = (rdoPremium.enabled ? "Disable" : "Enable") + " Premium";
-                            });
-
-                        endGroup();
-
-                        lblPlan = Label({
-                            text: "",
-                            fontSize: 14,
-                            textColor: Black(0.5),
-                            padding: [12, 8],
-                        });
-
-                        RadioButton({
-                            width: "100%",
-                            group: "side",
-                            labelText: "Label on the left",
-                            labelPosition: "left",
-                            checked: 1,
-                            styleName: "modern",
-                            style: getCustomStyle(),
-                        });
-
-                        // Without label (auto width)
-                        HGroup({ width: "auto", height: "auto", gap: 4 });
-                            RadioButton({ group: "mini", styleName: "modern", style: getCustomStyle() });
-                            RadioButton({ group: "mini", checked: 1, styleName: "modern", style: getCustomStyle() });
-                            RadioButton({ group: "mini", styleName: "modern", style: getCustomStyle() });
-                        endGroup();
-
-                    endCard();
-
-                endGroup();
-
-            endBox();
+            endGroup();
 
             refreshShipping();
             refreshPlan();

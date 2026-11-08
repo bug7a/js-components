@@ -14,6 +14,7 @@
 
     <!-- COMPONENT FILES -->
     <script src="../comp/context-menu.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/scroll-area.js" type="text/javascript" charset="utf-8"></script>
 
     <script>
 
@@ -58,213 +59,203 @@
 
             page.color = "whitesmoke";
 
-            // BOX: Full screen scrollable container
-            // WHY: page does not scroll. Scrollable content must be inside a Box with scrollY: 1.
-            startBox(0, 0, "100%", "100%", {
-                color: "transparent",
-                scrollY: 1,
+            // SCROLL AREA: The page
+            // WHY: page does not scroll. A ScrollArea fills the window; its content scrolls when it is taller.
+            ScrollArea({
+                align: "center top",
+                gap: 30,
+                padding: [20, 50],
             });
 
-                // GROUP: Page layout
-                VGroup({
-                    width: "100%",
-                    height: "auto", // Grows with content, so the Box can scroll.
-                    align: "center top",
-                    gap: 30,
-                    padding: [20, 50],
+                // LABEL: Title
+                Label({
+                    text: "Context Menu",
+                    fontSize: 26,
+                    fontFamily: "opensans-bold",
                 });
 
-                    // LABEL: Title
-                    Label({
-                        text: "Context Menu",
-                        fontSize: 26,
-                        fontFamily: "opensans-bold",
+                // SAMPLE 1: Text only
+                startCard("1. Text only (no icon: texts are near the left side)");
+
+                    const areaText = clickArea("Right click here");
+
+                    lblText = infoLabel("Clicked: -");
+
+                    ContextMenu({
+                        target: areaText,
+                        items: [
+                            { text: "Refresh", key: "refresh" },
+                            { text: "Select all", key: "selectAll" },
+                            "-",
+                            { text: "Sort by name", key: "sortName" },
+                            { text: "Sort by date", key: "sortDate" },
+                            "-",
+                            { text: "Properties", key: "properties" },
+                        ],
+                        onClick: function (self, item, index) {
+                            lblText.text = "Clicked: <b>" + ContextMenu.escapeHtml(item.text) + "</b> (key: " + item.key + ")";
+                        },
                     });
 
-                    // SAMPLE 1: Text only
-                    startCard("1. Text only (no icon: texts are near the left side)");
+                endCard();
 
-                        const areaText = clickArea("Right click here");
+                // SAMPLE 2: Icon + text
+                startCard("2. Icon + text (\"Rename\" has no icon, but its text is aligned)");
 
-                        lblText = infoLabel("Clicked: -");
+                    const areaIcon = clickArea("Right click here");
 
-                        ContextMenu({
-                            target: areaText,
-                            items: [
-                                { text: "Refresh", key: "refresh" },
-                                { text: "Select all", key: "selectAll" },
-                                "-",
-                                { text: "Sort by name", key: "sortName" },
-                                { text: "Sort by date", key: "sortDate" },
-                                "-",
-                                { text: "Properties", key: "properties" },
-                            ],
-                            onClick: function (self, item, index) {
-                                lblText.text = "Clicked: <b>" + ContextMenu.escapeHtml(item.text) + "</b> (key: " + item.key + ")";
-                            },
-                        });
+                    lblIcon = infoLabel("Clicked: -");
 
-                    endCard();
+                    ContextMenu({
+                        target: areaIcon,
+                        items: [
+                            { text: "Open", key: "open", iconFile: ICON.open },
+                            "-",
+                            { text: "Cut", key: "cut", iconFile: ICON.cut },
+                            { text: "Copy", key: "copy", iconFile: ICON.copy },
+                            { text: "Paste", key: "paste", iconFile: ICON.paste, enabled: 0 },
+                            { text: "Rename", key: "rename" },
+                            "-",
+                            { text: "Delete", key: "delete", iconFile: ICON.delete },
+                        ],
+                        onClick: function (self, item) {
+                            lblIcon.text = "Clicked: <b>" + ContextMenu.escapeHtml(item.text) + "</b>";
+                            // "Paste" is enabled after "Copy" or "Cut".
+                            if (item.key == "copy" || item.key == "cut") self.setItemEnabled("paste", 1);
+                            if (item.key == "paste") self.setItemEnabled("paste", 0);
+                        },
+                    });
 
-                    // SAMPLE 2: Icon + text
-                    startCard("2. Icon + text (\"Rename\" has no icon, but its text is aligned)");
+                    Label({
+                        text: "\"Paste\" is disabled. Click \"Copy\" to enable it. Keyboard: ↑ ↓ Enter, Esc.",
+                        fontSize: 13,
+                        textColor: Black(0.45),
+                    });
 
-                        const areaIcon = clickArea("Right click here");
+                endCard();
 
-                        lblIcon = infoLabel("Clicked: -");
+                // SAMPLE 3: One menu for many objects
+                startCard("3. One menu for many rows (self.source)");
 
-                        ContextMenu({
-                            target: areaIcon,
-                            items: [
-                                { text: "Open", key: "open", iconFile: ICON.open },
-                                "-",
-                                { text: "Cut", key: "cut", iconFile: ICON.cut },
-                                { text: "Copy", key: "copy", iconFile: ICON.copy },
-                                { text: "Paste", key: "paste", iconFile: ICON.paste, enabled: 0 },
-                                { text: "Rename", key: "rename" },
-                                "-",
-                                { text: "Delete", key: "delete", iconFile: ICON.delete },
-                            ],
-                            onClick: function (self, item) {
-                                lblIcon.text = "Clicked: <b>" + ContextMenu.escapeHtml(item.text) + "</b>";
-                                // "Paste" is enabled after "Copy" or "Cut".
-                                if (item.key == "copy" || item.key == "cut") self.setItemEnabled("paste", 1);
-                                if (item.key == "paste") self.setItemEnabled("paste", 0);
-                            },
-                        });
+                    // GROUP: File list
+                    VGroup({
+                        width: "100%",
+                        height: "auto",
+                        align: "left top",
+                        gap: 0,
+                        border: 1,
+                        borderColor: Black(0.1),
+                        round: 6,
+                    });
 
-                        Label({
-                            text: "\"Paste\" is disabled. Click \"Copy\" to enable it. Keyboard: ↑ ↓ Enter, Esc.",
-                            fontSize: 13,
-                            textColor: Black(0.45),
-                        });
+                        ["report-2026.pdf", "photo.jpg", "notes.txt", "budget.xlsx"].forEach(function (name) {
 
-                    endCard();
-
-                    // SAMPLE 3: One menu for many objects
-                    startCard("3. One menu for many rows (self.source)");
-
-                        // GROUP: File list
-                        VGroup({
-                            width: "100%",
-                            height: "auto",
-                            align: "left top",
-                            gap: 0,
-                            border: 1,
-                            borderColor: Black(0.1),
-                            round: 6,
-                        });
-
-                            ["report-2026.pdf", "photo.jpg", "notes.txt", "budget.xlsx"].forEach(function (name) {
-
-                                const row = Label({
-                                    text: "📄 " + name,
-                                    width: "100%",
-                                    fontSize: 14,
-                                    textColor: Black(0.8),
-                                    color: "transparent",
-                                    cursor: "default",
-                                    css: { padding: "9px 12px", boxSizing: "border-box" },
-                                });
-                                row.fileName = name;
-                                fileRows.push(row);
-
+                            const row = Label({
+                                text: "📄 " + name,
+                                width: "100%",
+                                fontSize: 14,
+                                textColor: Black(0.8),
+                                color: "transparent",
+                                cursor: "default",
+                                css: { padding: "9px 12px", boxSizing: "border-box" },
                             });
+                            row.fileName = name;
+                            fileRows.push(row);
 
-                        endGroup();
+                        });
 
-                        lblFiles = infoLabel("Right click a file.");
+                    endGroup();
 
-                        ContextMenu({
-                            target: fileRows,
-                            items: [
-                                { text: "Open", key: "open", iconFile: ICON.open },
-                                { text: "Download", key: "download", iconFile: ICON.download },
+                    lblFiles = infoLabel("Right click a file.");
+
+                    ContextMenu({
+                        target: fileRows,
+                        items: [
+                            { text: "Open", key: "open", iconFile: ICON.open },
+                            { text: "Download", key: "download", iconFile: ICON.download },
+                            "-",
+                            { text: "Delete", key: "delete", iconFile: ICON.delete },
+                        ],
+                        onOpen: function (self) {
+                            self.source.color = "#EEF4FF"; // Selected row
+                        },
+                        onClose: function (self) {
+                            if (self.source) self.source.color = "transparent";
+                        },
+                        onClick: function (self, item) {
+                            lblFiles.text = "<b>" + ContextMenu.escapeHtml(item.text) + "</b>: " + ContextMenu.escapeHtml(self.source.fileName);
+                        },
+                    });
+
+                endCard();
+
+                // SAMPLE 4: Left click
+                startCard("4. Left click (trigger: \"click\")");
+
+                    // BUTTON: More
+                    const btnMore = Button({
+                        text: "More ⋯",
+                        width: "auto",
+                        height: 36,
+                        fontSize: 14,
+                        color: "#E8E8E8",
+                        textColor: Black(0.75),
+                        round: 6,
+                        css: { padding: "0 16px" },
+                    });
+
+                    lblMore = infoLabel("Click the button. Click it again to close.");
+
+                    menuMore = ContextMenu({
+                        minWidth: 150,
+                        items: ["Edit", "Duplicate", "Archive", "-", "Share link"],
+                        onClick: function (self, item) {
+                            lblMore.text = "Clicked: <b>" + ContextMenu.escapeHtml(item.text) + "</b>";
+                        },
+                    });
+                    menuMore.attachTo(btnMore, "click");
+
+                endCard();
+
+                // SAMPLE 5: Submenus and SVG icons
+                startCard("5. Submenus and SVG icons (dark: the icons take the text color)");
+
+                    const areaSub = clickArea("Right click here");
+
+                    lblSub = infoLabel("Clicked: -");
+
+                    ContextMenu({
+                        target: areaSub,
+                        styleName: "dark",
+                        items: [
+                            { text: "Copy to", icon: SVG.copy, items: [
+                                { text: "My colors", key: "copyMine" },
+                                { text: "★ Favorites", key: "copyFavorites" },
+                            ] },
+                            { text: "Move to", icon: SVG.move, items: [
+                                { text: "Top", key: "moveTop" },
+                                { text: "Bottom", key: "moveBottom" },
                                 "-",
-                                { text: "Delete", key: "delete", iconFile: ICON.delete },
-                            ],
-                            onOpen: function (self) {
-                                self.source.color = "#EEF4FF"; // Selected row
-                            },
-                            onClose: function (self) {
-                                if (self.source) self.source.color = "transparent";
-                            },
-                            onClick: function (self, item) {
-                                lblFiles.text = "<b>" + ContextMenu.escapeHtml(item.text) + "</b>: " + ContextMenu.escapeHtml(self.source.fileName);
-                            },
-                        });
+                                { text: "Another page", items: ["Home", "Settings", "About"] },
+                            ] },
+                            { text: "Color", icon: SVG.color, key: "color" },
+                            "-",
+                            { text: "Delete", icon: SVG.trash, key: "delete" },
+                        ],
+                        onClick: function (self, item) {
+                            lblSub.text = "Clicked: <b>" + ContextMenu.escapeHtml(item.text) + "</b>";
+                        },
+                    });
 
-                    endCard();
+                    Label({
+                        text: "Keyboard: → opens a submenu, ← or Esc closes it.",
+                        fontSize: 13,
+                        textColor: Black(0.45),
+                    });
 
-                    // SAMPLE 4: Left click
-                    startCard("4. Left click (trigger: \"click\")");
+                endCard();
 
-                        // BUTTON: More
-                        const btnMore = Button({
-                            text: "More ⋯",
-                            width: "auto",
-                            height: 36,
-                            fontSize: 14,
-                            color: "#E8E8E8",
-                            textColor: Black(0.75),
-                            round: 6,
-                            css: { padding: "0 16px" },
-                        });
-
-                        lblMore = infoLabel("Click the button. Click it again to close.");
-
-                        menuMore = ContextMenu({
-                            minWidth: 150,
-                            items: ["Edit", "Duplicate", "Archive", "-", "Share link"],
-                            onClick: function (self, item) {
-                                lblMore.text = "Clicked: <b>" + ContextMenu.escapeHtml(item.text) + "</b>";
-                            },
-                        });
-                        menuMore.attachTo(btnMore, "click");
-
-                    endCard();
-
-                    // SAMPLE 5: Submenus and SVG icons
-                    startCard("5. Submenus and SVG icons (dark: the icons take the text color)");
-
-                        const areaSub = clickArea("Right click here");
-
-                        lblSub = infoLabel("Clicked: -");
-
-                        ContextMenu({
-                            target: areaSub,
-                            styleName: "dark",
-                            items: [
-                                { text: "Copy to", icon: SVG.copy, items: [
-                                    { text: "My colors", key: "copyMine" },
-                                    { text: "★ Favorites", key: "copyFavorites" },
-                                ] },
-                                { text: "Move to", icon: SVG.move, items: [
-                                    { text: "Top", key: "moveTop" },
-                                    { text: "Bottom", key: "moveBottom" },
-                                    "-",
-                                    { text: "Another page", items: ["Home", "Settings", "About"] },
-                                ] },
-                                { text: "Color", icon: SVG.color, key: "color" },
-                                "-",
-                                { text: "Delete", icon: SVG.trash, key: "delete" },
-                            ],
-                            onClick: function (self, item) {
-                                lblSub.text = "Clicked: <b>" + ContextMenu.escapeHtml(item.text) + "</b>";
-                            },
-                        });
-
-                        Label({
-                            text: "Keyboard: → opens a submenu, ← or Esc closes it.",
-                            fontSize: 13,
-                            textColor: Black(0.45),
-                        });
-
-                    endCard();
-
-                endGroup();
-
-            endBox();
+            endGroup();
 
         };
 

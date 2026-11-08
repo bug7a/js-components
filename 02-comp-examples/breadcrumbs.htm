@@ -15,6 +15,7 @@
     <!-- COMPONENT FILES -->
     <script src="../comp/smart-button.js" type="text/javascript" charset="utf-8"></script>
     <script src="../comp/breadcrumbs.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/scroll-area.js" type="text/javascript" charset="utf-8"></script>
 
     <script>
 
@@ -57,169 +58,159 @@
 
             page.color = "whitesmoke";
 
-            // BOX: Full screen scrollable container
-            // WHY: page does not scroll. Scrollable content must be inside a Box with scrollY: 1.
-            startBox(0, 0, "100%", "100%", {
-                color: "transparent",
-                scrollY: 1,
+            // SCROLL AREA: The page
+            // WHY: page does not scroll. A ScrollArea fills the window; its content scrolls when it is taller.
+            ScrollArea({
+                align: "center top",
+                gap: 30,
+                padding: [16, 50], // WHY 16 at the sides: the cards fill a phone (390 px)
             });
 
-                // GROUP: Page layout
-                VGroup({
-                    width: "100%",
-                    height: "auto", // Grows with content, so the Box can scroll.
-                    align: "center top",
-                    gap: 30,
-                    padding: [16, 50], // WHY 16 at the sides: the cards fill a phone (390 px)
+                // LABEL: Title
+                Label({
+                    text: "Breadcrumbs",
+                    fontSize: 26,
+                    fontFamily: "opensans-bold",
                 });
 
-                    // LABEL: Title
-                    Label({
-                        text: "Breadcrumbs",
-                        fontSize: 26,
-                        fontFamily: "opensans-bold",
+                // SAMPLE 1: Basic, text separator
+                startCard("1. Basic (separator: \"/\")");
+
+                    Breadcrumbs({
+                        separator: "/",
+                        items: [
+                            { text: "Home", key: "home" },
+                            { text: "Products", key: "products" },
+                            { text: "Laptops", key: "laptops" },
+                            { text: "Lenovo ThinkPad X1 Carbon", key: "x1" },
+                        ],
+                        onClick: function (self, item, index) {
+                            lblBasic.text = "Clicked: <b>" + Breadcrumbs.escapeHtml(item.text) + "</b> (key: " + item.key + ", index: " + index + ")";
+                        },
                     });
 
-                    // SAMPLE 1: Basic, text separator
-                    startCard("1. Basic (separator: \"/\")");
+                    lblBasic = Label({
+                        text: "Click an item. The last item is the current page.",
+                        fontSize: 13,
+                        textColor: Black(0.6),
+                    });
 
-                        Breadcrumbs({
-                            separator: "/",
-                            items: [
-                                { text: "Home", key: "home" },
-                                { text: "Products", key: "products" },
-                                { text: "Laptops", key: "laptops" },
-                                { text: "Lenovo ThinkPad X1 Carbon", key: "x1" },
-                            ],
-                            onClick: function (self, item, index) {
-                                lblBasic.text = "Clicked: <b>" + Breadcrumbs.escapeHtml(item.text) + "</b> (key: " + item.key + ", index: " + index + ")";
-                            },
+                endCard();
+
+                // SAMPLE 2: Chevron and icon
+                startCard("2. Chevron & Icon");
+
+                    Breadcrumbs({
+                        items: [
+                            { text: "Home", iconFile: HOME_ICON },
+                            "Settings",
+                            "Account",
+                            "Security",
+                        ],
+                    });
+
+                endCard();
+
+                // SAMPLE 3: Collapse
+                startCard("3. Collapse (maxItems: 4)");
+
+                    crumbCollapse = Breadcrumbs({
+                        maxItems: 4,
+                        items: Breadcrumbs.fromPath("/users/bugra/projects/js-components/comp/breadcrumbs.js", "Root"),
+                    });
+
+                    Label({
+                        text: "Click \"…\" to show the hidden items. Items are created with <b>Breadcrumbs.fromPath()</b>.",
+                        fontSize: 13,
+                        textColor: Black(0.6),
+                    });
+
+                    // GROUP: Buttons
+                    HGroup({ width: "auto", height: "auto", gap: 8, clipContent: 0 });
+
+                        smallButton("Collapse", function () {
+                            crumbCollapse.collapse();
                         });
 
-                        lblBasic = Label({
-                            text: "Click an item. The last item is the current page.",
-                            fontSize: 13,
-                            textColor: Black(0.6),
+                        smallButton("maxItems: 0", function (self) {
+                            crumbCollapse.setMaxItems((crumbCollapse.maxItems) ? 0 : 4);
+                            self.setLabelText((crumbCollapse.maxItems) ? "maxItems: 0" : "maxItems: 4");
                         });
 
-                    endCard();
+                    endGroup();
 
-                    // SAMPLE 2: Chevron and icon
-                    startCard("2. Chevron & Icon");
+                endCard();
 
-                        Breadcrumbs({
-                            items: [
-                                { text: "Home", iconFile: HOME_ICON },
-                                "Settings",
-                                "Account",
-                                "Security",
-                            ],
+                // SAMPLE 4: In-app navigation
+                startCard("4. Folder Explorer (trimOnClick: 1)");
+
+                    crumbExplorer = Breadcrumbs({
+                        width: "100%",
+                        trimOnClick: 1,
+                        maxItems: 4,
+                        maxItemWidth: 120,
+                        items: [{ text: "My Files", key: "/", iconFile: HOME_ICON }],
+                        onChange: function (self) {
+                            showFolders();
+                        },
+                        style: {
+                            item: { textColor: "#3871E0" },
+                            itemHover: { color: "#EEF4FF", textColor: "#1F4FB5" },
+                            separator: { textColor: "#9DB6E8" },
+                        },
+                    });
+
+                    // GROUP: Sub folders (created by showFolders)
+                    grpFolders = HGroup({
+                        width: "100%",
+                        height: "auto",
+                        align: "left top",
+                        gap: 8,
+                        wrap: 1,
+                        clipContent: 0, // WHY: a SmartButton lifts under the mouse
+                    });
+                    endGroup();
+
+                    lblExplorer = Label({
+                        text: "",
+                        fontSize: 13,
+                        textColor: Black(0.6),
+                    });
+
+                    // GROUP: Buttons
+                    HGroup({ width: "auto", height: "auto", gap: 8, clipContent: 0 });
+
+                        btnBack = smallButton("Back", function () {
+                            crumbExplorer.back();
+                        }, BACK_ICON);
+
+                        smallButton("Disable", function (self) {
+                            crumbExplorer.setEnabled(crumbExplorer.enabled ? 0 : 1);
+                            self.setLabelText((crumbExplorer.enabled) ? "Disable" : "Enable");
+                            refreshBackButton();
                         });
 
-                    endCard();
+                    endGroup();
 
-                    // SAMPLE 3: Collapse
-                    startCard("3. Collapse (maxItems: 4)");
+                endCard();
 
-                        crumbCollapse = Breadcrumbs({
-                            maxItems: 4,
-                            items: Breadcrumbs.fromPath("/users/bugra/projects/js-components/comp/breadcrumbs.js", "Root"),
-                        });
+                // SAMPLE 5: Wrap in a narrow space
+                startCard("5. Wrap (width: 240, wrap: 1)");
 
-                        Label({
-                            text: "Click \"…\" to show the hidden items. Items are created with <b>Breadcrumbs.fromPath()</b>.",
-                            fontSize: 13,
-                            textColor: Black(0.6),
-                        });
+                    crumbWrap = Breadcrumbs({
+                        width: 240,
+                        wrap: 1,
+                        separator: "•",
+                        items: ["Store", "Electronics", "Computers", "Accessories", "Keyboards", "Mechanical"],
+                        style: {
+                            current: { textColor: "#FE5D49" },
+                        },
+                        css: { outline: "1px dashed " + Black(0.15) },
+                    });
 
-                        // GROUP: Buttons
-                        HGroup({ width: "auto", height: "auto", gap: 8, clipContent: 0 });
+                endCard();
 
-                            smallButton("Collapse", function () {
-                                crumbCollapse.collapse();
-                            });
-
-                            smallButton("maxItems: 0", function (self) {
-                                crumbCollapse.setMaxItems((crumbCollapse.maxItems) ? 0 : 4);
-                                self.setLabelText((crumbCollapse.maxItems) ? "maxItems: 0" : "maxItems: 4");
-                            });
-
-                        endGroup();
-
-                    endCard();
-
-                    // SAMPLE 4: In-app navigation
-                    startCard("4. Folder Explorer (trimOnClick: 1)");
-
-                        crumbExplorer = Breadcrumbs({
-                            width: "100%",
-                            trimOnClick: 1,
-                            maxItems: 4,
-                            maxItemWidth: 120,
-                            items: [{ text: "My Files", key: "/", iconFile: HOME_ICON }],
-                            onChange: function (self) {
-                                showFolders();
-                            },
-                            style: {
-                                item: { textColor: "#3871E0" },
-                                itemHover: { color: "#EEF4FF", textColor: "#1F4FB5" },
-                                separator: { textColor: "#9DB6E8" },
-                            },
-                        });
-
-                        // GROUP: Sub folders (created by showFolders)
-                        grpFolders = HGroup({
-                            width: "100%",
-                            height: "auto",
-                            align: "left top",
-                            gap: 8,
-                            wrap: 1,
-                            clipContent: 0, // WHY: a SmartButton lifts under the mouse
-                        });
-                        endGroup();
-
-                        lblExplorer = Label({
-                            text: "",
-                            fontSize: 13,
-                            textColor: Black(0.6),
-                        });
-
-                        // GROUP: Buttons
-                        HGroup({ width: "auto", height: "auto", gap: 8, clipContent: 0 });
-
-                            btnBack = smallButton("Back", function () {
-                                crumbExplorer.back();
-                            }, BACK_ICON);
-
-                            smallButton("Disable", function (self) {
-                                crumbExplorer.setEnabled(crumbExplorer.enabled ? 0 : 1);
-                                self.setLabelText((crumbExplorer.enabled) ? "Disable" : "Enable");
-                                refreshBackButton();
-                            });
-
-                        endGroup();
-
-                    endCard();
-
-                    // SAMPLE 5: Wrap in a narrow space
-                    startCard("5. Wrap (width: 240, wrap: 1)");
-
-                        crumbWrap = Breadcrumbs({
-                            width: 240,
-                            wrap: 1,
-                            separator: "•",
-                            items: ["Store", "Electronics", "Computers", "Accessories", "Keyboards", "Mechanical"],
-                            style: {
-                                current: { textColor: "#FE5D49" },
-                            },
-                            css: { outline: "1px dashed " + Black(0.15) },
-                        });
-
-                    endCard();
-
-                endGroup();
-
-            endBox();
+            endGroup();
 
             showFolders();
 
