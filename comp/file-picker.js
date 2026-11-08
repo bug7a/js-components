@@ -48,7 +48,7 @@ const FilePickerDefaults = {
     maxFiles: 0, // 0: No limit (only for multiple: 1)
     enabled: 1,
     showIcon: 1, // 0: Hide the upload icon. (A zone too low for it hides it by itself.)
-    iconSvg: "", // An "<svg" text of your own, drawn with currentColor. Empty: FilePicker.UPLOAD_ICON (box.setIconSvg())
+    iconSvg: "", // An "<svg" text of your own, drawn with currentColor. Empty: the icon of the style (box.setIconSvg())
     animated: 0, // 1: the icon lifts under the mouse, and more while a file is dragged over. (box.setAnimated(0/1))
     showList: 1,
     showPreview: 1, // Image thumbnails in the list.
@@ -77,6 +77,9 @@ const FilePickerDefaults = {
             borderColor: "#3871E0",
         },
         icon: {
+            size: 40,
+            space: 6, // px under the icon, more than the gap of the zone
+            svg: "", // the upload icon of the look, drawn with currentColor. "": FilePicker.UPLOAD_ICON
             color: Black(0.45),
             dragOverColor: "#3871E0",
         },
@@ -154,7 +157,6 @@ const FilePicker = function (params = {}) {
     let wasAnimated = 0;
     const ZONE_GAP = 4; // Between the parts of the zone
     const ZONE_MIN_SPACE = 4; // At least this much over and under the parts of the zone
-    const ICON_SPACE = 6; // More space under the icon
     const HINT_SPACE = 4; // More space over the hint
     const ROW_GAP = 10; // Space between the thumbnail, the texts and the remove button
     const THUMB_INSET = 16; // The thumbnail is this much smaller than the row height
@@ -171,7 +173,7 @@ const FilePicker = function (params = {}) {
     // The parts the zone can lose, first the one it needs least. (The title always stays.)
     const getOptionalParts = function () {
         const parts = [];
-        if (box.showIcon == 1) parts.push({ object: box.icon, extra: ICON_SPACE });
+        if (box.showIcon == 1) parts.push({ object: box.icon, extra: _s.icon.space });
         if (box.hint.text) parts.push({ object: box.hint, extra: HINT_SPACE });
         if (box.descText) parts.push({ object: box.desc, extra: 0 });
         return parts;
@@ -594,10 +596,10 @@ const FilePicker = function (params = {}) {
         applyAnimated();
     };
 
-    // An "<svg" text drawn with currentColor. Empty: the upload icon.
+    // An "<svg" text drawn with currentColor. Empty: the upload icon of the style.
     box.setIconSvg = function (svgText) {
         box.iconSvg = svgText || "";
-        box.icon.elem.innerHTML = box.iconSvg || FilePicker.UPLOAD_ICON;
+        box.icon.elem.innerHTML = box.iconSvg || _s.icon.svg || FilePicker.UPLOAD_ICON;
     };
 
     box.setEnabled = function (enabled) {
@@ -665,13 +667,13 @@ const FilePicker = function (params = {}) {
 
             // BOX: Upload icon (a cloud and an arrow, drawn with currentColor)
             box.icon = Box({
-                width: 40,
-                height: 40,
+                width: _s.icon.size,
+                height: _s.icon.size,
                 color: "transparent",
                 textColor: _s.icon.color,
                 shrink: 0,
             });
-            box.icon.css.marginBottom = ICON_SPACE + "px";
+            box.icon.css.marginBottom = _s.icon.space + "px";
             box.icon.clipContent = 0;
             // WHY: an svg of the page may come without a size of its own.
             basic.addCss("file-picker-icon", ".file-picker-icon svg { display: block; width: 100%; height: 100%; }");
@@ -836,6 +838,13 @@ FilePicker.UPLOAD_ICON = '<svg xmlns="http://www.w3.org/2000/svg" width="100%" h
     + '<path d="M8.5 18H7a4 4 0 0 1-.5-7.97A6 6 0 0 1 17.6 9a4.6 4.6 0 0 1-.6 9h-1.5"/>'
     + '<path d="M12 20.5V12M9 15l3-3 3 3"/></svg>';
 
+// The upload icon of the minimal theme (_designs/minimal-theme.htm), drawn as its other icons: a 24 px grid, lines 2
+// wide with round ends. The head of the arrow is in the cloud.
+FilePicker.MINIMAL_UPLOAD_ICON = '<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 24 24" fill="none"'
+    + ' stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:block">'
+    + '<path d="M7 18a4.5 4.5 0 0 1-.5-9A6 6 0 0 1 18 9.5a4 4 0 0 1-1 8.5"/>'
+    + '<path d="M12 12v8M9 15l3-3 3 3"/></svg>';
+
 // 1536 -> "1.5 KB"
 FilePicker.formatSize = function (bytes) {
     if (!bytes) return "0 B";
@@ -852,8 +861,8 @@ FilePicker.formatSize = function (bytes) {
 FilePicker.escapeHtml = basic.escapeHtml; // (the name is kept: other code may use it)
 
 // The minimal theme (_designs/minimal-theme.htm): a lower zone (120 px) with no fill and a dashed line of 3:1 at least
-// (it is a control: a click chooses a file), darker under the mouse and ink while a file is dragged over it; 13 px
-// texts; the rows of the files with a soft line. minimalDark: the same on a dark window.
+// (it is a control: a click chooses a file), darker under the mouse and ink while a file is dragged over it; a 28 px
+// line icon of its own; 13 px texts; the rows of the files with a soft line. minimalDark: the same on a dark window.
 FilePicker.createMinimalStyle = function (colors) {
     return {
         zoneHeight: 120,
@@ -861,7 +870,7 @@ FilePicker.createMinimalStyle = function (colors) {
             zone: { color: "transparent", border: 1, borderColor: colors.edge, round: 4 },
             zoneHover: { color: "transparent", borderColor: colors.edgeHover },
             zoneDragOver: { color: colors.hover, borderColor: colors.ink },
-            icon: { color: colors.softText, dragOverColor: colors.ink },
+            icon: { size: 28, space: 0, svg: FilePicker.MINIMAL_UPLOAD_ICON, color: colors.softText, dragOverColor: colors.ink },
             title: { fontSize: 13, textColor: colors.text, fontFamily: "opensans-bold" },
             desc: { fontSize: 12, textColor: colors.softText },
             hint: { fontSize: 11, textColor: colors.softText },
