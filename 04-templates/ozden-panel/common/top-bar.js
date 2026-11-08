@@ -419,7 +419,7 @@ const TopBar = function(params = {}) {
         // EXAMPLE: How to use a Dialog
         // NOTE: Hidden. The same dialog is also in the create menu (+) as "Keyboard Shortcuts".
         box.btnShortcuts = TopBarIconButton({
-            iconPath: "assets/top-bar/keyboard.svg",
+            iconFile: "assets/top-bar/keyboard.svg",
             invertIconColor: 1,
             hintText: "Keyboard shortcuts",
             hintPosition: "right",
@@ -439,7 +439,7 @@ const TopBar = function(params = {}) {
     });
 
         TopBarIconButton({
-            iconPath: "assets/top-bar/apps.svg",
+            iconFile: "assets/top-bar/apps.svg",
             invertIconColor: 1,
             hintText: "Module 4 (Main View)",
             hintPosition: "right",
@@ -450,7 +450,7 @@ const TopBar = function(params = {}) {
         });
 
         TopBarIconButton({
-            iconPath: "assets/top-bar/bookmark.svg",
+            iconFile: "assets/top-bar/bookmark.svg",
             invertIconColor: 1,
             hintText: "Module 5 (Right View)",
             hintPosition: "right",
@@ -561,16 +561,16 @@ const TopBar = function(params = {}) {
 
         // Create menu (+)
         box.btnCreate = TopBarIconButton({
-            iconPath: "assets/top-bar/add.svg",
+            iconFile: "assets/top-bar/add.svg",
             invertIconColor: 1,
             hintText: "Create",
             hintPosition: "left",
-            createBudge: 0,
+            showBadge: 0,
             onClick: function() {},
         });
 
         box.btnNotifications = TopBarIconButton({
-            iconPath: "assets/top-bar/bell.svg",
+            iconFile: "assets/top-bar/bell.svg",
             invertIconColor: 1,
             badgeProps: { value: 0 }, // Set with setNotificationCount()
             hintText: "Notifications",
@@ -583,11 +583,11 @@ const TopBar = function(params = {}) {
 
         // Profile: initials and status dot on the button
         box.btnProfile = TopBarIconButton({
-            iconPath: "assets/top-bar/user.svg",
+            iconFile: "assets/top-bar/user.svg",
             invertIconColor: 1,
             hintText: "Profile",
             hintPosition: "left",
-            createBudge: 0,
+            showBadge: 0,
             onClick: function(self) {
                 openPageByKey(UserActionsPage.KEY);
                 box.manageSelectionForButton(UserActionsPage.KEY, self, rightView);
@@ -714,7 +714,7 @@ const TopBar = function(params = {}) {
 const TopBarIconButtonDefaults = {
     width: 40,
     height: 40,
-    iconPath: "",
+    iconFile: "",
     iconWidth: 24,
     iconHeight: 24,
     iconOpacity: 0.75,
@@ -722,8 +722,8 @@ const TopBarIconButtonDefaults = {
     hoverBackgroundColor: Black(0.4),
     invertIconColor: 0,
     hoverIconOpacity: 1,
-    createBudge: 1,
-    isSelected: 0,
+    showBadge: 1,
+    selected: 0,
     badge: null,
     badgeProps: {
         value: 0,
@@ -777,7 +777,7 @@ const TopBarIconButton = function(params = {}) {
     };
 
     box.setSelected = function(selected) {
-        box.isSelected = selected;
+        box.selected = selected;
         if (box.state != "mouseover") {
             box.setState((selected) ? "selected" : "normal");
         }
@@ -808,7 +808,7 @@ const TopBarIconButton = function(params = {}) {
                 color: "transparent",
                 opacity: box.iconOpacity,
             });
-            box.icon.load(box.iconPath);
+            box.icon.load(box.iconFile);
             if(box.invertIconColor == 1) {
                 box.icon.elem.style.filter = "invert(100%)";
             }
@@ -816,7 +816,7 @@ const TopBarIconButton = function(params = {}) {
         endGroup();
 
         // Badge if specified
-        if (box.createBudge == 1) {
+        if (box.showBadge == 1) {
             box.badge = Badge(box.badgeProps);
         }
 
@@ -842,7 +842,7 @@ const TopBarIconButton = function(params = {}) {
     });
 
     box.on("mouseout", function() {
-        if (box.isSelected === 1) {
+        if (box.selected === 1) {
             box.setState("selected");
         } else {
             box.setState("normal");
