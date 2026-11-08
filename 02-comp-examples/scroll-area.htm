@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+
+        <title>ScrollArea</title>
+
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <!-- LIBRARY FILES -->
+        <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
+        <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../basic/scroll-bar.min.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- COMPONENT FILES -->
+        <script src="../comp/smart-button.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/scroll-area.js" type="text/javascript" charset="utf-8"></script>
+
+        <script>
+
+        /* Bismillah */
+
+        // ScrollArea (comp/scroll-area.js): a box whose content scrolls. Start it like VGroup, close it with endGroup().
+        // 0. This page: one ScrollArea fills the window (no startBox, no ScrollBar line).
+        // 1. Between two bars: in a VGroup it takes the height the bars leave.
+        // 2. The same on a dark page.
+        // 3. The minimal theme: a thin bar.
+        // 4. To the side: scrollX: 1.
+        // 5. On the page: a short content in the middle, rows added later, scrollToEnd() and scrollToTop().
+
+        // *** VARIABLES:
+        const PAGE_COLOR = "#ECEBE8";
+        const CARD_COLOR = "#FFFFFF";
+        const SOFT_TEXT = "#6F6E6B";
+        const CARD_MIN_WIDTH = 320;
+        const CARD_MAX_WIDTH = 460;
+        const WINDOW_HEIGHT = 300;
+        const LIST_HEIGHT = 168;
+
+        // The windows of the cards: their frame, their bars and their rows
+        const LIGHT_WINDOW = { color: "#FFFFFF", border: 1, borderColor: Black(0.12), round: 10 };
+        const LIGHT_BAR = { color: "#F6F6F4", borderColor: Black(0.1) };
+        const LIGHT_TITLE = { fontSize: 15, bold: 1, textColor: Black(0.8) };
+        const LIGHT_NOTE = { fontSize: 13, textColor: SOFT_TEXT };
+        const LIGHT_ROW = { width: "100%", fontSize: 14, padding: [14, 10], textColor: Black(0.8), border: [0, 0, 0, 1], borderColor: Black(0.06) };
+
+        const DARK_WINDOW = { color: "#1A1A19", border: 1, borderColor: White(0.12), round: 10 };
+        const DARK_BAR = { color: "#232322", borderColor: White(0.1) };
+        const DARK_TITLE = { fontSize: 15, bold: 1, textColor: White(0.88) };
+        const DARK_NOTE = { fontSize: 13, textColor: White(0.55) };
+        const DARK_ROW = { width: "100%", fontSize: 14, padding: [14, 10], textColor: White(0.85), border: [0, 0, 0, 1], borderColor: White(0.07) };
+
+        const MINIMAL_FRAME = { color: "#FFFFFF", border: 1, borderColor: Black(0.2), round: 4 };
+        const MINIMAL_ROW = { width: "100%", fontSize: 13, padding: [10, 5], textColor: Black(0.85) };
+        const MINIMAL_DARK_FRAME = { color: "#1A1A19", border: 1, borderColor: White(0.18), round: 4 };
+        const MINIMAL_DARK_ROW = { width: "100%", fontSize: 13, padding: [10, 5], textColor: White(0.88) };
+
+        const TILE = { width: 96, height: 96, fontSize: 14, textAlign: "center", lineHeight: 96, textColor: Black(0.7), color: "#DCEFF1", round: 10 };
+        const CHANGING_ROW = { fontSize: 14, padding: [12, 6], textColor: Black(0.75), color: "#F1F0EC", round: 6 };
+
+        let changingArea;
+        let lblPlace;
+        let rowCount = 1;
+
+        // First running function. (basic.js calls it when the page is ready)
+        const start = function () {
+
+            page.color = PAGE_COLOR;
+
+            // SCROLL AREA: The page (it scrolls when the window is lower than the samples)
+            ScrollArea({ align: "center top", gap: 16, padding: [16, 28] });
+
+                Label({ text: "ScrollArea", fontSize: 24, bold: 1, textColor: Black(0.8) });
+
+                // GROUP: The samples side by side (one under the other on a narrow screen)
+                HGroup({ width: "100%", height: "auto", align: "center top", gap: 20, wrap: 1, clipContent: 0 });
+                    createBetweenBars();
+                    createDarkWindow();
+                    createMinimal();
+                    createToTheSide();
+                    createChanging();
+                endGroup();
+
+            endGroup();
+
+        };
+
+        // *** OTHER FUNCTIONS:
+
+        // GROUP: A white card with a title and a note. endGroup() closes it.
+        const startCard = function (titleText, noteText) {
+            VGroup({
+                width: "auto",
+                height: "auto",
+                align: "left top",
+                gap: 10,
+                padding: 16,
+                color: CARD_COLOR,
+                round: 12,
+                clipContent: 0,
+                css: { flex: "1 1 " + CARD_MIN_WIDTH + "px", maxWidth: CARD_MAX_WIDTH + "px", minWidth: "0" },
+            });
+            Label({ text: titleText, fontSize: 15, bold: 1, textColor: Black(0.75) });
+            Label({ width: "100%", text: noteText, fontSize: 13, textColor: SOFT_TEXT });
+        };
+
+        // A window: a bar, the list, a bar. The list takes the height the bars leave.
+        const createBetweenBars = function () {
+
+            startCard("Between two bars", "In a VGroup it takes the height the other objects leave: no css, no numbers.");
+
+                // GROUP: The window
+                VGroup({ width: "100%", height: WINDOW_HEIGHT, gap: 0, align: "left top", ...LIGHT_WINDOW });
+
+                    // GROUP: The bar at the top
+                    HGroup({ width: "100%", height: 44, align: "left center", padding: [14, 0], border: [0, 0, 0, 1], ...LIGHT_BAR });
+                        Label({ text: "Inbox", ...LIGHT_TITLE });
+                    endGroup();
+
+                    // SCROLL AREA: The room between the bars
+                    ScrollArea();
+                        Label({ text: "Ayşe: The plan for Monday", ...LIGHT_ROW });
+                        Label({ text: "Can: Photos from the trip", ...LIGHT_ROW });
+                        Label({ text: "Elif: Lunch on Friday?", ...LIGHT_ROW });
+                        Label({ text: "Mert: The new logo", ...LIGHT_ROW });
+                        Label({ text: "Zeynep: The tickets are ready", ...LIGHT_ROW });
+                        Label({ text: "Deniz: A question about the order", ...LIGHT_ROW });
+                        Label({ text: "Emre: The notes of the meeting", ...LIGHT_ROW });
+                        Label({ text: "Selin: Happy birthday!", ...LIGHT_ROW });
+                        Label({ text: "Burak: The report is attached", ...LIGHT_ROW });
+                        Label({ text: "Ece: See you at seven", ...LIGHT_ROW });
+                        Label({ text: "Kaan: A new version", ...LIGHT_ROW });
+                        Label({ text: "Derya: Thank you!", ...LIGHT_ROW });
+                    endGroup();
+
+                    // GROUP: The bar at the bottom
+                    HGroup({ width: "100%", height: 36, align: "left center", padding: [14, 0], border: [0, 1, 0, 0], ...LIGHT_BAR });
+                        Label({ text: "12 messages", ...LIGHT_NOTE });
+                    endGroup();
+
+                endGroup();
+
+            endGroup();
+
+        };
+
+        // The same window on a dark page: styleName "dark" (a light bar).
+        const createDarkWindow = function () {
+
+            startCard("On a dark page", "styleName: \"dark\": the scroll bar is light.");
+
+                // GROUP: The window
+                VGroup({ width: "100%", height: WINDOW_HEIGHT, gap: 0, align: "left top", ...DARK_WINDOW });
+
+                    // GROUP: The bar at the top
+                    HGroup({ width: "100%", height: 44, align: "left center", padding: [14, 0], border: [0, 0, 0, 1], ...DARK_BAR });
+                        Label({ text: "Playlist", ...DARK_TITLE });
+                    endGroup();
+
+                    // SCROLL AREA: The room between the bars
+                    ScrollArea({ styleName: "dark" });
+                        Label({ text: "1. Morning Light", ...DARK_ROW });
+                        Label({ text: "2. Blue Hour", ...DARK_ROW });
+                        Label({ text: "3. A Long Road", ...DARK_ROW });
+                        Label({ text: "4. Paper Boats", ...DARK_ROW });
+                        Label({ text: "5. City Rain", ...DARK_ROW });
+                        Label({ text: "6. Slow Waves", ...DARK_ROW });
+                        Label({ text: "7. North Wind", ...DARK_ROW });
+                        Label({ text: "8. Small Fires", ...DARK_ROW });
+                        Label({ text: "9. Night Train", ...DARK_ROW });
+                        Label({ text: "10. Home Again", ...DARK_ROW });
+                    endGroup();
+
+                    // GROUP: The bar at the bottom
+                    HGroup({ width: "100%", height: 36, align: "left center", padding: [14, 0], border: [0, 1, 0, 0], ...DARK_BAR });
+                        Label({ text: "10 songs", ...DARK_NOTE });
+                    endGroup();
+
+                endGroup();
+
+            endGroup();
+
+        };
+
+        // The minimal theme: a thin bar without the dots. Side by side in an HGroup, the two areas share its width.
+        const createMinimal = function () {
+
+            startCard("Minimal", "styleName: \"minimal\" and \"minimalDark\". In an HGroup they share the width.");
+
+                // GROUP: The two lists
+                HGroup({ width: "100%", height: "auto", align: "left top", gap: 12 });
+
+                    // SCROLL AREA: minimal
+                    ScrollArea({ height: LIST_HEIGHT, padding: [0, 4], styleName: "minimal", ...MINIMAL_FRAME });
+                        Label({ text: "Overview", ...MINIMAL_ROW });
+                        Label({ text: "Orders", ...MINIMAL_ROW });
+                        Label({ text: "Customers", ...MINIMAL_ROW });
+                        Label({ text: "Products", ...MINIMAL_ROW });
+                        Label({ text: "Reports", ...MINIMAL_ROW });
+                        Label({ text: "Messages", ...MINIMAL_ROW });
+                        Label({ text: "Settings", ...MINIMAL_ROW });
+                        Label({ text: "Help", ...MINIMAL_ROW });
+                    endGroup();
+
+                    // SCROLL AREA: minimalDark
+                    ScrollArea({ height: LIST_HEIGHT, padding: [0, 4], styleName: "minimalDark", ...MINIMAL_DARK_FRAME });
+                        Label({ text: "Overview", ...MINIMAL_DARK_ROW });
+                        Label({ text: "Orders", ...MINIMAL_DARK_ROW });
+                        Label({ text: "Customers", ...MINIMAL_DARK_ROW });
+                        Label({ text: "Products", ...MINIMAL_DARK_ROW });
+                        Label({ text: "Reports", ...MINIMAL_DARK_ROW });
+                        Label({ text: "Messages", ...MINIMAL_DARK_ROW });
+                        Label({ text: "Settings", ...MINIMAL_DARK_ROW });
+                        Label({ text: "Help", ...MINIMAL_DARK_ROW });
+                    endGroup();
+
+                endGroup();
+
+            endGroup();
+
+        };
+
+        // A row wider than the card: scrollX: 1, scrollY: 0. The bar is under the tiles (the padding at the bottom).
+        const createToTheSide = function () {
+
+            startCard("To the side", "scrollX: 1, scrollY: 0: the content is as wide as its widest object.");
+
+                // SCROLL AREA: Only to the side
+                ScrollArea({ height: 112, padding: [0, 0, 0, 16], scrollX: 1, scrollY: 0 });
+
+                    // GROUP: The tiles
+                    HGroup({ hug: 1, gap: 10 });
+                        Label({ text: "Photos", ...TILE });
+                        Label({ text: "Music", ...TILE });
+                        Label({ text: "Notes", ...TILE });
+                        Label({ text: "Files", ...TILE });
+                        Label({ text: "Maps", ...TILE });
+                        Label({ text: "Mail", ...TILE });
+                        Label({ text: "Clock", ...TILE });
+                        Label({ text: "Books", ...TILE });
+                    endGroup();
+
+                endGroup();
+
+            endGroup();
+
+        };
+
+        // align: "center center": a short content stays in the middle; a tall one scrolls (its top is not cut).
+        const createChanging = function () {
+
+            startCard("It changes on the page", "createIn(area.content, ...) adds a row, then scrollToEnd(). onScroll shows the place.");
+
+                // GROUP: The buttons
+                HGroup({ width: "100%", height: "auto", align: "left center", gap: 8, wrap: 1, clipContent: 0 });
+                    SmartButton({ labelText: "Add a row", onClick: addRow });
+                    SmartButton({ labelText: "To the top", onClick: goToTop });
+                endGroup();
+
+                // SCROLL AREA: In the middle while it fits
+                changingArea = ScrollArea({ height: LIST_HEIGHT, align: "center center", gap: 6, padding: 12, onScroll: showPlace, ...LIGHT_WINDOW });
+                    Label({ text: "Row 1", ...CHANGING_ROW });
+                endGroup();
+
+                lblPlace = Label({ text: "getScrollTop(): 0", ...LIGHT_NOTE });
+
+            endGroup();
+
+        };
+
+        const addRow = function () {
+            rowCount++;
+            createIn(changingArea.content, function () {
+                Label({ text: "Row " + rowCount, ...CHANGING_ROW });
+            });
+            changingArea.scrollToEnd();
+        };
+
+        const goToTop = function () {
+            changingArea.scrollToTop();
+        };
+
+        const showPlace = function (self) {
+            lblPlace.text = "getScrollTop(): " + Math.round(self.getScrollTop());
+        };
+
+        </script>
+    </head>
+
+    <body></body>
+
+</html>

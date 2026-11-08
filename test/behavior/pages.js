@@ -2,7 +2,8 @@
 
 /*
 BEHAVIOR TESTS: PAGES
-The tests of test/behavior-test.htm for pages and parts of a page (Form, LoginPage, ImageView, Splitter, GridGroup, Accordion).
+The tests of test/behavior-test.htm for pages and parts of a page (Form, LoginPage, ImageView, Splitter, GridGroup, ScrollArea,
+Accordion).
 Every check is a bug that was found and fixed, written as its repro. A new test of a component goes into the
 file of its group (the category of the component in index/catalog.js). The page loads every file, then runs
 the tests in this order; its helpers (test, check, wait, key, pointer, findByText...) are there.
@@ -492,6 +493,195 @@ test("GridGroup: visible: 0 stays hidden and comes back as a grid; its objects s
     check("GridGroup: visible: 0 stays hidden and comes back as a grid; its objects stay in its flow; a group in it closes",
         isHidden && isInFlow && isGrid && doesNotClip, [isHidden, isInFlow, isGrid, doesNotClip].join(" | "));
     grid.remove();
+});
+
+// *** SCROLL AREA (comp/scroll-area.js)
+
+// The place of an object in a box: "left,top,width,height" (px, rounded).
+const scrollAreaPlaceIn = function (obj, frame) {
+    const rect = obj.elem.getBoundingClientRect();
+    const corner = (frame) ? frame.elem.getBoundingClientRect() : { left: 0, top: 0 };
+    return [rect.left - corner.left, rect.top - corner.top, rect.width, rect.height].map(Math.round).join(",");
+};
+
+test("ScrollArea: on the page it fills the window; endGroup() goes back to the page; that is the area; a ScrollBar on it", async function () {
+    const before = getDefaultContainerBox();
+    const objectBefore = Label({ left: -500, top: 0, text: "Before" });
+    const area = ScrollArea({ gap: 4, padding: 10 });
+    const isThat = (that === area && prevThat === objectBefore);
+        const rows = [];
+        for (let i = 0; i < 60; i++) rows.push(Label({ text: "Row " + i }));
+    endGroup();
+    const isClosed = (getDefaultContainerBox() === before);
+    const place = scrollAreaPlaceIn(area);
+    const isWindow = (place === "0,0," + window.innerWidth + "," + window.innerHeight);
+    const isInContent = (rows[0].containerBox === area.content && area.content.containerBox === area.scrollBox);
+    const scrolls = (area.scrollBox.elem.scrollHeight > area.scrollBox.elem.clientHeight);
+    const hasBar = (area.scrollBar !== null && area.scrollBar.containerBox === area);
+    check("ScrollArea: on the page it fills the window; endGroup() goes back to the page; that is the area; a ScrollBar on it",
+        isThat && isClosed && isWindow && isInContent && scrolls && hasBar && area.scrollY === 1 && area.scrollX === 0,
+        [isThat, isClosed, place, isInContent, scrolls, hasBar, area.scrollY, area.scrollX].join(" | "));
+    area.remove();
+    objectBefore.remove();
+});
+
+test("ScrollArea: in a VGroup it takes the height the other objects leave, in an HGroup the width; a size of its own wins", async function () {
+    const frame = startBox(0, 0, 400, 300, { color: "white" });
+        const column = VGroup({ gap: 0, align: "left top" });
+            Box({ width: "100%", height: 50 });
+            const middle = ScrollArea();
+                for (let i = 0; i < 30; i++) Label({ text: "Row " + i });
+            endGroup();
+            const footer = Box({ width: "100%", height: 40 });
+        endGroup();
+    endBox();
+    const rowFrame = startBox(0, 0, 400, 200, { color: "white" });
+        HGroup({ gap: 0 });
+            Box({ width: 100, height: "100%" });
+            const side = ScrollArea();
+            endGroup();
+        endGroup();
+    endBox();
+    const ownFrame = startBox(0, 0, 400, 300, { color: "white" });
+        VGroup({ gap: 0, align: "left top" });
+            const own = ScrollArea({ height: 120 });
+            endGroup();
+            const under = Box({ width: "100%", height: 30 });
+        endGroup();
+    endBox();
+    const places = [
+        scrollAreaPlaceIn(middle, frame), scrollAreaPlaceIn(footer, frame),
+        scrollAreaPlaceIn(side, rowFrame),
+        scrollAreaPlaceIn(own, ownFrame), scrollAreaPlaceIn(under, ownFrame),
+    ];
+    const isFooterInColumn = (footer.containerBox === column);
+    check("ScrollArea: in a VGroup it takes the height the other objects leave, in an HGroup the width; a size of its own wins",
+        places.join(" ") === "0,50,400,210 0,260,400,40 100,0,300,200 0,0,400,120 0,120,400,30" && isFooterInColumn,
+        places.join(" ") + " | " + isFooterInColumn);
+    frame.remove();
+    rowFrame.remove();
+    ownFrame.remove();
+});
+
+test("ScrollArea: endGroup() goes back to the box that was open: in createIn(), in another ScrollArea, in a component", async function () {
+    const before = getDefaultContainerBox();
+    const holder = Box({ left: -900, top: 0, width: 300, height: 300 });
+    const afterInHolder = createIn(holder, function () {
+        ScrollArea();
+            Label({ text: "In the area" });
+        endGroup();
+        return Label({ text: "After the area" });
+    });
+    const outer = ScrollArea({ left: -900, width: 300, height: 300 });
+        const inner = ScrollArea({ height: 100 });
+            Label({ text: "In the inner one" });
+        endGroup();
+        const afterInner = Label({ text: "After the inner one" });
+    endGroup();
+    const panel = SidePanel({ titleText: "Panel" });
+    panel.startBody();
+        const inPanel = ScrollArea({ height: 100 });
+        endGroup();
+        const afterInPanel = Label({ text: "After it" });
+    panel.endBody();
+    const isClosed = (getDefaultContainerBox() === before);
+    check("ScrollArea: endGroup() goes back to the box that was open: in createIn(), in another ScrollArea, in a component",
+        afterInHolder.containerBox === holder && afterInner.containerBox === outer.content && inner.containerBox === outer.content &&
+        afterInPanel.containerBox === inPanel.containerBox && inPanel.containerBox !== page && isClosed,
+        [afterInHolder.containerBox === holder, afterInner.containerBox === outer.content, afterInPanel.containerBox === inPanel.containerBox, isClosed].join(" | "));
+    holder.remove();
+    outer.remove();
+    panel.remove();
+});
+
+test("ScrollArea: scrollX: 1 makes the content as wide as its objects; scrollY: 0 does not scroll down; setScrollX(), setScrollY()", async function () {
+    const area = ScrollArea({ left: 0, top: 0, width: 200, height: 100, scrollX: 1, scrollY: 0 });
+        HGroup({ hug: 1, gap: 8 });
+            for (let i = 0; i < 10; i++) Box({ width: 60, height: 60 });
+        endGroup();
+    endGroup();
+    const elem = area.scrollBox.elem;
+    const sideways = [elem.scrollWidth, getComputedStyle(elem).overflowX, getComputedStyle(elem).overflowY, area.scrollX, area.scrollY].join(",");
+    elem.scrollLeft = 50;
+    area.setScrollY(1);
+    const down = [getComputedStyle(elem).overflowY, area.scrollY].join(",");
+    area.setScrollX(0);
+    const contentWidth = Math.round(area.content.elem.getBoundingClientRect().width);
+    const notSideways = [getComputedStyle(elem).overflowX, elem.scrollLeft, contentWidth, area.scrollX].join(",");
+    check("ScrollArea: scrollX: 1 makes the content as wide as its objects; scrollY: 0 does not scroll down; setScrollX(), setScrollY()",
+        sideways === "672,auto,hidden,1,0" && down === "auto,1" && notSideways === "hidden,0,200,0", [sideways, down, notSideways].join(" | "));
+    area.remove();
+});
+
+test("ScrollArea: scrollToEnd(), scrollToTop(), scrollToObject(), getScrollTop() / setScrollTop(), onScroll(self)", async function () {
+    let scrolledBy = null;
+    const area = ScrollArea({ left: 0, top: 0, width: 200, height: 100, onScroll: function (self) { scrolledBy = self; } });
+        const rows = [];
+        for (let i = 0; i < 30; i++) rows.push(Label({ text: "Row " + i, height: 20 }));
+    endGroup();
+    const elem = area.scrollBox.elem;
+    const end = elem.scrollHeight - elem.clientHeight;
+    area.scrollToEnd();
+    const isAtEnd = (area.getScrollTop() === end);
+    await wait(100); // WHY: the browser sends the scroll event with the next frame
+    const isEventSelf = (scrolledBy === area);
+    area.scrollToTop();
+    const isAtTop = (area.getScrollTop() === 0);
+    area.scrollToObject(rows[10]);
+    const bottomOfRow = Math.round(rows[10].elem.getBoundingClientRect().bottom - elem.getBoundingClientRect().top);
+    area.scrollToObject(rows[2]);
+    const topOfRow = Math.round(rows[2].elem.getBoundingClientRect().top - elem.getBoundingClientRect().top);
+    area.setScrollTop(37);
+    check("ScrollArea: scrollToEnd(), scrollToTop(), scrollToObject(), getScrollTop() / setScrollTop(), onScroll(self)",
+        isAtEnd && isEventSelf && isAtTop && bottomOfRow === 100 && topOfRow === 0 && area.getScrollTop() === 37,
+        [isAtEnd, isEventSelf, isAtTop, bottomOfRow, topOfRow, area.getScrollTop()].join(" | "));
+    area.remove();
+});
+
+test("ScrollArea: align, gap and padding are the ones of the content (not of the area); a short content in the middle, a tall one not cut", async function () {
+    const area = ScrollArea({ left: 0, top: 0, width: 200, height: 150, align: "center center", gap: 6, padding: [10, 8] });
+        const first = Label({ text: "First", height: 20 });
+    endGroup();
+    const content = getComputedStyle(area.content.elem);
+    const ownPadding = getComputedStyle(area.elem).paddingLeft;
+    const look = [content.alignItems, content.justifyContent, content.rowGap, content.paddingLeft, content.paddingTop, ownPadding].join(",");
+    const middle = scrollAreaPlaceIn(first, area);
+    createIn(area.content, function () {
+        for (let i = 0; i < 20; i++) Label({ text: "Row " + i, height: 20 });
+    });
+    const tallTop = scrollAreaPlaceIn(first, area);
+    area.setGap(10);
+    area.setPadding(4);
+    area.setAlign("left top");
+    const changed = [content.rowGap, content.paddingTop, getComputedStyle(area.elem).paddingTop, area.padding, content.alignItems].join(",");
+    check("ScrollArea: align, gap and padding are the ones of the content (not of the area); a short content in the middle, a tall one not cut",
+        look === "center,center,6px,10px,8px,0px" && middle.split(",")[1] === "65" && tallTop.split(",")[1] === "8" && changed === "10px,4px,0px,4,flex-start",
+        [look, middle, tallTop, changed].join(" | "));
+    area.remove();
+});
+
+test("ScrollArea: remove() takes its ScrollBar; useScrollBar: 0 makes none; the bar of dark and minimal; MinimalAccent gives it a color's packages", async function () {
+    const area = ScrollArea({ left: 0, top: 0, width: 100, height: 100 });
+    endGroup();
+    const barElem = area.scrollBar.elem;
+    area.remove();
+    const isBarGone = (!barElem.isConnected);
+    const plain = ScrollArea({ left: 0, top: 0, width: 100, height: 100, useScrollBar: 0 });
+    endGroup();
+    const isNoBar = (plain.scrollBar === null);
+    plain.remove();
+    const dark = ScrollArea({ left: 0, top: 0, width: 100, height: 100, styleName: "dark" });
+    endGroup();
+    const minimal = ScrollArea({ left: 0, top: 0, width: 100, height: 100, styleName: "minimal" });
+    endGroup();
+    const bars = [dark.scrollBar.bar_color, minimal.scrollBar.bar_width, minimal.scrollBar.showDots].join(",");
+    dark.remove();
+    minimal.remove();
+    MinimalAccent.addPackages("minimalTestArea", "#2A78D6");
+    const accent = ScrollArea.styles.minimalTestArea;
+    const hasAccent = (!!accent && accent.scrollBar.bar_width === 3 && !!ScrollArea.styles.minimalTestAreaDark);
+    check("ScrollArea: remove() takes its ScrollBar; useScrollBar: 0 makes none; the bar of dark and minimal; MinimalAccent gives it a color's packages",
+        isBarGone && isNoBar && bars === "#CFCFCD,3,0" && hasAccent, [isBarGone, isNoBar, bars, hasAccent].join(" | "));
 });
 
 // *** ACCORDION (comp/accordion.js)

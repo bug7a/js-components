@@ -168,6 +168,7 @@ The components of the kit for a new page, and their look on a light page and on 
 | A bubble, a popover | `Tooltip` (`tooltip.js`) | | |
 | A dialog | `Dialog` (`dialog.js`) | `ozden` (the default) | `ozdenDark` |
 | A loading screen | `LoadingScreen` (`loading-screen.js`) | | |
+| A page or a part that scrolls | `ScrollArea` (`scroll-area.js`): `ScrollArea({ gap: 20, padding: 40 })` ... `endGroup()`; in a group it takes the room the other objects leave | `light` | `dark` |
 
 ---
 

@@ -67,6 +67,7 @@ Pictures that must be drawn go to the Codex CLI. **Ask before making one: only a
   endBox();
   ScrollBar({ scrollableBox: pageBox }); // load basic/scroll-bar.js too
   ```
+  A new page writes it in one call with `comp/scroll-area.js`: `ScrollArea({ align: "center top", gap: 20, padding: 40 })` ... `endGroup()` (a box that scrolls, its VGroup and the ScrollBar).
 - **Only a Box holds other objects** (`Box`, `startBox()`, `HGroup` / `VGroup`). Not `Button`, `Label`, `Input`, `Icon`: an object inside a button bubbles its mouse events to it. An overlay goes into the same box as a sibling, `position: "absolute"`, with the target's left/top/width/height (`box.btnSendCover` in `comp/form.js`).
 - **Implicit containers**: new objects go into the current default container; `startBox()`/`endBox()` and `HGroup`/`VGroup` … `endGroup()` push and pop it. **Every start call needs its end call** (basic.js warns about the missing ones).
 - **Groups** (`HGroup`, `VGroup`: flexbox; `AutoLayout` / `endAutoLayout` are the old names: not in new code): `flow`, `align: "left top"`, `gap`, `padding` (a number or `[x, y]`), `wrap: 1`, `justify`, `hug: 1` (width and height `"auto"`). A group is 100% × 100% by default. **`hug: 1` in new code**; `fit: 1` is its old name: don't "fix" pages that use it.
@@ -130,6 +131,7 @@ Existing pages are switched only when asked. Each choice is also noted in the he
 | A bubble, a popover | `comp/tooltip.js` (`Tooltip`, `Tooltip.show()`, `Tooltip.openPopover()`) | | | `tooltip-2.htm`, `tooltip-3.htm`; never a hand-made one |
 | A dialog | `comp/dialog.js` (`Dialog`, `Dialog.confirm` / `alert` / `prompt`) | | | |
 | A loading screen | `comp/loading-screen.js` | | | |
+| A page or a part that scrolls | `comp/scroll-area.js` (`ScrollArea`) | `light` | `dark` | `02-comp-examples/scroll-area.htm`; `ScrollArea({ gap, padding })` ... `endGroup()`: the window on a page, the room the others leave in a group; the ScrollBar comes with it |
 
 - **The newest component is the default:** when two do the same job, new pages use the newest. The old file has a `NOT FOR NEW PROJECTS` note at the top of its header naming the new one (`grep -l "NOT FOR NEW PROJECTS" comp/*.js`), and its catalog entries say "Not for new pages: use X" (`index/catalog.js` en / tr and the `<noscript>` list of `index.htm`). A new component that replaces an old one gets the same three steps.
 - **Parallel designs are kept on purpose** (do not merge or retire them without asking): `tiny-select` / `select-box`, `full-screen-select` / `select-box` (`fullHeightList`), `slider` / `slider-field`, `line-progress-bar` / `progress-bar`, `smart-table` (very many rows) / `data-table`, `mini-graph-box` / `spark-line-box`, `toast` / `notice`.

@@ -364,6 +364,12 @@ CATALOG.COMPONENTS = [
         tr: "Nesneleri sütun ve satırlara dizen grup: başlık ve alanlardan bir form, hesap makinesinin tuşları, kutucuklar. Eşit sütunlar, px, oranlar, birden çok hücreye yayılan nesne.",
     },
     {
+        key: "scroll-area", name: "ScrollArea", cat: "pages",
+        source: "comp/scroll-area.js", samples: ["02-comp-examples/scroll-area.htm"],
+        en: "A box whose content scrolls, in one call: the page of a window, or a list between two bars (in a group it takes the room the other objects leave). The scroll bar of the kit; light, dark and minimal.",
+        tr: "İçeriği kayan kutu, tek çağrıyla: pencerenin sayfası ya da iki çubuk arasındaki liste (bir grupta öteki nesnelerin bıraktığı yeri alır). Kitin kaydırma çubuğu; aydınlık, karanlık ve minimal.",
+    },
+    {
         key: "splitter", name: "Splitter", cat: "pages",
         source: "comp/splitter.js", samples: ["02-comp-examples/splitter.htm", "02-comp-examples/minimal-theme.htm"],
         en: "Two areas with a line between them: a drag changes their sizes, side by side or one under the other. Keyboard, limits, sizes that follow the window. Light and dark themes.",

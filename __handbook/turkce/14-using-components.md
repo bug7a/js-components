@@ -168,6 +168,7 @@ Kitin yeni bir sayfa için bileşenleri ve açık ile koyu sayfadaki görünüş
 | Bir baloncuk, bir açılır kutu | `Tooltip` (`tooltip.js`) | | |
 | Bir pencere | `Dialog` (`dialog.js`) | `ozden` (varsayılan) | `ozdenDark` |
 | Bir yükleme ekranı | `LoadingScreen` (`loading-screen.js`) | | |
+| Kayan bir sayfa ya da bölüm | `ScrollArea` (`scroll-area.js`): `ScrollArea({ gap: 20, padding: 40 })` ... `endGroup()`; bir grupta öteki nesnelerin bıraktığı yeri alır | `light` | `dark` |
 
 ---
 
