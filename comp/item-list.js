@@ -1233,7 +1233,7 @@ const ItemList = function (params = {}) {
             delete searchParams.padding;
             searchParams.width = "100%";
             searchParams.position = "relative";
-            searchParams.onSearch = function (text) { box.search(text); };
+            searchParams.onChange = function (self) { box.search(self.getSearchText()); };
             box.searchInput = SearchInput(searchParams);
             box.searchInput.txtSearch.on("keydown", onSearchKeyDown);
         endGroup();
@@ -1379,7 +1379,7 @@ const ItemList = function (params = {}) {
         applySearch();
         return getShownEntries().length;
     };
-    // USAGE: searchInput.onSearch = function (text) { list.search(text); };
+    // USAGE: searchInput.onChange = function (self) { list.search(self.getSearchText()); };
 
     box.setLayout = function (layout) {
         box.layout = normalizeLayout(layout);

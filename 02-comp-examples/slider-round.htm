@@ -245,7 +245,7 @@
                 ariaLabel: title,
                 showValueOnDrag: 0,
                 showValueOnSet: 0,
-                onDragMove: function (value) { lblValue.plainText = value + unit; },
+                onChange: function (self) { lblValue.plainText = self.value + unit; },
                 ...sliderParams,
             });
 

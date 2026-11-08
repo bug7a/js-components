@@ -1701,6 +1701,36 @@
             [field, editor, select].forEach(function (object) { object.remove(); });
         });
 
+        test("The old events of Slider, TinySelect, SearchInput and Form are called in the old way, also when set later", async function () {
+            const realWarn = console.warn;
+            console.warn = function () { };
+            const moved = [];
+            const slider = Slider({ width: 250, maxValue: 10, onDragMove: function (value) { moved.push(value); } });
+            await wait(50);
+            slider.elem.dispatchEvent(new MouseEvent("mousedown", { bubbles: true, button: 0, clientX: getSliderPointOf(slider, 0.7) }));
+            document.dispatchEvent(new MouseEvent("mouseup", {}));
+            const chosen = [];
+            const select = TinySelect({ titleText: "Size", list: [{ id: "s", label: "Small" }, { id: "l", label: "Large" }] });
+            select.onSelect = function (index, id, label, title) { chosen.push([index, id, label, title].join(" ")); };
+            select.setSelectedIndex(1);
+            const searched = [];
+            const search = SearchInput({ onSearch: function (text, self) { searched.push(text + ((self === search) ? "" : "?")); } });
+            search.txtSearch.inputElement.focus();
+            document.execCommand("insertText", false, "ABC");
+            const edited = [];
+            const form = Form({});
+            form.onEdit = function (input) { edited.push(input); };
+            const field = TextField({ titleText: "Name" });
+            form.addInput(field);
+            field.input.inputElement.value = "A";
+            field.input.inputElement.dispatchEvent(new Event("input", { bubbles: true }));
+            console.warn = realWarn;
+            check("The old events of Slider, TinySelect, SearchInput and Form are called in the old way, also when set later",
+                moved[0] === 7 && chosen[0] === "1 l Large Size" && searched[searched.length - 1] === "abc" && edited[0] === field,
+                "slider: " + moved.join(",") + ", select: " + chosen.join("|") + ", search: " + searched.join(",") + ", form: " + (edited[0] === field));
+            [slider, select, search, form].forEach(function (object) { object.remove(); });
+        });
+
         // *** PHONE FIELD (comp/phone-field.js)
 
         test("PhoneField: a pasted number keeps all its digits", async function () {
@@ -1821,9 +1851,9 @@
         test("Slider: a remove() during a drag takes the document events with it", async function () {
             let moveCount = 0;
             let isStarted = false;
-            const slider = Slider({ width: 250, onDragStart: function () { isStarted = true; }, onDragMove: function () { moveCount++; } });
+            const slider = Slider({ width: 250, onChangeStart: function () { isStarted = true; }, onChange: function () { moveCount++; } });
             await wait(50);
-            // WHY the thumb: a press on the track moves the thumb there first (one more onDragMove)
+            // WHY the thumb: a press on the track moves the thumb there first (one more onChange)
             getSliderThumb(slider).dispatchEvent(new MouseEvent("mousedown", { bubbles: true, clientX: 10 }));
             document.dispatchEvent(new MouseEvent("mousemove", { clientX: 60 }));
             const movesBeforeRemove = moveCount;
@@ -1866,7 +1896,7 @@
         test("Slider: a touch the system takes (touchcancel) ends the drag", async function () {
             let moveCount = 0;
             let endCount = 0;
-            const slider = Slider({ width: 250, onDragMove: function () { moveCount++; }, onDragEnd: function () { endCount++; } });
+            const slider = Slider({ width: 250, onChange: function () { moveCount++; }, onChangeEnd: function () { endCount++; } });
             await wait(50);
             getSliderThumb(slider).dispatchEvent(makeSliderTouch("touchstart", 10));
             document.dispatchEvent(makeSliderTouch("touchcancel", 10));
@@ -1879,7 +1909,7 @@
 
         test("Slider: the right mouse button does not start a drag", async function () {
             let startCount = 0;
-            const slider = Slider({ width: 250, onDragStart: function () { startCount++; } });
+            const slider = Slider({ width: 250, onChangeStart: function () { startCount++; } });
             await wait(50);
             getSliderThumb(slider).dispatchEvent(new MouseEvent("mousedown", { bubbles: true, button: 2, clientX: 10 }));
             document.dispatchEvent(new MouseEvent("mousemove", { clientX: 120 }));
@@ -1959,9 +1989,9 @@
             const slider = Slider({
                 width: 250,
                 maxValue: 10,
-                onDragStart: function () { calls.push("start"); },
-                onDragMove: function (value) { calls.push(value); },
-                onDragEnd: function () { calls.push("end"); },
+                onChangeStart: function () { calls.push("start"); },
+                onChange: function (self) { calls.push(self.value); },
+                onChangeEnd: function () { calls.push("end"); },
             });
             await wait(50);
             slider.elem.dispatchEvent(new MouseEvent("mousedown", { bubbles: true, button: 0, clientX: getSliderPointOf(slider, 0.7) }));
@@ -1979,9 +2009,9 @@
             const calls = [];
             const slider = Slider({
                 width: 250,
-                onDragStart: function () { calls.push("start"); },
-                onDragMove: function (value) { calls.push(value); },
-                onDragEnd: function () { calls.push("end"); },
+                onChangeStart: function () { calls.push("start"); },
+                onChange: function (self) { calls.push(self.value); },
+                onChangeEnd: function () { calls.push("end"); },
             });
             await wait(50);
             const middle = getSliderPointOf(slider, 0.5);
@@ -2006,7 +2036,7 @@
 
         test("Slider: the keys change the value by its step (a key is a short drag); role slider, aria-valuenow; the ring only for the keyboard", async function () {
             let endCount = 0;
-            const slider = Slider({ width: 250, maxValue: 10, step: 0.5, value: 5, onDragEnd: function () { endCount++; } });
+            const slider = Slider({ width: 250, maxValue: 10, step: 0.5, value: 5, onChangeEnd: function () { endCount++; } });
             await wait(50);
             const values = [];
             ["ArrowRight", "ArrowLeft", "ArrowLeft", "PageUp", "End", "ArrowUp", "Home", "ArrowDown"].forEach(function (keyName) {
@@ -2448,11 +2478,11 @@
 
         test("SearchInput: a pasted text is searched", async function () {
             const texts = [];
-            const search = SearchInput({ onSearch: function (text) { texts.push(text); } });
+            const search = SearchInput({ onChange: function (self) { texts.push(self.getSearchText()); } });
             const el = search.txtSearch.inputElement;
             el.focus();
             document.execCommand("insertText", false, "abc"); // the same input event as a paste or an autofill
-            check("SearchInput: a pasted text is searched", texts[texts.length - 1] === "abc", "onSearch: " + texts.join(", "));
+            check("SearchInput: a pasted text is searched", texts[texts.length - 1] === "abc", "onChange: " + texts.join(", "));
             search.remove();
         });
 
@@ -2485,7 +2515,7 @@
 
         test("SearchInput: clearOnEscape: Escape clears the text and uses the key; an empty field leaves it to the page; off by default", async function () {
             const submitted = [];
-            const search = SearchInput({ clearOnEscape: 1, onSubmit: function (text) { submitted.push(text); } });
+            const search = SearchInput({ clearOnEscape: 1, onEnter: function (self) { submitted.push(self.getSearchText()); } });
             const plain = SearchInput({});
             const table = SmartTable({ itemLineCount: 2, style: { width: 500, height: "auto" } });
             // Returns 1 when the key was used (a Dialog around the field would not close)

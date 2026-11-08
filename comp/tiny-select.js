@@ -21,7 +21,7 @@ Webpage: https://bug7a.github.io/js-components/
 const TinySelectDefaults = {
     titleText: "",
     list: [], // [{ id: "1", label: "(none)" },]
-    onSelect: function(index, id, label, titleText) {}, // Not called at create time. setSelectedIndex(index) calls it, setSelectedIndex(index, 1) does not.
+    onChange: function(self) {}, // Another item is chosen: self.selectedIndex, self.getSelectedItem() ({ id, label }). Not at create time; setSelectedIndex(index) calls it, setSelectedIndex(index, 1) does not.
     selectedIndex: 0,
     fontSize: 20,
     border: 0,
@@ -50,13 +50,6 @@ const TinySelectDefaults = {
 };
 
 const TinySelect = function(params = {}) {
-
-    // THE OLD NAME disabled, for a while. WHY by hand: it is the reverse of enabled (basic.keepOldNames moves a value
-    //     as it is)
-    if ("disabled" in params) {
-        basic.renameOldParams(params, { disabled: "enabled" }, "TinySelect");
-        params.enabled = basic.isOn(params.enabled) ? 0 : 1;
-    }
 
     // Merge params:
     mergeIntoIfMissing(params, TinySelectDefaults);
@@ -89,14 +82,14 @@ const TinySelect = function(params = {}) {
 
     };
 
-    // Seçili olanı değiştir. silent: 1 -> onSelect is not called.
+    // Chooses the item at index. silent: 1 -> onChange is not called.
     box.setSelectedIndex = function(index, silent = 0) {
 
         box.selectedIndex = index;
 
         if (box.list.length > box.selectedIndex) {
             box.lblLabel.text = box.list[box.selectedIndex].label;
-            if (!silent) box.onSelect(index, box.list[index].id, box.list[index].label, box.titleText);
+            if (!silent) box.onChange(box);
         } else {
             box.lblLabel.text = box.emptyText;
         }
@@ -127,6 +120,12 @@ const TinySelect = function(params = {}) {
     box.setDisabled = function(value) {
         box.setEnabled(basic.isOn(value) ? 0 : 1);
     };
+
+    // The chosen item ({ id, label }), or null
+    box.getSelectedItem = function() {
+        return box.list[box.selectedIndex] || null;
+    };
+    // USAGE: const item = tinySelect.getSelectedItem();
 
     box.getIndexById = function(id) {
         return box.list.findIndex(item => item.id === id);
@@ -200,7 +199,7 @@ const TinySelect = function(params = {}) {
         TinySelect.createList(box);
     });
     box.setTitle(box.titleText);
-    // WHY: Silent: onSelect is a choice of the user, not the start value (the pages that use it
+    // WHY: Silent: onChange is a choice of the user, not the start value (the pages that use it
     //      guarded against this first call with isReady / isRendering).
     box.setSelectedIndex(box.selectedIndex, 1);
     box.setEnabled(box.enabled);
@@ -211,15 +210,20 @@ const TinySelect = function(params = {}) {
 
 // THE OLD NAMES of the params, the properties and the methods (basic.keepOldNames): the pages made with them keep
 // working until they move to the new names. Delete a name when no page uses it any more.
-// (disabled is turned by hand at the start: it is the reverse of enabled)
 TinySelect.OLD_NAMES = {
     title: "titleText",
     arrowIcon: "arrowIconFile",
     labelBoldFont: "labelBold",
+    // WHY wrap: disabled is the reverse of enabled
+    disabled: { name: "enabled", wrap: (disabled) => basic.isOn(disabled) ? 0 : 1 },
+    // WHY wrap: onSelect got the index, the id, the label and the title; onChange gets self
+    onSelect: { name: "onChange", wrap: (onSelect) => (self) => {
+        const item = self.getSelectedItem() || {};
+        if (onSelect) onSelect(self.selectedIndex, item.id, item.label, self.titleText);
+    } },
 };
-// The old names it bridges by itself (the value is the reverse): for test/old-names.js and the reader
+// The old method it keeps by itself (the reverse of setEnabled): for test/old-names.js and the reader
 TinySelect.OLD_NAMES_BY_HAND = {
-    disabled: "enabled",
     setDisabled: "setEnabled",
 };
 

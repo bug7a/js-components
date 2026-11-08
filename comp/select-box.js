@@ -1159,7 +1159,7 @@ const SelectBox = function (params = {}) {
         params.width = "100%";
         params.scale = 1; // WHY: style.searchInput is scaled already (with the style of SelectBox).
         params.placeholder = box.searchPlaceholder;
-        params.onSearch = onSearchTextChange; // WHY: also after its clear button (that is not an "input" event).
+        params.onChange = onSearchTextChange; // WHY: also after its clear button (that is not an "input" event).
         box.searchGroup = SearchInput(params);
         box.searchInput = box.searchGroup.txtSearch;
     };

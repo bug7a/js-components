@@ -122,9 +122,9 @@
                 },
             });
             lightResults.attachTo(lightInput.txtSearch.inputElement);
-            // NOTE: SearchInput gives the text in lower case. The raw text is in txtSearch.text.
-            lightInput.onSearch = function (text, self) {
-                lightResults.setItems(findResults(text), self.txtSearch.text);
+            // NOTE: getSearchText() is the text in lower case, getText() the text as it is typed.
+            lightInput.onChange = function (self) {
+                lightResults.setItems(findResults(self.getSearchText()), self.getText());
             };
 
             darkResults = SearchResults({
@@ -137,8 +137,8 @@
                 },
             });
             darkResults.attachTo(darkInput.txtSearch.inputElement);
-            darkInput.onSearch = function (text, self) {
-                darkResults.setItems(findResults(text), self.txtSearch.text);
+            darkInput.onChange = function (self) {
+                darkResults.setItems(findResults(self.getSearchText()), self.getText());
             };
 
         };

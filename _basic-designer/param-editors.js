@@ -207,8 +207,8 @@ BasicDesigner.buildParamFilter = function (left, top, width) {
                 clearIconOffsetY: 0,
                 clearOnEscape: 1,
                 placeholder: "Search the parameters",
-                onSearch: function (text) {
-                    s.paramFilter = String(text || "");
+                onChange: function (self) {
+                    s.paramFilter = self.getSearchText();
                     BasicDesigner.applyParamFilter();
                 },
             });

@@ -271,7 +271,7 @@ const FullScreenSelect = function (params = {}) {
             border: 0,
             borderBottomStyle: "none",
             placeholder: box.placeholder,
-            onSearch: function (text) { filterRows(text); },
+            onChange: function (self) { filterRows(self.getSearchText()); },
         };
         // WHY only when given: a file given here would win over the icon of the style package of SearchInput
         if (box.searchIconFile) searchParams.searchIconFile = box.searchIconFile;
@@ -379,7 +379,7 @@ const FullScreenSelect = function (params = {}) {
 
     const filterRows = function (text) {
         const newSearchText = FullScreenSelect.toSearchText(text).trim();
-        // WHY: SearchInput calls onSearch at every keyup, the arrow keys too: they must not reset the focused item
+        // WHY: the same text again (a search that is asked again) must not reset the focused item
         if (newSearchText === searchText) return;
         searchText = newSearchText;
         box.panel.rows.forEach(function (row) {

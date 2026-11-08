@@ -459,8 +459,8 @@ const Filters = function (params = {}) {
         const searchParams = Object.assign({}, box.searchInputParams);
         searchParams.placeholder = box.searchPlaceholder;
         if (searchParams.animated === undefined) searchParams.animated = box.animated;
-        // WHY getText(), not the text of onSearch: that one is in lower case, and the field must keep what is typed
-        searchParams.onSearch = function () { box.search(box.searchInput.getText()); };
+        // WHY getText(), not getSearchText(): that one is in lower case, and the field must keep what is typed
+        searchParams.onChange = function () { box.search(box.searchInput.getText()); };
         box.searchInput = SearchInput(searchParams);
         box.searchInput.shrink = 0;
     };

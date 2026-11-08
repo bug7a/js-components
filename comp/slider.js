@@ -17,18 +17,19 @@ UI COMPONENT TEMPLATE
 - The keyboard: ArrowRight / ArrowUp one step, ArrowLeft / ArrowDown one step back, PageUp / PageDown
   ten steps, Home / End the ends. role "slider" with aria-valuenow / valuemin / valuemax (ariaLabel: its name);
   a ring around the thumb only for the keyboard (style.focus).
-- A key, a tap and a click on the track are short drags for the page: onDragStart, onDragMove(value), onDragEnd,
-  so a page that saves in onDragEnd saves them too.
+- A key, a tap and a click on the track are short drags for the page: onChangeStart(self), onChange(self),
+  onChangeEnd(self), so a page that saves in onChangeEnd saves them too. (The old onDragStart, onDragMove(value),
+  onDragEnd work for a while.)
 - Style packages: "classic" (the default: inspired by Google Material 3: a thick track in two parts,
   a thin line for the thumb, a dot at the end), "round" (a thin track and a round white knob: the look of most web
   and phone sliders; a ring in the track color while it is dragged) and "roundDark" (round for a dark page).
   Select with styleName. (Slider.styles)
   The colors and the height of the track stay params (trackColor, trackHeight...): a package fills the ones the
   page does not give, so Slider({ styleName: "round", trackColor: "tomato" }) is a tomato round slider.
-- Needs basic.js v26.10.27 (a package of params).
+- Needs basic.js v26.11.08 (a package of params, the old names).
 
 USAGE:
-const volume = Slider({ width: 280, value: 70, onDragMove: function (value) { println(value); } });
+const volume = Slider({ width: 280, value: 70, onChange: function (self) { println(self.value); } });
 volume.setValue(40);
 Slider({ styleName: "round", width: "100%", value: 30 });
 Slider({ styleName: "round", minValue: 12, maxValue: 24, step: 0.5, value: 16 }); // 12, 12.5 ... 24
@@ -59,9 +60,9 @@ const SliderDefaults = {
     trackColor: "cadetblue", // Color of the filled part
     trackBackgroundColor: "rgba(0,0,0,0.05)", // Color of the unfilled part
 
-    onDragStart: function() {}, // Triggered when dragging starts
-    onDragMove: function(val) {}, // Triggered while dragging
-    onDragEnd: function() {}, // Triggered when dragging ends
+    onChangeStart: function(self) {}, // A drag starts (a tap and a key are short drags)
+    onChange: function(self) {}, // self.value changed: while dragging, a tap, a key. Not at create time, not by setValue()
+    onChangeEnd: function(self) {}, // The drag ends: a page that saves, saves here
 
     showValueAtStart: 0,
     showValueOnSet: 1,
@@ -538,15 +539,15 @@ const Slider = function(params = {}) {
             //      next touch anywhere on the page moved the thumb and could not scroll the page.
             box.listenTo(document, "touchcancel", onMouseUp),
         ];
-        box.onDragStart();
+        box.onChangeStart(box);
     };
 
-    // The thumb goes to a point of the track; the page hears it when the value changes (onDragMove).
+    // The thumb goes to a point of the track; the page hears it when the value changes (onChange).
     const moveThumbToPoint = (clientX, animated) => {
         const value = getValueAtClientX(clientX);
         if (value === box.value) return;
         moveThumbToValue(value, animated);
-        box.onDragMove(value);
+        box.onChange(box);
     };
 
     // A press on the thumb starts a drag. A press of the mouse on the track moves the thumb there and drags from there.
@@ -561,7 +562,7 @@ const Slider = function(params = {}) {
             waitForTouchDirection(e);
             return;
         }
-        // WHY: After a touch the browser sends mousedown and mouseup too: a tap gave two onDragStart and two onDragEnd.
+        // WHY: After a touch the browser sends mousedown and mouseup too: a tap gave two onChangeStart and two onChangeEnd.
         if (e.type === "touchstart") e.preventDefault();
         if (isOnThumb) {
             startDrag(getClientX(e));
@@ -606,14 +607,14 @@ const Slider = function(params = {}) {
         startLeft = parseFloat(thumbBox.left) || 0;
     };
 
-    // A tap on the track: a short drag for the page (onDragStart, onDragMove, onDragEnd).
+    // A tap on the track: a short drag for the page (onChangeStart, onChange, onChangeEnd).
     const onPendingTouchEnd = (self, e) => {
         e.preventDefault(); // WHY: the mousedown and mouseup of the browser after a tap would be a second press
         const tapX = pendingTouch.x;
         cancelPendingTouch();
-        box.onDragStart();
+        box.onChangeStart(box);
         moveThumbToPoint(tapX, 1);
-        box.onDragEnd();
+        box.onChangeEnd(box);
         if (box.showValueOnDrag) box.showValue();
     };
 
@@ -631,17 +632,17 @@ const Slider = function(params = {}) {
 
         updateThumbPosition(newLeft);
         showHideTracks(box.value, 0);
-        box.onDragMove(box.value);
+        box.onChange(box);
     };
 
     const onMouseUp = () => {
         removeDragEvents();
         setIsDragging(false, isTrackClick && box.showValueOnDrag);
         isTrackClick = false;
-        box.onDragEnd();
+        box.onChangeEnd(box);
     };
 
-    // The keys that change the value (a key is a short drag for the page: onDragStart, onDragMove, onDragEnd).
+    // The keys that change the value (a key is a short drag for the page: onChangeStart, onChange, onChangeEnd).
     const keyValues = {
         ArrowRight: () => box.value + getStep(),
         ArrowUp: () => box.value + getStep(),
@@ -660,11 +661,11 @@ const Slider = function(params = {}) {
         paintFocus();
         const value = toStepValue(keyValues[e.key]());
         if (value === box.value) return;
-        box.onDragStart();
+        box.onChangeStart(box);
         moveThumbToValue(value, 1);
         if (box.showValueOnDrag) box.showValue();
-        box.onDragMove(value);
-        box.onDragEnd();
+        box.onChange(box);
+        box.onChangeEnd(box);
     };
 
     const onFocus = () => {
@@ -825,4 +826,8 @@ Slider.styles.minimalDark = Slider.createMinimalStyle(Slider.MINIMAL_DARK_COLORS
 // working until they move to the new names. Delete a name when no page uses it any more.
 Slider.OLD_NAMES = {
     currentValue: "value",
+    onDragStart: "onChangeStart",
+    onDragEnd: "onChangeEnd",
+    // WHY wrap: onDragMove got the value, onChange gets self
+    onDragMove: { name: "onChange", wrap: (onDragMove) => (self) => { if (onDragMove) onDragMove(self.value); } },
 };

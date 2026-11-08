@@ -1232,8 +1232,8 @@ const SmartTable = function (params = {}) {
 
         box.searchInput = SearchInput(box.searchInputParams);
         that.setText(box.searchKeyword);
-        that.onSubmit = function (searchedText, self) {
-            box.searchKeyword = searchedText;
+        that.onEnter = function (self) {
+            box.searchKeyword = self.getSearchText();
             box.filterAndSortData();
         }
         searchClearIconRight = that.clearIconRight;

@@ -83,8 +83,8 @@ const SearchInputDefaults = {
     animated: 0, // 1: small hover / focus / clear motions. (box.setAnimated(0/1))
     hoverRingColor: "rgba(0, 0, 0, 0.08)", // animated: the thin line inside the border under the mouse
     focusRingColor: "rgba(0, 0, 0, 0.16)", // animated: the line while typing
-    onSearch: function(searchedText, self) {},
-    onSubmit: function(searchedText, self) {},
+    onChange: function(self) {}, // The text changed (typed, pasted, cleared): self.getSearchText() (lower case), self.getText()
+    onEnter: function(self) {}, // Enter, and the clear icon: self.getSearchText()
     styleName: "original", // "original" (the look of these defaults), "light" ("classic": its old name), "ozden", "ozdenDark", "minimal", "minimalDark" or a name added to SearchInput.styles
     style: {}, // WHY: the look is in the flat params above; the packages are packages of params (see SearchInput.styles).
 };
@@ -221,10 +221,6 @@ const SearchInput = function(params = {}) {
         return "linear-gradient(to right, " + start + ", " + end + ")";
     };
 
-    // The text given to onSearch and onSubmit
-    const getSearchedText = function() {
-        return box.txtSearch.text.toLowerCase();
-    };
 
     // An icon's own invert param (0 / 1), or invertIconColor when it is null.
     const isIconInverted = function(iconInvert) {
@@ -347,8 +343,8 @@ const SearchInput = function(params = {}) {
         setClearIconVisible(0);
         box.txtSearch.text = "";
         refreshTextFade();
-        box.onSearch(getSearchedText(), box);
-        box.onSubmit(getSearchedText(), box);
+        box.onChange(box);
+        box.onEnter(box);
     };
 
     // clearOnEscape: Escape clears a text. In an empty field the key goes on to the page (a Dialog closes).
@@ -374,6 +370,12 @@ const SearchInput = function(params = {}) {
     box.getText = function() {
         return box.txtSearch.text;
     }
+
+    // The text to search with: the text in lower case
+    box.getSearchText = function() {
+        return box.txtSearch.text.toLowerCase();
+    };
+    // USAGE: list.search(searchInput.getSearchText())
 
     box.setPlaceholder = function(text) {
         box.placeholder = text;
@@ -444,14 +446,14 @@ const SearchInput = function(params = {}) {
     // WHY "input", not keyup: a text pasted with the mouse, dropped or filled by the browser was never searched
     //     (the list kept the old text); and the arrows, Enter, Escape, which change nothing, searched again.
     box.listenTo(box.txtSearch.inputElement, "input", function() {
-        box.onSearch(getSearchedText(), box);
+        box.onChange(box);
         refreshClearIcon();
         refreshTextFade();
     });
 
-    // Sadece enter a basınca.
+    // Only Enter
     box.listenTo(box.txtSearch.inputElement, "keyup", function(self, event) {
-        if (event.key === "Enter") box.onSubmit(getSearchedText(), box);
+        if (event.key === "Enter") box.onEnter(box);
         refreshTextFade(); // (the arrows, Home and End move the caret)
     });
     // The text scrolls in its box (typing at the end, the blur takes it back to its start), a click moves the caret.
@@ -658,4 +660,7 @@ SearchInput.OLD_NAMES = {
     isCancelEnabled: "showClearIcon",
     placeholderText: "placeholder",
     setPlaceholderText: "setPlaceholder",
+    // WHY wrap: onSearch and onSubmit got the text first, onChange and onEnter get self
+    onSearch: { name: "onChange", wrap: (onSearch) => (self) => { if (onSearch) onSearch(self.getSearchText(), self); } },
+    onSubmit: { name: "onEnter", wrap: (onSubmit) => (self) => { if (onSubmit) onSubmit(self.getSearchText(), self); } },
 };

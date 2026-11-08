@@ -1966,7 +1966,7 @@ const JsonEditor = function (params = {}) {
                     top: 0,
                     width: "100%",
                     placeholder: box.texts.search,
-                    onSearch: searchRows,
+                    onChange: function (self) { searchRows(self.getSearchText()); },
                 });
             endGroup();
 

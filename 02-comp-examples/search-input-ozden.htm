@@ -41,14 +41,14 @@
                     caption("ozden · empty");
                     const searchEmpty = SearchInput({
                         styleName: "ozden",
-                        onSearch: showSearched,
+                        onChange: showSearched,
                     });
 
                     caption("ozden · with text (setText shows the clear icon)");
                     const searchWithText = SearchInput({
                         styleName: "ozden",
                         placeholder: "Search products",
-                        onSearch: showSearched,
+                        onChange: showSearched,
                     });
                     searchWithText.setText("fishing boat");
 
@@ -60,7 +60,7 @@
                         fontSize: 18,
                         searchIconSize: 20,
                         placeholder: "Search in all pages",
-                        onSearch: showSearched,
+                        onChange: showSearched,
                     });
 
                     caption("ozden · animated: 1 (move the mouse over it, click, type, clear; the packages are still: animated 0)");
@@ -68,7 +68,7 @@
                         styleName: "ozden",
                         animated: 1,
                         placeholder: "Search products",
-                        onSearch: showSearched,
+                        onChange: showSearched,
                     });
 
                     lblSearched = Label({ text: "Searched: -", fontSize: 13, textColor: Black(0.5) });
@@ -80,7 +80,7 @@
                         const searchDark = SearchInput({
                             styleName: "ozdenDark",
                             placeholder: "Search products",
-                            onSearch: showSearched,
+                            onChange: showSearched,
                         });
                         searchDark.setText("fishing boat");
 
@@ -89,7 +89,7 @@
                             styleName: "ozdenDark",
                             animated: 1,
                             placeholder: "Search products",
-                            onSearch: showSearched,
+                            onChange: showSearched,
                         });
 
                     endGroup();
@@ -98,7 +98,7 @@
                     caption("light · to compare");
                     const searchLight = SearchInput({
                         styleName: "light",
-                        onSearch: showSearched,
+                        onChange: showSearched,
                     });
 
                 endGroup();
@@ -111,8 +111,8 @@
 
         // *** OTHER FUNCTIONS:
 
-        const showSearched = function (searchedText) {
-            lblSearched.text = "Searched: " + (searchedText || "-");
+        const showSearched = function (self) {
+            lblSearched.text = "Searched: " + (self.getSearchText() || "-");
         };
 
         const caption = function (text) {

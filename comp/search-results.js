@@ -27,7 +27,7 @@ const results = SearchResults({
     styleName: "dark",
     onSelect: function (self, item) { item.open(); },
 });
-searchInput.onSearch = function (text) { results.setItems(findResults(text), text); };
+searchInput.onChange = function (self) { results.setItems(findResults(self.getSearchText()), self.getSearchText()); };
 results.attachTo(searchInput.txtSearch.inputElement);
 results.remove();                         // Also removes its window events and its ScrollBar.
 
@@ -332,8 +332,8 @@ const SearchResults = function (params = {}) {
     // items: [{ text, desc, group, ... }]. The list opens by itself when there is something to show.
     box.setItems = function (newItems, searchedText = "") {
 
-        // WHY: a SearchInput calls onSearch at every keyup (the arrows, Enter, Escape too), with the same text.
-        //      The active row went back to the first one after each arrow, and a list closed with Escape opened again.
+        // WHY: the same text again keeps the active row (it went back to the first one), and a list closed with Escape
+        //      stays closed (it opened again)
         const isSameQuery = (String(searchedText) === String(query));
         const keptIndex = (isSameQuery && box.isOpened === 1) ? activeIndex : 0;
         if (!isSameQuery) isClosedByUser = 0;

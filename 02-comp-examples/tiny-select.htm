@@ -32,7 +32,7 @@
                 ],
                 selectedIndex: 2,
             });
-            tinySelectA.onSelect = showSelected;
+            tinySelectA.onChange = showSelected;
 
             // TINY SELECT:
             const tinySelectB = TinySelect({
@@ -46,7 +46,7 @@
                 ],
                 selectedIndex: 3,
             });
-            tinySelectB.onSelect = showSelected;
+            tinySelectB.onChange = showSelected;
 
             // Put second object bottom of the previous object.
             tinySelectB.aline(tinySelectA, "bottom", 4, "left");
@@ -55,8 +55,9 @@
 
         };
 
-        const showSelected = function (index, id, label, titleText) {
-            console.log(`${titleText}: ${label} (${id})`);
+        const showSelected = function (self) {
+            const item = self.getSelectedItem();
+            console.log(`${self.titleText}: ${item.label} (${item.id})`);
         };
 
         </script>

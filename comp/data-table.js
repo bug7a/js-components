@@ -577,8 +577,8 @@ const DataTable = function (params = {}) {
             _s.search,
             box.searchParams,
         );
-        searchParams.onSearch = function (text) {
-            box.search(text);
+        searchParams.onChange = function (self) {
+            box.search(self.getSearchText());
         };
         box.searchInput = SearchInput(searchParams);
         box.searchInput.shrink = 0;

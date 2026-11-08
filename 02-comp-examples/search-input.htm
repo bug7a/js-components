@@ -46,14 +46,14 @@
                     caption("light · empty (click it: the edge while typing)");
                     SearchInput({
                         styleName: "light",
-                        onSearch: showSearched,
+                        onChange: showSearched,
                     });
 
                     caption("light · with text (setText shows the clear icon)");
                     const searchWithText = SearchInput({
                         styleName: "light",
                         placeholder: "Search products",
-                        onSearch: showSearched,
+                        onChange: showSearched,
                     });
                     searchWithText.setText("running shoes");
 
@@ -75,7 +75,7 @@
                             styleName: "light",
                             width: "100%",
                             placeholder: "Search in all pages",
-                            onSearch: showSearched,
+                            onChange: showSearched,
                         });
                     endGroup();
 
@@ -83,7 +83,7 @@
 
                     caption("original · the default (no styleName), to compare");
                     SearchInput({
-                        onSearch: showSearched,
+                        onChange: showSearched,
                     });
 
                 endGroup();
@@ -94,8 +94,8 @@
 
         // *** OTHER FUNCTIONS:
 
-        const showSearched = function (searchedText) {
-            lblSearched.plainText = "Searched: " + (searchedText || "-");
+        const showSearched = function (self) {
+            lblSearched.plainText = "Searched: " + (self.getSearchText() || "-");
         };
 
         const caption = function (text) {
