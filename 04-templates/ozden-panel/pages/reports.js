@@ -331,7 +331,7 @@ const ReportsPage = function(params = {}) {
 
         // Group select calls scheduleReport() with onSelect.
         filter.group = range.group;
-        groupSelect.setSelectedIndex(GROUPS.findIndex(function(g) { return g.id == range.group; }));
+        groupSelect.setSelectedIndex(GROUPS.findIndex(function(g) { return g.value == range.group; }));
 
         scheduleReport();
 
