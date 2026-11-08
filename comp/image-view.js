@@ -33,9 +33,11 @@ ImageView({ styleName: "dark", enlargeToFit: 1, onZoomChange: function (self) { 
 ImageView({ style: { image: { color: "white" } } }); // A ground behind a transparent picture
 
 Started Date: November 2026
-Developer: Bugra Ozden
-Email: bugra.ozden@gmail.com
 Webpage: https://bug7a.github.io/js-components/
+
+Copyright 2020-2026 Bugra Ozden <bugra.ozden@gmail.com> (https://bug7a.github.io/)
+Licensed under the Apache License, Version 2.0
+SPDX-License-Identifier: Apache-2.0
 
 */
 

@@ -10,9 +10,11 @@ THE SETTINGS OF THE APP: change these first.
 - The sizes of the template are px of a 600 px design (the app is fitted to the screen: page.fit(600, 800)).
 
 Started Date: November 2026 (the look of bug7a/javascript-mobile-app-template)
-Developer: Bugra Ozden
-Email: bugra.ozden@gmail.com
 Webpage: https://bug7a.github.io/js-components/
+
+Copyright 2020-2026 Bugra Ozden <bugra.ozden@gmail.com> (https://bug7a.github.io/)
+Licensed under the Apache License, Version 2.0
+SPDX-License-Identifier: Apache-2.0
 
 */
 

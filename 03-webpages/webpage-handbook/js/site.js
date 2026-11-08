@@ -8,8 +8,11 @@ basic.js Handbook Website - Site Controller - v26.09
 - Adresler: index.htm (ilk bölüm), index.htm#/box (bölüm), index.htm#/box/examples (bölümdeki başlık)
 - Reads the handbook files, builds the page, opens the chapter by the address and prepares the search index.
 
-Developer: Bugra Ozden
-Email: bugra.ozden@gmail.com
+Webpage: https://bug7a.github.io/basic.js-handbook/
+
+Copyright 2020-2026 Bugra Ozden <bugra.ozden@gmail.com> (https://bug7a.github.io/)
+Licensed under the Apache License, Version 2.0
+SPDX-License-Identifier: Apache-2.0
 
 */
 

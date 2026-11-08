@@ -9,8 +9,11 @@ basic.js Handbook Website - Layout - v26.09
 - Arama: comp/search-results.js, üst çubuktaki kutunun altında açılır. "/" veya Ctrl (Cmd) + K arama kutusuna gider.
 - The frame of the page: header, chapter list on the left and the scrolling content box.
 
-Developer: Bugra Ozden
-Email: bugra.ozden@gmail.com
+Webpage: https://bug7a.github.io/basic.js-handbook/
+
+Copyright 2020-2026 Bugra Ozden <bugra.ozden@gmail.com> (https://bug7a.github.io/)
+Licensed under the Apache License, Version 2.0
+SPDX-License-Identifier: Apache-2.0
 
 */
 

@@ -10,7 +10,11 @@ basic-designer: what a parameter of a component holds
   WHY a guess is enough: the text field of a row always stays, so a wrong kind only gives a useless button.
 - Nothing here draws. The texts of a shadow, a line, a motion and a gradient are read and written here.
 
-Developer: Bugra Ozden
+Webpage: https://bug7a.github.io/js-components/
+
+Copyright 2020-2026 Bugra Ozden <bugra.ozden@gmail.com> (https://bug7a.github.io/)
+Licensed under the Apache License, Version 2.0
+SPDX-License-Identifier: Apache-2.0
 
 */
 

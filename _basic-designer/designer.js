@@ -12,7 +12,11 @@ basic-designer - v0.1 (prototype)
 - The page is fetched as text and given to the iframe with srcdoc: on the SAME lines,
   <base> is added, .min.js -> .js and runtime.js after basic.js, so the line numbers stay right.
 
-Developer: Bugra Ozden
+Webpage: https://bug7a.github.io/js-components/
+
+Copyright 2020-2026 Bugra Ozden <bugra.ozden@gmail.com> (https://bug7a.github.io/)
+Licensed under the Apache License, Version 2.0
+SPDX-License-Identifier: Apache-2.0
 
 */
 

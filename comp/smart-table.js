@@ -24,10 +24,12 @@ Sample: 02-comp-examples/smart-table.htm (the model page of SmartTable).
 - SmartTable is a JavaScript table component designed to run smoothly even with millions of records. Thanks to its virtual scroll architecture, it only writes the visible rows to the DOM, eliminating memory and performance issues with large datasets. It makes data exploration easy with real-time filtering, multi-column sorting, and both horizontal and vertical scroll support. Custom cell designs can be created for each column via createCustomItemCell, allowing flexible visual content per column. Since column widths, heights, and colors are all configurable through parameters, it can be quickly adapted to different projects.
 
 
-Started Date: Mar 2026
-Developer: Bugra Ozden
-Email: bugra.ozden@gmail.com
+Started Date: March 2026
 Webpage: https://bug7a.github.io/js-components/
+
+Copyright 2020-2026 Bugra Ozden <bugra.ozden@gmail.com> (https://bug7a.github.io/)
+Licensed under the Apache License, Version 2.0
+SPDX-License-Identifier: Apache-2.0
 
 
 - Arama sütunu: Arama kutusunun sağ ucundaki etikete (ALL) basınca sütun listesi açılır. Arama sadece seçilen sütunda yapılır.

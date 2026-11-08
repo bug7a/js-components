@@ -25,8 +25,11 @@ NOTE: The left menu keeps its own default look (dark background, red selection) 
       not the page's look, so it does not use Ink()/T.invertIcon: it has its own ink keys
       (menuTextColor, menuSelectedTextColor, menuHoverColor, menuInvertIcon). See index.htm.
 
-Developer: Bugra Ozden
-Email: bugra.ozden@gmail.com
+Webpage: https://bug7a.github.io/js-components/
+
+Copyright 2020-2026 Bugra Ozden <bugra.ozden@gmail.com> (https://bug7a.github.io/)
+Licensed under the Apache License, Version 2.0
+SPDX-License-Identifier: Apache-2.0
 
 */
 

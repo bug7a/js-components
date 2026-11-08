@@ -34,9 +34,11 @@ Slider({ styleName: "round", width: "100%", value: 30 });
 Slider({ styleName: "round", minValue: 12, maxValue: 24, step: 0.5, value: 16 }); // 12, 12.5 ... 24
 
 Started Date: June 2024
-Developer: Bugra Ozden
-Email: bugra.ozden@gmail.com
 Webpage: https://bug7a.github.io/js-components/
+
+Copyright 2020-2026 Bugra Ozden <bugra.ozden@gmail.com> (https://bug7a.github.io/)
+Licensed under the Apache License, Version 2.0
+SPDX-License-Identifier: Apache-2.0
 
 */
 

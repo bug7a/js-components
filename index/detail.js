@@ -10,8 +10,11 @@ JS Components Website - Detail View - v26.09
 - Dar ekranda (CONFIG.splitBreakpoint altı) ekran bölünmez; üst çubuktaki düğme ile örnek ve kod sırayla gösterilir.
 - When a component is opened the screen is split: the running sample on the left, its code on the right.
 
-Developer: Bugra Ozden
-Email: bugra.ozden@gmail.com
+Webpage: https://bug7a.github.io/js-components/
+
+Copyright 2020-2026 Bugra Ozden <bugra.ozden@gmail.com> (https://bug7a.github.io/)
+Licensed under the Apache License, Version 2.0
+SPDX-License-Identifier: Apache-2.0
 
 */
 

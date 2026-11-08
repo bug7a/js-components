@@ -11,8 +11,11 @@ basic.js Handbook Website - Code Block - v26.09
 - window.onload veya start() içermeyen parçalar, bir start() fonksiyonunun içine konularak çalıştırılır.
 - Code blocks of the handbook: highlighted code, Copy and (for examples that draw objects) Run.
 
-Developer: Bugra Ozden
-Email: bugra.ozden@gmail.com
+Webpage: https://bug7a.github.io/basic.js-handbook/
+
+Copyright 2020-2026 Bugra Ozden <bugra.ozden@gmail.com> (https://bug7a.github.io/)
+Licensed under the Apache License, Version 2.0
+SPDX-License-Identifier: Apache-2.0
 
 */
 

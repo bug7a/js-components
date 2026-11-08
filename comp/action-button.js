@@ -36,9 +36,11 @@ ActionButton({ onAction: function () { addNewNote(); } }); // no items: a direct
 ActionButton({ style: { button: { color: "#8BC34A" } } }); // Change only some keys of the style.
 
 Started Date: October 2026
-Developer: Bugra Ozden
-Email: bugra.ozden@gmail.com
 Webpage: https://bug7a.github.io/js-components/
+
+Copyright 2020-2026 Bugra Ozden <bugra.ozden@gmail.com> (https://bug7a.github.io/)
+Licensed under the Apache License, Version 2.0
+SPDX-License-Identifier: Apache-2.0
 
 */
 

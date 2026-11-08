@@ -67,10 +67,9 @@ WHAT IS NEW IN v26.09.18 (see basic/basic-what-is-new.md for examples):
 The Art of Fun Coding — With basic.js
 
 
-Copyright 2020-2026 Bugra Ozden <bugra.ozden@gmail.com>
-- https://github.com/bug7a
-
+Copyright 2020-2026 Bugra Ozden <bugra.ozden@gmail.com> (https://bug7a.github.io/)
 Licensed under the Apache License, Version 2.0
+SPDX-License-Identifier: Apache-2.0
 
 */
 

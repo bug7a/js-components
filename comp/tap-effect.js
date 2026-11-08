@@ -30,9 +30,11 @@ TapEffect.show(200, 300); // a circle at x 200, y 300 of the page
 if (TapEffect.isOn) TapEffect.stop();
 
 Started Date: November 2026
-Developer: Bugra Ozden
-Email: bugra.ozden@gmail.com
 Webpage: https://bug7a.github.io/js-components/
+
+Copyright 2020-2026 Bugra Ozden <bugra.ozden@gmail.com> (https://bug7a.github.io/)
+Licensed under the Apache License, Version 2.0
+SPDX-License-Identifier: Apache-2.0
 
 */
 

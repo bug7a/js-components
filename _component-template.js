@@ -64,9 +64,11 @@ there a component goes to app/ and gets a <script> line in index.htm):
 - The catalog: index/catalog.js (and the <noscript> list of index.htm), and its details in context/repo-map.md.
 
 Started Date: June 2024
-Developer: Bugra Ozden
-Email: bugra.ozden@gmail.com
 Webpage: https://bug7a.github.io/js-components/
+
+Copyright 2020-2026 Bugra Ozden <bugra.ozden@gmail.com> (https://bug7a.github.io/)
+Licensed under the Apache License, Version 2.0
+SPDX-License-Identifier: Apache-2.0
 
 */
 

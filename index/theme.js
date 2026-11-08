@@ -7,8 +7,11 @@ JS Components Website - Site Theme & UI Helpers - v26.09
 - Renkler, ölçüler, ikonlar ve sayfa boyunca tekrar eden küçük arayüz parçaları.
 - Colors, metrics, icons and the small UI pieces the site repeats.
 
-Developer: Bugra Ozden
-Email: bugra.ozden@gmail.com
+Webpage: https://bug7a.github.io/js-components/
+
+Copyright 2020-2026 Bugra Ozden <bugra.ozden@gmail.com> (https://bug7a.github.io/)
+Licensed under the Apache License, Version 2.0
+SPDX-License-Identifier: Apache-2.0
 
 */
 

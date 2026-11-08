@@ -38,9 +38,11 @@ SliderField({ styleName: "ozden", labelText: "Volume", value: 60, minValue: 0, m
 SliderField({ styleName: "ozden", labelText: "Speed", style: { fill: { color: "#7BC362", hoverColor: "#70B756", activeColor: "#67AD4D" } } }); // the green of SmartButton
 
 Started Date: September 2026
-Developer: Bugra Ozden
-Email: bugra.ozden@gmail.com
 Webpage: https://bug7a.github.io/js-components/
+
+Copyright 2020-2026 Bugra Ozden <bugra.ozden@gmail.com> (https://bug7a.github.io/)
+Licensed under the Apache License, Version 2.0
+SPDX-License-Identifier: Apache-2.0
 
 */
 

@@ -39,9 +39,11 @@ MORE:
 - App.makeIcon(App.ICON_PATHS.trash, color): a simple line icon (an SVG data URI) for Icon / SmartButton.
 
 Started Date: November 2026 (the new version of bug7a/web2app)
-Developer: Bugra Ozden
-Email: bugra.ozden@gmail.com
 Webpage: https://bug7a.github.io/js-components/
+
+Copyright 2020-2026 Bugra Ozden <bugra.ozden@gmail.com> (https://bug7a.github.io/)
+Licensed under the Apache License, Version 2.0
+SPDX-License-Identifier: Apache-2.0
 
 */
 

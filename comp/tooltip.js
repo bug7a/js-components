@@ -36,9 +36,11 @@ bubble.remove();
 Tooltip.show(button, "Saved", { arrow: 10, scale: 1.5 }); // every size x 1.5 (default: basic.uiScale)
 
 Started Date: June 2024
-Developer: Bugra Ozden
-Email: bugra.ozden@gmail.com
 Webpage: https://bug7a.github.io/js-components/
+
+Copyright 2020-2026 Bugra Ozden <bugra.ozden@gmail.com> (https://bug7a.github.io/)
+Licensed under the Apache License, Version 2.0
+SPDX-License-Identifier: Apache-2.0
 
 */
 

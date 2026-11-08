@@ -7,8 +7,11 @@ basic.js Website - Site Theme & UI Helpers - v26.09
 - Renk paleti, ölçüler, ikonlar ve sayfa boyunca tekrar eden arayüz parçaları.
 - Color palette, metrics, icons and the small UI pieces the page repeats.
 
-Developer: Bugra Ozden
-Email: bugra.ozden@gmail.com
+Webpage: https://bug7a.github.io/basic.js/
+
+Copyright 2020-2026 Bugra Ozden <bugra.ozden@gmail.com> (https://bug7a.github.io/)
+Licensed under the Apache License, Version 2.0
+SPDX-License-Identifier: Apache-2.0
 
 */
 

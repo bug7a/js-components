@@ -11,8 +11,11 @@ basic.js Handbook Website - Site Configuration - v26.09
   El kitabını güncellemek için o dosyaları düzenleyin; site bir şey kopyalamaz.
 - The chapters are read from the Markdown files in __handbook/english and __handbook/turkce.
 
-Developer: Bugra Ozden
-Email: bugra.ozden@gmail.com
+Webpage: https://bug7a.github.io/basic.js-handbook/
+
+Copyright 2020-2026 Bugra Ozden <bugra.ozden@gmail.com> (https://bug7a.github.io/)
+Licensed under the Apache License, Version 2.0
+SPDX-License-Identifier: Apache-2.0
 
 */
 

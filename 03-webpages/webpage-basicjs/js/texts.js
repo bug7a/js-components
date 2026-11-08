@@ -8,8 +8,11 @@ basic.js Website - Texts - v26.09
 - All the copy of the site. Both languages must have the same keys. Code samples: js/samples.js
 - {size}, {components}, {chapters}, {license}, {version} -> js/config.js ve basic.version ile doldurulur.
 
-Developer: Bugra Ozden
-Email: bugra.ozden@gmail.com
+Webpage: https://bug7a.github.io/basic.js/
+
+Copyright 2020-2026 Bugra Ozden <bugra.ozden@gmail.com> (https://bug7a.github.io/)
+Licensed under the Apache License, Version 2.0
+SPDX-License-Identifier: Apache-2.0
 
 */
 

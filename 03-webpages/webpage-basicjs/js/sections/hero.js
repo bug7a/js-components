@@ -6,8 +6,11 @@ HeroSection - v26.09 (basic.js Website)
 
 - Koyu giriş bölümü: sürüm, başlık, giriş, iki düğme, kısa bilgiler ve canlı bir kod örneği (LiveCode).
 
-Developer: Bugra Ozden
-Email: bugra.ozden@gmail.com
+Webpage: https://bug7a.github.io/basic.js/
+
+Copyright 2020-2026 Bugra Ozden <bugra.ozden@gmail.com> (https://bug7a.github.io/)
+Licensed under the Apache License, Version 2.0
+SPDX-License-Identifier: Apache-2.0
 
 */
 

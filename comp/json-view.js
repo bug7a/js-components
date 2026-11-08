@@ -40,9 +40,11 @@ AN ENTRY (onSelect): { key, label, kind, path, pathText, value }
 - value: the value of a string, a number, a boolean or null. An object or a list: null (getSelectedValue() gives it).
 
 Started Date: November 2026
-Developer: Bugra Ozden
-Email: bugra.ozden@gmail.com
 Webpage: https://bug7a.github.io/js-components/
+
+Copyright 2020-2026 Bugra Ozden <bugra.ozden@gmail.com> (https://bug7a.github.io/)
+Licensed under the Apache License, Version 2.0
+SPDX-License-Identifier: Apache-2.0
 
 */
 

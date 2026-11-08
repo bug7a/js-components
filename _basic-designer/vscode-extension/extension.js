@@ -15,7 +15,11 @@ basic designer - VS Code extension - v0.0.1 (prototype)
   designer loads the page again (reloadAfterSend).
 - Terminals: zsh / bash get the whole prompt, PowerShell and cmd (Windows) an instruction to read its file.
 
-Developer: Bugra Ozden
+Webpage: https://bug7a.github.io/js-components/
+
+Copyright 2020-2026 Bugra Ozden <bugra.ozden@gmail.com> (https://bug7a.github.io/)
+Licensed under the Apache License, Version 2.0
+SPDX-License-Identifier: Apache-2.0
 
 */
 

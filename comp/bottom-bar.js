@@ -5,9 +5,11 @@
 Component: BottomBar - v26.11
 Description: Mobile application bottom bar component that creates buttons from a JSON list.
 Started Date: December 2025
-Developer: Bugra Ozden
-Email: bugra.ozden@gmail.com
-WebPage: https://bug7a.github.io/
+Webpage: https://bug7a.github.io/js-components/
+
+Copyright 2020-2026 Bugra Ozden <bugra.ozden@gmail.com> (https://bug7a.github.io/)
+Licensed under the Apache License, Version 2.0
+SPDX-License-Identifier: Apache-2.0
 
 - Design idea from an Instagram post by shahinurstk02
 

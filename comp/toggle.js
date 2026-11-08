@@ -46,9 +46,11 @@ Toggle({ styleName: "label", onMark: "AÇIK", offMark: "KAPALI", width: 92 }); /
 Toggle({ styleName: "badge", animated: 0 });    // No motion
 
 Started Date: August 2025
-Developer: Bugra Ozden
-Email: bugra.ozden@gmail.com
 Webpage: https://bug7a.github.io/js-components/
+
+Copyright 2020-2026 Bugra Ozden <bugra.ozden@gmail.com> (https://bug7a.github.io/)
+Licensed under the Apache License, Version 2.0
+SPDX-License-Identifier: Apache-2.0
 
 */
 

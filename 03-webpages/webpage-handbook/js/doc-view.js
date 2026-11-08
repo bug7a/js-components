@@ -8,8 +8,11 @@ basic.js Handbook Website - Document View - v26.09
 - Sağda "Bu sayfada" listesi (geniş ekranda), altta önceki / sonraki bölüm.
 - Draws the chosen chapter: the Markdown blocks become basic.js objects.
 
-Developer: Bugra Ozden
-Email: bugra.ozden@gmail.com
+Webpage: https://bug7a.github.io/basic.js-handbook/
+
+Copyright 2020-2026 Bugra Ozden <bugra.ozden@gmail.com> (https://bug7a.github.io/)
+Licensed under the Apache License, Version 2.0
+SPDX-License-Identifier: Apache-2.0
 
 */
 

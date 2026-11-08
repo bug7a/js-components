@@ -11,7 +11,11 @@ basic-designer: the rows of the Parameters view and their small editors
   titles move them. A list of data is too big for that: it opens in its own window (JsonEditor.open of comp/json-editor.js).
 - A change makes the component again, so a drag sends only a few changes in a second (sendParamLive).
 
-Developer: Bugra Ozden
+Webpage: https://bug7a.github.io/js-components/
+
+Copyright 2020-2026 Bugra Ozden <bugra.ozden@gmail.com> (https://bug7a.github.io/)
+Licensed under the Apache License, Version 2.0
+SPDX-License-Identifier: Apache-2.0
 
 */
 

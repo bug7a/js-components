@@ -7,8 +7,11 @@ basic.js Website - Site Configuration - v26.09
 - Tüm site ayarları bu dosyadadır. Metinler: js/texts.js  |  Kod örnekleri: js/samples.js
 - All site settings are in this file. Texts: js/texts.js  |  Code samples: js/samples.js
 
-Developer: Bugra Ozden
-Email: bugra.ozden@gmail.com
+Webpage: https://bug7a.github.io/basic.js/
+
+Copyright 2020-2026 Bugra Ozden <bugra.ozden@gmail.com> (https://bug7a.github.io/)
+Licensed under the Apache License, Version 2.0
+SPDX-License-Identifier: Apache-2.0
 
 */
 

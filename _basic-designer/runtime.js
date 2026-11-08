@@ -19,7 +19,11 @@ basic-designer runtime - v0.1 (prototype)
   also the two argument startObject(defaults, params). The designer makes the component again with them.
 - Everything is in one global: window.__basicDesigner
 
-Developer: Bugra Ozden
+Webpage: https://bug7a.github.io/js-components/
+
+Copyright 2020-2026 Bugra Ozden <bugra.ozden@gmail.com> (https://bug7a.github.io/)
+Licensed under the Apache License, Version 2.0
+SPDX-License-Identifier: Apache-2.0
 
 */
 

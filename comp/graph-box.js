@@ -74,9 +74,11 @@ and these changes:
 NEEDS: basic.js v26.10.25 (basic.resolveTheme, listenTo, setFocusRing...).
 
 Started Date: November 2026
-Developer: Bugra Ozden
-Email: bugra.ozden@gmail.com
 Webpage: https://bug7a.github.io/js-components/
+
+Copyright 2020-2026 Bugra Ozden <bugra.ozden@gmail.com> (https://bug7a.github.io/)
+Licensed under the Apache License, Version 2.0
+SPDX-License-Identifier: Apache-2.0
 
 */
 
