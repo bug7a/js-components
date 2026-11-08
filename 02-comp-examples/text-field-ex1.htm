@@ -12,13 +12,9 @@
         <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
         <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
         <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
-        <!--<script src="basic/scroll-bar.min.js" type="text/javascript" charset="utf-8"></script>-->
 
         <script src="../comp/tooltip.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/text-field.js" type="text/javascript" charset="utf-8"></script>
-
-        <!-- ALL COMPONENTS IN ONE FILE -->
-        <!-- <script src="components.js" type="text/javascript" charset="utf-8"></script> -->
 
         <script>
 
@@ -27,7 +23,7 @@
             page.color = "white";
 
             // GROUP: Autolayout
-            AutoLayout();
+            HGroup();
 
                 // INPUT: #1
                 const myInput = TextField({
@@ -68,7 +64,7 @@
 
                 });
 
-            endAutoLayout(); // END GROUP
+            endGroup();
 
             // Other functions of TextField: setTitle(), setDescription() (needs showDescription: 1), setMaxLength(),
             // setPlaceholder(), setBackgroundColor(), setFocusBackgroundColor(), setLineColor(),

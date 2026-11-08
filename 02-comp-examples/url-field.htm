@@ -12,15 +12,11 @@
         <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
         <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
         <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
-        <!--<script src="basic/scroll-bar.min.js" type="text/javascript" charset="utf-8"></script>-->
 
         <script src="../comp/tooltip.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/text-field.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/url-field.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/tiny-select.js" type="text/javascript" charset="utf-8"></script>
-
-        <!-- ALL COMPONENTS IN ONE FILE -->
-        <!-- <script src="components.js" type="text/javascript" charset="utf-8"></script> -->
 
         <script>
 
@@ -29,7 +25,7 @@
             page.color = "white";
 
             // GROUP: Autolayout
-            AutoLayout();
+            HGroup();
 
                 // INPUT: #1
                 const myInput = UrlField({
@@ -60,7 +56,7 @@
                     },
                 });
 
-            endAutoLayout(); // END GROUP
+            endGroup();
 
             // Get value
             myInput.onChange = function () {

@@ -23,8 +23,7 @@
             page.color = "lightgray";
 
             // PAGE:
-            AutoLayout({
-                flow: "vertical",
+            VGroup({
                 align: "center",
                 gap: 6,
             });
@@ -53,11 +52,10 @@
                     value: random(0,100),
                 });
 
-            endAutoLayout();
+            endGroup();
 
             // GROUP: Top left buttons
-            AutoLayout({
-                flow: "horizontal",
+            HGroup({
                 align: "top left",
                 gap: 8,
                 padding: [20, 20],
@@ -73,11 +71,10 @@
                     sliderB.showValue();
                 });
 
-            endAutoLayout();
+            endGroup();
 
             // GROUP: Bottom info
-            AutoLayout({
-                flow: "vertical",
+            VGroup({
                 align: "left bottom",
                 padding: [20 ,20],
             });
@@ -93,7 +90,7 @@
                     fontSize: 14,
                 });
 
-            endAutoLayout();
+            endGroup();
 
         };
 
@@ -115,8 +112,7 @@
         const createSliderTitle = function (titleText, iconPath) {
 
             // GROUP: An icon and a title
-            AutoLayout({
-                flow: "horizontal",
+            HGroup({
                 align: "left center",
                 height: "auto",
                 width: 250,
@@ -134,7 +130,7 @@
                     text: titleText,
                 });
 
-            endAutoLayout();
+            endGroup();
 
         };
 

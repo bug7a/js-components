@@ -41,7 +41,7 @@
             page.onResize(fitToWindow);
 
             // GROUP: Fills the window and puts the page in its middle
-            AutoLayout({ align: "center top" });
+            HGroup({ align: "center top" });
 
                 // BOX: The page (600 px)
                 startBox({ width: DESIGN_WIDTH, height: "100%", color: "white" });
@@ -66,7 +66,7 @@
 
                 endBox();
 
-            endAutoLayout();
+            endGroup();
 
             showPage(tabBar);
 

@@ -37,7 +37,7 @@
             page.onResize(fitToWindow);
 
             // GROUP: Fills the window and puts the page in its middle
-            AutoLayout({ align: "center top" });
+            HGroup({ align: "center top" });
 
                 // BOX: The page (600 px), it scrolls when the window is low
                 startBox({ width: DESIGN_WIDTH, height: "100%", color: "white", scrollY: 1 });
@@ -82,7 +82,7 @@
                     endGroup();
                 endBox();
 
-            endAutoLayout();
+            endGroup();
 
             showSelected(periodBar);
 
