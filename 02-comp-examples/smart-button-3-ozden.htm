@@ -14,6 +14,7 @@
 
     <script src="../comp/tooltip.js" type="text/javascript" charset="utf-8"></script> <!-- the bubble of ask -->
     <script src="../comp/smart-button.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/scroll-area.js" type="text/javascript" charset="utf-8"></script>
 
     <script>
 
@@ -103,113 +104,109 @@
         // BOX: Cover (behind the dialog)
         Box(0, 0, "100%", "100%", { color: COVER_COLOR });
 
-        startBox(0, 0, "100%", "100%", { color: "transparent", scrollY: 1 });
+        ScrollArea({ align: "center top", gap: 30, padding: [20, 50] });
 
-            VGroup({ width: "100%", height: "100%", align: "center top", gap: 30, padding: [20, 50], clipContent: 0 });
+            // GROUP: The card of the button standards
+            VGroup({
+                width: CARD_WIDTH,
+                height: CARD_HEIGHT,
+                align: "left top",
+                gap: 0,
+                color: "white",
+                round: CARD_ROUND,
+                border: CARD_BORDER,
+                borderColor: INK,
+                boxShadow: "0 10px 30px rgba(0, 0, 0, 0.08), " + BOTTOM_LINE,
+                clipContent: 0,
+                css: { maxWidth: "calc(100vw - 40px)" },
+            });
 
-                // GROUP: The card of the button standards
-                VGroup({
-                    width: CARD_WIDTH,
-                    height: CARD_HEIGHT,
-                    align: "left top",
-                    gap: 0,
-                    color: "white",
-                    round: CARD_ROUND,
-                    border: CARD_BORDER,
-                    borderColor: INK,
-                    boxShadow: "0 10px 30px rgba(0, 0, 0, 0.08), " + BOTTOM_LINE,
-                    clipContent: 0,
-                    css: { maxWidth: "calc(100vw - 40px)" },
-                });
+                // GROUP: Content (it fills the card: the height of the card in its edge)
+                VGroup({ width: "100%", height: CARD_HEIGHT - 2 * CARD_BORDER, align: "left top", gap: 8, padding: [24, 22] });
 
-                    // GROUP: Content (it fills the card: the height of the card in its edge)
-                    VGroup({ width: "100%", height: CARD_HEIGHT - 2 * CARD_BORDER, align: "left top", gap: 8, padding: [24, 22] });
+                    Label({
+                        plainText: "Button styles",
+                        width: "100%",
+                        fontSize: TEXT_SIZE,
+                        textColor: INK,
+                        fontFamily: "opensans-bold",
+                        css: { whiteSpace: "normal", lineHeight: "1.5", textWrap: "balance" },
+                    });
 
-                        Label({
-                            plainText: "Button styles",
-                            width: "100%",
-                            fontSize: TEXT_SIZE,
-                            textColor: INK,
-                            fontFamily: "opensans-bold",
-                            css: { whiteSpace: "normal", lineHeight: "1.5", textWrap: "balance" },
+                    // DEFAULT: Cancel, gray and white
+                    createSectionTitle("Default (ozden)");
+                    HGroup({ width: "100%", height: "auto", align: "left center", gap: 10, clipContent: 0 });
+                        SmartButton({ labelText: "Cancel" });
+                        SmartButton({ tone: "white", labelText: "Cancel" });
+                    endGroup();
+
+                    // PRIMARY: the actions, each in its own color (it waits while the job runs)
+                    createSectionTitle("Primary (ozden)");
+                    HGroup({ width: "100%", height: "auto", align: "left center", gap: 10, color: PRIMARY_ROW_COLOR, clipContent: 0 });
+                        SmartButton({ labelText: "Edit", iconFile: ICONS.edit, style: TEAL_ACTION, onClick: waitForJob });
+                        SmartButton({ labelText: "Save", iconFile: ICONS.save, style: CYAN_ACTION, onClick: waitForJob });
+                        SmartButton({ labelText: "Send", iconFile: ICONS.send, style: SKY_ACTION, onClick: waitForJob });
+                        SmartButton({ labelText: "Upload", iconFile: ICONS.upload, style: ORANGE_ACTION, onClick: waitForJob });
+                        SmartButton({ labelText: "Print", iconFile: ICONS.print, style: SLATE_ACTION, onClick: waitForJob });
+                    endGroup();
+
+                    // ALTERNATIVE (ozden2): the white trash (it asks before it deletes), plain buttons in a few colors
+                    createSectionTitle("Alternative (ozden2)");
+                    HGroup({ height: "auto", align: "left center", gap: 10, clipContent: 0 });
+                        SmartButton({
+                            styleName: "ozden2",
+                            tone: "white",
+                            width: TRASH_WIDTH,
+                            labelText: "",
+                            iconFile: ICONS.trash,
+                            ariaLabel: "Delete the draft",
+                            ask: "Click again to delete the draft.",
+                            style: TRASH,
                         });
+                        SmartButton({ styleName: "ozden2", tone: "white", labelText: "Details" });
+                        SmartButton({ styleName: "ozden2", labelText: "Later", style: SOFT_YELLOW });
+                        SmartButton({ styleName: "ozden2", labelText: "Report", style: ROSE });
+                        SmartButton({ styleName: "ozden2", labelText: "Archive", style: MINT });
+                    endGroup();
 
-                        // DEFAULT: Cancel, gray and white
-                        createSectionTitle("Default (ozden)");
-                        HGroup({ width: "100%", height: "auto", align: "left center", gap: 10, clipContent: 0 });
-                            SmartButton({ labelText: "Cancel" });
-                            SmartButton({ tone: "white", labelText: "Cancel" });
-                        endGroup();
+                    // ALTERNATIVE (ozden3): the same kinds with a fainter edge, a gray bin
+                    createSectionTitle("Alternative (ozden3)");
+                    HGroup({ width: "100%", height: "auto", align: "left center", gap: 10, clipContent: 0 });
+                        SmartButton({
+                            styleName: "ozden3",
+                            width: TRASH_WIDTH,
+                            labelText: "",
+                            iconFile: ICONS.trash,
+                            ariaLabel: "Delete the draft",
+                            ask: "Click again to delete the draft.",
+                            style: TRASH,
+                        });
+                        SmartButton({ styleName: "ozden3", labelText: "Send" });
+                        SmartButton({ styleName: "ozden3", labelText: "Print", style: SOFT_YELLOW });
+                        SmartButton({ styleName: "ozden3", labelText: "Save", style: MIST });
+                        SmartButton({ styleName: "ozden3", labelText: "Upload", style: LAVENDER });
+                    endGroup();
 
-                        // PRIMARY: the actions, each in its own color (it waits while the job runs)
-                        createSectionTitle("Primary (ozden)");
-                        HGroup({ width: "100%", height: "auto", align: "left center", gap: 10, color: PRIMARY_ROW_COLOR, clipContent: 0 });
-                            SmartButton({ labelText: "Edit", iconFile: ICONS.edit, style: TEAL_ACTION, onClick: waitForJob });
-                            SmartButton({ labelText: "Save", iconFile: ICONS.save, style: CYAN_ACTION, onClick: waitForJob });
-                            SmartButton({ labelText: "Send", iconFile: ICONS.send, style: SKY_ACTION, onClick: waitForJob });
-                            SmartButton({ labelText: "Upload", iconFile: ICONS.upload, style: ORANGE_ACTION, onClick: waitForJob });
-                            SmartButton({ labelText: "Print", iconFile: ICONS.print, style: SLATE_ACTION, onClick: waitForJob });
-                        endGroup();
-
-                        // ALTERNATIVE (ozden2): the white trash (it asks before it deletes), plain buttons in a few colors
-                        createSectionTitle("Alternative (ozden2)");
-                        HGroup({ height: "auto", align: "left center", gap: 10, clipContent: 0 });
-                            SmartButton({
-                                styleName: "ozden2",
-                                tone: "white",
-                                width: TRASH_WIDTH,
-                                labelText: "",
-                                iconFile: ICONS.trash,
-                                ariaLabel: "Delete the draft",
-                                ask: "Click again to delete the draft.",
-                                style: TRASH,
-                            });
-                            SmartButton({ styleName: "ozden2", tone: "white", labelText: "Details" });
-                            SmartButton({ styleName: "ozden2", labelText: "Later", style: SOFT_YELLOW });
-                            SmartButton({ styleName: "ozden2", labelText: "Report", style: ROSE });
-                            SmartButton({ styleName: "ozden2", labelText: "Archive", style: MINT });
-                        endGroup();
-
-                        // ALTERNATIVE (ozden3): the same kinds with a fainter edge, a gray bin
-                        createSectionTitle("Alternative (ozden3)");
-                        HGroup({ width: "100%", height: "auto", align: "left center", gap: 10, clipContent: 0 });
-                            SmartButton({
-                                styleName: "ozden3",
-                                width: TRASH_WIDTH,
-                                labelText: "",
-                                iconFile: ICONS.trash,
-                                ariaLabel: "Delete the draft",
-                                ask: "Click again to delete the draft.",
-                                style: TRASH,
-                            });
-                            SmartButton({ styleName: "ozden3", labelText: "Send" });
-                            SmartButton({ styleName: "ozden3", labelText: "Print", style: SOFT_YELLOW });
-                            SmartButton({ styleName: "ozden3", labelText: "Save", style: MIST });
-                            SmartButton({ styleName: "ozden3", labelText: "Upload", style: LAVENDER });
-                        endGroup();
-
-                        // ALTERNATIVE (ozden4): a text button and a bin with no surface (their hover shows they are buttons)
-                        createSectionTitle("Alternative (ozden4)");
-                        HGroup({ height: "auto", align: "left center", gap: 10, clipContent: 0 });
-                            SmartButton({ styleName: "ozden4", labelText: "Upload" });
-                            SmartButton({
-                                styleName: "ozden4",
-                                width: TRASH_WIDTH,
-                                labelText: "",
-                                iconFile: ICONS.trash,
-                                ariaLabel: "Delete the draft",
-                                ask: "Click again to delete the draft.",
-                                style: TRASH,
-                            });
-                        endGroup();
-
+                    // ALTERNATIVE (ozden4): a text button and a bin with no surface (their hover shows they are buttons)
+                    createSectionTitle("Alternative (ozden4)");
+                    HGroup({ height: "auto", align: "left center", gap: 10, clipContent: 0 });
+                        SmartButton({ styleName: "ozden4", labelText: "Upload" });
+                        SmartButton({
+                            styleName: "ozden4",
+                            width: TRASH_WIDTH,
+                            labelText: "",
+                            iconFile: ICONS.trash,
+                            ariaLabel: "Delete the draft",
+                            ask: "Click again to delete the draft.",
+                            style: TRASH,
+                        });
                     endGroup();
 
                 endGroup();
 
             endGroup();
 
-        endBox();
+        endGroup();
 
     };
 

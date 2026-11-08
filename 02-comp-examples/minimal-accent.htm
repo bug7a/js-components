@@ -33,6 +33,7 @@
     <script src="../comp/toast.js" type="text/javascript" charset="utf-8"></script>
     <!-- after the components: it gives every one of them the packages of the color -->
     <script src="../comp/minimal-accent.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/scroll-area.js" type="text/javascript" charset="utf-8"></script>
 
     <script>
 
@@ -67,8 +68,8 @@
 
         page.color = PAGE_COLOR;
 
-        // BOX: Scrolling page
-        const pageBox = startBox(0, 0, "100%", "100%", { color: "transparent", scrollY: 1 });
+        // SCROLL AREA: Scrolling page
+        ScrollArea();
 
             HGroup({ width: "100%", height: "auto", align: "center top", gap: 24, padding: [PAGE_SIDE_SPACE, 40], wrap: 1, clipContent: 0 });
 
@@ -182,9 +183,7 @@
 
             endGroup();
 
-        endBox();
-
-        if (typeof ScrollBar === "function") ScrollBar({ scrollableBox: pageBox });
+        endGroup();
 
     };
 

@@ -18,6 +18,7 @@
         <script src="../comp/context-menu.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/tree-view.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/json-view.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/scroll-area.js" type="text/javascript" charset="utf-8"></script>
 
         <script>
 
@@ -60,11 +61,8 @@
 
             page.color = PAGE_COLOR;
 
-            // BOX: Page (it scrolls when the window is lower than the samples)
-            const pageBox = startBox(0, 0, "100%", "100%", { color: "transparent", scrollY: 1 });
-
-            // GROUP: The title and the samples
-            VGroup({ width: "100%", height: "auto", align: "center top", gap: 16, padding: [16, 28], clipContent: 0 });
+            // SCROLL AREA: Page (it scrolls when the window is lower than the samples)
+            ScrollArea({ align: "center top", gap: 16, padding: [16, 28] });
 
                 Label({ text: "JsonView", fontSize: 24, bold: 1, textColor: Black(0.8) });
 
@@ -77,10 +75,6 @@
                 endGroup();
 
             endGroup();
-
-            endBox();
-
-            ScrollBar({ scrollableBox: pageBox });
 
         };
 

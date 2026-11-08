@@ -16,6 +16,7 @@
     <script src="../comp/tooltip.js" type="text/javascript" charset="utf-8"></script>
     <script src="../comp/smart-button.js" type="text/javascript" charset="utf-8"></script>
     <script src="../comp/line-progress-bar.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/scroll-area.js" type="text/javascript" charset="utf-8"></script>
 
     <script>
 
@@ -52,47 +53,42 @@
 
             page.color = "#F0F1EE";
 
-            // BOX: Page (it scrolls when the window is lower than the samples)
-            pageBox = startBox(0, 0, "100%", "100%", { color: "transparent", scrollY: 1 });
+            // SCROLL AREA: Page (it scrolls when the window is lower than the samples)
+            pageBox = ScrollArea({ align: "center top", gap: 22, padding: [16, 40] });
 
-                // GROUP: Page layout
-                VGroup({ width: "100%", height: "auto", align: "center top", gap: 22, padding: [16, 40] });
+                Label({ text: "LineProgressBar", fontSize: 26, fontFamily: "opensans-bold", textColor: Black(0.8) });
+                Label({
+                    text: "Thick lines with round ends; the full lines in a tone of SmartButton, the value in a bubble.",
+                    fontSize: 14,
+                    textColor: Black(0.5),
+                    width: "100%",
+                    textAlign: "center",
+                    css: { whiteSpace: "normal", textWrap: "balance" },
+                });
 
-                    Label({ text: "LineProgressBar", fontSize: 26, fontFamily: "opensans-bold", textColor: Black(0.8) });
-                    Label({
-                        text: "Thick lines with round ends; the full lines in a tone of SmartButton, the value in a bubble.",
-                        fontSize: 14,
-                        textColor: Black(0.5),
-                        width: "100%",
-                        textAlign: "center",
-                        css: { whiteSpace: "normal", textWrap: "balance" },
+                bars = BARS.map(createBar);
+
+                // CARD: the value of every bar
+                startCard("Value");
+                    createButtonRow(function () {
+                        VALUES.forEach(function (value) {
+                            SmartButton({ tone: "white", labelText: value + "%", onClick: function () { setAllBars(value); } });
+                        });
+                        SmartButton({ tone: "white", labelText: "Random", onClick: setRandomValues });
+                        btnAnimate = SmartButton({ tone: "cyan", labelText: "Animate", onClick: toggleAnimation });
                     });
+                endCard();
 
-                    bars = BARS.map(createBar);
-
-                    // CARD: the value of every bar
-                    startCard("Value");
-                        createButtonRow(function () {
-                            VALUES.forEach(function (value) {
-                                SmartButton({ tone: "white", labelText: value + "%", onClick: function () { setAllBars(value); } });
-                            });
-                            SmartButton({ tone: "white", labelText: "Random", onClick: setRandomValues });
-                            btnAnimate = SmartButton({ tone: "cyan", labelText: "Animate", onClick: toggleAnimation });
+                // CARD: the tone of the first bar
+                startCard("Tone of the first bar");
+                    createButtonRow(function () {
+                        TONE_NAMES.forEach(function (toneName) {
+                            SmartButton({ tone: toneName, labelText: toneName, onClick: function () { setFirstBarTone(toneName); } });
                         });
-                    endCard();
+                    });
+                endCard();
 
-                    // CARD: the tone of the first bar
-                    startCard("Tone of the first bar");
-                        createButtonRow(function () {
-                            TONE_NAMES.forEach(function (toneName) {
-                                SmartButton({ tone: toneName, labelText: toneName, onClick: function () { setFirstBarTone(toneName); } });
-                            });
-                        });
-                    endCard();
-
-                endGroup();
-
-            endBox();
+            endGroup();
 
         };
 

@@ -20,6 +20,7 @@
         <script src="../comp/text-area-field.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/tiny-select.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/url-field.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/scroll-area.js" type="text/javascript" charset="utf-8"></script>
 
         <script>
 
@@ -38,45 +39,39 @@
 
             page.color = "#F4F5F2";
 
-            const pageBox = startBox(0, 0, "100%", "100%", { color: "transparent", scrollY: 1 });
+            ScrollArea({ align: "center top", padding: 40, gap: 24 });
 
-                VGroup({ width: "100%", height: "auto", align: "center top", padding: 40, gap: 24 });
+                Label({ text: "TextField · ozden, ozdenDark", fontSize: 22, fontFamily: "opensans-bold", textColor: Black(0.8) });
 
-                    Label({ text: "TextField · ozden, ozdenDark", fontSize: 22, fontFamily: "opensans-bold", textColor: Black(0.8) });
+                // GROUP: The two cards side by side (one under the other on a narrow screen)
+                HGroup({ width: "100%", height: "auto", align: "center top", gap: 24, wrap: 1 });
 
-                    // GROUP: The two cards side by side (one under the other on a narrow screen)
-                    HGroup({ width: "100%", height: "auto", align: "center top", gap: 24, wrap: 1 });
+                    // CARD: ozden on a white page
+                    startCard("styleName: \"ozden\"", LIGHT_PAGE_COLOR, Black(0.08), Black(0.45));
+                        addFields("ozden");
+                    endCard();
 
-                        // CARD: ozden on a white page
-                        startCard("styleName: \"ozden\"", LIGHT_PAGE_COLOR, Black(0.08), Black(0.45));
-                            addFields("ozden");
-                        endCard();
-
-                        // CARD: ozdenDark on a black page
-                        startCard("styleName: \"ozdenDark\"", DARK_PAGE_COLOR, DARK_CARD_BORDER_COLOR, White(0.45));
-                            VGroup({
-                                width: "100%",
-                                height: "auto",
-                                align: "left top",
-                                gap: 14,
-                                padding: 20,
-                                color: DARK_CARD_COLOR,
-                                round: 14,
-                                border: 1,
-                                borderColor: DARK_CARD_BORDER_COLOR,
-                                css: { alignItems: "stretch" },
-                            });
-                                addFields("ozdenDark");
-                            endGroup();
-                        endCard();
-
-                    endGroup();
+                    // CARD: ozdenDark on a black page
+                    startCard("styleName: \"ozdenDark\"", DARK_PAGE_COLOR, DARK_CARD_BORDER_COLOR, White(0.45));
+                        VGroup({
+                            width: "100%",
+                            height: "auto",
+                            align: "left top",
+                            gap: 14,
+                            padding: 20,
+                            color: DARK_CARD_COLOR,
+                            round: 14,
+                            border: 1,
+                            borderColor: DARK_CARD_BORDER_COLOR,
+                            css: { alignItems: "stretch" },
+                        });
+                            addFields("ozdenDark");
+                        endGroup();
+                    endCard();
 
                 endGroup();
 
-            endBox();
-
-            ScrollBar({ scrollableBox: pageBox });
+            endGroup();
 
         };
 

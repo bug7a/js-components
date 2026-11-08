@@ -15,6 +15,7 @@
 
     <!-- COMPONENT FILES -->
     <script src="../comp/toggle.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/scroll-area.js" type="text/javascript" charset="utf-8"></script>
 
     <script>
 
@@ -46,22 +47,16 @@
 
             // BOX: Full screen scrollable container
             // WHY: page does not scroll. Scrollable content must be inside a Box with scrollY: 1.
-            const scrollBox = startBox(0, 0, "100%", "100%", { color: "transparent", scrollY: 1 });
+            ScrollArea({ align: "center top", gap: 20, padding: [16, 40] });
 
-                VGroup({ width: "100%", height: "auto", align: "center top", gap: 20, padding: [16, 40] });
+                Label({ text: "Settings", fontSize: 26, fontFamily: "opensans-bold" });
 
-                    Label({ text: "Settings", fontSize: 26, fontFamily: "opensans-bold" });
+                createNotificationCard();
+                createDarkCard();
 
-                    createNotificationCard();
-                    createDarkCard();
+                lblStatus = Label({ text: "Change a setting", fontSize: 14, textColor: Black(0.5) });
 
-                    lblStatus = Label({ text: "Change a setting", fontSize: 14, textColor: Black(0.5) });
-
-                endGroup();
-
-            endBox();
-
-            ScrollBar({ scrollableBox: scrollBox });
+            endGroup();
 
         };
 

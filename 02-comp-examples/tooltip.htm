@@ -16,6 +16,7 @@
     <!-- COMPONENT FILES -->
     <script src="../comp/tooltip.js" type="text/javascript" charset="utf-8"></script>
     <script src="../comp/smart-button.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/scroll-area.js" type="text/javascript" charset="utf-8"></script>
 
     <script>
 
@@ -65,33 +66,27 @@
 
             // BOX: Full screen scrollable container
             // WHY: page does not scroll. Scrollable content must be inside a Box with scrollY: 1.
-            const scrollBox = startBox(0, 0, "100%", "100%", { color: "transparent", scrollY: 1 });
+            ScrollArea({ align: "center top", gap: 20, padding: [16, 40] });
 
-                VGroup({ width: "100%", height: "auto", align: "center top", gap: 20, padding: [16, 40], clipContent: 0 });
+                Label({ text: "Tooltip", fontSize: 26, fontFamily: "opensans-bold" });
 
-                    Label({ text: "Tooltip", fontSize: 26, fontFamily: "opensans-bold" });
+                startCard("A toolbar", "A button with only an icon says its name.");
+                    TOOLS.forEach(createToolButton);
+                endCard();
 
-                    startCard("A toolbar", "A button with only an icon says its name.");
-                        TOOLS.forEach(createToolButton);
-                    endCard();
+                startCard("A hint that changes", "setHintText(): the text follows the state of the button.");
+                    createSaveButton();
+                endCard();
 
-                    startCard("A hint that changes", "setHintText(): the text follows the state of the button.");
-                        createSaveButton();
-                    endCard();
+                startCard("Your own colors", "lbl_color, lbl_textColor, lbl_border, lbl_fontSize...");
+                    createCarrot();
+                endCard();
 
-                    startCard("Your own colors", "lbl_color, lbl_textColor, lbl_border, lbl_fontSize...");
-                        createCarrot();
-                    endCard();
+                startCard("No hints", "tooltip.remove() takes a hint away from its object.");
+                    btnHints = SmartButton({ labelText: "Hints off", onClick: switchHints });
+                endCard();
 
-                    startCard("No hints", "tooltip.remove() takes a hint away from its object.");
-                        btnHints = SmartButton({ labelText: "Hints off", onClick: switchHints });
-                    endCard();
-
-                endGroup();
-
-            endBox();
-
-            ScrollBar({ scrollableBox: scrollBox });
+            endGroup();
 
         };
 

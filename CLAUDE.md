@@ -58,16 +58,13 @@ Pictures that must be drawn go to the Codex CLI. **Ask before making one: only a
 - **Startup**: basic.js creates the global `page` (a `MainBox`), then calls the global `start()` if there is one (older pages: `window.onload`). A global `loop()` runs every 1000 ms (`setLoopTimer(ms)`).
 - **Constructors**: `Box`, `Label`, `Button`, `Input`, `Icon`: `(left, top, width, height)`, the props object **last** (`Label({ text: "Hi", fontSize: 16 })`, `Box(0, 0, "100%", "100%", { color: "red" })`). `obj.props({...})` after creation; the DOM element is `obj.elem`.
 - **`that`**: the last object made (`that.css = {...}` right after it); `prevThat` the one before it.
-- **`page` never scrolls** (`body { overflow: hidden }`). Content taller or wider than the screen goes into a full-screen Box that scrolls; a new page gets a `ScrollBar` (an older page without it stays as it is). Sample and template pages that stack content vertically follow this (see `_empty-project-template.htm`):
+- **`page` never scrolls** (`body { overflow: hidden }`). Content taller or wider than the screen goes into a full-screen box that scrolls, with a `ScrollBar` (an older page without it stays as it is). Sample and template pages that stack content vertically use `comp/scroll-area.js` (see `_empty-project-template.htm`; load `basic/scroll-bar.js` too, for the bar):
   ```js
-  const pageBox = startBox(0, 0, "100%", "100%", { color: "transparent", scrollY: 1 }); // scrollX: 1 for horizontal
-      VGroup({ width: "100%", height: "auto", align: "center top", gap: 20, padding: 40 }); // height "auto" so content can exceed the Box
-          // ... page content
-      endGroup();
-  endBox();
-  ScrollBar({ scrollableBox: pageBox }); // load basic/scroll-bar.js too
+  ScrollArea({ align: "center top", gap: 20, padding: 40 }); // scrollX: 1 for horizontal too
+      // ... page content
+  endGroup();
   ```
-  A new page writes it in one call with `comp/scroll-area.js`: `ScrollArea({ align: "center top", gap: 20, padding: 40 })` ... `endGroup()` (a box that scrolls, its VGroup and the ScrollBar).
+  It is the long form of a page without `comp/` (the tutorial pages of `01-`): `const pageBox = startBox(0, 0, "100%", "100%", { color: "transparent", scrollY: 1 });`, a `VGroup` with `height: "auto"` (so the content can be taller than the box), `endGroup(); endBox();`, `ScrollBar({ scrollableBox: pageBox });`.
 - **Only a Box holds other objects** (`Box`, `startBox()`, `HGroup` / `VGroup`). Not `Button`, `Label`, `Input`, `Icon`: an object inside a button bubbles its mouse events to it. An overlay goes into the same box as a sibling, `position: "absolute"`, with the target's left/top/width/height (`box.btnSendCover` in `comp/form.js`).
 - **Implicit containers**: new objects go into the current default container; `startBox()`/`endBox()` and `HGroup`/`VGroup` … `endGroup()` push and pop it. **Every start call needs its end call** (basic.js warns about the missing ones).
 - **Groups** (`HGroup`, `VGroup`: flexbox; `AutoLayout` / `endAutoLayout` are the old names: not in new code): `flow`, `align: "left top"`, `gap`, `padding` (a number or `[x, y]`), `wrap: 1`, `justify`, `hug: 1` (width and height `"auto"`). A group is 100% × 100% by default. **`hug: 1` in new code**; `fit: 1` is its old name: don't "fix" pages that use it.

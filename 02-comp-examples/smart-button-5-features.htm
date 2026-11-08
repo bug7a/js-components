@@ -14,6 +14,7 @@
     <script src="../basic/scroll-bar.js" type="text/javascript" charset="utf-8"></script>
 
     <script src="../comp/smart-button.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/scroll-area.js" type="text/javascript" charset="utf-8"></script>
 
     <script>
 
@@ -110,99 +111,93 @@
 
         page.color = "#F0F2F5";
 
-        const pageBox = startBox(0, 0, "100%", "100%", { color: "transparent", scrollY: 1 });
+        ScrollArea({ align: "center top", gap: 24, padding: 40 });
 
-            VGroup({ width: "100%", height: "auto", align: "center top", gap: 24, padding: 40, clipContent: 0 });
+            Label({ text: "SmartButton", fontSize: 26, bold: 1, textColor: Black(0.8) });
 
-                Label({ text: "SmartButton", fontSize: 26, bold: 1, textColor: Black(0.8) });
+            startCard(
+                "The place of the icon",
+                "iconPosition: \"left\" (default) or \"top\". labelText: \"\" -> an icon button: a square with the icon in the middle (give it an ariaLabel). No iconFile -> only the text."
+            );
+                SmartButton({ labelText: "Lock", iconFile: ICONS + "lock.png" });
+                SmartButton({ labelText: "Plant", iconFile: ICONS + "plant.png", iconPosition: "top", style: LOOKS.square });
+                SmartButton({ labelText: "", ariaLabel: "Delete", iconFile: ICONS + "trash.svg" });
+                SmartButton({ labelText: "Only text" });
+            endCard();
 
-                startCard(
-                    "The place of the icon",
-                    "iconPosition: \"left\" (default) or \"top\". labelText: \"\" -> an icon button: a square with the icon in the middle (give it an ariaLabel). No iconFile -> only the text."
-                );
-                    SmartButton({ labelText: "Lock", iconFile: ICONS + "lock.png" });
-                    SmartButton({ labelText: "Plant", iconFile: ICONS + "plant.png", iconPosition: "top", style: LOOKS.square });
-                    SmartButton({ labelText: "", ariaLabel: "Delete", iconFile: ICONS + "trash.svg" });
-                    SmartButton({ labelText: "Only text" });
-                endCard();
+            startCard(
+                "Your own look: style",
+                "styleName is the template (ozden - 4), tone a color of the kit (white, cyan, orange...), style your own keys: box, hover, layout, icon and label. A color is two colors: box.color and hover.color; pressed, it gets darker by itself."
+            );
+                SmartButton({ labelText: "Continue", style: LOOKS.blue });
+                SmartButton({ labelText: "Delete", iconFile: ICONS + "trash.svg", style: LOOKS.redEdge });
+                SmartButton({ styleName: "ozden4", labelText: "Filter", iconFile: ICONS + "panel.png", style: LOOKS.pill });
+                SmartButton({
+                    styleName: "ozden4",
+                    labelText: "Alert",
+                    iconFile: ICONS + "alert-black.png",
+                    style: LOOKS.pill,
+                });
+            endCard();
 
-                startCard(
-                    "Your own look: style",
-                    "styleName is the template (ozden - 4), tone a color of the kit (white, cyan, orange...), style your own keys: box, hover, layout, icon and label. A color is two colors: box.color and hover.color; pressed, it gets darker by itself."
-                );
-                    SmartButton({ labelText: "Continue", style: LOOKS.blue });
-                    SmartButton({ labelText: "Delete", iconFile: ICONS + "trash.svg", style: LOOKS.redEdge });
-                    SmartButton({ styleName: "ozden4", labelText: "Filter", iconFile: ICONS + "panel.png", style: LOOKS.pill });
-                    SmartButton({
-                        styleName: "ozden4",
-                        labelText: "Alert",
-                        iconFile: ICONS + "alert-black.png",
-                        style: LOOKS.pill,
-                    });
-                endCard();
+            startCard("setLabelText() and setIcon()", "A button that changes itself: the lamp is turned on and off.");
+                SmartButton({
+                    labelText: "Lamp is off",
+                    iconFile: ICONS + "lamp.png",
+                    onClick: function (self) {
+                        const isOn = (self.labelText == "Lamp is on");
+                        self.setLabelText(isOn ? "Lamp is off" : "Lamp is on");
+                        self.setIcon(ICONS + (isOn ? "lamp.png" : "lamp-on.png"));
+                    },
+                });
+            endCard();
 
-                startCard("setLabelText() and setIcon()", "A button that changes itself: the lamp is turned on and off.");
-                    SmartButton({
-                        labelText: "Lamp is off",
-                        iconFile: ICONS + "lamp.png",
-                        onClick: function (self) {
-                            const isOn = (self.labelText == "Lamp is on");
-                            self.setLabelText(isOn ? "Lamp is off" : "Lamp is on");
-                            self.setIcon(ICONS + (isOn ? "lamp.png" : "lamp-on.png"));
-                        },
-                    });
-                endCard();
+            startCard(
+                "Waiting: setWaiting()",
+                "The waiting clock over the button while a job runs (the default wait); it can not be clicked then. setWaiting(0, delay) ends it later. style.waiting.clock: \"ozdenDark\" is the dark clock (the dark templates have it), waitingType: \"dots\" three dots."
+            );
+                SmartButton({ tone: "cyan", labelText: "Save", onClick: saveWithWaiting });
+                SmartButton({
+                    labelText: "Delete",
+                    iconFile: ICONS + "trash.svg",
+                    style: LOOKS.redEdge, // WHY not tone "orange": the red lines of trash.svg are lost on it
+                    onClick: function (self) {
+                        self.setWaiting(1);
+                        self.setWaiting(0, JOB_TIME); // the end is given at once, it comes later
+                    },
+                });
+                SmartButton({ labelText: "", ariaLabel: "Lock", iconFile: ICONS + "lock.png", onClick: waitForJob });
+                SmartButton({ labelText: "ozdenDark clock", style: { waiting: { clock: "ozdenDark" } }, onClick: waitForJob });
+                SmartButton({ labelText: "Dots", waitingType: "dots", onClick: waitForJob });
+            endCard();
 
-                startCard(
-                    "Waiting: setWaiting()",
-                    "The waiting clock over the button while a job runs (the default wait); it can not be clicked then. setWaiting(0, delay) ends it later. style.waiting.clock: \"ozdenDark\" is the dark clock (the dark templates have it), waitingType: \"dots\" three dots."
-                );
-                    SmartButton({ tone: "cyan", labelText: "Save", onClick: saveWithWaiting });
-                    SmartButton({
-                        labelText: "Delete",
-                        iconFile: ICONS + "trash.svg",
-                        style: LOOKS.redEdge, // WHY not tone "orange": the red lines of trash.svg are lost on it
-                        onClick: function (self) {
-                            self.setWaiting(1);
-                            self.setWaiting(0, JOB_TIME); // the end is given at once, it comes later
-                        },
-                    });
-                    SmartButton({ labelText: "", ariaLabel: "Lock", iconFile: ICONS + "lock.png", onClick: waitForJob });
-                    SmartButton({ labelText: "ozdenDark clock", style: { waiting: { clock: "ozdenDark" } }, onClick: waitForJob });
-                    SmartButton({ labelText: "Dots", waitingType: "dots", onClick: waitForJob });
-                endCard();
+            startCard(
+                "Motion: animated and ripple",
+                "animated is on by default: pressed, a button gets smaller and a little darker (its color under the mouse, darker: a press has no color of its own). ripple is off by default: a wave from the pressed point (its color fits the button). Each one can be turned off."
+            );
+                SmartButton({ tone: "cyan", labelText: "Both", ripple: 1 });
+                SmartButton({ labelText: "Both", iconFile: ICONS + "plant.png", ripple: 1 });
+                SmartButton({ tone: "cyan", labelText: "Only press", ripple: 0 });
+                SmartButton({ labelText: "Only ripple", animated: 0, ripple: 1 });
+                SmartButton({ labelText: "Still", animated: 0, ripple: 0 });
+            endCard();
 
-                startCard(
-                    "Motion: animated and ripple",
-                    "animated is on by default: pressed, a button gets smaller and a little darker (its color under the mouse, darker: a press has no color of its own). ripple is off by default: a wave from the pressed point (its color fits the button). Each one can be turned off."
-                );
-                    SmartButton({ tone: "cyan", labelText: "Both", ripple: 1 });
-                    SmartButton({ labelText: "Both", iconFile: ICONS + "plant.png", ripple: 1 });
-                    SmartButton({ tone: "cyan", labelText: "Only press", ripple: 0 });
-                    SmartButton({ labelText: "Only ripple", animated: 0, ripple: 1 });
-                    SmartButton({ labelText: "Still", animated: 0, ripple: 0 });
-                endCard();
+            startCard(
+                "Keyboard and setEnabled()",
+                "Tab reaches every button (a ring only for the keyboard), Enter or Space presses it. A disabled button is gray, can not be pressed and is out of the Tab order."
+            );
+                const btnSend = SmartButton({ tone: "cyan", labelText: "Send", enabled: 0 });
+                SmartButton({
+                    labelText: "Enable Send",
+                    onClick: function (self) {
+                        const isOn = (btnSend.enabled == 1);
+                        btnSend.setEnabled(isOn ? 0 : 1);
+                        self.setLabelText(isOn ? "Enable Send" : "Disable Send");
+                    },
+                });
+            endCard();
 
-                startCard(
-                    "Keyboard and setEnabled()",
-                    "Tab reaches every button (a ring only for the keyboard), Enter or Space presses it. A disabled button is gray, can not be pressed and is out of the Tab order."
-                );
-                    const btnSend = SmartButton({ tone: "cyan", labelText: "Send", enabled: 0 });
-                    SmartButton({
-                        labelText: "Enable Send",
-                        onClick: function (self) {
-                            const isOn = (btnSend.enabled == 1);
-                            btnSend.setEnabled(isOn ? 0 : 1);
-                            self.setLabelText(isOn ? "Enable Send" : "Disable Send");
-                        },
-                    });
-                endCard();
-
-            endGroup();
-
-        endBox();
-
-        ScrollBar({ scrollableBox: pageBox });
+        endGroup();
 
     };
 

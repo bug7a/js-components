@@ -59,7 +59,7 @@ GOTCHAS (CLAUDE.md):
 
 WHEN THE NEW COMPONENT IS READY (only in the kit repository: a project made from the starter has none of these;
 there a component goes to app/ and gets a <script> line in index.htm):
-- A sample page: 02-comp-examples/<name>.htm (a scrolling Box, the cards of the other sample pages).
+- A sample page: 02-comp-examples/<name>.htm (a ScrollArea, the cards of the other sample pages).
 - test/components-test.htm: add it to COMPONENTS ({ file, name, deps }) and open it (the tab title: ALL PASS).
 - No .min.js twin: the pages load the source; a copy that leaves the repo gets its .min file
   from ./_make-standalone.sh (all in comp/components.min.js, or one file per component with --separate).

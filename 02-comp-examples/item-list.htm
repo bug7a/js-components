@@ -15,6 +15,7 @@
 
     <script src="../comp/search-input.js" type="text/javascript" charset="utf-8"></script>
     <script src="../comp/item-list.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/scroll-area.js" type="text/javascript" charset="utf-8"></script>
 
     <script>
 
@@ -156,117 +157,111 @@
 
         page.color = "#E9EAE6";
 
-        const pageBox = startBox(0, 0, "100%", "100%", { color: "transparent", scrollY: 1 });
+        ScrollArea({ align: "center top", gap: 24, padding: 32 });
 
-            VGroup({ width: "100%", height: "auto", align: "center top", gap: 24, padding: 32 });
+            Label({ text: "ItemList", fontSize: 26, bold: 1, textColor: Black(0.8) });
+            Label({ plainText: "Style packages, layouts, multiple selection, search and your own rows", fontSize: 14, textColor: Black(0.45) });
 
-                Label({ text: "ItemList", fontSize: 26, bold: 1, textColor: Black(0.8) });
-                Label({ plainText: "Style packages, layouts, multiple selection, search and your own rows", fontSize: 14, textColor: Black(0.45) });
+            // GROUP: The four style packages, two in a row: a light one and its dark one
+            HGroup({
+                width: "100%",
+                height: "auto",
+                align: "center top",
+                gap: CARD_GAP,
+                wrap: 1,
+                css: { maxWidth: TWO_CARDS_WIDTH + "px" },
+            });
 
-                // GROUP: The four style packages, two in a row: a light one and its dark one
-                HGroup({
-                    width: "100%",
-                    height: "auto",
-                    align: "center top",
-                    gap: CARD_GAP,
-                    wrap: 1,
-                    css: { maxWidth: TWO_CARDS_WIDTH + "px" },
-                });
+                createStyleSample(
+                    "ozden",
+                    "single",
+                    "Rows as wide as the list, white with a thin line above and under them under the mouse, the selected one half transparent (it can not be chosen again)."
+                );
 
-                    createStyleSample(
-                        "ozden",
-                        "single",
-                        "Rows as wide as the list, white with a thin line above and under them under the mouse, the selected one half transparent (it can not be chosen again)."
-                    );
+                createStyleSample(
+                    "ozdenDark",
+                    "single",
+                    "The dark theme of ozden: the same rows on a dark page, a lighter gray with a thin light line above and under them under the mouse."
+                );
 
-                    createStyleSample(
-                        "ozdenDark",
-                        "single",
-                        "The dark theme of ozden: the same rows on a dark page, a lighter gray with a thin light line above and under them under the mouse."
-                    );
+                createStyleSample("modern", "multiple", "Light cards; a check mark on the selected rows.");
 
-                    createStyleSample("modern", "multiple", "Light cards; a check mark on the selected rows.");
-
-                    createStyleSample("dark", "multiple", "Dark cards; a check mark on the selected rows.");
-
-                endGroup();
-
-                // GROUP: The other layouts
-                HGroup({ width: "100%", height: "auto", align: "center top", gap: CARD_GAP, wrap: 1 });
-
-                    const ozdenLook = STYLE_PAGES.ozdenTiles;
-                    const horizontalCard = startCard(
-                        "layout: \"horizontal\" · ozden",
-                        "One row of tiles, for categories: a grey icon in a circle; the selected one grows, gets its colors and a bold title.",
-                        ozdenLook
-                    );
-                    horizontalCard.width = TWO_CARDS_WIDTH;
-
-                        ItemList({
-                            width: "100%",
-                            height: 216,
-                            layout: "horizontal",
-                            items: DRINKS.map(withoutDescription),
-                            selectedKeys: ["coffee"],
-                        });
-
-                    endCard();
-
-                    const darkLook = STYLE_PAGES.dark;
-                    startCard("layout: \"grid\"", "Tiles that wrap (files, icons, pictures). Arrow keys move in all four ways.", darkLook);
-
-                        ItemList({
-                            width: "100%",
-                            height: 420,
-                            layout: "grid",
-                            styleName: "dark",
-                            selection: "multiple",
-                            items: DRINKS,
-                        });
-
-                    endCard();
-
-                    // Your own rows: createItemView
-                    startCard("createItemView", "Your own row: a title and a price. style.row.height: \"auto\".", ozdenLook);
-                        ItemList({
-                            width: "100%",
-                            height: "auto",
-                            style: { row: { height: "auto", padding: [16, 12] } },
-                            items: [
-                                { key: "1", text: "Cappuccino", price: "4.50" },
-                                { key: "2", text: "Tea", price: "2.00" },
-                                { key: "3", text: "Orange juice", price: "3.75" },
-                            ],
-                            createItemView: function (item, row) {
-                                Label({ plainText: item.text, fontSize: 17, textColor: Black(0.8), grow: 1 });
-                                Label({ plainText: "$ " + item.price, fontSize: 17, textColor: "#3D7A6B", bold: 1 });
-                            },
-                        });
-                    endCard();
-
-                endGroup();
-
-                // GROUP: A picture gallery, light and dark
-                HGroup({
-                    width: "100%",
-                    height: "auto",
-                    align: "center top",
-                    gap: CARD_GAP,
-                    wrap: 1,
-                    css: { maxWidth: TWO_CARDS_WIDTH + "px" },
-                });
-
-                    createGallerySample("gallery", "Pictures: a big photo with no filter that fills its square (tile.iconFit: \"cover\"), its title under it, a ring around the selected one.");
-
-                    createGallerySample("galleryDark", "The same gallery on a dark page.");
-
-                endGroup();
+                createStyleSample("dark", "multiple", "Dark cards; a check mark on the selected rows.");
 
             endGroup();
 
-        endBox();
+            // GROUP: The other layouts
+            HGroup({ width: "100%", height: "auto", align: "center top", gap: CARD_GAP, wrap: 1 });
 
-        ScrollBar({ scrollableBox: pageBox });
+                const ozdenLook = STYLE_PAGES.ozdenTiles;
+                const horizontalCard = startCard(
+                    "layout: \"horizontal\" · ozden",
+                    "One row of tiles, for categories: a grey icon in a circle; the selected one grows, gets its colors and a bold title.",
+                    ozdenLook
+                );
+                horizontalCard.width = TWO_CARDS_WIDTH;
+
+                    ItemList({
+                        width: "100%",
+                        height: 216,
+                        layout: "horizontal",
+                        items: DRINKS.map(withoutDescription),
+                        selectedKeys: ["coffee"],
+                    });
+
+                endCard();
+
+                const darkLook = STYLE_PAGES.dark;
+                startCard("layout: \"grid\"", "Tiles that wrap (files, icons, pictures). Arrow keys move in all four ways.", darkLook);
+
+                    ItemList({
+                        width: "100%",
+                        height: 420,
+                        layout: "grid",
+                        styleName: "dark",
+                        selection: "multiple",
+                        items: DRINKS,
+                    });
+
+                endCard();
+
+                // Your own rows: createItemView
+                startCard("createItemView", "Your own row: a title and a price. style.row.height: \"auto\".", ozdenLook);
+                    ItemList({
+                        width: "100%",
+                        height: "auto",
+                        style: { row: { height: "auto", padding: [16, 12] } },
+                        items: [
+                            { key: "1", text: "Cappuccino", price: "4.50" },
+                            { key: "2", text: "Tea", price: "2.00" },
+                            { key: "3", text: "Orange juice", price: "3.75" },
+                        ],
+                        createItemView: function (item, row) {
+                            Label({ plainText: item.text, fontSize: 17, textColor: Black(0.8), grow: 1 });
+                            Label({ plainText: "$ " + item.price, fontSize: 17, textColor: "#3D7A6B", bold: 1 });
+                        },
+                    });
+                endCard();
+
+            endGroup();
+
+            // GROUP: A picture gallery, light and dark
+            HGroup({
+                width: "100%",
+                height: "auto",
+                align: "center top",
+                gap: CARD_GAP,
+                wrap: 1,
+                css: { maxWidth: TWO_CARDS_WIDTH + "px" },
+            });
+
+                createGallerySample("gallery", "Pictures: a big photo with no filter that fills its square (tile.iconFit: \"cover\"), its title under it, a ring around the selected one.");
+
+                createGallerySample("galleryDark", "The same gallery on a dark page.");
+
+            endGroup();
+
+        endGroup();
 
     };
 

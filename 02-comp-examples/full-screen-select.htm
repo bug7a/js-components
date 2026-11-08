@@ -15,6 +15,7 @@
 
     <script src="../comp/search-input.js" type="text/javascript" charset="utf-8"></script>
     <script src="../comp/full-screen-select.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/scroll-area.js" type="text/javascript" charset="utf-8"></script>
 
     <script>
 
@@ -68,52 +69,46 @@
         });
         page.color = "white";
 
-        const pageBox = startBox(0, 0, "100%", "100%", { color: "transparent", scrollY: 1 });
+        ScrollArea({ align: "left top", gap: 30, padding: [SPACE, 40] });
 
-            VGroup({ width: "100%", height: "auto", align: "left top", gap: 30, padding: [SPACE, 40] });
+            Label({ text: "FullScreenSelect", fontSize: 26, bold: 1, textColor: Black(0.8) });
 
-                Label({ text: "FullScreenSelect", fontSize: 26, bold: 1, textColor: Black(0.8) });
-
-                // The two fields of ui-select-text-e2.htm
-                startField("Fruits:");
-                    const fruits = FullScreenSelect({
-                        width: FIELD_WIDTH,
-                        items: FRUITS,
-                        selectedKey: "banana",
-                        onChange: function (self) { showSelected(fruitsInfo, self); },
-                    });
-                    const fruitsInfo = createInfo();
-                    showSelected(fruitsInfo, fruits);
-                endField();
-
-                startField("Connection status:");
-                    FullScreenSelect({ width: FIELD_WIDTH, items: STATUSES, selectedKey: "auto" });
-                endField();
-
-                // autoWidth and Turkish letters in the search
-                startField("City (autoWidth: 1; search \"canakkale\" or \"sanli\"):");
-                    FullScreenSelect({ autoWidth: 1, items: CITIES, placeholder: "Şehir ara", emptyText: "Sonuç yok" });
-                endField();
-
-                // GROUP: The dark package
-                VGroup({
-                    width: "100%",
-                    height: "auto",
-                    align: "left top",
-                    gap: 10,
-                    padding: SPACE,
-                    color: "#141414",
-                    round: 12,
+            // The two fields of ui-select-text-e2.htm
+            startField("Fruits:");
+                const fruits = FullScreenSelect({
+                    width: FIELD_WIDTH,
+                    items: FRUITS,
+                    selectedKey: "banana",
+                    onChange: function (self) { showSelected(fruitsInfo, self); },
                 });
-                    Label({ plainText: "styleName: \"dark\"", fontSize: 16, textColor: White(0.6) });
-                    FullScreenSelect({ width: FIELD_WIDTH - 2 * SPACE, styleName: "dark", items: FRUITS, selectedKey: "mango" });
-                endGroup();
+                const fruitsInfo = createInfo();
+                showSelected(fruitsInfo, fruits);
+            endField();
 
+            startField("Connection status:");
+                FullScreenSelect({ width: FIELD_WIDTH, items: STATUSES, selectedKey: "auto" });
+            endField();
+
+            // autoWidth and Turkish letters in the search
+            startField("City (autoWidth: 1; search \"canakkale\" or \"sanli\"):");
+                FullScreenSelect({ autoWidth: 1, items: CITIES, placeholder: "Şehir ara", emptyText: "Sonuç yok" });
+            endField();
+
+            // GROUP: The dark package
+            VGroup({
+                width: "100%",
+                height: "auto",
+                align: "left top",
+                gap: 10,
+                padding: SPACE,
+                color: "#141414",
+                round: 12,
+            });
+                Label({ plainText: "styleName: \"dark\"", fontSize: 16, textColor: White(0.6) });
+                FullScreenSelect({ width: FIELD_WIDTH - 2 * SPACE, styleName: "dark", items: FRUITS, selectedKey: "mango" });
             endGroup();
 
-        endBox();
-
-        ScrollBar({ scrollableBox: pageBox });
+        endGroup();
 
     };
 

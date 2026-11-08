@@ -13,6 +13,7 @@
     <script src="../basic/basic.js" type="text/javascript" charset="utf-8"></script>
 
     <script src="../comp/search-input.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/scroll-area.js" type="text/javascript" charset="utf-8"></script>
 
     <script>
 
@@ -44,30 +45,28 @@
 
         page.color = "white";
 
-        startBox(0, 0, "100%", "100%", { color: "transparent", scrollY: 1 });
-            VGroup({ width: "100%", height: "auto", align: "center top", gap: 16, padding: 40 });
+        ScrollArea({ align: "center top", gap: 16, padding: 40 });
 
-                Label({ text: "Search Input: place", fontSize: 26, bold: 1, textColor: Black(0.8) });
-                Label({ text: "In a plain box: left / top, or right / bottom.", fontSize: 16, textColor: Black(0.55) });
+            Label({ text: "Search Input: place", fontSize: 26, bold: 1, textColor: Black(0.8) });
+            Label({ text: "In a plain box: left / top, or right / bottom.", fontSize: 16, textColor: Black(0.55) });
 
-                // BOX: A plain box (not a group): its objects are placed by left / top / right / bottom
-                startBox({
-                    width: "100%",
-                    height: PANEL_HEIGHT,
-                    color: "#F4F5F2",
-                    border: 1,
-                    borderColor: Black(0.12),
-                    round: 12,
-                    css: { maxWidth: PANEL_MAX_WIDTH + "px" },
-                });
-                    createField("left, top", { left: SPACE, top: SPACE });
-                    createField("right, top", { right: SPACE, top: SPACE });
-                    createField("left, bottom", { left: SPACE, bottom: SPACE });
-                    createField("right, bottom", { right: SPACE, bottom: SPACE });
-                endBox();
+            // BOX: A plain box (not a group): its objects are placed by left / top / right / bottom
+            startBox({
+                width: "100%",
+                height: PANEL_HEIGHT,
+                color: "#F4F5F2",
+                border: 1,
+                borderColor: Black(0.12),
+                round: 12,
+                css: { maxWidth: PANEL_MAX_WIDTH + "px" },
+            });
+                createField("left, top", { left: SPACE, top: SPACE });
+                createField("right, top", { right: SPACE, top: SPACE });
+                createField("left, bottom", { left: SPACE, bottom: SPACE });
+                createField("right, bottom", { right: SPACE, bottom: SPACE });
+            endBox();
 
-            endGroup();
-        endBox();
+        endGroup();
 
     };
 

@@ -14,6 +14,7 @@
 
     <script src="../comp/tooltip.js" type="text/javascript" charset="utf-8"></script>
     <script src="../comp/smart-button.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/scroll-area.js" type="text/javascript" charset="utf-8"></script>
 
     <script>
 
@@ -159,65 +160,59 @@
 
         page.color = "#F0F2F5";
 
-        const pageBox = startBox(0, 0, "100%", "100%", { color: "transparent", scrollY: 1 });
+        // WHY onScroll: a bubble of Tooltip.show() is on the page; the content under it moves when the page scrolls
+        ScrollArea({ align: "center top", gap: 24, padding: [60, 40], onScroll: removeBubbles });
 
-            VGroup({ width: "100%", height: "auto", align: "center top", gap: 24, padding: [60, 40], clipContent: 0 });
+            Label({ text: "Tooltip: the bubble", fontSize: 26, bold: 1, textColor: Black(0.8) });
 
-                Label({ text: "Tooltip: the bubble", fontSize: 26, bold: 1, textColor: Black(0.8) });
+            startCard(
+                "1. It follows the mouse, with an arrow",
+                "Tooltip({ target, hintText, hintPosition, lbl_arrow: 10, lbl_border: 1 }): the arrow points at the mouse; the edge of the bubble goes around the arrow too, as one line."
+            );
+                ["top", "bottom", "left", "right"].forEach(function (position) {
+                    const button = SmartButton({ labelText: position, ...PLAIN });
+                    addMouseTooltip(button, "hintPosition: \"" + position + "\"", position);
+                });
+            endCard();
 
-                startCard(
-                    "1. It follows the mouse, with an arrow",
-                    "Tooltip({ target, hintText, hintPosition, lbl_arrow: 10, lbl_border: 1 }): the arrow points at the mouse; the edge of the bubble goes around the arrow too, as one line."
-                );
-                    ["top", "bottom", "left", "right"].forEach(function (position) {
-                        const button = SmartButton({ labelText: position, ...PLAIN });
-                        addMouseTooltip(button, "hintPosition: \"" + position + "\"", position);
-                    });
-                endCard();
+            startCard("2. No arrow (the look of before)", "lbl_arrow: 0 (the default): the bubble of before, a little over the mouse.");
+                const plain = SmartButton({ labelText: "Hover me", ...PLAIN });
+                plain.tooltip = Tooltip({ target: plain, hintText: "Hint about this button" });
+            endCard();
 
-                startCard("2. No arrow (the look of before)", "lbl_arrow: 0 (the default): the bubble of before, a little over the mouse.");
-                    const plain = SmartButton({ labelText: "Hover me", ...PLAIN });
-                    plain.tooltip = Tooltip({ target: plain, hintText: "Hint about this button" });
-                endCard();
+            startCard(
+                "3. Tooltip.show(): a bubble at an object",
+                "Tooltip.show(target, text, look, side) puts a bubble at an object, not under the mouse (Ex: the \"Click again\" of a SmartButton ask). It returns the bubble: bubble.remove(). A click opens one, the next click closes it."
+            );
+                toggleButton("Edged, top", "border: 2, arrow: 14", LOOKS.edged, "top");
+                toggleButton("Edged, bottom", "The edge goes around the arrow", LOOKS.edged, "bottom");
+                toggleButton("Red, no edge", "Click again to delete.", LOOKS.red, "top");
+                toggleButton("Dark, right", "On the right side", LOOKS.dark, "right");
+            endCard();
 
-                startCard(
-                    "3. Tooltip.show(): a bubble at an object",
-                    "Tooltip.show(target, text, look, side) puts a bubble at an object, not under the mouse (Ex: the \"Click again\" of a SmartButton ask). It returns the bubble: bubble.remove(). A click opens one, the next click closes it."
-                );
-                    toggleButton("Edged, top", "border: 2, arrow: 14", LOOKS.edged, "top");
-                    toggleButton("Edged, bottom", "The edge goes around the arrow", LOOKS.edged, "bottom");
-                    toggleButton("Red, no edge", "Click again to delete.", LOOKS.red, "top");
-                    toggleButton("Dark, right", "On the right side", LOOKS.dark, "right");
-                endCard();
+            startCard(
+                "4. Never out of the screen",
+                "The small buttons at the corners of the screen have tooltips: the bubble slides inside, or goes to the other side when there is no room; the arrow still points at its place. \"Show all\" opens a bubble at each corner for 3 seconds."
+            );
+                SmartButton({
+                    labelText: "Show all",
+                    onClick: function () {
+                        removeBubbles();
+                        edgeButtons.forEach(function (button) {
+                            showBubble(button, button.hint, LOOKS.edged, "top");
+                        });
+                        setTimeout(removeBubbles, SHOW_TIME);
+                    },
+                });
+            endCard();
 
-                startCard(
-                    "4. Never out of the screen",
-                    "The small buttons at the corners of the screen have tooltips: the bubble slides inside, or goes to the other side when there is no room; the arrow still points at its place. \"Show all\" opens a bubble at each corner for 3 seconds."
-                );
-                    SmartButton({
-                        labelText: "Show all",
-                        onClick: function () {
-                            removeBubbles();
-                            edgeButtons.forEach(function (button) {
-                                showBubble(button, button.hint, LOOKS.edged, "top");
-                            });
-                            setTimeout(removeBubbles, SHOW_TIME);
-                        },
-                    });
-                endCard();
+            startCard(
+                "The look keys",
+                "Tooltip.BUBBLE_LOOK: fontSize, bold, padding, color, textColor, round, border, borderColor, shadow, arrow (0: none), gap (from the target to the point of the arrow), edge (the room kept inside the screen), grow (it grows out of the point), zIndex."
+            );
+            endCard();
 
-                startCard(
-                    "The look keys",
-                    "Tooltip.BUBBLE_LOOK: fontSize, bold, padding, color, textColor, round, border, borderColor, shadow, arrow (0: none), gap (from the target to the point of the arrow), edge (the room kept inside the screen), grow (it grows out of the point), zIndex."
-                );
-                endCard();
-
-            endGroup();
-
-        endBox();
-
-        // WHY: a bubble of Tooltip.show() is on the page; the content under it moves when the page box scrolls
-        pageBox.on("scroll", removeBubbles);
+        endGroup();
 
         const edgeButtons = createEdgeButtons();
 

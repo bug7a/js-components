@@ -55,6 +55,7 @@
     <script src="../comp/side-panel.js" type="text/javascript" charset="utf-8"></script>
     <script src="../comp/loading-screen.js" type="text/javascript" charset="utf-8"></script>
     <script src="../comp/graph-box.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/scroll-area.js" type="text/javascript" charset="utf-8"></script>
 
     <script>
 
@@ -158,8 +159,8 @@
 
         page.color = PAGE_COLOR;
 
-        // BOX: Scrolling page
-        const pageBox = startBox(0, 0, "100%", "100%", { color: "transparent", scrollY: 1 });
+        // SCROLL AREA: Scrolling page
+        ScrollArea();
 
             HGroup({ width: "100%", height: "auto", align: "center top", gap: 24, padding: [PAGE_SIDE_SPACE, 40], wrap: 1, clipContent: 0 });
 
@@ -405,9 +406,7 @@
 
             endGroup();
 
-        endBox();
-
-        if (typeof ScrollBar === "function") ScrollBar({ scrollableBox: pageBox });
+        endGroup();
 
     };
 

@@ -14,6 +14,7 @@
 
     <script src="../comp/smart-button.js" type="text/javascript" charset="utf-8"></script>
     <script src="../comp/tap-effect.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/scroll-area.js" type="text/javascript" charset="utf-8"></script>
 
     <script>
 
@@ -65,32 +66,30 @@
         page.color = "white";
         TapEffect.start();
 
-        startBox(0, 0, "100%", "100%", { color: "transparent", scrollY: 1 });
-            VGroup({ width: "100%", height: "auto", align: "center top", gap: 20, padding: 40 });
+        ScrollArea({ align: "center top", gap: 20, padding: 40 });
 
-                Label({ text: "Tap Effect", fontSize: 26, bold: 1, textColor: Black(0.8) });
-                Label({ text: "Tap anywhere: a soft circle comes where you tap.", fontSize: 16, textColor: Black(0.55) });
+            Label({ text: "Tap Effect", fontSize: 26, bold: 1, textColor: Black(0.8) });
+            Label({ text: "Tap anywhere: a soft circle comes where you tap.", fontSize: 16, textColor: Black(0.55) });
 
-                HGroup({ width: "100%", height: "auto", align: "center top", gap: 12, wrap: 1 });
-                    CARDS.forEach(createCard);
-                endGroup();
-
-                lblTapped = Label({ text: "Tapped: -", fontSize: 14, textColor: Black(0.5) });
-
-                HGroup({ hug: 1, align: "left center", gap: 14, clipContent: 0 });
-                    // WHY ripple: 0: only the circle of TapEffect is seen, not the wave of the button too
-                    btnStartStop = SmartButton({
-                        labelText: "Stop",
-                        width: BUTTON_WIDTH,
-                        height: BUTTON_HEIGHT,
-                        ripple: 0,
-                        onClick: toggleTapEffect,
-                    });
-                    lblState = Label({ text: "", fontSize: 14, textColor: Black(0.5) });
-                endGroup();
-
+            HGroup({ width: "100%", height: "auto", align: "center top", gap: 12, wrap: 1 });
+                CARDS.forEach(createCard);
             endGroup();
-        endBox();
+
+            lblTapped = Label({ text: "Tapped: -", fontSize: 14, textColor: Black(0.5) });
+
+            HGroup({ hug: 1, align: "left center", gap: 14, clipContent: 0 });
+                // WHY ripple: 0: only the circle of TapEffect is seen, not the wave of the button too
+                btnStartStop = SmartButton({
+                    labelText: "Stop",
+                    width: BUTTON_WIDTH,
+                    height: BUTTON_HEIGHT,
+                    ripple: 0,
+                    onClick: toggleTapEffect,
+                });
+                lblState = Label({ text: "", fontSize: 14, textColor: Black(0.5) });
+            endGroup();
+
+        endGroup();
 
         showState();
 

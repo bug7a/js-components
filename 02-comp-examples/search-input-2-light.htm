@@ -13,6 +13,7 @@
 
     <!-- COMPONENT FILES -->
     <script src="../comp/search-input.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/scroll-area.js" type="text/javascript" charset="utf-8"></script>
 
     <script>
 
@@ -36,59 +37,55 @@
 
             // BOX: Scrolling page
             // WHY: page does not scroll. Scrollable content must be inside a Box with scrollY: 1.
-            startBox(0, 0, "100%", "100%", { color: "transparent", scrollY: 1 });
+            // WHY 16 at the sides: the white card fills a phone (390 px)
+            ScrollArea({ align: "left top", gap: 24, padding: [16, 40] });
 
-                // WHY 16 at the sides: the white card fills a phone (390 px)
-                VGroup({ width: "100%", height: "auto", align: "left top", gap: 24, padding: [16, 40] });
+                Label({ text: "SearchInput: light", fontSize: 24, bold: 1, textColor: Black(0.8) });
 
-                    Label({ text: "SearchInput: light", fontSize: 24, bold: 1, textColor: Black(0.8) });
+                caption("light · empty (click it: the edge while typing)");
+                SearchInput({
+                    styleName: "light",
+                    onChange: showSearched,
+                });
 
-                    caption("light · empty (click it: the edge while typing)");
+                caption("light · with text (value shows the clear icon)");
+                SearchInput({
+                    styleName: "light",
+                    placeholder: "Search products",
+                    value: "running shoes",
+                    onChange: showSearched,
+                });
+
+                // GROUP: A white card with a search box as wide as the card
+                VGroup({
+                    width: "100%",
+                    height: "auto",
+                    align: "left top",
+                    gap: 12,
+                    padding: 20,
+                    color: "white",
+                    round: 10,
+                    border: 1,
+                    borderColor: Black(0.1),
+                    css: { maxWidth: CARD_WIDTH + "px" },
+                });
+                    caption("light · on a white card, as wide as the card (width: \"100%\")");
                     SearchInput({
                         styleName: "light",
-                        onChange: showSearched,
-                    });
-
-                    caption("light · with text (value shows the clear icon)");
-                    SearchInput({
-                        styleName: "light",
-                        placeholder: "Search products",
-                        value: "running shoes",
-                        onChange: showSearched,
-                    });
-
-                    // GROUP: A white card with a search box as wide as the card
-                    VGroup({
                         width: "100%",
-                        height: "auto",
-                        align: "left top",
-                        gap: 12,
-                        padding: 20,
-                        color: "white",
-                        round: 10,
-                        border: 1,
-                        borderColor: Black(0.1),
-                        css: { maxWidth: CARD_WIDTH + "px" },
-                    });
-                        caption("light · on a white card, as wide as the card (width: \"100%\")");
-                        SearchInput({
-                            styleName: "light",
-                            width: "100%",
-                            placeholder: "Search in all pages",
-                            onChange: showSearched,
-                        });
-                    endGroup();
-
-                    lblSearched = Label({ text: "Searched: -", fontSize: 13, textColor: Black(0.5) });
-
-                    caption("original · the default (no styleName), to compare");
-                    SearchInput({
+                        placeholder: "Search in all pages",
                         onChange: showSearched,
                     });
-
                 endGroup();
 
-            endBox();
+                lblSearched = Label({ text: "Searched: -", fontSize: 13, textColor: Black(0.5) });
+
+                caption("original · the default (no styleName), to compare");
+                SearchInput({
+                    onChange: showSearched,
+                });
+
+            endGroup();
 
         };
 

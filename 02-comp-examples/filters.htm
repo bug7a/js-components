@@ -16,6 +16,7 @@
         <script src="../comp/search-input.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/check-box.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/filters.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/scroll-area.js" type="text/javascript" charset="utf-8"></script>
 
         <script>
 
@@ -51,15 +52,15 @@
         ];
 
         // *** VARIABLES:
-        let pageBox, vehicleFilters, lblResult;
+        let vehicleFilters, lblResult;
 
         // First running function. (basic.js calls it when the page is ready)
         const start = function () {
 
             page.color = PAGE_COLOR;
 
-            // BOX: Page (it scrolls when the window is lower than the samples)
-            pageBox = startBox(0, 0, "100%", "100%", { color: "transparent", scrollY: 1 });
+            // SCROLL AREA: Page (it scrolls when the window is lower than the samples)
+            ScrollArea();
 
             // GROUP: The samples side by side (one under the other on a narrow screen)
             HGroup({ width: "100%", height: "auto", align: "center top", gap: 40, padding: 40, wrap: 1 });
@@ -96,9 +97,7 @@
 
             endGroup();
 
-            endBox();
-
-            ScrollBar({ scrollableBox: pageBox });
+            endGroup();
 
             showSelected(vehicleFilters);
 

@@ -16,6 +16,7 @@
     <script src="../comp/search-input.js" type="text/javascript" charset="utf-8"></script>
     <script src="../comp/smart-button.js" type="text/javascript" charset="utf-8"></script>
     <script src="../comp/item-list.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/scroll-area.js" type="text/javascript" charset="utf-8"></script>
 
     <script>
 
@@ -167,93 +168,87 @@
 
         page.color = PAGE_COLOR;
 
-        const pageBox = startBox(0, 0, "100%", "100%", { color: "transparent", scrollY: 1 });
+        ScrollArea({ align: "center top", gap: 16, padding: [16, 24] });
 
-            VGroup({ width: "100%", height: "auto", align: "center top", gap: 16, padding: [16, 24] });
+            // GROUP: The column of the page
+            VGroup({
+                width: "100%",
+                height: "auto",
+                align: "left top",
+                gap: 16,
+                css: { maxWidth: CONTENT_WIDTH + "px", alignItems: "stretch" },
+            });
 
-                // GROUP: The column of the page
-                VGroup({
+                Label({ plainText: "ItemList: sections and motion", fontSize: 24, textColor: White(0.95), bold: 1 });
+                Label({
+                    plainText: "The Usage Examples list of the mobile template: { type: \"section\" } rows, a search that keeps the section of a match, and a dark flash on a click (style.pressed).",
+                    fontSize: 13,
+                    textColor: White(0.8),
                     width: "100%",
-                    height: "auto",
-                    align: "left top",
-                    gap: 16,
-                    css: { maxWidth: CONTENT_WIDTH + "px", alignItems: "stretch" },
+                    css: { lineHeight: "1.4" },
                 });
 
-                    Label({ plainText: "ItemList: sections and motion", fontSize: 24, textColor: White(0.95), bold: 1 });
-                    Label({
-                        plainText: "The Usage Examples list of the mobile template: { type: \"section\" } rows, a search that keeps the section of a match, and a dark flash on a click (style.pressed).",
-                        fontSize: 13,
-                        textColor: White(0.8),
+                // LIST: Usage Examples (sections, search, the pressed flash)
+                ItemList({
+                    width: "100%",
+                    height: EXAMPLES_HEIGHT,
+                    items: EXAMPLES,
+                    selection: "none",
+                    showSearch: 1,
+                    searchParams: { placeholder: "Search", searchIconOpacity: 0.4 },
+                    style: EXAMPLES_STYLE,
+                    createItemView: ItemListSample.createExampleRow,
+                    onItemClick: function (self, item) {
+                        lblOpened.plainText = "Opened: " + item.text + " (" + item.description + ")";
+                    },
+                });
+                const lblOpened = Label({ plainText: "Click a row: it flashes.", fontSize: 13, textColor: White(0.85) });
+
+                // GROUP: Card of the animated list
+                ItemListSample.startCard(
+                    "animated: 1 · addItem / removeItem",
+                    "The rows move to their new places (FLIP), a new row fades in, a removed one fades out and then leaves. A section without items goes too. The count changes at once."
+                );
+
+                    const foodList = ItemList({
                         width: "100%",
-                        css: { lineHeight: "1.4" },
+                        height: FOODS_HEIGHT,
+                        styleName: "modern",
+                        animated: 1,
+                        items: ItemListSample.getStartFoods(),
+                        onChange: function () { showCount(); },
                     });
 
-                    // LIST: Usage Examples (sections, search, the pressed flash)
-                    ItemList({
-                        width: "100%",
-                        height: EXAMPLES_HEIGHT,
-                        items: EXAMPLES,
-                        selection: "none",
-                        showSearch: 1,
-                        searchParams: { placeholder: "Search", searchIconOpacity: 0.4 },
-                        style: EXAMPLES_STYLE,
-                        createItemView: ItemListSample.createExampleRow,
-                        onItemClick: function (self, item) {
-                            lblOpened.plainText = "Opened: " + item.text + " (" + item.description + ")";
-                        },
-                    });
-                    const lblOpened = Label({ plainText: "Click a row: it flashes.", fontSize: 13, textColor: White(0.85) });
-
-                    // GROUP: Card of the animated list
-                    ItemListSample.startCard(
-                        "animated: 1 · addItem / removeItem",
-                        "The rows move to their new places (FLIP), a new row fades in, a removed one fades out and then leaves. A section without items goes too. The count changes at once."
-                    );
-
-                        const foodList = ItemList({
-                            width: "100%",
-                            height: FOODS_HEIGHT,
-                            styleName: "modern",
-                            animated: 1,
-                            items: ItemListSample.getStartFoods(),
-                            onChange: function () { showCount(); },
+                    // GROUP: Buttons
+                    HGroup({ width: "100%", height: "auto", align: "left center", gap: 8, wrap: 1 });
+                        SmartButton({
+                            height: BUTTON_HEIGHT,
+                            labelText: "Add",
+                            style: BUTTON_STYLE,
+                            onClick: function () { addFood(); },
                         });
-
-                        // GROUP: Buttons
-                        HGroup({ width: "100%", height: "auto", align: "left center", gap: 8, wrap: 1 });
-                            SmartButton({
-                                height: BUTTON_HEIGHT,
-                                labelText: "Add",
-                                style: BUTTON_STYLE,
-                                onClick: function () { addFood(); },
-                            });
-                            SmartButton({
-                                height: BUTTON_HEIGHT,
-                                labelText: "Remove",
-                                style: BUTTON_STYLE,
-                                onClick: function () { removeFood(); },
-                            });
-                            const btnMotion = SmartButton({
-                                height: BUTTON_HEIGHT,
-                                labelText: "Motion: on",
-                                styleName: "ozden4",
-                                style: BUTTON_STYLE,
-                                onClick: function () { toggleMotion(); },
-                            });
-                        endGroup();
-
-                        const lblCount = Label({ plainText: "", fontSize: 13, textColor: Black(0.5) });
-
+                        SmartButton({
+                            height: BUTTON_HEIGHT,
+                            labelText: "Remove",
+                            style: BUTTON_STYLE,
+                            onClick: function () { removeFood(); },
+                        });
+                        const btnMotion = SmartButton({
+                            height: BUTTON_HEIGHT,
+                            labelText: "Motion: on",
+                            styleName: "ozden4",
+                            style: BUTTON_STYLE,
+                            onClick: function () { toggleMotion(); },
+                        });
                     endGroup();
+
+                    const lblCount = Label({ plainText: "", fontSize: 13, textColor: Black(0.5) });
 
                 endGroup();
 
             endGroup();
 
-        endBox();
-
-        ScrollBar({ scrollableBox: pageBox });
+        endGroup();
 
         // *** THE ANIMATED LIST
 

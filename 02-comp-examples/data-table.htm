@@ -15,6 +15,7 @@
 
     <script src="../comp/search-input.js" type="text/javascript" charset="utf-8"></script>
     <script src="../comp/data-table.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/scroll-area.js" type="text/javascript" charset="utf-8"></script>
 
     <script>
 
@@ -192,35 +193,29 @@
 
         page.color = "#E9EAE6";
 
-        const pageBox = startBox(0, 0, "100%", "100%", { color: "transparent", scrollY: 1 });
+        ScrollArea({ align: "center top", gap: 24, padding: 32 });
 
-            VGroup({ width: "100%", height: "auto", align: "center top", gap: 24, padding: 32 });
+            Label({ text: "DataTable", fontSize: 26, bold: 1, textColor: Black(0.8) });
+            Label({
+                plainText: "More samples: data-table-2 ... data-table-5 · for very many rows: SmartTable",
+                fontSize: 14,
+                textColor: Black(0.45),
+            });
 
-                Label({ text: "DataTable", fontSize: 26, bold: 1, textColor: Black(0.8) });
-                Label({
-                    plainText: "More samples: data-table-2 ... data-table-5 · for very many rows: SmartTable",
-                    fontSize: 14,
-                    textColor: Black(0.45),
-                });
-
-                // GROUP: The style packages
-                HGroup({ width: "100%", height: "auto", align: "center top", gap: 20, wrap: 1 });
-                    createStyleSample(
-                        "classic",
-                        "A gray title row, striped rows, a soft yellow selection. Search: try \"istanbul\" (the Turkish letters are found without their marks).",
-                        LOOKS.light
-                    );
-                    createStyleSample("plain", "White, only lines: a table inside a page.", LOOKS.light);
-                    createStyleSample("dark", "For a dark page; the search box is ozdenDark.", LOOKS.dark);
-                endGroup();
-
-                createUpdateSample();
-
+            // GROUP: The style packages
+            HGroup({ width: "100%", height: "auto", align: "center top", gap: 20, wrap: 1 });
+                createStyleSample(
+                    "classic",
+                    "A gray title row, striped rows, a soft yellow selection. Search: try \"istanbul\" (the Turkish letters are found without their marks).",
+                    LOOKS.light
+                );
+                createStyleSample("plain", "White, only lines: a table inside a page.", LOOKS.light);
+                createStyleSample("dark", "For a dark page; the search box is ozdenDark.", LOOKS.dark);
             endGroup();
 
-        endBox();
+            createUpdateSample();
 
-        ScrollBar({ scrollableBox: pageBox });
+        endGroup();
 
     };
 

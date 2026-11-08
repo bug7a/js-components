@@ -15,6 +15,7 @@
     <!-- COMPONENT FILES -->
     <script src="../comp/gauge.js" type="text/javascript" charset="utf-8"></script>
     <script src="../comp/smart-button.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/scroll-area.js" type="text/javascript" charset="utf-8"></script>
 
     <script>
 
@@ -31,83 +32,79 @@
 
             page.color = "#F4F5F2";
 
-            startBox(0, 0, "100%", "100%", { color: "transparent", scrollY: 1 });
+            // WHY 16 at the sides: the cards fill a phone (390 px)
+            ScrollArea({ align: "center top", gap: 30, padding: [16, 50] });
 
-                // WHY 16 at the sides: the cards fill a phone (390 px)
-                VGroup({ width: "100%", height: "auto", align: "center top", gap: 30, padding: [16, 50] });
+                Label({ text: "Gauge", fontSize: 26, fontFamily: "opensans-bold" });
 
-                    Label({ text: "Gauge", fontSize: 26, fontFamily: "opensans-bold" });
+                // SAMPLE 1: Ring
+                startCard("1. Ring (sweepAngle: 360)", "A battery charge. The marker line is the reserve.", 1);
 
-                    // SAMPLE 1: Ring
-                    startCard("1. Ring (sweepAngle: 360)", "A battery charge. The marker line is the reserve.", 1);
+                    HGroup({ width: "100%", height: "auto", align: "center center", gap: 20 });
+                        ring = Gauge({
+                            width: 180, height: 180,
+                            styleName: "dark",
+                            value: 46, subText: "Charging",
+                            markerValue: 20,
+                        });
+                    endGroup();
 
-                        HGroup({ width: "100%", height: "auto", align: "center center", gap: 20 });
-                            ring = Gauge({
-                                width: 180, height: 180,
-                                styleName: "dark",
-                                value: 46, subText: "Charging",
-                                markerValue: 20,
-                            });
-                        endGroup();
+                    HGroup({ hug: 1, gap: 8, clipContent: 0 }); // WHY clipContent: a pressed SmartButton is not cut
+                        addButton("+15%", function () { ring.setValue(Math.min(100, ring.value + 15)); });
+                        addButton("−15%", function () { ring.setValue(Math.max(0, ring.value - 15)); });
+                        addButton("Low", function () {
+                            ring.setBarColor("#F2B24C");
+                            ring.setSubText("Low");
+                        }, "yellowDark");
+                    endGroup();
 
-                        HGroup({ hug: 1, gap: 8, clipContent: 0 }); // WHY clipContent: a pressed SmartButton is not cut
-                            addButton("+15%", function () { ring.setValue(Math.min(100, ring.value + 15)); });
-                            addButton("−15%", function () { ring.setValue(Math.max(0, ring.value - 15)); });
-                            addButton("Low", function () {
-                                ring.setBarColor("#F2B24C");
-                                ring.setSubText("Low");
-                            }, "yellowDark");
-                        endGroup();
+                endCard();
 
-                    endCard();
+                // SAMPLE 2: Half arc
+                startCard("2. Half arc (startAngle: -90, sweepAngle: 180)", "Two heaters. The white line is the target.", 1);
 
-                    // SAMPLE 2: Half arc
-                    startCard("2. Half arc (startAngle: -90, sweepAngle: 180)", "Two heaters. The white line is the target.", 1);
+                    // (a phone: one under the other)
+                    HGroup({ width: "100%", height: "auto", align: "center center", gap: 30, wrap: 1 });
+                        Gauge({
+                            width: 200, height: 130,
+                            styleName: "dark",
+                            startAngle: -90, sweepAngle: 180,
+                            maxValue: 300, value: 215, markerValue: 220,
+                            valueSuffix: "°", subText: "Target 220°", titleText: "Nozzle",
+                            style: { bar: { color: "#E0715A" }, value: { fontSize: 26 } },
+                        });
+                        Gauge({
+                            width: 200, height: 130,
+                            styleName: "dark",
+                            startAngle: -90, sweepAngle: 180,
+                            maxValue: 300, value: 58, markerValue: 60,
+                            valueSuffix: "°", subText: "Target 60°", titleText: "Bed",
+                            style: { bar: { color: "#5A8FE0" }, value: { fontSize: 26 } },
+                        });
+                    endGroup();
 
-                        // (a phone: one under the other)
-                        HGroup({ width: "100%", height: "auto", align: "center center", gap: 30, wrap: 1 });
-                            Gauge({
-                                width: 200, height: 130,
-                                styleName: "dark",
-                                startAngle: -90, sweepAngle: 180,
-                                maxValue: 300, value: 215, markerValue: 220,
-                                valueSuffix: "°", subText: "Target 220°", titleText: "Nozzle",
-                                style: { bar: { color: "#E0715A" }, value: { fontSize: 26 } },
-                            });
-                            Gauge({
-                                width: 200, height: 130,
-                                styleName: "dark",
-                                startAngle: -90, sweepAngle: 180,
-                                maxValue: 300, value: 58, markerValue: 60,
-                                valueSuffix: "°", subText: "Target 60°", titleText: "Bed",
-                                style: { bar: { color: "#5A8FE0" }, value: { fontSize: 26 } },
-                            });
-                        endGroup();
+                endCard();
 
-                    endCard();
+                // SAMPLE 3: Other sweeps and styles
+                startCard("3. Any sweep, any style", "sweepAngle: 270 and the modern package.");
 
-                    // SAMPLE 3: Other sweeps and styles
-                    startCard("3. Any sweep, any style", "sweepAngle: 270 and the modern package.");
+                    // (a phone: one under the other)
+                    HGroup({ width: "100%", height: "auto", align: "center center", gap: 30, wrap: 1 });
+                        Gauge({
+                            width: 170, height: 170,
+                            startAngle: -135, sweepAngle: 270,
+                            value: 68, subText: "Disk used", valueSuffix: "%",
+                        });
+                        Gauge({
+                            width: 170, height: 170,
+                            styleName: "modern",
+                            value: 82, subText: "Score",
+                        });
+                    endGroup();
 
-                        // (a phone: one under the other)
-                        HGroup({ width: "100%", height: "auto", align: "center center", gap: 30, wrap: 1 });
-                            Gauge({
-                                width: 170, height: 170,
-                                startAngle: -135, sweepAngle: 270,
-                                value: 68, subText: "Disk used", valueSuffix: "%",
-                            });
-                            Gauge({
-                                width: 170, height: 170,
-                                styleName: "modern",
-                                value: 82, subText: "Score",
-                            });
-                        endGroup();
+                endCard();
 
-                    endCard();
-
-                endGroup();
-
-            endBox();
+            endGroup();
 
         };
 

@@ -16,6 +16,7 @@
     <script src="../comp/text-field.js" type="text/javascript" charset="utf-8"></script>
     <script src="../comp/smart-button.js" type="text/javascript" charset="utf-8"></script>
     <script src="../comp/dialog.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/scroll-area.js" type="text/javascript" charset="utf-8"></script>
 
     <script>
 
@@ -326,42 +327,39 @@
         page.color = "#F0F1EE";
         basic.addCss("dialog-centered-icons", ICON_MOTION_CSS);
 
-        // BOX: the page scrolls when its buttons are higher than the screen (a phone)
-        startBox(0, 0, "100%", "100%", { color: "transparent", scrollY: 1 });
-            // WHY gap 22 (8 in a group): a title is nearer to its own buttons than to the buttons of the group above
-            // WHY minHeight: in the middle of the screen while it is not higher than it
-            VGroup({ width: "100%", height: "auto", align: "center", gap: 22, padding: [16, 24], css: { minHeight: "100%" } });
+        // SCROLL AREA: the page scrolls when its buttons are higher than the screen (a phone)
+        // WHY gap 22 (8 in a group): a title is nearer to its own buttons than to the buttons of the group above
+        ScrollArea({ align: "center", gap: 22, padding: [16, 24] });
 
-                Label({ text: "Dialog: centered", fontSize: 26, bold: 1, textColor: Black(0.8) });
+            Label({ text: "Dialog: centered", fontSize: 26, bold: 1, textColor: Black(0.8) });
 
-                // The dialogs by their situation: a small title and their buttons
-                [
-                    { titleText: "Before a change", buttons: [
-                        { text: "Delete account", open: openDeleteDialog },
-                        { text: "Log out", open: openLogoutConfirm },
-                        { text: "Leave without saving", open: openUnsavedConfirm },
-                    ] },
-                    { titleText: "After a good result", buttons: [
-                        { text: "Saved", open: openSavedAlert },
-                        { text: "Order placed", open: openOrderDialog },
-                        { text: "Check your inbox", open: openInboxDialog },
-                    ] },
-                    { titleText: "When something is wrong", buttons: [
-                        { text: "Something went wrong", open: openErrorDialog },
-                        { text: "No connection", open: openOfflineDialog },
-                        { text: "Session ended", open: openSessionAlert },
-                    ] },
-                    { titleText: "Requests", buttons: [
-                        { text: "Notifications", open: openNotificationsDialog },
-                        { text: "Location", open: openLocationDialog },
-                        { text: "Rate the app", open: openRateDialog },
-                    ] },
-                ].forEach(createGroup);
+            // The dialogs by their situation: a small title and their buttons
+            [
+                { titleText: "Before a change", buttons: [
+                    { text: "Delete account", open: openDeleteDialog },
+                    { text: "Log out", open: openLogoutConfirm },
+                    { text: "Leave without saving", open: openUnsavedConfirm },
+                ] },
+                { titleText: "After a good result", buttons: [
+                    { text: "Saved", open: openSavedAlert },
+                    { text: "Order placed", open: openOrderDialog },
+                    { text: "Check your inbox", open: openInboxDialog },
+                ] },
+                { titleText: "When something is wrong", buttons: [
+                    { text: "Something went wrong", open: openErrorDialog },
+                    { text: "No connection", open: openOfflineDialog },
+                    { text: "Session ended", open: openSessionAlert },
+                ] },
+                { titleText: "Requests", buttons: [
+                    { text: "Notifications", open: openNotificationsDialog },
+                    { text: "Location", open: openLocationDialog },
+                    { text: "Rate the app", open: openRateDialog },
+                ] },
+            ].forEach(createGroup);
 
-                lblResult = Label({ plainText: "-", fontSize: 14, textColor: Black(0.5) });
+            lblResult = Label({ plainText: "-", fontSize: 14, textColor: Black(0.5) });
 
-            endGroup();
-        endBox();
+        endGroup();
 
     };
 

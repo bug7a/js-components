@@ -14,6 +14,7 @@
     <script src="../basic/scroll-bar.js" type="text/javascript" charset="utf-8"></script>
 
     <script src="../comp/tooltip.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/scroll-area.js" type="text/javascript" charset="utf-8"></script>
 
     <script>
 
@@ -83,26 +84,19 @@
 
         page.color = PAGE_COLOR;
 
-        // BOX: Scrolling page
-        const scrollBox = startBox(0, 0, "100%", "100%", { color: "transparent", scrollY: 1 });
+        // SCROLL AREA: Scrolling page
+        // WHY onScroll: the bubbles are on page, over the area: they go to their dots again when the dots move.
+        const pageArea = ScrollArea({ align: "center top", gap: 8, padding: [16, 40], onScroll: showBubbles });
 
-            VGroup({ width: "100%", height: "auto", align: "center top", gap: 8, padding: [16, 40], clipContent: 0 });
+            Label({ text: "Conference day", fontSize: 26, fontFamily: "opensans-bold", textColor: INK });
+            Label({ text: "Pill bubbles with tags in them", fontSize: 15, textColor: Black(0.5) });
 
-                Label({ text: "Conference day", fontSize: 26, fontFamily: "opensans-bold", textColor: INK });
-                Label({ text: "Pill bubbles with tags in them", fontSize: 15, textColor: Black(0.5) });
+            ROWS.forEach(createRow);
+            createTalkRow();
 
-                ROWS.forEach(createRow);
-                createTalkRow();
+        endGroup();
 
-            endGroup();
-
-        endBox();
-
-        ScrollBar({ scrollableBox: scrollBox });
-
-        // WHY: The bubbles are on page, over the Box: they go to their dots again when the dots move.
-        scrollBox.onPageResize(showBubbles);
-        scrollBox.listenTo(scrollBox.elem, "scroll", showBubbles);
+        pageArea.onPageResize(showBubbles); // WHY: the dots move with the size of the page too.
         document.fonts.ready.then(showBubbles); // WHY: The width of a bubble depends on its font.
 
     };

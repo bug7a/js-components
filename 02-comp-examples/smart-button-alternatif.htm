@@ -14,6 +14,7 @@
 
     <!-- COMPONENTS -->
     <script src="../comp/smart-button.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/scroll-area.js" type="text/javascript" charset="utf-8"></script>
 
     <script>
 
@@ -154,71 +155,65 @@
 
             page.color = "white";
 
-            // BOX: Scrolling page
-            const scrollBox = startBox(0, 0, "100%", "100%", { color: "transparent", scrollY: 1 });
+            // SCROLL AREA: Scrolling page
+            ScrollArea({ align: "center top", gap: 40, padding: [20, 60] });
 
-                VGroup({ width: "100%", height: "auto", align: "center top", gap: 40, padding: [20, 60], clipContent: 0 });
+                startRow("Order status");
+                    SmartButton({ styleName: "pill", labelText: "Draft", iconFile: grayIcon("pencil"), style: pillColors(COLORS.gray) });
+                    SmartButton({ styleName: "pill", labelText: "Waiting", iconFile: pillIcon("clock", COLORS.orange), style: pillColors(COLORS.orange) });
+                    SmartButton({ styleName: "pill", labelText: "Preparing", iconFile: pillIcon("dots", COLORS.blue), style: pillColors(COLORS.blue) });
+                    SmartButton({ styleName: "pill", labelText: "On the way", iconFile: pillIcon("arrow", COLORS.purple), style: pillColors(COLORS.purple) });
+                    SmartButton({ styleName: "pill", labelText: "Accepted", iconFile: pillIcon("check", COLORS.green), style: pillColors(COLORS.green) });
+                    SmartButton({ styleName: "pill", labelText: "Declined", iconFile: pillIcon("cross", COLORS.red), style: pillColors(COLORS.red) });
+                endRow();
 
-                    startRow("Order status");
-                        SmartButton({ styleName: "pill", labelText: "Draft", iconFile: grayIcon("pencil"), style: pillColors(COLORS.gray) });
-                        SmartButton({ styleName: "pill", labelText: "Waiting", iconFile: pillIcon("clock", COLORS.orange), style: pillColors(COLORS.orange) });
-                        SmartButton({ styleName: "pill", labelText: "Preparing", iconFile: pillIcon("dots", COLORS.blue), style: pillColors(COLORS.blue) });
-                        SmartButton({ styleName: "pill", labelText: "On the way", iconFile: pillIcon("arrow", COLORS.purple), style: pillColors(COLORS.purple) });
-                        SmartButton({ styleName: "pill", labelText: "Accepted", iconFile: pillIcon("check", COLORS.green), style: pillColors(COLORS.green) });
-                        SmartButton({ styleName: "pill", labelText: "Declined", iconFile: pillIcon("cross", COLORS.red), style: pillColors(COLORS.red) });
-                    endRow();
+                // A click changes the look; a second click brings it back
+                startRow("Click to change");
+                    createSwitchButton(
+                        { text: "Add", icon: grayIcon("plus"), colors: pillColors(COLORS.gray) },
+                        { text: "Added", icon: solidIcon("check", COLORS.blue), colors: pillSolidColors(COLORS.blue) }
+                    );
+                    createSwitchButton(
+                        { text: "Follow", icon: grayIcon("plus"), colors: pillColors(COLORS.gray) },
+                        { text: "Following", icon: solidIcon("check", COLORS.purple), colors: pillSolidColors(COLORS.purple) }
+                    );
+                    createSwitchButton(
+                        { text: "Like", icon: grayIcon("heart"), colors: pillColors(COLORS.gray) },
+                        { text: "Liked", icon: solidIcon("heart", COLORS.pink), colors: pillSolidColors(COLORS.pink) }
+                    );
+                    createSwitchButton(
+                        { text: "Save", icon: grayIcon("bookmark"), colors: pillColors(COLORS.gray) },
+                        { text: "Saved", icon: solidIcon("bookmark", COLORS.teal), colors: pillSolidColors(COLORS.teal) }
+                    );
+                endRow();
 
-                    // A click changes the look; a second click brings it back
-                    startRow("Click to change");
-                        createSwitchButton(
-                            { text: "Add", icon: grayIcon("plus"), colors: pillColors(COLORS.gray) },
-                            { text: "Added", icon: solidIcon("check", COLORS.blue), colors: pillSolidColors(COLORS.blue) }
-                        );
-                        createSwitchButton(
-                            { text: "Follow", icon: grayIcon("plus"), colors: pillColors(COLORS.gray) },
-                            { text: "Following", icon: solidIcon("check", COLORS.purple), colors: pillSolidColors(COLORS.purple) }
-                        );
-                        createSwitchButton(
-                            { text: "Like", icon: grayIcon("heart"), colors: pillColors(COLORS.gray) },
-                            { text: "Liked", icon: solidIcon("heart", COLORS.pink), colors: pillSolidColors(COLORS.pink) }
-                        );
-                        createSwitchButton(
-                            { text: "Save", icon: grayIcon("bookmark"), colors: pillColors(COLORS.gray) },
-                            { text: "Saved", icon: solidIcon("bookmark", COLORS.teal), colors: pillSolidColors(COLORS.teal) }
-                        );
-                    endRow();
+                startRow("Labels");
+                    SmartButton({ styleName: "pill", labelText: "New", iconFile: pillIcon("star", COLORS.yellow), style: pillColors(COLORS.yellow) });
+                    SmartButton({ styleName: "pill", labelText: "Verified", iconFile: pillIcon("check", COLORS.teal), style: pillColors(COLORS.teal) });
+                    SmartButton({ styleName: "pill", labelText: "Info", iconFile: pillIcon("info", COLORS.sky), style: pillColors(COLORS.sky) });
+                    SmartButton({ styleName: "pill", labelText: "Locked", iconFile: pillIcon("lock", COLORS.gray), style: pillColors(COLORS.gray) });
+                endRow();
 
-                    startRow("Labels");
-                        SmartButton({ styleName: "pill", labelText: "New", iconFile: pillIcon("star", COLORS.yellow), style: pillColors(COLORS.yellow) });
-                        SmartButton({ styleName: "pill", labelText: "Verified", iconFile: pillIcon("check", COLORS.teal), style: pillColors(COLORS.teal) });
-                        SmartButton({ styleName: "pill", labelText: "Info", iconFile: pillIcon("info", COLORS.sky), style: pillColors(COLORS.sky) });
-                        SmartButton({ styleName: "pill", labelText: "Locked", iconFile: pillIcon("lock", COLORS.gray), style: pillColors(COLORS.gray) });
-                    endRow();
+                startRow("Outlined");
+                    SmartButton({ styleName: "outlined", labelText: "Music", iconFile: outlinedIcon("music", COLORS.blue), style: outlinedColors(COLORS.blue) });
+                    SmartButton({ styleName: "outlined", labelText: "Travel", iconFile: outlinedIcon("compass", COLORS.green), style: outlinedColors(COLORS.green) });
+                    SmartButton({ styleName: "outlined", labelText: "Photos", iconFile: outlinedIcon("photo", COLORS.purple), style: outlinedColors(COLORS.purple) });
+                    SmartButton({ styleName: "outlined", labelText: "Coffee", iconFile: outlinedIcon("coffee", COLORS.orange), style: outlinedColors(COLORS.orange) });
+                    SmartButton({ styleName: "outlined", labelText: "Games", iconFile: outlinedIcon("gamepad", COLORS.navy), style: outlinedColors(COLORS.navy) });
+                    SmartButton({ styleName: "outlined", labelText: "Gifts", iconFile: outlinedIcon("gift", COLORS.pink), style: outlinedColors(COLORS.pink) });
+                endRow();
 
-                    startRow("Outlined");
-                        SmartButton({ styleName: "outlined", labelText: "Music", iconFile: outlinedIcon("music", COLORS.blue), style: outlinedColors(COLORS.blue) });
-                        SmartButton({ styleName: "outlined", labelText: "Travel", iconFile: outlinedIcon("compass", COLORS.green), style: outlinedColors(COLORS.green) });
-                        SmartButton({ styleName: "outlined", labelText: "Photos", iconFile: outlinedIcon("photo", COLORS.purple), style: outlinedColors(COLORS.purple) });
-                        SmartButton({ styleName: "outlined", labelText: "Coffee", iconFile: outlinedIcon("coffee", COLORS.orange), style: outlinedColors(COLORS.orange) });
-                        SmartButton({ styleName: "outlined", labelText: "Games", iconFile: outlinedIcon("gamepad", COLORS.navy), style: outlinedColors(COLORS.navy) });
-                        SmartButton({ styleName: "outlined", labelText: "Gifts", iconFile: outlinedIcon("gift", COLORS.pink), style: outlinedColors(COLORS.pink) });
-                    endRow();
+                // ONLY AN ICON (labelText: ""): a circle; its name is read by a screen reader (ariaLabel)
+                startRow("Outlined, only an icon");
+                    SmartButton({ styleName: "outlined", labelText: "", ariaLabel: "Display", iconFile: outlinedIcon("display", COLORS.blue), style: outlinedColors(COLORS.blue) });
+                    SmartButton({ styleName: "outlined", labelText: "", ariaLabel: "Wallet", iconFile: outlinedIcon("wallet", COLORS.green), style: outlinedColors(COLORS.green) });
+                    SmartButton({ styleName: "outlined", labelText: "", ariaLabel: "Notes", iconFile: outlinedIcon("notes", COLORS.purple), style: outlinedColors(COLORS.purple) });
+                    SmartButton({ styleName: "outlined", labelText: "", ariaLabel: "Boost", iconFile: outlinedIcon("rocket", COLORS.orange), style: outlinedColors(COLORS.orange) });
+                    SmartButton({ styleName: "outlined", labelText: "", ariaLabel: "Privacy", iconFile: outlinedIcon("lock", COLORS.navy), style: outlinedColors(COLORS.navy) });
+                    SmartButton({ styleName: "outlined", labelText: "", ariaLabel: "Weather", iconFile: outlinedIcon("cloudSun", COLORS.sky), style: outlinedColors(COLORS.sky) });
+                endRow();
 
-                    // ONLY AN ICON (labelText: ""): a circle; its name is read by a screen reader (ariaLabel)
-                    startRow("Outlined, only an icon");
-                        SmartButton({ styleName: "outlined", labelText: "", ariaLabel: "Display", iconFile: outlinedIcon("display", COLORS.blue), style: outlinedColors(COLORS.blue) });
-                        SmartButton({ styleName: "outlined", labelText: "", ariaLabel: "Wallet", iconFile: outlinedIcon("wallet", COLORS.green), style: outlinedColors(COLORS.green) });
-                        SmartButton({ styleName: "outlined", labelText: "", ariaLabel: "Notes", iconFile: outlinedIcon("notes", COLORS.purple), style: outlinedColors(COLORS.purple) });
-                        SmartButton({ styleName: "outlined", labelText: "", ariaLabel: "Boost", iconFile: outlinedIcon("rocket", COLORS.orange), style: outlinedColors(COLORS.orange) });
-                        SmartButton({ styleName: "outlined", labelText: "", ariaLabel: "Privacy", iconFile: outlinedIcon("lock", COLORS.navy), style: outlinedColors(COLORS.navy) });
-                        SmartButton({ styleName: "outlined", labelText: "", ariaLabel: "Weather", iconFile: outlinedIcon("cloudSun", COLORS.sky), style: outlinedColors(COLORS.sky) });
-                    endRow();
-
-                endGroup();
-
-            endBox();
-
-            ScrollBar({ scrollableBox: scrollBox });
+            endGroup();
 
         };
 

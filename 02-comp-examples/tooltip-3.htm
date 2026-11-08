@@ -14,6 +14,7 @@
 
     <script src="../comp/tooltip.js" type="text/javascript" charset="utf-8"></script>
     <script src="../comp/smart-button.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/scroll-area.js" type="text/javascript" charset="utf-8"></script>
 
     <script>
 
@@ -203,67 +204,61 @@
 
         page.color = "#F0F2F5";
 
-        const pageBox = startBox(0, 0, "100%", "100%", { color: "transparent", scrollY: 1 });
+        // WHY onScroll: the bubbles are on the page; the content under them moves when the page scrolls
+        ScrollArea({ align: "center top", gap: 24, padding: [50, 40], onScroll: Tooltip.closePopover });
 
-            VGroup({ width: "100%", height: "auto", align: "center top", gap: 24, padding: [50, 40], clipContent: 0 });
+            Label({ text: "Tooltip: content and popover", fontSize: 26, bold: 1, textColor: Black(0.8) });
 
-                Label({ text: "Tooltip: content and popover", fontSize: 26, bold: 1, textColor: Black(0.8) });
+            startCard(
+                "1. Your own content (under the mouse)",
+                "content: function (bubble) { ... } builds its objects in the bubble, one under the other (look.contentGap), in place of hintText. It follows the mouse like a hint."
+            );
+                const btnSave = SmartButton({ labelText: "Save", ...PLAIN });
+                btnSave.tooltip = Tooltip({ target: btnSave, content: saveHint, lbl_arrow: 10, look: HINT_LOOK });
 
-                startCard(
-                    "1. Your own content (under the mouse)",
-                    "content: function (bubble) { ... } builds its objects in the bubble, one under the other (look.contentGap), in place of hintText. It follows the mouse like a hint."
-                );
-                    const btnSave = SmartButton({ labelText: "Save", ...PLAIN });
-                    btnSave.tooltip = Tooltip({ target: btnSave, content: saveHint, lbl_arrow: 10, look: HINT_LOOK });
+                const btnUser = SmartButton({ labelText: "Ayşe K.", ...PLAIN });
+                btnUser.tooltip = Tooltip({ target: btnUser, content: userCard, hintPosition: "bottom", lbl_arrow: 10, look: HINT_LOOK });
 
-                    const btnUser = SmartButton({ labelText: "Ayşe K.", ...PLAIN });
-                    btnUser.tooltip = Tooltip({ target: btnUser, content: userCard, hintPosition: "bottom", lbl_arrow: 10, look: HINT_LOOK });
+                const btnPassword = SmartButton({ labelText: "Password rules", ...PLAIN });
+                btnPassword.tooltip = Tooltip({ target: btnPassword, content: passwordRules, hintPosition: "right", lbl_arrow: 10, look: HINT_LOOK });
+            endCard();
 
-                    const btnPassword = SmartButton({ labelText: "Password rules", ...PLAIN });
-                    btnPassword.tooltip = Tooltip({ target: btnPassword, content: passwordRules, hintPosition: "right", lbl_arrow: 10, look: HINT_LOOK });
-                endCard();
+            startCard(
+                "2. A popover (a click)",
+                "trigger: \"click\": a click opens the bubble and it stays; its buttons can be clicked. A click outside, Escape or a second click on the button closes it; one popover at a time."
+            );
+                const btnShare = SmartButton({ labelText: "Share", ...PLAIN });
+                btnShare.tooltip = Tooltip({ target: btnShare, trigger: "click", content: sharePopover, hintPosition: "bottom", look: POPOVER_LOOK });
 
-                startCard(
-                    "2. A popover (a click)",
-                    "trigger: \"click\": a click opens the bubble and it stays; its buttons can be clicked. A click outside, Escape or a second click on the button closes it; one popover at a time."
-                );
-                    const btnShare = SmartButton({ labelText: "Share", ...PLAIN });
-                    btnShare.tooltip = Tooltip({ target: btnShare, trigger: "click", content: sharePopover, hintPosition: "bottom", look: POPOVER_LOOK });
+                const btnSort = SmartButton({ labelText: "Sort", ...PLAIN });
+                btnSort.tooltip = Tooltip({ target: btnSort, trigger: "click", content: sortPopover, hintPosition: "bottom", look: POPOVER_LOOK });
 
-                    const btnSort = SmartButton({ labelText: "Sort", ...PLAIN });
-                    btnSort.tooltip = Tooltip({ target: btnSort, trigger: "click", content: sortPopover, hintPosition: "bottom", look: POPOVER_LOOK });
+                const btnDelete = SmartButton({ labelText: "Delete", ...PLAIN });
+                btnDelete.tooltip = Tooltip({ target: btnDelete, trigger: "click", content: deletePopover, hintPosition: "top", look: POPOVER_LOOK });
+            endCard();
 
-                    const btnDelete = SmartButton({ labelText: "Delete", ...PLAIN });
-                    btnDelete.tooltip = Tooltip({ target: btnDelete, trigger: "click", content: deletePopover, hintPosition: "top", look: POPOVER_LOOK });
-                endCard();
+            startCard(
+                "3. A popover from the code",
+                "Tooltip.openPopover(target, content, look, side, text, { onClose }) opens one at any object (here at the text under the button); Tooltip.closePopover() closes it."
+            );
+                VGroup({ hug: 1, align: "left top", gap: 12, clipContent: 0 });
+                    const lblTarget = Label({ text: "The popover opens here", fontSize: 14, textColor: SOFT_INK });
+                    SmartButton({
+                        labelText: "Open from the code",
+                        onClick: function () {
+                            Tooltip.openPopover(lblTarget, deletePopover, POPOVER_LOOK, "right", "", {
+                                onClose: function () { lblTarget.text = "It closed (onClose)"; },
+                            });
+                            lblTarget.text = "The popover opens here";
+                        },
+                    });
+                endGroup();
+            endCard();
 
-                startCard(
-                    "3. A popover from the code",
-                    "Tooltip.openPopover(target, content, look, side, text, { onClose }) opens one at any object (here at the text under the button); Tooltip.closePopover() closes it."
-                );
-                    VGroup({ hug: 1, align: "left top", gap: 12, clipContent: 0 });
-                        const lblTarget = Label({ text: "The popover opens here", fontSize: 14, textColor: SOFT_INK });
-                        SmartButton({
-                            labelText: "Open from the code",
-                            onClick: function () {
-                                Tooltip.openPopover(lblTarget, deletePopover, POPOVER_LOOK, "right", "", {
-                                    onClose: function () { lblTarget.text = "It closed (onClose)"; },
-                                });
-                                lblTarget.text = "The popover opens here";
-                            },
-                        });
-                    endGroup();
-                endCard();
+            // LABEL: What the buttons of the popovers did
+            lblResult = Label({ text: "-", fontSize: 14, textColor: GREEN });
 
-                // LABEL: What the buttons of the popovers did
-                lblResult = Label({ text: "-", fontSize: 14, textColor: GREEN });
-
-            endGroup();
-
-        endBox();
-
-        // WHY: the bubbles are on the page; the content under them moves when the page box scrolls
-        pageBox.on("scroll", Tooltip.closePopover);
+        endGroup();
 
     };
 

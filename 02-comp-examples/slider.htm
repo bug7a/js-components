@@ -17,6 +17,7 @@
     <!-- COMPONENT FILES -->
     <script src="../comp/slider.js" type="text/javascript" charset="utf-8"></script>
     <script src="../comp/smart-button.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/scroll-area.js" type="text/javascript" charset="utf-8"></script>
 
     <script>
 
@@ -41,138 +42,132 @@
 
         page.color = PAGE_COLOR;
 
-        const scrollBox = startBox(0, 0, "100%", "100%", { color: "transparent", scrollY: 1 });
+        ScrollArea({ align: "center top", gap: 24, padding: [16, 30] });
 
-            VGroup({ width: "100%", height: "auto", align: "center top", gap: 24, padding: [16, 30] });
+            Label({ plainText: "Slider: round", fontSize: 26, bold: 1, textColor: INK });
 
-                Label({ plainText: "Slider: round", fontSize: 26, bold: 1, textColor: INK });
+            // 1. The look
+            startCard(
+                "1. The round look",
+                "styleName: \"round\". Drag the knob (a ring in the track color around it, the value over it) or press the track. The keyboard: Tab, the arrows, PageUp / PageDown, Home / End."
+            );
+                Slider({
+                    width: "100%",
+                    styleName: "round",
+                    value: 60,
+                    css: { marginTop: BUBBLE_ROOM },
+                });
+            endCard();
 
-                // 1. The look
-                startCard(
-                    "1. The round look",
-                    "styleName: \"round\". Drag the knob (a ring in the track color around it, the value over it) or press the track. The keyboard: Tab, the arrows, PageUp / PageDown, Home / End."
-                );
-                    Slider({
-                        width: "100%",
-                        styleName: "round",
-                        value: 60,
-                        css: { marginTop: BUBBLE_ROOM },
+            // 2. A settings list
+            startCard(
+                "2. A settings list",
+                "The value is written next to the title (onDragMove; a key and a tap call it too), so the bubble is off: showValueOnDrag: 0 and showValueOnSet: 0. ariaLabel: the name a screen reader says."
+            );
+                createSettingRow("Volume", "%", { value: 70 });
+                createSettingRow("Brightness", "%", { value: 45 });
+                createSettingRow("Text size", " px", { minValue: 12, maxValue: 24, value: 18 });
+            endCard();
+
+            // 3. Other colors
+            startCard("3. Other colors", "trackColor is a param: the page gives its own, the ring of the drag follows it.");
+                Slider({
+                    width: "100%",
+                    styleName: "round",
+                    trackColor: RED,
+                    value: 80,
+                    css: { marginTop: BUBBLE_ROOM },
+                });
+                Slider({
+                    width: "100%",
+                    styleName: "round",
+                    trackColor: YELLOW,
+                    value: 50,
+                });
+                Slider({
+                    width: "100%",
+                    styleName: "round",
+                    trackColor: GREEN,
+                    value: 25,
+                });
+            endCard();
+
+            // 4. A bigger knob
+            startCard("4. A bigger knob", "Change only some keys of the package (style.thumb): a 32 px knob is easier for a finger.");
+                Slider({
+                    width: "100%",
+                    styleName: "round",
+                    value: 40,
+                    style: { thumb: { areaWidth: 32, width: 32, height: 32, round: 16 } },
+                    css: { marginTop: BUBBLE_ROOM },
+                });
+            endCard();
+
+            // 5. setValue() and showValue()
+            startCard(
+                "5. setValue() and showValue()",
+                "setValue() moves the knob and shows the value for a while (showValueOnSet: 1, the default); showValue() only shows it."
+            );
+                const apiSlider = Slider({
+                    width: "100%",
+                    styleName: "round",
+                    value: 30,
+                    css: { marginTop: BUBBLE_ROOM },
+                });
+
+                // GROUP: Buttons. WHY clipContent 0: the focus ring of a SmartButton is not cut
+                HGroup({ hug: 1, align: "left center", gap: 8, wrap: 1, clipContent: 0 });
+
+                    SmartButton({
+                        labelText: "setValue(25)",
+                        onClick: function () { apiSlider.setValue(25); },
                     });
-                endCard();
 
-                // 2. A settings list
-                startCard(
-                    "2. A settings list",
-                    "The value is written next to the title (onDragMove; a key and a tap call it too), so the bubble is off: showValueOnDrag: 0 and showValueOnSet: 0. ariaLabel: the name a screen reader says."
-                );
-                    createSettingRow("Volume", "%", { value: 70 });
-                    createSettingRow("Brightness", "%", { value: 45 });
-                    createSettingRow("Text size", " px", { minValue: 12, maxValue: 24, value: 18 });
-                endCard();
-
-                // 3. Other colors
-                startCard("3. Other colors", "trackColor is a param: the page gives its own, the ring of the drag follows it.");
-                    Slider({
-                        width: "100%",
-                        styleName: "round",
-                        trackColor: RED,
-                        value: 80,
-                        css: { marginTop: BUBBLE_ROOM },
-                    });
-                    Slider({
-                        width: "100%",
-                        styleName: "round",
-                        trackColor: YELLOW,
-                        value: 50,
-                    });
-                    Slider({
-                        width: "100%",
-                        styleName: "round",
-                        trackColor: GREEN,
-                        value: 25,
-                    });
-                endCard();
-
-                // 4. A bigger knob
-                startCard("4. A bigger knob", "Change only some keys of the package (style.thumb): a 32 px knob is easier for a finger.");
-                    Slider({
-                        width: "100%",
-                        styleName: "round",
-                        value: 40,
-                        style: { thumb: { areaWidth: 32, width: 32, height: 32, round: 16 } },
-                        css: { marginTop: BUBBLE_ROOM },
-                    });
-                endCard();
-
-                // 5. setValue() and showValue()
-                startCard(
-                    "5. setValue() and showValue()",
-                    "setValue() moves the knob and shows the value for a while (showValueOnSet: 1, the default); showValue() only shows it."
-                );
-                    const apiSlider = Slider({
-                        width: "100%",
-                        styleName: "round",
-                        value: 30,
-                        css: { marginTop: BUBBLE_ROOM },
+                    SmartButton({
+                        tone: "cyan",
+                        labelText: "Random",
+                        onClick: function () { apiSlider.setValue(random(0, 100)); },
                     });
 
-                    // GROUP: Buttons. WHY clipContent 0: the focus ring of a SmartButton is not cut
-                    HGroup({ hug: 1, align: "left center", gap: 8, wrap: 1, clipContent: 0 });
-
-                        SmartButton({
-                            labelText: "setValue(25)",
-                            onClick: function () { apiSlider.setValue(25); },
-                        });
-
-                        SmartButton({
-                            tone: "cyan",
-                            labelText: "Random",
-                            onClick: function () { apiSlider.setValue(random(0, 100)); },
-                        });
-
-                        SmartButton({
-                            tone: "white",
-                            labelText: "showValue()",
-                            onClick: function () { apiSlider.showValue(); },
-                        });
-
-                    endGroup();
-                endCard();
-
-                // 6. A range and a step
-                startCard(
-                    "6. A range and a step",
-                    "minValue: 0, maxValue: 10, step: 0.5: the value goes 0, 0.5, 1 ... 10. setMinValue(), setMaxValue() and setStep() change them later."
-                );
-                    Slider({
-                        width: "100%",
-                        styleName: "round",
-                        minValue: 0,
-                        maxValue: 10,
-                        step: 0.5,
-                        value: 6.5,
-                        css: { marginTop: BUBBLE_ROOM },
+                    SmartButton({
+                        tone: "white",
+                        labelText: "showValue()",
+                        onClick: function () { apiSlider.showValue(); },
                     });
-                endCard();
 
-                // 7. A dark page
-                startDarkCard(
-                    "7. For a dark page",
-                    "styleName: \"roundDark\": a light empty track, the main cyan of the kit and a light value bubble."
-                );
-                    Slider({
-                        width: "100%",
-                        styleName: "roundDark",
-                        value: 40,
-                        css: { marginTop: BUBBLE_ROOM },
-                    });
-                endCard();
+                endGroup();
+            endCard();
 
-            endGroup();
+            // 6. A range and a step
+            startCard(
+                "6. A range and a step",
+                "minValue: 0, maxValue: 10, step: 0.5: the value goes 0, 0.5, 1 ... 10. setMinValue(), setMaxValue() and setStep() change them later."
+            );
+                Slider({
+                    width: "100%",
+                    styleName: "round",
+                    minValue: 0,
+                    maxValue: 10,
+                    step: 0.5,
+                    value: 6.5,
+                    css: { marginTop: BUBBLE_ROOM },
+                });
+            endCard();
 
-        endBox();
+            // 7. A dark page
+            startDarkCard(
+                "7. For a dark page",
+                "styleName: \"roundDark\": a light empty track, the main cyan of the kit and a light value bubble."
+            );
+                Slider({
+                    width: "100%",
+                    styleName: "roundDark",
+                    value: 40,
+                    css: { marginTop: BUBBLE_ROOM },
+                });
+            endCard();
 
-        ScrollBar({ scrollableBox: scrollBox });
+        endGroup();
 
     };
 

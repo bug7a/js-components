@@ -131,7 +131,7 @@ Never write a `destroy()` for a component: everything is removed with `remove()`
 ## When the component is ready (only in the kit repository)
 A project made from the starter has none of the things below: there a component goes to `app/` and gets a `<script>` line in `index.htm`.
 
-1. A sample page `02-comp-examples/<name>.htm`: a scrolling Box, cards, every style package; it loads the source files (`../basic/basic.js`, `../comp/<name>.js`), not `.min.js`.
+1. A sample page `02-comp-examples/<name>.htm`: a `ScrollArea` (`comp/scroll-area.js`), cards, every style package; it loads the source files (`../basic/basic.js`, `../comp/<name>.js`), not `.min.js`.
 2. `test/components-test.htm`: add it to `COMPONENTS` (`{ file, name, deps, setup }`), open `?only=<name>`: the title must say ALL PASS.
 3. No `.min.js` twin: the pages load the source. A copy that leaves the repository gets its `.min` file from `./_make-standalone.sh`.
 4. The catalog: `index/catalog.js` (+ the `<noscript>` list in `index.htm`), and its details in `context/repo-map.md`.

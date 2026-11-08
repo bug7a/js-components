@@ -15,6 +15,7 @@
 
         <script src="../comp/tooltip.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/text-field.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/scroll-area.js" type="text/javascript" charset="utf-8"></script>
 
         <script>
 
@@ -35,77 +36,71 @@
 
             page.color = PAGE_COLOR;
 
-            const pageBox = startBox(0, 0, "100%", "100%", { color: "transparent", scrollY: 1 });
+            ScrollArea({ align: "center top", padding: 40, gap: 20 });
 
-                VGroup({ width: "100%", height: "auto", align: "center top", padding: 40, gap: 20 });
+                Label({ text: "TextField · styleName: \"dark\"", fontSize: 22, textColor: White(0.9) });
 
-                    Label({ text: "TextField · styleName: \"dark\"", fontSize: 22, textColor: White(0.9) });
+                // GROUP: A dark card (Ozden Panel)
+                VGroup({
+                    width: CARD_WIDTH,
+                    height: "auto",
+                    align: "left top",
+                    gap: 14,
+                    padding: 20,
+                    color: CARD_COLOR,
+                    round: 12,
+                    border: 1,
+                    borderColor: CARD_BORDER_COLOR,
+                    css: { alignItems: "stretch" },
+                });
 
-                    // GROUP: A dark card (Ozden Panel)
-                    VGroup({
-                        width: CARD_WIDTH,
-                        height: "auto",
-                        align: "left top",
-                        gap: 14,
-                        padding: 20,
-                        color: CARD_COLOR,
-                        round: 12,
-                        border: 1,
-                        borderColor: CARD_BORDER_COLOR,
-                        css: { alignItems: "stretch" },
+                    addCaption("REQUIRED");
+                    TextField({
+                        styleName: "dark",
+                        width: "100%",
+                        titleText: "FULL NAME",
+                        placeholder: "Your name",
+                        required: 1,
                     });
 
-                        addCaption("REQUIRED");
-                        TextField({
-                            styleName: "dark",
-                            width: "100%",
-                            titleText: "FULL NAME",
-                            placeholder: "Your name",
-                            required: 1,
-                        });
+                    addCaption("UNIT AND DESCRIPTION");
+                    TextField({
+                        styleName: "dark",
+                        width: "100%",
+                        titleText: "WEIGHT",
+                        placeholder: "0",
+                        unitText: "KG",
+                        descriptionText: "The weight of the package",
+                    });
 
-                        addCaption("UNIT AND DESCRIPTION");
-                        TextField({
-                            styleName: "dark",
-                            width: "100%",
-                            titleText: "WEIGHT",
-                            placeholder: "0",
-                            unitText: "KG",
-                            descriptionText: "The weight of the package",
-                        });
+                    addCaption("WARNING ICON (warningBallType: \"icon\")");
+                    const codeInput = TextField({
+                        styleName: "dark",
+                        width: "100%",
+                        titleText: "CODE",
+                        placeholder: "4 digits",
+                        value: "12a",
+                        warningText: "Only digits",
+                        warningBallType: "icon",
+                        maxLength: 4,
+                    });
+                    codeInput.isValid = function () {
+                        return /^\d*$/.test(codeInput.getValue());
+                    };
+                    codeInput.showWarningIfNotValid(codeInput.isValid());
 
-                        addCaption("WARNING ICON (warningBallType: \"icon\")");
-                        const codeInput = TextField({
-                            styleName: "dark",
-                            width: "100%",
-                            titleText: "CODE",
-                            placeholder: "4 digits",
-                            value: "12a",
-                            warningText: "Only digits",
-                            warningBallType: "icon",
-                            maxLength: 4,
-                        });
-                        codeInput.isValid = function () {
-                            return /^\d*$/.test(codeInput.getValue());
-                        };
-                        codeInput.showWarningIfNotValid(codeInput.isValid());
-
-                        addCaption("ONE PARAM OF THE PACKAGE CHANGED (focusLineColor)");
-                        TextField({
-                            styleName: "dark",
-                            width: "100%",
-                            titleText: "E-MAIL",
-                            placeholder: "name@example.com",
-                            focusLineColor: "#3987E5",
-                        });
-
-                    endGroup();
+                    addCaption("ONE PARAM OF THE PACKAGE CHANGED (focusLineColor)");
+                    TextField({
+                        styleName: "dark",
+                        width: "100%",
+                        titleText: "E-MAIL",
+                        placeholder: "name@example.com",
+                        focusLineColor: "#3987E5",
+                    });
 
                 endGroup();
 
-            endBox();
-
-            ScrollBar({ scrollableBox: pageBox });
+            endGroup();
 
         };
 

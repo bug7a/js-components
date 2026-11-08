@@ -15,6 +15,7 @@
     <!-- COMPONENTS: tooltip.js for the bubble of ask -->
     <script src="../comp/tooltip.js" type="text/javascript" charset="utf-8"></script>
     <script src="../comp/smart-button.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/scroll-area.js" type="text/javascript" charset="utf-8"></script>
 
     <script>
 
@@ -63,22 +64,18 @@
 
             page.color = "#F4F5F2";
 
-            // BOX: Scrolling page
-            startBox(0, 0, "100%", "100%", { color: "transparent", scrollY: 1 });
+            // SCROLL AREA: Scrolling page
+            ScrollArea({ align: "center top", gap: 24, padding: 40 });
 
-                VGroup({ width: "100%", height: "auto", align: "center top", gap: 24, padding: 40, clipContent: 0 });
+                Label({ text: "SmartButton", fontSize: 24, bold: 1, textColor: Black(0.8) });
 
-                    Label({ text: "SmartButton", fontSize: 24, bold: 1, textColor: Black(0.8) });
+                createTonesRow();
+                createProfileCard();
+                createFileCard();
 
-                    createTonesRow();
-                    createProfileCard();
-                    createFileCard();
+                lblResult = Label({ text: "-", fontSize: 14, textColor: Black(0.5) });
 
-                    lblResult = Label({ text: "-", fontSize: 14, textColor: Black(0.5) });
-
-                endGroup();
-
-            endBox();
+            endGroup();
 
         };
 

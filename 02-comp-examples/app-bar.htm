@@ -14,6 +14,7 @@
 
     <script src="../comp/smart-button.js" type="text/javascript" charset="utf-8"></script>
     <script src="../comp/app-bar.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/scroll-area.js" type="text/javascript" charset="utf-8"></script>
 
     <script>
 
@@ -104,55 +105,51 @@
         page.onResize(fitPage);
         page.color = PAGE_COLOR;
 
-        startBox(0, 0, "100%", "100%", { color: "transparent", scrollY: 1 });
+        ScrollArea({ align: "left top", gap: 0, padding: [0, 0, 0, BOTTOM_SPACE] });
 
-            VGroup({ width: "100%", height: "auto", align: "left top", gap: 0, padding: [0, 0, 0, BOTTOM_SPACE] });
+            // The bar of a page in the place of the tabs: back, the title in the middle, ⋮
+            AppBar({ titleText: "Default Example", showBack: 1, line: 1, onBack: onBack, onMenu: onMenu });
 
-                // The bar of a page in the place of the tabs: back, the title in the middle, ⋮
-                AppBar({ titleText: "Default Example", showBack: 1, line: 1, onBack: onBack, onMenu: onMenu });
+            createCaption("titleAlign: \"left\", line: 1 (the Settings tab)");
+            AppBar({ titleText: "Settings", titleAlign: "left", line: 1, onMenu: onMenu });
 
-                createCaption("titleAlign: \"left\", line: 1 (the Settings tab)");
-                AppBar({ titleText: "Settings", titleAlign: "left", line: 1, onMenu: onMenu });
+            createCaption("showMenu: 0, no line");
+            AppBar({ titleText: "Home", showMenu: 0 });
 
-                createCaption("showMenu: 0, no line");
-                AppBar({ titleText: "Home", showMenu: 0 });
+            createCaption("A long title ends with \"...\"");
+            AppBar({
+                titleText: "Privacy Policy and Terms of Use of This Application",
+                showBack: 1,
+                line: 1,
+                onBack: onBack,
+                onMenu: onMenu,
+            });
 
-                createCaption("A long title ends with \"...\"");
-                AppBar({
-                    titleText: "Privacy Policy and Terms of Use of This Application",
-                    showBack: 1,
-                    line: 1,
-                    onBack: onBack,
-                    onMenu: onMenu,
-                });
+            createCaption("Your own colors: color, iconColor, style.title");
+            AppBar({
+                titleText: "Categories",
+                color: GREEN,
+                iconColor: "white",
+                showBack: 1,
+                style: { title: { textColor: "white" } },
+                onBack: onBack,
+                onMenu: onMenu,
+            });
 
-                createCaption("Your own colors: color, iconColor, style.title");
-                AppBar({
-                    titleText: "Categories",
-                    color: GREEN,
-                    iconColor: "white",
-                    showBack: 1,
-                    style: { title: { textColor: "white" } },
-                    onBack: onBack,
-                    onMenu: onMenu,
-                });
+            createCaption("The setters: setTitleAlign, setBackVisible, setMenuVisible, setLine, setTitleText");
+            const bar = AppBar({ titleText: TITLES[0], line: 1, onBack: onBack, onMenu: onMenu });
+            createSetterButtons(bar);
 
-                createCaption("The setters: setTitleAlign, setBackVisible, setMenuVisible, setLine, setTitleText");
-                const bar = AppBar({ titleText: TITLES[0], line: 1, onBack: onBack, onMenu: onMenu });
-                createSetterButtons(bar);
+            // LABEL: The last onBack / onMenu
+            lblResult = Label({
+                plainText: "Click a back or a menu button.",
+                width: "100%",
+                fontSize: TEXT_SIZE,
+                textColor: GREEN,
+                padding: [SPACE, 0],
+            });
 
-                // LABEL: The last onBack / onMenu
-                lblResult = Label({
-                    plainText: "Click a back or a menu button.",
-                    width: "100%",
-                    fontSize: TEXT_SIZE,
-                    textColor: GREEN,
-                    padding: [SPACE, 0],
-                });
-
-            endGroup();
-
-        endBox();
+        endGroup();
 
     };
 

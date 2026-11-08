@@ -17,6 +17,7 @@
     <script src="../comp/context-menu.js" type="text/javascript" charset="utf-8"></script>
     <script src="../comp/tooltip.js" type="text/javascript" charset="utf-8"></script>
     <script src="../comp/smart-table.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/scroll-area.js" type="text/javascript" charset="utf-8"></script>
 
     <script>
 
@@ -135,47 +136,41 @@
 
         page.color = "#E9EAE6";
 
-        const pageBox = startBox(0, 0, "100%", "100%", { color: "transparent", scrollY: 1 });
+        ScrollArea({ align: "center top", gap: 24, padding: 32 });
 
-            VGroup({ width: "100%", height: "auto", align: "center top", gap: 24, padding: 32 });
+            Label({ text: "SmartTable", fontSize: 26, bold: 1, textColor: Black(0.8) });
+            Label({
+                plainText: "Very many rows and columns · more samples: smart-table-2 ... smart-table-5 · a better looking table for fewer rows: DataTable",
+                width: "100%",
+                fontSize: 14,
+                textColor: Black(0.45),
+                textAlign: "center",
+            });
 
-                Label({ text: "SmartTable", fontSize: 26, bold: 1, textColor: Black(0.8) });
-                Label({
-                    plainText: "Very many rows and columns · more samples: smart-table-2 ... smart-table-5 · a better looking table for fewer rows: DataTable",
-                    width: "100%",
-                    fontSize: 14,
-                    textColor: Black(0.45),
-                    textAlign: "center",
-                });
+            // GROUP: The style packages
+            HGroup({ width: "100%", height: "auto", align: "center top", gap: 20, wrap: 1 });
 
-                // GROUP: The style packages
-                HGroup({ width: "100%", height: "auto", align: "center top", gap: 20, wrap: 1 });
+                createStyleSample(
+                    "classic",
+                    "The default, for a light page: the look of DataTable \"classic\". Rest the mouse on a cut e-mail or note: a bubble shows all of it.",
+                    LOOKS.light
+                );
 
-                    createStyleSample(
-                        "classic",
-                        "The default, for a light page: the look of DataTable \"classic\". Rest the mouse on a cut e-mail or note: a bubble shows all of it.",
-                        LOOKS.light
-                    );
+                createStyleSample(
+                    "dark",
+                    "For a dark page: the look of DataTable \"dark\". The filter box is the SearchInput \"ozdenDark\".",
+                    LOOKS.dark
+                );
 
-                    createStyleSample(
-                        "dark",
-                        "For a dark page: the look of DataTable \"dark\". The filter box is the SearchInput \"ozdenDark\".",
-                        LOOKS.dark
-                    );
-
-                    createStyleSample(
-                        "green",
-                        "An older look: a green title line, a dark edge, big texts. A page with its own colors over it names it (styleName: \"green\").",
-                        LOOKS.light
-                    );
-
-                endGroup();
+                createStyleSample(
+                    "green",
+                    "An older look: a green title line, a dark edge, big texts. A page with its own colors over it names it (styleName: \"green\").",
+                    LOOKS.light
+                );
 
             endGroup();
 
-        endBox();
-
-        ScrollBar({ scrollableBox: pageBox });
+        endGroup();
 
     };
 

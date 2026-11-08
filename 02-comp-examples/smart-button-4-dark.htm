@@ -13,6 +13,7 @@
     <!-- COMPONENTS: tooltip.js for the bubble of ask -->
     <script src="../comp/tooltip.js" type="text/javascript" charset="utf-8"></script>
     <script src="../comp/smart-button.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/scroll-area.js" type="text/javascript" charset="utf-8"></script>
 
     <script>
 
@@ -39,66 +40,62 @@
 
             page.color = "#000000";
 
-            // BOX: Scrolling page
-            startBox(0, 0, "100%", "100%", { color: "transparent", scrollY: 1 });
+            // SCROLL AREA: Scrolling page
+            ScrollArea({ align: "center top", gap: 20, padding: 40 });
 
-                VGroup({ width: "100%", height: "auto", align: "center top", gap: 20, padding: 40, clipContent: 0 });
+                Label({ text: "SmartButton · dark templates", fontSize: 24, bold: 1, textColor: White(0.9) });
 
-                    Label({ text: "SmartButton · dark templates", fontSize: 24, bold: 1, textColor: White(0.9) });
+                startCard("ozdenDark (the default dark)");
+                    SmartButton({ styleName: "ozdenDark", labelText: "Send", iconFile: ICON_FILE });
+                    SmartButton({ styleName: "ozdenDark", labelText: "Only a text" });
+                    SmartButton({ styleName: "ozdenDark", labelText: "Download", iconFile: ICON_FILE, onClick: download });
+                    SmartButton({ styleName: "ozdenDark", labelText: "Delete", ask: "Click again to delete." });
+                    SmartButton({ styleName: "ozdenDark", labelText: "Disabled", iconFile: ICON_FILE, enabled: 0 });
+                endCard();
 
-                    startCard("ozdenDark (the default dark)");
-                        SmartButton({ styleName: "ozdenDark", labelText: "Send", iconFile: ICON_FILE });
-                        SmartButton({ styleName: "ozdenDark", labelText: "Only a text" });
-                        SmartButton({ styleName: "ozdenDark", labelText: "Download", iconFile: ICON_FILE, onClick: download });
-                        SmartButton({ styleName: "ozdenDark", labelText: "Delete", ask: "Click again to delete." });
-                        SmartButton({ styleName: "ozdenDark", labelText: "Disabled", iconFile: ICON_FILE, enabled: 0 });
-                    endCard();
+                startCard("ozden2Dark");
+                    SmartButton({ styleName: "ozden2Dark", labelText: "Send", iconFile: ICON_FILE });
+                    SmartButton({ styleName: "ozden2Dark", labelText: "Only a text" });
+                    SmartButton({ styleName: "ozden2Dark", labelText: "Download", iconFile: ICON_FILE, onClick: download });
+                    SmartButton({ styleName: "ozden2Dark", labelText: "Delete", ask: "Click again to delete." });
+                    SmartButton({ styleName: "ozden2Dark", labelText: "Disabled", iconFile: ICON_FILE, enabled: 0 });
+                endCard();
 
-                    startCard("ozden2Dark");
-                        SmartButton({ styleName: "ozden2Dark", labelText: "Send", iconFile: ICON_FILE });
-                        SmartButton({ styleName: "ozden2Dark", labelText: "Only a text" });
-                        SmartButton({ styleName: "ozden2Dark", labelText: "Download", iconFile: ICON_FILE, onClick: download });
-                        SmartButton({ styleName: "ozden2Dark", labelText: "Delete", ask: "Click again to delete." });
-                        SmartButton({ styleName: "ozden2Dark", labelText: "Disabled", iconFile: ICON_FILE, enabled: 0 });
-                    endCard();
+                startCard("ozden3Dark");
+                    SmartButton({ styleName: "ozden3Dark", labelText: "Send", iconFile: ICON_FILE });
+                    SmartButton({ styleName: "ozden3Dark", labelText: "Only a text" });
+                    SmartButton({ styleName: "ozden3Dark", labelText: "Download", iconFile: ICON_FILE, onClick: download });
+                    SmartButton({ styleName: "ozden3Dark", labelText: "Delete", ask: "Click again to delete." });
+                    SmartButton({ styleName: "ozden3Dark", labelText: "Disabled", iconFile: ICON_FILE, enabled: 0 });
+                endCard();
 
-                    startCard("ozden3Dark");
-                        SmartButton({ styleName: "ozden3Dark", labelText: "Send", iconFile: ICON_FILE });
-                        SmartButton({ styleName: "ozden3Dark", labelText: "Only a text" });
-                        SmartButton({ styleName: "ozden3Dark", labelText: "Download", iconFile: ICON_FILE, onClick: download });
-                        SmartButton({ styleName: "ozden3Dark", labelText: "Delete", ask: "Click again to delete." });
-                        SmartButton({ styleName: "ozden3Dark", labelText: "Disabled", iconFile: ICON_FILE, enabled: 0 });
-                    endCard();
+                startCard("ozden4Dark");
+                    SmartButton({ styleName: "ozden4Dark", labelText: "Send", iconFile: ICON_FILE });
+                    SmartButton({ styleName: "ozden4Dark", labelText: "Only a text" });
+                    SmartButton({ styleName: "ozden4Dark", labelText: "Download", iconFile: ICON_FILE, onClick: download });
+                    SmartButton({ styleName: "ozden4Dark", labelText: "Delete", ask: "Click again to delete." });
+                    SmartButton({ styleName: "ozden4Dark", labelText: "Disabled", iconFile: ICON_FILE, enabled: 0 });
+                endCard();
 
-                    startCard("ozden4Dark");
-                        SmartButton({ styleName: "ozden4Dark", labelText: "Send", iconFile: ICON_FILE });
-                        SmartButton({ styleName: "ozden4Dark", labelText: "Only a text" });
-                        SmartButton({ styleName: "ozden4Dark", labelText: "Download", iconFile: ICON_FILE, onClick: download });
-                        SmartButton({ styleName: "ozden4Dark", labelText: "Delete", ask: "Click again to delete." });
-                        SmartButton({ styleName: "ozden4Dark", labelText: "Disabled", iconFile: ICON_FILE, enabled: 0 });
-                    endCard();
+                // The tones of a dark page: a light text, the icon turns white
+                startCard("Tones for a dark page (on ozdenDark)");
+                    SmartButton({ styleName: "ozdenDark", tone: "cyanDark", labelText: "cyanDark", iconFile: ICON_FILE });
+                    SmartButton({ styleName: "ozdenDark", tone: "orangeDark", labelText: "orangeDark", iconFile: ICON_FILE });
+                    SmartButton({ styleName: "ozdenDark", tone: "yellowDark", labelText: "yellowDark", iconFile: ICON_FILE });
+                    SmartButton({ styleName: "ozdenDark", tone: "greenDark", labelText: "greenDark", iconFile: ICON_FILE });
+                    SmartButton({ styleName: "ozdenDark", tone: "blueDark", labelText: "blueDark", iconFile: ICON_FILE });
+                endCard();
 
-                    // The tones of a dark page: a light text, the icon turns white
-                    startCard("Tones for a dark page (on ozdenDark)");
-                        SmartButton({ styleName: "ozdenDark", tone: "cyanDark", labelText: "cyanDark", iconFile: ICON_FILE });
-                        SmartButton({ styleName: "ozdenDark", tone: "orangeDark", labelText: "orangeDark", iconFile: ICON_FILE });
-                        SmartButton({ styleName: "ozdenDark", tone: "yellowDark", labelText: "yellowDark", iconFile: ICON_FILE });
-                        SmartButton({ styleName: "ozdenDark", tone: "greenDark", labelText: "greenDark", iconFile: ICON_FILE });
-                        SmartButton({ styleName: "ozdenDark", tone: "blueDark", labelText: "blueDark", iconFile: ICON_FILE });
-                    endCard();
+                startCard("The light tones on a dark page (their text stays dark)");
+                    SmartButton({ styleName: "ozdenDark", tone: "white", labelText: "white", iconFile: ICON_FILE });
+                    SmartButton({ styleName: "ozdenDark", tone: "cyan", labelText: "cyan", iconFile: ICON_FILE });
+                    SmartButton({ styleName: "ozdenDark", tone: "orange", labelText: "orange", iconFile: ICON_FILE });
+                    SmartButton({ styleName: "ozdenDark", tone: "yellow", labelText: "yellow", iconFile: ICON_FILE });
+                    SmartButton({ styleName: "ozdenDark", tone: "green", labelText: "green", iconFile: ICON_FILE });
+                    SmartButton({ styleName: "ozdenDark", tone: "blue", labelText: "blue", iconFile: ICON_FILE });
+                endCard();
 
-                    startCard("The light tones on a dark page (their text stays dark)");
-                        SmartButton({ styleName: "ozdenDark", tone: "white", labelText: "white", iconFile: ICON_FILE });
-                        SmartButton({ styleName: "ozdenDark", tone: "cyan", labelText: "cyan", iconFile: ICON_FILE });
-                        SmartButton({ styleName: "ozdenDark", tone: "orange", labelText: "orange", iconFile: ICON_FILE });
-                        SmartButton({ styleName: "ozdenDark", tone: "yellow", labelText: "yellow", iconFile: ICON_FILE });
-                        SmartButton({ styleName: "ozdenDark", tone: "green", labelText: "green", iconFile: ICON_FILE });
-                        SmartButton({ styleName: "ozdenDark", tone: "blue", labelText: "blue", iconFile: ICON_FILE });
-                    endCard();
-
-                endGroup();
-
-            endBox();
+            endGroup();
 
         };
 
