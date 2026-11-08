@@ -10,6 +10,7 @@ UI COMPONENT TEMPLATE
   look of 02-comp-examples/text-field.htm), unless the user asks for another one. The fields made from TextField
   (EmailField, PhoneField, PasswordField, UrlField, NumberField, CurrencyField, TextAreaField) take the same
   packages: give them the same styleName. The default (classic) stays for the pages made before.
+- NEEDS comp/tooltip.js, loaded before this file: the bubble of the warning ball is a Tooltip.
 
 
 Started Date: July 2025
