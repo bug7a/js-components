@@ -2070,14 +2070,20 @@
         });
 
         test("SidePanel: a panel opened right after it is made still slides in", async function () {
+            const SLIDE_WAIT = 600; // ms: the duration of the panel and some room
             const panel = SidePanel({ side: "right", panelSize: 300, duration: 400 });
+            // WHY the event, not the place after two frames: a slow page reads the place before the slide has moved
+            //     it (300), though it slides; a panel that shows at once has no transition at all
+            let isSliding = false;
+            panel.elem.addEventListener("transitionrun", function (event) {
+                if (event.propertyName === "transform") isSliding = true;
+            });
             panel.open(); // WHY: in the same moment as its making (a sheet made by a click)
-            await basic.nextFrame();
-            await basic.nextFrame();
-            const matrix = new DOMMatrix(getComputedStyle(panel.elem).transform);
-            const movedPart = matrix.m41; // translateX: 300 when closed, 0 when open
+            const start = performance.now();
+            while (!isSliding && performance.now() - start < SLIDE_WAIT) await basic.nextFrame();
+            const movedPart = new DOMMatrix(getComputedStyle(panel.elem).transform).m41; // translateX: 300 closed, 0 open
             panel.remove();
-            check("SidePanel: a panel opened right after it is made still slides in", movedPart > 1 && movedPart < 300, "translateX two frames after open(): " + movedPart);
+            check("SidePanel: a panel opened right after it is made still slides in", isSliding, "a transition of transform: " + isSliding + ", translateX then: " + movedPart);
         });
 
         test("SidePanel: container: it is made in the box, covers only the box and follows its size", async function () {
