@@ -43,6 +43,7 @@ Bu klasör ara sıra kullanılır: taslaklar **her bileşen değişikliğinde g�
 
 | Dosya | Bileşen | İçinde |
 |---|---|---|
+| `item-list.htm` | `comp/item-list.js` (ItemList) | yeni `light` / `dark` paketleri (2026-11-08): basit taslak, her temada tek bir satır (ikon, başlık, açıklama) listenin kutusunda, kendi sayfasının zemininde (beyaz, #141414); iki satır ayrı ayrı yazılmıştır, designer biri değişince ötekine dokunmaz; başlangıç değerleri kitin açık / koyu listelerinden (SelectBox ve ContextMenu light / dark, SearchInput classic); durumlar (hover, seçili, odak, kapalı) bu görünüm oturduktan sonra |
 | `item-list-modern.htm` | `comp/item-list.js` (ItemList) | `modern` paketi (2026-11-04): bütün liste (arama kutusu, bölümler, çoklu seçim, kaydırma çubuğu) ve grid; satır ve kutucuk (tile) için 16 durum: normal, seçim yok, yalnız başlık, uzun yazı, hover, basılı, klavye odağı, seçili, seçili + odak, kapalı, kapalı + seçili, bölüm, boş, sonuç yok, arama kutusu (boş / yazılı) |
 | `item-list-dark.htm` | `comp/item-list.js` (ItemList) | `dark` paketi (2026-11-04): item-list-modern.htm'nin aynısı, #141414 zeminde |
 | `progress-bar.htm` | `comp/progress-bar.js` (ProgressBar) | classic, modern, ozden; 14 durum |

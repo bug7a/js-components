@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>ItemList light / dark draft</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- LIBRARY FILES (a draft: no component, only basic.js objects) -->
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Bold.ttf" as="font" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="../basic/basic.css">
+    <script src="../basic/basic.js" type="text/javascript" charset="utf-8"></script>
+
+    <script>
+
+        /* Bismillah */
+
+        // DRAFT DESIGN of comp/item-list.js (ItemList): the new "light" and "dark" packages, the general look of the kit.
+        // A simple draft: one item of the vertical list in each theme, inside the box of the list, on the page of that
+        // theme. The two items are written out one by one (no shared drawing function), so basic-designer changes one
+        // without touching the other. No ItemList here: plain basic.js objects.
+        // The starting values are a proposal, taken from the light / dark lists of the kit (SelectBox and ContextMenu
+        // light / dark, SearchInput classic): ItemList has no light package yet, and its dark package today is the dark
+        // twin of modern (_designs/item-list-dark.htm). The states (hover, selected, focus, disabled...) come later.
+        // http://127.0.0.1:5505/_basic-designer/index.htm?page=_designs/item-list.htm
+
+        const PAGE_COLOR = "#F4F5F2"; // the ground of the draft, not of the list
+        const PAGE_TEXT = { title: Black(0.8), note: Black(0.5) }; // the texts of the draft, not of the list
+        const LIST_WIDTH = 360;
+        const CARD_PADDING = 30;
+        const CARD_GAP = 40;
+        const FRUITS_PATH = "../assets/fruids/";
+
+        // THE LIGHT THEME: a white box with a thin edge, flat rows (the list of SelectBox light)
+        const LIGHT = {
+            page: { color: "white", textColor: Black(0.45) }, // the light page the list sits on
+            box: { color: "white", border: 1, borderColor: Black(0.2), round: 8, padding: 6 },
+            row: { height: 60, padding: [12, 10], gap: 12, color: "transparent", round: 6 },
+            icon: { size: 36, round: 8, color: Black(0.05) },
+            title: { fontSize: 15, textColor: Black(0.85), fontFamily: "opensans" },
+            desc: { fontSize: 13, textColor: Black(0.5) },
+        };
+        const LIGHT_ITEM = { title: "Broccoli", desc: "Vegetable", iconFile: FRUITS_PATH + "brokoli.png" };
+
+        // THE DARK THEME: the same shapes in the dark colors of the kit (SelectBox dark: #232322, white lines)
+        const DARK = {
+            page: { color: "#141414", textColor: White(0.5) }, // the dark page the list sits on
+            box: { color: "#232322", border: 1, borderColor: White(0.12), round: 8, padding: 6 },
+            row: { height: 60, padding: [12, 10], gap: 12, color: "transparent", round: 6 },
+            icon: { size: 36, round: 8, color: White(0.06) },
+            title: { fontSize: 15, textColor: White(0.9), fontFamily: "opensans" },
+            desc: { fontSize: 13, textColor: White(0.45) },
+        };
+        const DARK_ITEM = { title: "Strawberry", desc: "Fruit", iconFile: FRUITS_PATH + "cilek.png" };
+
+        const start = function () {
+
+            page.color = PAGE_COLOR;
+
+            // BOX: Scrolling page
+            startBox(0, 0, "100%", "100%", { color: "transparent", scrollY: 1, scrollX: 1 });
+
+                VGroup({ width: "max-content", height: "auto", align: "left top", gap: 22, padding: 40, clipContent: 0 });
+
+                    Label({ text: "ItemList · light / dark · draft (comp/item-list.js)", fontSize: 20, bold: 1, textColor: PAGE_TEXT.title });
+                    Label({ text: "One item of the list in each theme. The states (hover, selected, focus, disabled) come after this look is settled.", fontSize: 13, textColor: PAGE_TEXT.note });
+
+                    // GROUP: The two themes side by side
+                    HGroup({ width: "auto", height: "auto", align: "left top", gap: CARD_GAP, clipContent: 0 });
+                        drawLightItem();
+                        drawDarkItem();
+                    endGroup();
+
+                endGroup();
+
+            endBox();
+
+        };
+
+        // *** THE LIGHT THEME
+
+        // GROUP: The light page, the box of the list and its one row
+        const drawLightItem = function () {
+            const card = VGroup({ width: "auto", height: "auto", align: "left top", gap: 14, padding: CARD_PADDING, color: LIGHT.page.color, round: 10, border: 1, borderColor: Black(0.08), clipContent: 0 });
+                Label({ text: "light (the default of new pages)", fontSize: 12, textColor: LIGHT.page.textColor });
+                // GROUP: The box of the list (style.box)
+                VGroup({ width: LIST_WIDTH, height: "auto", align: "left top", gap: 0, padding: LIGHT.box.padding, color: LIGHT.box.color, border: LIGHT.box.border, borderColor: LIGHT.box.borderColor, round: LIGHT.box.round, clipContent: 0 });
+                    // GROUP: One item row (style.row): its icon, its title and its description
+                    HGroup({ width: "100%", height: LIGHT.row.height, align: "left center", gap: LIGHT.row.gap, padding: LIGHT.row.padding, color: LIGHT.row.color, round: LIGHT.row.round, clipContent: 0 });
+                        // ICON: The picture of the item on its own color (style.icon)
+                        const icon = Icon({ width: LIGHT.icon.size, height: LIGHT.icon.size, color: LIGHT.icon.color, round: LIGHT.icon.round });
+                        icon.shrink = 0;
+                        icon.load(LIGHT_ITEM.iconFile);
+                        // GROUP: The texts (they take the rest of the row; a long text is cut with ...)
+                        const texts = VGroup({ width: "auto", height: "auto", align: "left center", gap: 0 });
+                        texts.css = { flex: "1 1 0", minWidth: "0", alignItems: "stretch" };
+                            Label({ text: LIGHT_ITEM.title, width: "100%", fontSize: LIGHT.title.fontSize, fontFamily: LIGHT.title.fontFamily, textColor: LIGHT.title.textColor, ellipsis: 1 });
+                            Label({ text: LIGHT_ITEM.desc, width: "100%", fontSize: LIGHT.desc.fontSize, textColor: LIGHT.desc.textColor, ellipsis: 1 });
+                        endGroup();
+                    endGroup();
+                endGroup();
+            endGroup();
+            return card;
+        };
+
+        // *** THE DARK THEME
+
+        // GROUP: The dark page, the box of the list and its one row
+        const drawDarkItem = function () {
+            const card = VGroup({ width: "auto", height: "auto", align: "left top", gap: 14, padding: CARD_PADDING, color: DARK.page.color, round: 10, border: 1, borderColor: Black(0.08), clipContent: 0 });
+                Label({ text: "dark (a dark page)", fontSize: 12, textColor: DARK.page.textColor });
+                // GROUP: The box of the list (style.box)
+                VGroup({ width: LIST_WIDTH, height: "auto", align: "left top", gap: 0, padding: DARK.box.padding, color: DARK.box.color, border: DARK.box.border, borderColor: DARK.box.borderColor, round: DARK.box.round, clipContent: 0 });
+                    // GROUP: One item row (style.row): its icon, its title and its description
+                    HGroup({ width: "100%", height: DARK.row.height, align: "left center", gap: DARK.row.gap, padding: DARK.row.padding, color: DARK.row.color, round: DARK.row.round, clipContent: 0 });
+                        // ICON: The picture of the item on its own color (style.icon)
+                        const icon = Icon({ width: DARK.icon.size, height: DARK.icon.size, color: DARK.icon.color, round: DARK.icon.round });
+                        icon.shrink = 0;
+                        icon.load(DARK_ITEM.iconFile);
+                        // GROUP: The texts (they take the rest of the row; a long text is cut with ...)
+                        const texts = VGroup({ width: "auto", height: "auto", align: "left center", gap: 0 });
+                        texts.css = { flex: "1 1 0", minWidth: "0", alignItems: "stretch" };
+                            Label({ text: DARK_ITEM.title, width: "100%", fontSize: DARK.title.fontSize, fontFamily: DARK.title.fontFamily, textColor: DARK.title.textColor, ellipsis: 1 });
+                            Label({ text: DARK_ITEM.desc, width: "100%", fontSize: DARK.desc.fontSize, textColor: DARK.desc.textColor, ellipsis: 1 });
+                        endGroup();
+                    endGroup();
+                endGroup();
+            endGroup();
+            return card;
+        };
+
+    </script>
+
+</head>
+
+<body>
+</body>
+
+</html>
