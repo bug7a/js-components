@@ -176,5 +176,7 @@ It fits admin panels, dashboards, internal tools, forms, mobile apps and prototy
 
 ## License
 
-Copyright 2020-2026 Bugra Ozden <bugra.ozden@gmail.com>
-Licensed under the [Apache License, Version 2.0](LICENSE).
+Copyright 2020-2026 Bugra Ozden <bugra.ozden@gmail.com> (https://bug7a.github.io/)
+Licensed under the [Apache License, Version 2.0](LICENSE) (see also [NOTICE](NOTICE)).
+
+Developed with the help of Claude Code (Anthropic).

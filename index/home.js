@@ -11,8 +11,11 @@ JS Components Website - Home View - v26.09
 - The home page: header, search and filters, component cards by category.
   The previews are not images: the sample page itself runs in a scaled WebView (iframe).
 
-Developer: Bugra Ozden
-Email: bugra.ozden@gmail.com
+Webpage: https://bug7a.github.io/js-components/
+
+Copyright 2020-2026 Bugra Ozden <bugra.ozden@gmail.com> (https://bug7a.github.io/)
+Licensed under the Apache License, Version 2.0
+SPDX-License-Identifier: Apache-2.0
 
 */
 
@@ -602,7 +605,7 @@ HomeView.createFooter = function () {
 
                 SITE.label("© 2020–" + new Date().getFullYear(), { fontSize: 13, textColor: SITE.TEXT_SOFT });
 
-                const lblAuthor = SITE.label("Bugra Ozden", { fontSize: 13, textColor: SITE.TEXT_SOFT });
+                const lblAuthor = SITE.label("Buğra Özden", { fontSize: 13, textColor: SITE.TEXT_SOFT });
                 lblAuthor.elem.style.cursor = "pointer";
                 lblAuthor.elem.style.textDecoration = "underline";
                 lblAuthor.on("mouseenter", function () { lblAuthor.textColor = SITE.INK; });
@@ -610,7 +613,7 @@ HomeView.createFooter = function () {
                 lblAuthor.on("click", function () { window.open(CONFIG.authorURL, "_blank", "noopener"); });
 
             endGroup();
-            SITE.text(T.footerText + " " + T.footerMade, "auto", 13, SITE.TEXT_FAINT);
+            SITE.text(T.footerText + " " + T.footerMade + " " + T.footerHelp, "auto", 13, SITE.TEXT_FAINT);
             that.elem.style.flex = "1 1 300px";
 
         endGroup();

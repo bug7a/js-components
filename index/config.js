@@ -7,8 +7,11 @@ JS Components Website - Site Configuration - v26.09
 - Tüm site ayarları bu dosyadadır. Metinler: index/texts.js  |  Bileşen listesi: index/catalog.js
 - All site settings are in this file. Texts: index/texts.js  |  Component list: index/catalog.js
 
-Developer: Bugra Ozden
-Email: bugra.ozden@gmail.com
+Webpage: https://bug7a.github.io/js-components/
+
+Copyright 2020-2026 Bugra Ozden <bugra.ozden@gmail.com> (https://bug7a.github.io/)
+Licensed under the Apache License, Version 2.0
+SPDX-License-Identifier: Apache-2.0
 
 */
 
@@ -28,7 +31,7 @@ const CONFIG = {
     // *** LINKS:
     githubURL: "https://github.com/bug7a/js-components",
     handbookURL: "https://bug7a.github.io/basic.js-handbook/",
-    authorURL: "https://bug7a.github.io/", // Alt bilgideki "Bugra Ozden"
+    authorURL: "https://bug7a.github.io/", // the "Buğra Özden" link of the footer
 
     // *** PREVIEW CARDS:
     // Önizleme, örnek sayfayı bu ölçüde bir ekranda açıp kartın içine küçültür.

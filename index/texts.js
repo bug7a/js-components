@@ -9,8 +9,11 @@ JS Components Website - Texts - v26.09
 - All the copy of the site. Both languages must have the same keys.
   The component descriptions are in index/catalog.js.
 
-Developer: Bugra Ozden
-Email: bugra.ozden@gmail.com
+Webpage: https://bug7a.github.io/js-components/
+
+Copyright 2020-2026 Bugra Ozden <bugra.ozden@gmail.com> (https://bug7a.github.io/)
+Licensed under the Apache License, Version 2.0
+SPDX-License-Identifier: Apache-2.0
 
 */
 
@@ -71,6 +74,7 @@ const TEXTS = {
         // FOOTER
         footerText: "basic.js and the components are open source (Apache 2.0).",
         footerMade: "This site is built with basic.js and the components it shows.",
+        footerHelp: "Developed with the help of Claude Code (Anthropic).",
     },
 
     tr: {
@@ -126,6 +130,7 @@ const TEXTS = {
         // FOOTER
         footerText: "basic.js ve bileşenler açık kaynaktır (Apache 2.0).",
         footerMade: "Bu site, basic.js ve gösterdiği bileşenlerle yapılmıştır.",
+        footerHelp: "Claude Code (Anthropic) yardımıyla geliştirildi.",
     },
 
 };
