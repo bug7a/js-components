@@ -320,9 +320,9 @@
             check("icons load", broken.length === 0, "not found: " + broken.join(", "), "warn");
             const setterProblems = __findSetterProblems(test.name, box);
             check("the names of its setters (code rules, 9)", setterProblems.length === 0, setterProblems.join("; "));
-            const sameValueCalls = await __countSameValueChanges(test.name, box);
-            if (sameValueCalls !== null) {
-                check("setValue() with its own value calls no onChange (code rules, 9)", sameValueCalls === 0, "onChange calls: " + sameValueCalls);
+            const sameValueProblems = await __findSameValueChanges(test.name, box);
+            if (sameValueProblems !== null) {
+                check("a setter with its own value calls no onChange (code rules, 9)", sameValueProblems.length === 0, "onChange called by " + sameValueProblems.join(", "));
             }
 
             if (test.keysOnly) return { steps: steps, keys: keys };
@@ -416,26 +416,36 @@
                 .filter(function (problem) { return problem !== ""; });
         };
 
-        // A plain setValue() with the value the component has changes nothing, so it calls no onChange (code rules, 9).
-        // The calls of onChange, or null: not checked (no setValue, no value or onChange param, or a setValue(key, value)).
-        const countSameValueChanges = async function (componentName, box) {
+        // A plain setter with the value the component has changes nothing, so it calls no onChange (code rules, 9):
+        // setValue(box.value), setChecked(box.checked), setSelected(box.selected).
+        // The setters that called onChange ("setChecked: 1"), or null: nothing to check (no onChange, or no param with
+        // its setter; a setter of an item, as setValue(key, value) of PropertyPanel, is left out).
+        const findSameValueChanges = async function (componentName, box) {
             let defaults = null;
             try { defaults = (0, eval)(componentName + "Defaults"); } catch (e) { return null; }
-            if (!defaults || !("value" in defaults) || typeof defaults.onChange !== "function") return null;
-            if (typeof box.setValue !== "function" || typeof box.onChange !== "function") return null;
-            const params = box.setValue.toString().match(/^[^(]*\(\s*([A-Za-z_$][\w$]*)/);
-            if (params && params[1] === "key") return null; // WHY: PropertyPanel sets the value of one of its items
+            if (!defaults || typeof defaults.onChange !== "function" || typeof box.onChange !== "function") return null;
+            const PAIRS = [["value", "setValue"], ["checked", "setChecked"], ["selected", "setSelected"]];
+            const pairs = PAIRS.filter(function (pair) {
+                if (!(pair[0] in defaults) || typeof box[pair[1]] !== "function") return false;
+                const params = box[pair[1]].toString().match(/^[^(]*\(\s*([A-Za-z_$][\w$]*)/);
+                return !(params && params[1] === "key"); // WHY: PropertyPanel sets the value of one of its items
+            });
+            if (!pairs.length) return null;
+            const problems = [];
             const onChange = box.onChange;
-            let calls = 0;
-            box.onChange = function () { calls++; };
             try {
-                box.setValue(box.value);
-                // WHY the wait: a component may call onChange a moment later (box.after)
-                await new Promise(function (resolve) { setTimeout(resolve, 100); });
+                for (const pair of pairs) {
+                    let calls = 0;
+                    box.onChange = function () { calls++; };
+                    box[pair[1]](box[pair[0]]);
+                    // WHY the wait: a component may call onChange a moment later (box.after)
+                    await new Promise(function (resolve) { setTimeout(resolve, 100); });
+                    if (calls) problems.push(pair[1] + ": " + calls);
+                }
             } finally {
                 box.onChange = onChange;
             }
-            return calls;
+            return problems;
         };
 
         // A setter takes the name of its param: setTitleText for titleText, not setTitle (code rules, 9).
@@ -472,7 +482,7 @@
                 "<script>const __runProbe = " + runProbe.toString() + ";" +
                 "const __findNameProblems = " + findNameProblems.toString() + ";" +
                 "const __findSetterProblems = " + findSetterProblems.toString() + ";" +
-                "const __countSameValueChanges = " + countSameValueChanges.toString() + ";" +
+                "const __findSameValueChanges = " + findSameValueChanges.toString() + ";" +
                 "const __setup = " + (test.setup ? test.setup.toString() : "null") + ";" +
                 "function start() { __runProbe(" + JSON.stringify(probeTest) + ", __setup)" +
                 ".then(function (r) { parent.__frameDone(" + id + ", r); })" +
