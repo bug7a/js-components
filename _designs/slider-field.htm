@@ -16,12 +16,53 @@
 
         /* Bismillah */
 
-        // DRAFT DESIGN of comp/slider-field.js (SliderField): the "light" and "dark" packages, every state side by side.
-        // light: SliderFieldDefaults.style (a light gray field, a gray fill that ends with a small handle, dots for the
-        // steps). dark: SliderField.styles.dark, its missing keys filled from the defaults. Plain basic.js objects (no
-        // SliderField here); under the mouse, dragging, the keyboard focus and the typing are still frames of those
-        // moments. The values are copies: keep them in step with slider-field.js when it changes.
+        // DRAFT DESIGN of comp/slider-field.js (SliderField): the NEW "light" and "dark" looks of the kit, every state
+        // side by side. A new design, not a copy of a package: it will take the place of the "light" and "dark"
+        // packages. A quiet gray field with round 10 corners, a fill in a tint of the accent that ends with a handle in
+        // the accent, a bold value, dots for the steps; the keyboard focus is the accent edge with a soft ring inside.
+        // Plain basic.js objects (no SliderField here); under the mouse, dragging, the keyboard focus and the typing are
+        // still frames of those moments. The tokens at the top are the same in every draft of the new look.
         // http://127.0.0.1:5505/_basic-designer/index.htm?page=_designs/slider-field.htm
+
+        // THE TOKENS OF THE NEW LIGHT / DARK LOOK (the same in every draft of it)
+        const LIGHT_TOKENS = {
+            page: "#FFFFFF", // the page the component sits on
+            surface: "#FFFFFF", // a field, a list, the face of a button
+            soft: "#F2F3F0", // under the mouse, the ground of an icon, a quiet field
+            softer: "#E6E7E3", // pressed, a track
+            line: Black(0.12), // the edge of a surface
+            lineStrong: Black(0.3), // the edge under the mouse
+            text: Black(0.88),
+            textSoft: Black(0.55),
+            textFaint: Black(0.38), // a placeholder
+            accent: "#3D7A6B", // the one color: a selected row, a fill, the main button, the edge while typing
+            accentHover: "#356C5E",
+            accentPress: "#2E5F53",
+            accentSoft: "#E4EFEB", // a tint of the accent on the surface
+            onAccent: "#FFFFFF", // a text or a mark on the accent
+            danger: "#D9534F",
+            warning: "#E5885E",
+            focusRing: "rgba(61, 122, 107, 0.5)", // the ring of the keyboard focus
+        };
+        const DARK_TOKENS = {
+            page: "#1A1A19",
+            surface: "#232322",
+            soft: "#2C2C2B",
+            softer: "#363635",
+            line: White(0.12),
+            lineStrong: White(0.32),
+            text: White(0.9),
+            textSoft: White(0.55),
+            textFaint: White(0.38),
+            accent: "#65A293",
+            accentHover: "#74B0A2",
+            accentPress: "#5A9385",
+            accentSoft: "rgba(101, 162, 147, 0.2)",
+            onAccent: "#0F1F1B",
+            danger: "#E0605A",
+            warning: "#F0A07A",
+            focusRing: "rgba(101, 162, 147, 0.55)",
+        };
 
         const PAGE_COLOR = "#F4F5F2"; // the ground of the draft, not of the fields
         const PAGE_TEXT = { title: Black(0.8), note: Black(0.5), state: Black(0.45), stateTitle: Black(0.4) }; // the texts of the draft
@@ -36,31 +77,31 @@
         const SPACE = { labelDot: 8, valueDot: 10, textOverlap: 4, fillDot: 4, handleDot: 8, inputMinWidth: 64, inputExtraWidth: 28, input: 6, caretHeight: 18 }; // LABEL_DOT_SPACE, VALUE_DOT_SPACE, TEXT_OVERLAP, FILL_DOT_SPACE, HANDLE_DOT_SPACE, INPUT_MIN_WIDTH, INPUT_EXTRA_WIDTH, INPUT_SPACE
         const TEXT_WIDTH_PER_PX = 0.56; // the width of a letter of Open Sans, from its font size (the component measures the texts)
 
-        // THE LIGHT LOOK (SliderFieldDefaults.style)
+        // THE LIGHT LOOK: a quiet gray field, a fill in a tint of the accent, the handle and the focus in the accent
         const LIGHT = {
-            page: { color: "white", textColor: Black(0.45) }, // the light page the fields sit on
-            box: { color: "#F2F2F4", hoverColor: "", border: 1, borderColor: "#E8E8EB", round: 12, boxShadow: "none" }, // hoverColor "": the same color under the mouse
-            boxFocus: { borderColor: "#9A9AA0", ringColor: "", ringWidth: 2 }, // the keyboard focus: the edge; ringColor "": no ring inside it
-            fill: { color: "#E1E1E4", hoverColor: "#DCDCE0", activeColor: "#D5D5DA", minWidth: 26, round: 11 }, // activeColor: while dragging; minWidth: the fill at min
-            handle: { width: 3, height: 16, inset: 11, color: "#A9A9AE", hoverColor: "#86868C", activeColor: "#5E5E64", round: 2 }, // inset: from the right end of the fill
-            tick: { size: 3, color: "#BDBDC2", minSpace: 9 },
-            label: { fontSize: 15, textColor: "#8A8A8F", fontFamily: "", padding: 14 },
-            value: { fontSize: 15, textColor: "#2C2C2E", fontFamily: "", padding: 16 },
-            input: { color: White(1), textColor: "#2C2C2E", round: 6 }, // while typing the value
-            disabled: { opacity: 0.5, filter: "none" },
+            page: { color: LIGHT_TOKENS.page, textColor: LIGHT_TOKENS.textSoft },
+            box: { color: LIGHT_TOKENS.soft, hoverColor: "", border: 1, borderColor: Black(0.08), round: 10, boxShadow: "none" }, // hoverColor "": the same color under the mouse
+            boxFocus: { borderColor: LIGHT_TOKENS.accent, ringColor: LIGHT_TOKENS.focusRing, ringWidth: 2 }, // the keyboard focus: the edge and a ring inside it
+            fill: { color: "#D8E8E2", hoverColor: "#CCE1DA", activeColor: "#BFD9D0", minWidth: 26, round: 9 }, // the accent on the field at 22 %, 30 %, 38 %; activeColor: while dragging; minWidth: the fill at min
+            handle: { width: 4, height: 18, inset: 11, color: LIGHT_TOKENS.accent, hoverColor: LIGHT_TOKENS.accentHover, activeColor: LIGHT_TOKENS.accentPress, round: 2 }, // inset: from the right end of the fill
+            tick: { size: 3, color: Black(0.15), minSpace: 9 },
+            label: { fontSize: 15, textColor: LIGHT_TOKENS.textSoft, fontFamily: "", padding: 14 },
+            value: { fontSize: 15, textColor: LIGHT_TOKENS.text, fontFamily: "opensans-bold", padding: 14 },
+            input: { color: LIGHT_TOKENS.surface, textColor: LIGHT_TOKENS.text, round: 6 }, // while typing the value
+            disabled: { opacity: 0.45, filter: "none" },
         };
 
-        // THE DARK LOOK (SliderField.styles.dark, the same colors as SelectBox, TagInput, Tabs and Stepper "dark")
+        // THE DARK LOOK: the same shapes on the dark surface
         const DARK = {
-            page: { color: "#1A1A19", textColor: White(0.5) }, // the dark card of the kit
-            box: { color: "#232322", hoverColor: "", border: 1, borderColor: White(0.08), round: 12, boxShadow: "none" },
-            boxFocus: { borderColor: "#65A293", ringColor: "", ringWidth: 2 },
-            fill: { color: White(0.09), hoverColor: White(0.12), activeColor: White(0.16), minWidth: 26, round: 11 },
-            handle: { width: 3, height: 16, inset: 11, color: White(0.35), hoverColor: White(0.55), activeColor: "#65A293", round: 2 },
-            tick: { size: 3, color: White(0.22), minSpace: 9 },
-            label: { fontSize: 15, textColor: White(0.5), fontFamily: "", padding: 14 },
-            value: { fontSize: 15, textColor: White(0.9), fontFamily: "", padding: 16 },
-            input: { color: White(0.08), textColor: White(0.9), round: 6 },
+            page: { color: DARK_TOKENS.page, textColor: DARK_TOKENS.textSoft },
+            box: { color: DARK_TOKENS.surface, hoverColor: "", border: 1, borderColor: White(0.08), round: 10, boxShadow: "none" },
+            boxFocus: { borderColor: DARK_TOKENS.accent, ringColor: DARK_TOKENS.focusRing, ringWidth: 2 },
+            fill: { color: "rgba(101, 162, 147, 0.22)", hoverColor: "rgba(101, 162, 147, 0.28)", activeColor: "rgba(101, 162, 147, 0.34)", minWidth: 26, round: 9 },
+            handle: { width: 4, height: 18, inset: 11, color: DARK_TOKENS.accent, hoverColor: DARK_TOKENS.accentHover, activeColor: "#8CC2B5", round: 2 },
+            tick: { size: 3, color: White(0.2), minSpace: 9 },
+            label: { fontSize: 15, textColor: DARK_TOKENS.textSoft, fontFamily: "", padding: 14 },
+            value: { fontSize: 15, textColor: DARK_TOKENS.text, fontFamily: "opensans-bold", padding: 14 },
+            input: { color: White(0.08), textColor: DARK_TOKENS.text, round: 6 },
             disabled: { opacity: 0.4, filter: "none" },
         };
 
@@ -88,14 +129,14 @@
 
                 VGroup({ width: "max-content", height: "auto", align: "left top", gap: 22, padding: 40, clipContent: 0 });
 
-                    Label({ text: "SliderField · light / dark · draft (comp/slider-field.js)", fontSize: 20, bold: 1, textColor: PAGE_TEXT.title });
-                    Label({ text: "light is the default package, dark is SliderField.styles.dark. Every row is a state.", fontSize: 13, textColor: PAGE_TEXT.note });
+                    Label({ text: "SliderField · the new light / dark · draft (comp/slider-field.js)", fontSize: 20, bold: 1, textColor: PAGE_TEXT.title });
+                    Label({ text: "A new design for the light and dark packages. Every row is a state.", fontSize: 13, textColor: PAGE_TEXT.note });
 
                     // GROUP: The names of the states, then a card for every look
                     HGroup({ width: "auto", height: "auto", align: "left top", gap: COLUMN_GAP, clipContent: 0 });
                         drawStateColumn();
-                        drawLookCard(LIGHT, "light (default)");
-                        drawLookCard(DARK, "dark");
+                        drawLookCard(LIGHT, "light (new)");
+                        drawLookCard(DARK, "dark (new)");
                     endGroup();
 
                 endGroup();
@@ -268,7 +309,7 @@
             const _i = look.input;
             const width = Math.max(SPACE.inputMinWidth, layout.valueWidth + SPACE.inputExtraWidth);
             const input = HGroup({ left: layout.innerWidth - width - SPACE.input, top: SPACE.input, width: width, height: layout.innerHeight - 2 * SPACE.input, align: "right center", gap: 1, padding: [10, 0], color: _i.color, round: _i.round });
-                Label({ text: formatValue(Object.assign({}, state, { unitText: "" })), fontSize: look.value.fontSize, textColor: _i.textColor, css: { whiteSpace: "nowrap" } });
+                Label({ text: formatValue(Object.assign({}, state, { unitText: "" })), fontSize: look.value.fontSize, textColor: _i.textColor, css: { whiteSpace: "nowrap", fontFamily: look.value.fontFamily || "" } });
                 Box({ width: 1, height: SPACE.caretHeight, color: _i.textColor, position: "relative" });
             endGroup();
             return input;
