@@ -1,0 +1,8 @@
+# Only the scripts and their README go to git: what they make (versions, pictures, logs) stays in the scratchpad of a
+# session, so the folder stays small.
+*
+!.gitignore
+!README.md
+!*.py
+!*.js
+!*.sh

@@ -44,7 +44,7 @@ There is **no build system, package.json, bundler, linter or test runner**. Ever
 | `_starter/`, `_make-starter.sh`, `_npm/`, `_make-npm.sh` | The starter of a new project: `./_make-starter.sh` writes `_dist/starter/`; `./_make-npm.sh` writes the `create-basicjs` package in `_dist/create-basicjs/` and never publishes. A fault seen in a clean AI session becomes a rule in `_starter/AGENTS.md`. |
 | `_basic-designer/` | The visual editor of basic.js pages and its VS Code extension (alpha). `_notes.md`, `prompts/` and `old-*/` stay gitignored: never add them. |
 | `__archive/`, `__projects/`, `__video/`, `_ozden-manager/`, `_screenshots/` | **Gitignored: never add, commit or push anything from them.** |
-| `_ai-tools/` | The helper scripts of the AI sessions on this computer (gitignored, its `README.md` lists them). A helper that is not general goes here; a tool for everybody goes into the repository (`test/`, the root). |
+| `_ai-tools/` | The helper scripts of the AI sessions (`version-of.py`, `edit_text.py`; its `README.md` lists them). In git, but only scripts and their README: what they make stays in the scratchpad (its own `.gitignore`). A helper for the sessions goes here; a tool for everybody goes into the repository (`test/`, the root). |
 | `_component-template.js`, `_empty-project-template.htm` | Starting points for a new component and a new page. |
 
 Do not use or update files prefixed with `delete-` (obsolete). `unfinished-` files are work in progress.
