@@ -79,7 +79,7 @@ App.addPage({
             Toast.show({
                 key: "added-to-cart",
                 type: "success",
-                message: tx("Added to cart"),
+                messageText: tx("Added to cart"),
                 action: { text: tx("View"), onClick: () => App.open("cart") },
             });
         };

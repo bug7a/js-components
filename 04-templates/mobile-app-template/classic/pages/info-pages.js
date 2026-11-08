@@ -52,7 +52,7 @@ App.addPage({
     backText: "Settings",
     scroll: 0, // WHY: The HTML page scrolls itself.
     create: function () {
-        WebView({ width: "100%", height: "100%", url: "html/privacy.htm", title: "Privacy Policy and Terms of Use" });
+        WebView({ width: "100%", height: "100%", url: "html/privacy.htm", ariaLabel: "Privacy Policy and Terms of Use" });
     },
 });
 

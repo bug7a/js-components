@@ -80,11 +80,12 @@ App.addPage({
             searchIconSize: 20,
             searchIconFile: AppSettings.componentPath + "search-input/search.svg",
             clearIconFile: AppSettings.componentPath + "search-input/clear-round.svg",
-            placeholderText: tx("Search products"),
+            placeholder: tx("Search products"),
             color: App.colors.surface,
             textColor: App.colors.text,
             borderColor: App.colors.line,
-            onSearch: function (text) {
+            onChange: function (self) {
+                const text = self.getSearchText();
                 searchedText = normalize(text);
                 drawProducts();
             },

@@ -79,10 +79,10 @@ App.addPage({
                 width: 200,
                 height: 50,
                 searchIconOpacity: 0.4,
-                placeholderText: "Search",
+                placeholder: "Search",
                 searchIconFile: AppSettings.componentPath + "search-input/search.svg",
                 clearIconFile: AppSettings.componentPath + "search-input/clear.svg",
-                onSearch: (text) => categoryList.search(text),
+                onChange: (self) => categoryList.search(self.getSearchText()),
             });
         });
 

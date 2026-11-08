@@ -10,7 +10,7 @@ A page file only says what is in its page (pages/*.js); this file shows it.
 THE DESIGN: the app is drawn 600 px wide (page.fit(600, 800)): every size in this template is a px of that design.
 On a phone the design fills the width; on a wider screen it is a column of at most 800 px.
 
-THE DESIGN: the components made for screen px (Tabs, Dialog, Toast, Tooltip, SelectBox, SelectDate) keep their size
+THE DESIGN: the components made for screen px (Tabs, Dialog, Toast, Tooltip, SelectBox, DatePicker) keep their size
 on the screen: basic.uiScale = 1 / page.zoom.
 
 THE VIEWS:

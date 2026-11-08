@@ -97,7 +97,7 @@ App.addPage({
                 autoWidth: 1,
                 items: names,
                 selectedKey: saved[key] || defaultName,
-                placeholderText: "Filter",
+                placeholder: "Filter",
                 arrowIconFile: AppSettings.componentPath + "full-screen-select/arrow.svg",
                 closeIconFile: AppSettings.componentPath + "full-screen-select/cancel.svg",
                 searchIconFile: AppSettings.componentPath + "search-input/search.svg",

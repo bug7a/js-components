@@ -73,7 +73,7 @@ App.addPage({
                 confirmText: "Yes",
                 cancelText: "No",
             });
-            Toast.show({ type: "info", message: isOk ? "You said yes." : "You said no." });
+            Toast.show({ type: "info", messageText: isOk ? "You said yes." : "You said no." });
         }
 
     },

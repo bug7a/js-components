@@ -105,10 +105,10 @@ App.addPage({
                 placeholderColor: Black(0.4),
                 borderBottomStyle: "2px solid " + Black(0.2),
                 searchIconOpacity: 0.4,
-                placeholderText: "Search",
+                placeholder: "Search",
                 searchIconFile: AppSettings.componentPath + "search-input/search.svg",
                 clearIconFile: AppSettings.componentPath + "search-input/clear.svg",
-                onSearch: (text) => exampleList.search(text),
+                onChange: (self) => exampleList.search(self.getSearchText()),
             });
         endBox();
 

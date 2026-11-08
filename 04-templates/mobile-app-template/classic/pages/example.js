@@ -158,7 +158,7 @@ const ExampleViews = {
         endGroup();
         // GROUP: The white half
         VGroup({ width: "100%", height: "50%", align: "center center", color: "white" });
-            SearchInput({ width: 300, height: 50, placeholderText: "Filter", searchIconOpacity: 0.4, ...iconFiles });
+            SearchInput({ width: 300, height: 50, placeholder: "Filter", searchIconOpacity: 0.4, ...iconFiles });
         endGroup();
     },
 
@@ -201,7 +201,7 @@ const ExampleViews = {
 
     "web-view": function (box) {
         ExampleViews.startCenter(box, App.colors.whitesmoke, 0);
-            WebView({ width: 400, height: 400, url: "html/privacy.htm", title: "Privacy", round: 4 });
+            WebView({ width: 400, height: 400, url: "html/privacy.htm", ariaLabel: "Privacy", round: 4 });
         endGroup();
     },
 
