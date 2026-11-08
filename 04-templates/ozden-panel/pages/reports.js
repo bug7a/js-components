@@ -878,7 +878,7 @@ const ReportsPage = function(params = {}) {
                     sortByTitleIndex: 0,
                     sortDirection: "Z-A", // Newest period first
                     // WHY: SmartTable writes the raw value (numbers sort right). Money and percent texts are written here.
-                    updateCustomItemCell: function(cell, titleDataIndex, data) {
+                    updateCellView: function(cell, titleDataIndex, data) {
                         switch (titleDataList[titleDataIndex].dataTitle) {
                             case "orders":
                             case "refunds":

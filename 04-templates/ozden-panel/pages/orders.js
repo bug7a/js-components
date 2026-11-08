@@ -380,7 +380,7 @@ const OrdersPage = function(params = {}) {
                     openDetails(itemData.id);
                 },
                 // WHY: SmartTable writes the raw value (totals sort as numbers). Money and status colors are written here.
-                updateCustomItemCell: function(cell, titleDataIndex, data) {
+                updateCellView: function(cell, titleDataIndex, data) {
                     if (titleDataIndex == 4 && data !== "") cell.label.text = OrdersPage.formatMoney(data);
                     if (titleDataIndex == 6) {
                         const status = OrdersPage.getStatusByLabel(data);

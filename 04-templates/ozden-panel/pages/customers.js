@@ -364,7 +364,7 @@ const CustomersPage = function(params = {}) {
                     openDetails(itemData.id);
                 },
                 // WHY: SmartTable writes the raw value (money sorts as a number). Texts and colors are written here.
-                updateCustomItemCell: function(cell, titleDataIndex, data) {
+                updateCellView: function(cell, titleDataIndex, data) {
                     if (titleDataIndex == 5 && data !== "") cell.label.text = OrdersPage.formatMoney(data);
                     if (titleDataIndex == 7) {
                         const segment = CustomersPage.getSegmentByLabel(data);

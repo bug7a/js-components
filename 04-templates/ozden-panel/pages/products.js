@@ -392,20 +392,17 @@ const ProductsPage = function(params = {}) {
                     if (product) openEditor(product);
                 },
                 // Thumbnail cell (created one time for each visible row)
-                createCustomItemCell: function(cell, titleDataIndex) {
-                    if (titleDataIndex != 0) return cell;
+                createCellView: function(cell, titleDataIndex) {
+                    if (titleDataIndex != 0) return;
                     cell.label.visible = 0;
-                    // WHY: The group is created in the current container and moved into the cell (like pages/users.js).
                     cell.thumbGroup = HGroup({ width: "100%", height: "100%", align: "center center" });
-                    cell.add(cell.thumbGroup);
                         cell.thumb = Icon({ width: 36, height: 36, round: 6 });
                         cell.thumb.elem.style.objectFit = "cover";
                         cell.thumb.elem.alt = "";
                     endGroup();
-                    return cell;
                 },
                 // WHY: SmartTable writes the raw value (numbers sort right). Texts and colors are written here.
-                updateCustomItemCell: function(cell, titleDataIndex, data) {
+                updateCellView: function(cell, titleDataIndex, data) {
                     if (titleDataIndex == 0) {
                         cell.label.text = "";
                         if (cell.thumbUrl != data) {

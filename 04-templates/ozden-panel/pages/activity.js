@@ -545,7 +545,7 @@ const ActivityPage = function(params = {}) {
                         openDetails(itemData.id);
                     },
                     // Colored action texts
-                    updateCustomItemCell: function(cell, titleDataIndex, data) {
+                    updateCellView: function(cell, titleDataIndex, data) {
                         if (titleDataIndex != 2) return;
                         const action = ActivityPage.getActionByLabel(data);
                         cell.label.textColor = (action) ? action.color : Ink(0.75);

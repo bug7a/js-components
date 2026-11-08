@@ -861,7 +861,7 @@ const MediaPage = function(params = {}) {
                     if (item) openDetails(item);
                 },
                 // WHY: SmartTable writes the raw value (sizes sort as numbers). The size text is written here.
-                updateCustomItemCell: function(cell, titleDataIndex, data) {
+                updateCellView: function(cell, titleDataIndex, data) {
                     if (titleDataIndex == 3 && data !== "") cell.label.text = MediaPage.formatSize(data);
                 },
                 ...MediaPage.getSmartTableStyle(LIB_PATH, "Filter the list"),

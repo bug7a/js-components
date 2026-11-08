@@ -21,7 +21,7 @@ Sample: 02-comp-examples/smart-table.htm (the model page of SmartTable).
   the cell when the mouse rests on it (style.cellTooltip: the look; showCellTooltip: 0 turns it off). The bubble is
   comp/tooltip.js (Tooltip.show); without that file the browser's own hint (the title of the cell) shows the text.
 
-- SmartTable is a JavaScript table component designed to run smoothly even with millions of records. Thanks to its virtual scroll architecture, it only writes the visible rows to the DOM, eliminating memory and performance issues with large datasets. It makes data exploration easy with real-time filtering, multi-column sorting, and both horizontal and vertical scroll support. Custom cell designs can be created for each column via createCustomItemCell, allowing flexible visual content per column. Since column widths, heights, and colors are all configurable through parameters, it can be quickly adapted to different projects.
+- SmartTable is a JavaScript table component designed to run smoothly even with millions of records. Thanks to its virtual scroll architecture, it only writes the visible rows to the DOM, eliminating memory and performance issues with large datasets. It makes data exploration easy with real-time filtering, multi-column sorting, and both horizontal and vertical scroll support. Custom cell designs can be created for each column via createCellView / updateCellView, allowing flexible visual content per column. Since column widths, heights, and colors are all configurable through parameters, it can be quickly adapted to different projects.
 
 
 Started Date: March 2026
@@ -52,9 +52,9 @@ SPDX-License-Identifier: Apache-2.0
   with no language keeps "tr-TR". Ex: "en-US" -> 12,499, "tr-TR" -> 12.499. setLocale(locale).
 - wheelScroll: 1 ise fare tekerleği tablonun satırlarını kaydırır (sayfa kaymaz). Varsayılan 0: tekerlek sayfayı kaydırır, satırlar scroll çubuğu ve butonlar ile kaydırılır.
 -- smartTable.setWheelScroll(1) ile sonradan açılabilir.
-- allowHtml: 0 (varsayılan): hücre değerleri düz metin yazılır (kullanıcının yazdığı bir ad veya başlık
-  HTML olarak çalışmaz). 1: değerler HTML olarak yazılır (Ex: "<b>12</b>"). createCustomItemCell / updateCustomItemCell
-  içinde cell.label.text ile yazılan kendi değerleriniz etkilenmez.
+- allowHtml: 0 (default): the values of the cells are written as plain text (a name or a title a user wrote does not
+  run as HTML). 1: the values are written as HTML (Ex: "<b>12</b>"). Your own values written with cell.label.text in
+  createCellView / updateCellView are not touched.
 
 
 */
@@ -87,8 +87,8 @@ const SmartTableDefaults = {
     sortDirection: "A-Z", // "A-Z" or "Z-A"
     fillTestData: 0,
     onSelect: function (self, itemData) { },
-    createCustomItemCell: function (cell, titleDataIndex) { return cell },
-    updateCustomItemCell: function (cell, titleDataIndex, data) { },
+    createCellView: null, // function (cell, titleDataIndex, self) { } Once for every cell (a cell shows other rows as the table scrolls): objects created here go into the cell; cell.label is its text
+    updateCellView: null, // function (cell, titleDataIndex, value, self) { } Every time a cell shows a value: paint what createCellView made
     titleDataList: [
         { name: "ID", dataTitle: "id", dataType: "integer", width: 100, sortable: 1 },
         { name: "NAME", dataTitle: "name", dataType: "string", width: 100, sortable: 1 },
@@ -340,7 +340,7 @@ const SmartTable = function (params = {}) {
                 else cell.label.plainText = newValue;
             }
 
-            box.updateCustomItemCell(cell, j, newValue);
+            if (box.updateCellView) box.updateCellView(cell, j, newValue, box);
 
         }
 
@@ -714,7 +714,7 @@ const SmartTable = function (params = {}) {
         // WHY itemData: a row with no record keeps the text of its last record, unseen
         if (!cell.itemLine.itemData) return "";
         const label = cell.label.elem;
-        // (a hidden label, Ex: a cell of createCustomItemCell, is 0 px wide: it fits)
+        // (a hidden label, Ex: a cell of createCellView, is 0 px wide: it fits)
         if (label.scrollWidth <= label.clientWidth) return "";
         return label.textContent;
     };
@@ -793,7 +793,11 @@ const SmartTable = function (params = {}) {
             onCellHoverChange(itemCell, isOver);
         });
 
-        itemCell = box.createCustomItemCell(itemCell, titleDataIndex);
+        if (box.createCellView) {
+            createIn(itemCell, function () {
+                box.createCellView(itemCell, titleDataIndex, box);
+            });
+        }
 
         return itemCell;
 

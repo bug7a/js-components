@@ -65,8 +65,8 @@
                 fitLineCount: 1,
                 titleDataList: titleDataList,
                 itemDataList: itemDataList,
-                createCustomItemCell: createCustomItemCell,
-                updateCustomItemCell: updateCustomItemCell,
+                createCellView: createCellView,
+                updateCellView: updateCellView,
                 sortByTitleIndex: 0,
                 sortDirection: "Z-A", // "A-Z" or "Z-A"
                 style: { width: "100%", height: "100%" },
@@ -85,11 +85,11 @@
         const ACTIVE_COLUMN = 3; // the index of dataTitle: active
         const CHECK_ROOM = 12; // px: the cell is this much higher than the check
 
-        const updateCustomItemCell = function (itemCell, titleDataIndex, data) {
+        const updateCellView = function (itemCell, titleDataIndex, value) {
 
             if (titleDataIndex != ACTIVE_COLUMN) return;
 
-            itemCell.boxCheck.color = (data == 1) ? "#E7BB67" : "white";
+            itemCell.boxCheck.color = (value == 1) ? "#E7BB67" : "white";
 
             const checkSize = itemCell.height - CHECK_ROOM;
             itemCell.boxCheck.width = checkSize;
@@ -97,15 +97,14 @@
 
         };
 
-        // Called once for every cell
-        const createCustomItemCell = function (itemCell, titleDataIndex) {
+        // Called once for every cell: the objects made here go into the cell
+        const createCellView = function (itemCell, titleDataIndex) {
 
-            if (titleDataIndex != ACTIVE_COLUMN) return itemCell;
+            if (titleDataIndex != ACTIVE_COLUMN) return;
 
             itemCell.label.visible = 0;
 
             itemCell.boxCustom = HGroup();
-            itemCell.add(itemCell.boxCustom);
 
                 const checkSize = itemCell.height - CHECK_ROOM;
                 itemCell.boxCheck = Box({
@@ -118,8 +117,6 @@
                 });
 
             endGroup();
-
-            return itemCell;
 
         };
 

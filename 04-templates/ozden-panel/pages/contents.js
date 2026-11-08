@@ -348,7 +348,7 @@ const ContentsPage = function(params = {}) {
                     if (content) openEditor(content);
                 },
                 // WHY: SmartTable writes the raw value. Texts and colors are written here.
-                updateCustomItemCell: function(cell, titleDataIndex, data) {
+                updateCellView: function(cell, titleDataIndex, data) {
                     if (titleDataIndex == 2) {
                         const status = ContentsPage.getStatusByLabel(data);
                         cell.label.textColor = (status) ? status.color : Ink(0.75);

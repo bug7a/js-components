@@ -332,7 +332,7 @@ const UserListPage = function(params = {}) {
                     openDetails(itemData.id);
                 },
                 // WHY: SmartTable writes the raw value. Status and 2FA colors are written here.
-                updateCustomItemCell: function(cell, titleDataIndex, data) {
+                updateCellView: function(cell, titleDataIndex, data) {
                     if (titleDataIndex == 3) {
                         const status = UserListPage.getStatusByLabel(data);
                         cell.label.textColor = (status) ? status.color : Ink(0.75);

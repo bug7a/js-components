@@ -65,7 +65,7 @@ const UsersPage = function(params = {}) {
 
     };
 
-    const updateCustomItemCell = function (itemCell, titleDataIndex, data) {
+    const updateCellView = function (itemCell, titleDataIndex, data) {
 
         // dataTitle: active
         if (titleDataIndex == 3) {
@@ -86,7 +86,7 @@ const UsersPage = function(params = {}) {
 
     };
 
-    const createCustomItemCell = function (itemCell, titleDataIndex) {
+    const createCellView = function (itemCell, titleDataIndex) {
 
         // CALL ONE TIME
 
@@ -96,7 +96,6 @@ const UsersPage = function(params = {}) {
             itemCell.label.visible = 0;
 
             itemCell.boxCustom = HGroup();
-            itemCell.add(itemCell.boxCustom);
 
             const _size = itemCell.height - 12;
 
@@ -113,8 +112,6 @@ const UsersPage = function(params = {}) {
             endGroup();
 
         };
-
-        return itemCell;
 
     };
 
@@ -231,8 +228,8 @@ const UsersPage = function(params = {}) {
             fillTestData: 0,
             titleDataList: titleDataList,
             itemDataList: itemDataList,
-            createCustomItemCell: createCustomItemCell,
-            updateCustomItemCell: updateCustomItemCell,
+            createCellView: createCellView,
+            updateCellView: updateCellView,
             sortByTitleIndex: 0,
             sortDirection: "Z-A", // "A-Z" or "Z-A"
             invertColor: 0,
