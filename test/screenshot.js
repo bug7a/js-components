@@ -10,9 +10,12 @@ SCREENSHOT: one picture of a page (or of a part of it) for a report, in one comm
     node test/screenshot.js tabs.htm --before                the page of the last commit left, the page now right
     node test/screenshot.js tabs.htm --before HEAD~2 --name tabs-fix
     node test/screenshot.js stepper.htm --print "document.title" --print "page.width" --no-picture
+    node test/screenshot.js "03-webpages/webpage-handbook/index.htm#/box" --click "Run" --click "Copy"
 
 Options:
     --run "code"      runs in the page after it is loaded (await works): open a menu, a dialog, a state
+    --click "text"    after --run, a click of the mouse on the element that shows this text (or has it as its
+                      aria-label or title), brought into the window first; more than one --click: one after the other
     --clip "x"        only this part: a basic.js expression (BasicDesigner.ui.pageMenu, a box or its elem, or a list
                       of them) or a CSS selector ([role=dialog], #id: its first element that is seen); --margin px
                       around it (12). More than one --clip: the part that holds all of them
@@ -20,12 +23,12 @@ Options:
     --name what       the file: _screenshots/YYYY-MM-DD-what.png (the name of the page by default)
     --width, --height the window (1280 x 800; a width under 500 is 844 high)
     --scale n         pixels per px (2 for a part, 1 for the whole window)
-    --wait ms         after the load and after --run (600)
+    --wait ms         after the load, after --run and after each --click (600)
     --print "expr"    writes the value of a JavaScript expression of the page in the terminal, after --run (await
                       works; more than one --print: each one): a check without reading a picture
     --no-picture      only the --print values and the errors: no picture is saved
 
-It prints the file, and the errors of the page (exit code 1 when the page throws or --clip finds nothing).
+It prints the file, and the errors of the page (exit code 1 when the page throws, or --clip or --click finds nothing).
 The pictures older than 48 hours in _screenshots/ are deleted first (never readme.md).
 The server lists a folder as Live Server does, so the Open Folder of basic designer works in it.
 It needs Chrome and puppeteer-core, like compare-pages.js (CHROME_PATH for another place of Chrome).
@@ -126,6 +129,31 @@ const findClipRect = function (clips) {
     return { x: left, y: top, width: right - left, height: bottom - top };
 };
 
+// Runs in the page: the middle of the element that shows this text (or has it as its aria-label or title), brought
+// into the window. null when there is none.
+// WHY the deepest element with the text: it is the one under the mouse (a label in a button).
+const findClickPoint = function (text) {
+    const wanted = text.trim();
+    const textOf = function (elem) { return elem.textContent.replace(/\s+/g, " ").trim(); };
+    const isShown = function (elem) {
+        const rect = elem.getBoundingClientRect();
+        return rect.width > 0 && rect.height > 0 && getComputedStyle(elem).visibility !== "hidden";
+    };
+    const shown = [...document.querySelectorAll("body *")].filter(isShown);
+    const byText = shown.find(function (elem) {
+        if (textOf(elem) !== wanted) return false;
+        return ![...elem.children].some(function (child) { return textOf(child) === wanted; });
+    });
+    const byLabel = shown.find(function (elem) {
+        return elem.getAttribute("aria-label") === wanted || elem.getAttribute("title") === wanted;
+    });
+    const target = byText || byLabel;
+    if (!target) return null;
+    target.scrollIntoView({ block: "center", inline: "center" });
+    const rect = target.getBoundingClientRect();
+    return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+};
+
 const runCode = function (code) {
     const AsyncFunction = Object.getPrototypeOf(async function () {}).constructor;
     return new AsyncFunction(code)();
@@ -186,6 +214,16 @@ const takePicture = async function (browser, url, options) {
             await sleep(options.wait);
         }
 
+        for (const text of options.clicks) {
+            const point = await page.evaluate(findClickPoint, text);
+            if (!point) {
+                log.push({ isError: true, text: "CLICK: nothing shows the text or the label \"" + text + "\"" });
+                continue;
+            }
+            await page.mouse.click(point.x, point.y);
+            await sleep(options.wait);
+        }
+
         const prints = await readPrints(page, options.prints, log);
         if (options.isNoPicture) return { picture: null, log, prints };
         if (!options.clips.length) return { picture: await page.screenshot(), log, prints };
@@ -239,7 +277,7 @@ const todayText = function () {
 };
 
 const readOptions = function (args) {
-    const options = { page: "", run: "", clips: [], prints: [], name: "", before: "", width: DEFAULT_WIDTH, height: 0,
+    const options = { page: "", run: "", clicks: [], clips: [], prints: [], name: "", before: "", width: DEFAULT_WIDTH, height: 0,
         scale: 0, wait: DEFAULT_WAIT, margin: DEFAULT_MARGIN, isNoPicture: false, isHelp: false };
     for (let i = 0; i < args.length; i++) {
         const arg = args[i];
@@ -247,6 +285,7 @@ const readOptions = function (args) {
         if (arg === "--help") options.isHelp = true;
         else if (arg === "--before") options.before = (hasValue) ? args[++i] : "HEAD";
         else if (arg === "--run") options.run = args[++i];
+        else if (arg === "--click") options.clicks.push(args[++i]);
         else if (arg === "--clip") options.clips.push(args[++i]);
         else if (arg === "--print") options.prints.push(args[++i]);
         else if (arg === "--no-picture") options.isNoPicture = true;
