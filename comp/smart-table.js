@@ -310,6 +310,7 @@ const SmartTable = function (params = {}) {
     const hideItemLine = function (itemLine) {
         itemLine.opacity = 0;
         itemLine.clickable = 0;
+        itemLine.cursor = ""; // (its cells take the cursor of the row: no hand over the empty part of the table)
         itemLine.itemData = null;
         paintItemLine(itemLine);
     };
@@ -318,6 +319,7 @@ const SmartTable = function (params = {}) {
 
         itemLine.opacity = 1;
         itemLine.clickable = 1;
+        itemLine.cursor = "pointer";
         itemLine.itemData = rowData; // WHY: Line a basıldığında bu bilgi kullanılacak.
         paintItemLine(itemLine);
 
@@ -618,6 +620,8 @@ const SmartTable = function (params = {}) {
         endGroup();
 
         itemLine.on("click", function (self) {
+            // WHY: a row with no record is unseen, but its cells still take the mouse (their hover makes them clickable)
+            if (!self.itemData) return;
             if (box.canSelect == 1) {
                 box.selectItem(self.itemData);
                 box.elem.focus({ preventScroll: true }); // WHY preventScroll: the page must not move to the table
@@ -759,7 +763,6 @@ const SmartTable = function (params = {}) {
             borderBottom: box.style.boxItemCell.borderBottom,
             borderRight: box.style.boxItemCell.borderRight,
         };
-        that.cursor = "pointer";
 
         itemCell.label = Label({
             text: "",

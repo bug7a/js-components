@@ -1470,6 +1470,30 @@
                 isGoneWithMouse && !findBubble(longName), "after the mouse: " + isGoneWithMouse);
         });
 
+        test("SmartTable: a click on a row with no record does nothing: no onSelect(null), the selection stays", async function () {
+            const selected = [];
+            const record = { id: 1, name: "Ada", email: "", active: 1 };
+            const table = SmartTable({ left: 0, top: 0, itemLineCount: 3, itemDataList: [record], onSelect: function (itemData) { selected.push(itemData); }, style: { width: 500, height: "auto" } });
+            table.zIndex = 100000; // (over the results of the page, for elementFromPoint)
+            await wait(150);
+            table.itemLineList[0].itemCell1.elem.click();
+            const emptyLine = table.itemLineList[2];
+            const rect = emptyLine.elem.getBoundingClientRect();
+            // (a person's click: the cell that is under the mouse there)
+            const hit = document.elementFromPoint(rect.left + 120, rect.top + rect.height / 2);
+            const isUnderMouse = Boolean(hit) && emptyLine.elem.contains(hit);
+            if (hit) hit.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+            emptyLine.itemCell0.elem.click();
+            const result = selected.map(function (itemData) { return itemData ? itemData.name : String(itemData); }).join(",");
+            const cursors = getComputedStyle(table.itemLineList[0].itemCell1.elem).cursor + " / " + getComputedStyle(emptyLine.itemCell1.elem).cursor;
+            check("SmartTable: a click on a row with no record does nothing: no onSelect(null), the selection stays",
+                isUnderMouse && result === "Ada" && table.selectedItemData === record,
+                "under the mouse: " + isUnderMouse + ", onSelect: " + result + ", selected: " + (table.selectedItemData ? table.selectedItemData.name : "none"));
+            check("SmartTable: the hand cursor is on the rows with a record, not on the empty part of the table",
+                cursors === "pointer / auto", "with a record / empty: " + cursors);
+            table.remove();
+        });
+
         test("SmartTable: classic is the default; a page's own style over \"green\" keeps the other keys of that look", async function () {
             const classicTable = SmartTable({ itemLineCount: 2, style: { width: 400, height: "auto" } });
             const greenTable = SmartTable({ itemLineCount: 2, styleName: "green", style: { width: 400, height: "auto", line2Color: "#EEEEEE" } });
