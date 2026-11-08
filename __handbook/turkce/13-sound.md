@@ -35,7 +35,7 @@ const start = function () {
 - `time` ve `timeLeft`, `currentTime` özelliği aracılığı ile arka plan çalar saat süreleri takip edilebilir.
 
 ### Yüklenme Olayı (.onLoad)
-Grafik nesnelerinde (Image/Icon) olduğu gibi, ses dosyaları da boyutları sebebiyle anında hazır olmayabilirler. Çalmaya (okumaya) hazır olduğu durumu `.onLoad()` ile yakalanır.
+Grafik nesnelerinde (Icon) olduğu gibi, ses dosyaları da boyutları sebebiyle anında hazır olmayabilirler. Çalmaya (okumaya) hazır olduğu durumu `.onLoad()` ile yakalanır.
 
 ```javascript
 const fxOkey = new BSound();

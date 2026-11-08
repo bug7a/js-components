@@ -1,4 +1,4 @@
-# basic.js — Input / TextBox (Metin Giriş Nesnesi)
+# basic.js — Input (Metin Giriş Nesnesi)
 
 basic.js kütüphanesinde kullanıcılardan klavye aracılığıyla metin veya sayı girişleri (input) almak için `Input()` nesnesi kullanılır.
 

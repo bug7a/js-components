@@ -1,6 +1,6 @@
 # basic.js — Motion (Hareket ve Animasyonlar)
 
-basic.js kütüphanesinde oluşturulan herhangi bir GUI nesnesinin (Box, Button, Image vb.) pozisyonlarını, boyutlarını veya renklerini anında (sertçe) değiştirmek yerine, yavaş ve estetik geçişlerle (akıcı şekilde) değiştirmek için `Motion` mekanizması kullanılır.
+basic.js kütüphanesinde oluşturulan herhangi bir GUI nesnesinin (Box, Button, Icon vb.) pozisyonlarını, boyutlarını veya renklerini anında (sertçe) değiştirmek yerine, yavaş ve estetik geçişlerle (akıcı şekilde) değiştirmek için `Motion` mekanizması kullanılır.
 
 ---
 

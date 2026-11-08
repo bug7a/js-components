@@ -9,7 +9,7 @@ In the `basic.js` library, the **`HGroup()`** and **`VGroup()`** functions are u
 - `Box()` — Box object (div)
 - `Label()` — Text label
 - `Button()` — Button
-- `Icon()` — Image / Icon
+- `Icon()` — An image or an icon
 - `Input()` — Text input field
 
 ---

@@ -35,7 +35,7 @@ const start = function () {
 - The background playback durations can be tracked via `time`, `timeLeft`, and `currentTime` properties.
 
 ### Load Event (.onLoad)
-Just like graphic objects (Image/Icon), audio files may not be ready instantly due to their sizes. The condition where it is ready to play (be read) is captured with `.onLoad()`.
+Just like graphic objects (Icon), audio files may not be ready instantly due to their sizes. The condition where it is ready to play (be read) is captured with `.onLoad()`.
 
 ```javascript
 const fxOkey = new BSound();

@@ -1,6 +1,6 @@
 # basic.js — Motion (Movement and Animations)
 
-In the basic.js library, the `Motion` mechanism is used to change the positions, sizes, or colors of any GUI object (Box, Button, Image, etc.) with slow and aesthetic transitions (fluidly) instead of changing them instantly (harshly).
+In the basic.js library, the `Motion` mechanism is used to change the positions, sizes, or colors of any GUI object (Box, Button, Icon, etc.) with slow and aesthetic transitions (fluidly) instead of changing them instantly (harshly).
 
 ---
 

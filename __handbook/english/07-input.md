@@ -1,4 +1,4 @@
-# basic.js — Input / TextBox (Text Input Object)
+# basic.js — Input (Text Input Object)
 
 In the `basic.js` library, the `Input()` object is used to get text or number entries (input) from users via the keyboard.
 

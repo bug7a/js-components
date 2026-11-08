@@ -1,10 +1,10 @@
-# basic.js — Image / Icon (Image Object)
+# basic.js — Icon (Image Object)
 
 In the `basic.js` library, the `Icon()` object is used to display image or icon files (PNG, JPG, SVG, etc.) on the screen. Images are loaded asynchronously (afterward) from external links or the local directory.
 
 ---
 
-## Creating an Image or Icon
+## Creating an Icon
 
 The fast `Icon` function provides a basic image control.
 
