@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>SmartButton light / dark draft</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- LIBRARY FILES (a draft: no component, only basic.js objects) -->
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Bold.ttf" as="font" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="../basic/basic.css">
+    <script src="../basic/basic.js" type="text/javascript" charset="utf-8"></script>
+
+    <script>
+
+        /* Bismillah */
+
+        // DRAFT DESIGN of comp/smart-button.js (SmartButton): the NEW "light" and "dark" looks of the kit, every state
+        // side by side (the ozden templates: _designs/smart-button.htm and smart-button-dark.htm). A new design, not a
+        // copy of a package: the "light" and "dark" templates the component will get. A 40 px button with round 8
+        // corners, a white face with one thin line and a 15 px bold text (the gray of the template); the main action in
+        // the accent of the kit and a delete in the danger color (tones); under the mouse the face and the line get a
+        // little stronger, pressed it is a little smaller and darker; the waiting clock and the dots in the accent; the
+        // ask in the danger color with its bubble. Plain basic.js objects (no SmartButton here); under the mouse,
+        // pressed and the keyboard focus are still frames of those moments. The tokens at the top are the same in
+        // every draft of the new look.
+        // http://127.0.0.1:5505/_basic-designer/index.htm?page=_designs/smart-button-light-dark.htm
+
+        // THE TOKENS OF THE NEW LIGHT / DARK LOOK (the same in every draft of it)
+        const LIGHT_TOKENS = {
+            page: "#FFFFFF", // the page the component sits on
+            surface: "#FFFFFF", // a field, a list, the face of a button
+            soft: "#F2F3F0", // under the mouse, the ground of an icon, a quiet field
+            softer: "#E6E7E3", // pressed, a track
+            line: Black(0.12), // the edge of a surface
+            lineStrong: Black(0.3), // the edge under the mouse
+            text: Black(0.88),
+            textSoft: Black(0.55),
+            textFaint: Black(0.38), // a placeholder
+            accent: "#3D7A6B", // the one color: a selected row, a fill, the main button, the edge while typing
+            accentHover: "#356C5E",
+            accentPress: "#2E5F53",
+            accentSoft: "#E4EFEB", // a tint of the accent on the surface
+            onAccent: "#FFFFFF", // a text or a mark on the accent
+            danger: "#D9534F",
+            warning: "#E5885E",
+            focusRing: "rgba(61, 122, 107, 0.5)", // the ring of the keyboard focus
+        };
+        const DARK_TOKENS = {
+            page: "#1A1A19",
+            surface: "#232322",
+            soft: "#2C2C2B",
+            softer: "#363635",
+            line: White(0.12),
+            lineStrong: White(0.32),
+            text: White(0.9),
+            textSoft: White(0.55),
+            textFaint: White(0.38),
+            accent: "#65A293",
+            accentHover: "#74B0A2",
+            accentPress: "#5A9385",
+            accentSoft: "rgba(101, 162, 147, 0.2)",
+            onAccent: "#0F1F1B",
+            danger: "#E0605A",
+            warning: "#F0A07A",
+            focusRing: "rgba(101, 162, 147, 0.55)",
+        };
+
+        const PAGE_COLOR = "#F4F5F2"; // the ground of the draft, not of the buttons
+        const PAGE_TEXT = { title: Black(0.8), note: Black(0.5), state: Black(0.45), stateTitle: Black(0.4) }; // the texts of the draft
+        const STATE_COLUMN_WIDTH = 250;
+        const CELL_WIDTH = 240;
+        const ROW_HEIGHT = 56;
+        const HEADER_HEIGHT = 24;
+        const CARD_PADDING = 24;
+        const COLUMN_GAP = 24;
+
+        // THE SIZES (the same in both looks; style.layout, style.icon, style.label, style.box.round, style.press, style.waiting, style.ask.bubble)
+        const BUTTON = {
+            height: 40,
+            iconButtonWidth: 40, // an icon button is a square
+            topButtonHeight: 64, // the icon on top of the text ("auto": its padding and content)
+            round: 8,
+            padding: [16, 0],
+            topPadding: [14, 8],
+            gap: 8,
+            icon: { size: 20, opacity: 0.75 }, // on a filled button (a tone, the ask) the icon is white and full
+            label: { fontSize: 15, fontFamily: "opensans-bold" },
+            focusRingWidth: 2, // inside the edge (only for the keyboard)
+            press: { scale: 0.97, brightness: 0.96 }, // while pressed (animated)
+            waiting: { contentOpacity: 0.18, clockSize: 26, dots: { size: 6, gap: 4 } }, // the text and the icon fade; the clock or the dots in the middle
+            bubble: { fontSize: 13, round: 8, padding: [12, 7], arrow: 12, gap: 6 }, // the bubble of the ask over the button
+        };
+        const ASK_TEXT = "Click again to delete.";
+        const DOT_OPACITIES = [1, 0.6, 0.35]; // a still frame of the dots (they grow one after the other)
+
+        // THE LIGHT LOOK: a white face with one thin line; the tones filled, a white text on them
+        const LIGHT = {
+            page: { color: LIGHT_TOKENS.page, textColor: LIGHT_TOKENS.textSoft },
+            // the gray of the template (style.box, style.hover, style.label): under the mouse the soft gray and the stronger line
+            neutral: { color: LIGHT_TOKENS.surface, borderColor: LIGHT_TOKENS.line, textColor: LIGHT_TOKENS.text, hoverColor: LIGHT_TOKENS.soft, hoverBorderColor: LIGHT_TOKENS.lineStrong, pressColor: LIGHT_TOKENS.softer, iconColor: "#000000", iconOpacity: 0.75 },
+            // the tone of the main action (Save, Send)
+            primary: { color: LIGHT_TOKENS.accent, borderColor: LIGHT_TOKENS.accent, textColor: LIGHT_TOKENS.onAccent, hoverColor: LIGHT_TOKENS.accentHover, hoverBorderColor: LIGHT_TOKENS.accentHover, pressColor: LIGHT_TOKENS.accentPress, iconColor: "#FFFFFF", iconOpacity: 1 },
+            // the tone of a delete, a reject
+            danger: { color: LIGHT_TOKENS.danger, borderColor: LIGHT_TOKENS.danger, textColor: "#FFFFFF", hoverColor: "#C9463F", hoverBorderColor: "#C9463F", pressColor: "#B83D38", iconColor: "#FFFFFF", iconOpacity: 1 },
+            disabled: { color: LIGHT_TOKENS.soft, borderColor: Black(0.06), textColor: LIGHT_TOKENS.textFaint, iconOpacity: 0.3 }, // style.disabled: the same for every tone
+            ask: { button: { color: LIGHT_TOKENS.danger, borderColor: LIGHT_TOKENS.danger, textColor: "#FFFFFF" }, bubble: { color: LIGHT_TOKENS.danger, textColor: "#FFFFFF", shadow: "0 6px 16px rgba(0, 0, 0, 0.18)" } }, // style.ask
+            focusRingColor: LIGHT_TOKENS.focusRing,
+            clock: { faceColor: LIGHT_TOKENS.surface, lineColor: LIGHT_TOKENS.text, hourColor: LIGHT_TOKENS.text, minuteColor: LIGHT_TOKENS.accent, centerColor: LIGHT_TOKENS.accent }, // SmartButton.clocks
+            dotsColor: LIGHT_TOKENS.accent,
+        };
+
+        // THE DARK LOOK: the same shapes; a dark gray face a little lighter than the page, white text and icons
+        const DARK = {
+            page: { color: DARK_TOKENS.page, textColor: DARK_TOKENS.textSoft },
+            neutral: { color: DARK_TOKENS.soft, borderColor: White(0.14), textColor: DARK_TOKENS.text, hoverColor: DARK_TOKENS.softer, hoverBorderColor: DARK_TOKENS.lineStrong, pressColor: "#3F3F3E", iconColor: "#FFFFFF", iconOpacity: 0.75 },
+            primary: { color: DARK_TOKENS.accent, borderColor: DARK_TOKENS.accent, textColor: DARK_TOKENS.onAccent, hoverColor: DARK_TOKENS.accentHover, hoverBorderColor: DARK_TOKENS.accentHover, pressColor: DARK_TOKENS.accentPress, iconColor: DARK_TOKENS.onAccent, iconOpacity: 1 },
+            danger: { color: DARK_TOKENS.danger, borderColor: DARK_TOKENS.danger, textColor: "#FFFFFF", hoverColor: "#D1544E", hoverBorderColor: "#D1544E", pressColor: "#C24A45", iconColor: "#FFFFFF", iconOpacity: 1 },
+            disabled: { color: "#262625", borderColor: White(0.06), textColor: DARK_TOKENS.textFaint, iconOpacity: 0.3 },
+            ask: { button: { color: DARK_TOKENS.danger, borderColor: DARK_TOKENS.danger, textColor: "#FFFFFF" }, bubble: { color: DARK_TOKENS.danger, textColor: "#FFFFFF", shadow: "0 6px 16px rgba(0, 0, 0, 0.45)" } },
+            focusRingColor: DARK_TOKENS.focusRing,
+            clock: { faceColor: DARK_TOKENS.soft, lineColor: White(0.9), hourColor: White(0.6), minuteColor: DARK_TOKENS.accent, centerColor: DARK_TOKENS.accent },
+            dotsColor: DARK_TOKENS.accent,
+        };
+
+        // THE STATES (one row each). content: "iconText", "text", "icon", "top", "askIcon"; tone: "neutral" (the template), "primary", "danger"
+        const STATES = [
+            { name: "Normal: an icon and a text", content: "iconText" },
+            { name: "Only a text", content: "text" },
+            { name: "Only an icon (an icon button: a 40 x 40 square)", content: "icon" },
+            { name: "The icon on top of the text", content: "top", rowHeight: 84 },
+            { name: "Under the mouse (hover): the soft gray, a stronger line", content: "iconText", hover: 1 },
+            { name: "Pressed (animated: a little smaller and darker)", content: "iconText", pressed: 1 },
+            { name: "Keyboard focus", content: "iconText", focus: 1 },
+            { name: "Disabled", content: "iconText", disabled: 1 },
+            { name: "Waiting (the clock)", content: "iconText", waiting: "clock" },
+            { name: "Waiting (the dots)", content: "iconText", waiting: "dots" },
+            { name: "The main action (a tone in the accent): normal", content: "iconText", tone: "primary", text: "Save" },
+            { name: "The main action: under the mouse", content: "iconText", tone: "primary", text: "Save", hover: 1 },
+            { name: "The main action: disabled (the same gray as every tone)", content: "iconText", tone: "primary", text: "Save", disabled: 1 },
+            { name: "A delete (a tone in the danger color)", content: "iconText", tone: "danger", text: "Delete", icon: "trash" },
+            { name: "Asking (ask: the first click), with its bubble", content: "askIcon", rowHeight: 120 },
+            { name: "Asking: a text button", content: "iconText", text: "Delete", icon: "trash", asking: 1 },
+        ];
+
+        const start = function () {
+
+            page.color = PAGE_COLOR;
+
+            // BOX: Scrolling page
+            startBox(0, 0, "100%", "100%", { color: "transparent", scrollY: 1, scrollX: 1 });
+
+                VGroup({ width: "max-content", height: "auto", align: "left top", gap: 22, padding: 40, clipContent: 0 });
+
+                    Label({ text: "SmartButton · the new light / dark · draft (comp/smart-button.js)", fontSize: 20, bold: 1, textColor: PAGE_TEXT.title });
+                    Label({ text: "A new design: the light and dark templates the component will get, with the main action and the delete as tones. Every row is a state.", fontSize: 13, textColor: PAGE_TEXT.note });
+
+                    // GROUP: The names of the states, then a card for every look
+                    HGroup({ width: "auto", height: "auto", align: "left top", gap: COLUMN_GAP, clipContent: 0 });
+                        drawStateColumn();
+                        drawLookCard(LIGHT, "light (new)");
+                        drawLookCard(DARK, "dark (new)");
+                    endGroup();
+
+                endGroup();
+
+            endBox();
+
+        };
+
+        const getRowHeight = function (state) {
+            return state.rowHeight || ROW_HEIGHT;
+        };
+
+        // GROUP: The names of the states, one per row (the rows of the cards have the same heights)
+        const drawStateColumn = function () {
+            const column = VGroup({ width: STATE_COLUMN_WIDTH, height: "auto", align: "left top", gap: 0, padding: [0, CARD_PADDING] });
+                Label({ height: HEADER_HEIGHT, text: "state", fontSize: 12, textColor: PAGE_TEXT.stateTitle });
+                STATES.forEach(function (state) {
+                    HGroup({ width: "100%", height: getRowHeight(state), align: "left center" });
+                        Label({ width: "100%", text: state.name, fontSize: 12, textColor: PAGE_TEXT.state, css: { lineHeight: "1.3" } });
+                    endGroup();
+                });
+            endGroup();
+            return column;
+        };
+
+        // GROUP: A card in the color of the page of a look: its name, then one row per state
+        const drawLookCard = function (look, name) {
+            const card = VGroup({ width: "auto", height: "auto", align: "left top", gap: 0, padding: CARD_PADDING, color: look.page.color, round: 10, border: 1, borderColor: Black(0.08), clipContent: 0 });
+                Label({ height: HEADER_HEIGHT, text: name, fontSize: 13, bold: 1, textColor: look.page.textColor, css: { whiteSpace: "nowrap" } });
+                STATES.forEach(function (state) {
+                    // GROUP: A row: the button in this state (the asking one with its bubble over it)
+                    HGroup({ width: CELL_WIDTH, height: getRowHeight(state), align: "left bottom", clipContent: 0 });
+                        if (state.content === "askIcon") drawAskingTrash(look);
+                        else drawButton(look, state);
+                    endGroup();
+                });
+            endGroup();
+            return card;
+        };
+
+        // GROUP: The trash asking, its bubble over it
+        const drawAskingTrash = function (look) {
+            const group = VGroup({ width: "auto", height: "auto", align: "center bottom", gap: BUTTON.bubble.gap, clipContent: 0 });
+                drawBubble(look);
+                drawButton(look, { content: "icon", icon: "trash", asking: 1 });
+                Box({ width: 1, height: (ROW_HEIGHT - BUTTON.height) / 2, color: "transparent" }); // (the button at the height of the other rows)
+            endGroup();
+            return group;
+        };
+
+        // GROUP: The bubble of the ask with a triangle under it (Tooltip.show with style.ask.bubble)
+        const drawBubble = function (look) {
+            const _b = BUTTON.bubble;
+            const bubble = VGroup({ width: "auto", height: "auto", align: "center top", gap: 0, clipContent: 0 });
+                Label({ text: ASK_TEXT, fontSize: _b.fontSize, bold: 1, textColor: look.ask.bubble.textColor, color: look.ask.bubble.color, round: _b.round, padding: _b.padding, boxShadow: look.ask.bubble.shadow, css: { whiteSpace: "nowrap" } });
+                // BOX: Triangle (a turned square under the label)
+                const arrow = Box({ width: _b.arrow, height: _b.arrow, color: look.ask.bubble.color });
+                arrow.css = { transform: "translateY(-" + (_b.arrow / 2) + "px) rotate(45deg)", marginBottom: "-" + (_b.arrow / 2) + "px" };
+            endGroup();
+            return bubble;
+        };
+
+        // GROUP: A button in one state: the face (color, edge), the content (icon, text), the clock or the dots
+        const drawButton = function (look, state) {
+            const tone = getTone(look, state);
+            const isIconOnly = (state.content === "icon");
+            const isTop = (state.content === "top");
+            const button = HGroup({
+                width: isIconOnly ? BUTTON.iconButtonWidth : "auto",
+                height: isTop ? BUTTON.topButtonHeight : BUTTON.height,
+                align: "center center",
+                color: getBoxColor(look, tone, state),
+                round: BUTTON.round,
+                border: 1,
+                borderColor: getBorderColor(look, tone, state),
+                clipContent: 0,
+            });
+            button.shrink = 0;
+            button.css = { filter: getPressFilter(state), transform: state.pressed ? "scale(" + BUTTON.press.scale + ")" : "none", position: "relative" };
+            if (state.focus) button.css = { outline: BUTTON.focusRingWidth + "px solid " + look.focusRingColor, outlineOffset: "-" + BUTTON.focusRingWidth + "px" };
+                drawContent(look, tone, state);
+                if (state.waiting === "clock") drawClock(look);
+                if (state.waiting === "dots") drawDots(look);
+            endGroup();
+            return button;
+        };
+
+        // GROUP: The icon and the text (faded while waiting)
+        const drawContent = function (look, tone, state) {
+            const isIconOnly = (state.content === "icon");
+            const hasIcon = (state.content !== "text");
+            const hasText = !isIconOnly;
+            const isTop = (state.content === "top");
+            const content = AutoLayout({ flow: isTop ? "vertical" : "horizontal", width: "auto", height: "100%", align: "center center", gap: BUTTON.gap, padding: isIconOnly ? [0, 0] : (isTop ? BUTTON.topPadding : BUTTON.padding), clipContent: 0 });
+            content.opacity = state.waiting ? BUTTON.waiting.contentOpacity : 1;
+                if (hasIcon) {
+                    const icon = Icon({ width: BUTTON.icon.size, height: BUTTON.icon.size, opacity: getIconOpacity(look, tone, state) });
+                    icon.load(getIconFile(state.icon || "send", getIconColor(look, tone, state)));
+                }
+                if (hasText) Label({ text: state.text || "Send", fontSize: BUTTON.label.fontSize, fontFamily: BUTTON.label.fontFamily, textColor: getTextColor(look, tone, state), css: { whiteSpace: "nowrap" } });
+            endGroup();
+            return content;
+        };
+
+        // LABEL: The waiting clock in the middle of the button (still)
+        const drawClock = function (look) {
+            const clock = Label({ width: BUTTON.waiting.clockSize, height: BUTTON.waiting.clockSize, text: getClockSvg(look.clock), css: { lineHeight: "0" } });
+            clock.css = { position: "absolute", left: "50%", top: "50%", transform: "translate(-50%, -50%)" };
+            return clock;
+        };
+
+        // GROUP: The three waiting dots in the middle of the button (a still frame)
+        const drawDots = function (look) {
+            const _d = BUTTON.waiting.dots;
+            const dots = HGroup({ hug: 1, align: "center center", gap: _d.gap });
+            dots.css = { position: "absolute", left: "50%", top: "50%", transform: "translate(-50%, -50%)" };
+                DOT_OPACITIES.forEach(function (opacity) {
+                    Box({ width: _d.size, height: _d.size, color: look.dotsColor, round: 100, opacity: opacity });
+                });
+            endGroup();
+            return dots;
+        };
+
+        // The clock of SmartButton.createClockSvg (a 30 px drawing): the minute hand up, the hour hand to the right
+        const getClockSvg = function (c) {
+            const size = 30;
+            const middle = size / 2;
+            const edgeWidth = 2;
+            const faceRadius = middle - edgeWidth / 2;
+            const hand = function (x2, y2, color) {
+                return '<line x1="' + middle + '" y1="' + middle + '" x2="' + x2 + '" y2="' + y2 + '" stroke="' + color + '" stroke-width="2" stroke-linecap="round"/>';
+            };
+            return '<svg viewBox="0 0 ' + size + ' ' + size + '" width="100%" height="100%" style="display: block">' +
+                '<circle cx="' + middle + '" cy="' + middle + '" r="' + faceRadius + '" fill="' + c.faceColor + '" stroke="' + c.lineColor + '" stroke-width="' + edgeWidth + '"/>' +
+                hand(middle + 7.5, middle, c.hourColor) +
+                hand(middle, middle - 10, c.minuteColor) +
+                '<circle cx="' + middle + '" cy="' + middle + '" r="2" fill="' + c.centerColor + '"/>' +
+                "<\/svg>";
+        };
+
+        // *** THE COLORS OF A STATE (as the component paints them: disabled > ask > pressed > hover > the tone)
+
+        const getTone = function (look, state) {
+            return look[state.tone || "neutral"];
+        };
+
+        const getBoxColor = function (look, tone, state) {
+            if (state.disabled) return look.disabled.color;
+            if (state.asking) return look.ask.button.color;
+            if (state.pressed) return tone.pressColor;
+            if (state.hover) return tone.hoverColor;
+            return tone.color;
+        };
+
+        const getBorderColor = function (look, tone, state) {
+            if (state.disabled) return look.disabled.borderColor;
+            if (state.asking) return look.ask.button.borderColor;
+            if (state.hover || state.pressed) return tone.hoverBorderColor;
+            return tone.borderColor;
+        };
+
+        const getPressFilter = function (state) {
+            if (state.pressed) return "brightness(" + BUTTON.press.brightness + ")";
+            return "none";
+        };
+
+        const getTextColor = function (look, tone, state) {
+            if (state.disabled) return look.disabled.textColor;
+            if (state.asking) return look.ask.button.textColor;
+            return tone.textColor;
+        };
+
+        // A filled button (a tone, the ask) has a white icon; the gray template a dark (light: a light) one
+        const getIconColor = function (look, tone, state) {
+            if (state.asking) return "#FFFFFF";
+            return tone.iconColor;
+        };
+
+        const getIconOpacity = function (look, tone, state) {
+            if (state.disabled) return look.disabled.iconOpacity;
+            if (state.asking) return 1;
+            return tone.iconOpacity;
+        };
+
+        // *** THE ICONS (lines of 24 x 24; the color is in the drawing)
+
+        const ICON_PATHS = {
+            send: '<path d="M21 3 3 10.5l7.5 3L13.5 21z"/><path d="M21 3 10.5 13.5"/>',
+            trash: '<path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3"/>',
+        };
+
+        const getIconFile = function (name, color) {
+            return "data:image/svg+xml;utf8," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="' + color + '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + ICON_PATHS[name] + "<\/svg>");
+        };
+
+    </script>
+
+</head>
+
+<body>
+</body>
+
+</html>
