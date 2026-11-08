@@ -27,11 +27,11 @@
     const PAGE_COLOR = "white"; // (the menu is a little gray: a side panel)
 
     const MENU_ITEMS = [
-        { key: "home", type: "button", text: "Home", icon: "../comp/left-menu/home.png" },
-        { key: "report", type: "button", text: "Reports", icon: "../comp/left-menu/reports.png" },
+        { key: "home", type: "button", text: "Home", iconFile: "../comp/left-menu/home.png" },
+        { key: "report", type: "button", text: "Reports", iconFile: "../comp/left-menu/reports.png" },
         { key: "contents", type: "header", text: "CONTENTS" },
-        { key: "user", type: "button", text: "Users", icon: "../comp/left-menu/data-table.png" },
-        { key: "content", type: "button", text: "Contents", icon: "../comp/left-menu/data-table.png" },
+        { key: "user", type: "button", text: "Users", iconFile: "../comp/left-menu/data-table.png" },
+        { key: "content", type: "button", text: "Contents", iconFile: "../comp/left-menu/data-table.png" },
     ];
 
     let menu, lblPageTitle;
@@ -78,7 +78,7 @@
             key: "settings",
             type: "button",
             text: "Settings",
-            icon: "../comp/left-menu/setting.png",
+            iconFile: "../comp/left-menu/setting.png",
         });
         menu.setSelectedItem("home");
 

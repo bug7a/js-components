@@ -19,6 +19,8 @@ UI COMPONENT TEMPLATE
   SmartButton in light tones, dark icons and a dark scroll bar). A package is a package of params (LeftMenu.styles):
   LeftMenu({ styleName: "light" }), LeftMenu({ styleName: "light", selectedColor: "#DCEBEC" }) (a param wins).
   Samples: 02-comp-examples/left-menu.htm (dark), left-menu-2.htm (light).
+- An item: { key, type: "button", text, iconFile, dontSelect } (dontSelect: 1: a click opens it, the selection stays)
+  or a title { key, type: "header", text }. addItemToTop(item) / addItemToBottom(item) add one later.
 
 Started Date: December 2024
 Webpage: https://bug7a.github.io/js-components/
@@ -48,7 +50,7 @@ const LeftMenuDefaults = {
     expandedShadow: "",           // The shadow of the open menu over the page ("": none). Ex: "6px 0 18px rgba(0, 0, 0, 0.08)"
     scrollBarColor: "#FFFFFF",    // The bar of the scroll of the items (a dark one on a light menu)
     openOnClick: "auto",          // "auto": Tap on a touch device, hover with a mouse. 1: Always tap, 0: Always hover.
-    items: [],                    // Menu items array
+    items: [],                    // [{ key, type: "button", text, iconFile }, { key, type: "header", text }]
     onItemClick: function(self, item) {}, // Callback when item is clicked
     onMenuToggle: function(self, isExpanded) {}, // Callback when menu expands/collapses
     styleName: "dark",            // "dark", "light" or a name added to LeftMenu.styles
@@ -122,7 +124,7 @@ const LeftMenu = function(params = {}) {
                     color: "transparent",
                     opacity: ICON_OPACITY,
                 });
-                buttonBox.icon.load(item.icon);
+                buttonBox.icon.load(item.iconFile);
 
                 if (box.invertIconColor == 1) {
                     that.css.filter = "invert(100%)";

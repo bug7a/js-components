@@ -1373,7 +1373,7 @@
 
         test("LeftMenu: a tap opens it first; direct selects at once", async function () {
             const clicked = [];
-            const items = [{ key: "a", type: "button", text: "A", icon: "" }];
+            const items = [{ key: "a", type: "button", text: "A", iconFile: "" }];
             const tapMenu = LeftMenu({ items: items, openOnClick: 1, itemHeight: 70, onItemClick: (self, item) => clicked.push(item.key) });
             const row = tapMenu.elem.querySelector("[style*='height: 70px']");
             check("LeftMenu: itemHeight is the height of a row", !!row);
