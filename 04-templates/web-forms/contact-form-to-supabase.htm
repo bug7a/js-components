@@ -89,7 +89,7 @@
                     //sendFormToMailService(json); // Sends the form as an e-mail (service/send-form-mail.php)
 
                 },
-                onEdit: function(input) {
+                onChange: function(self, input) {
                     console.log(input.titleText);
                 },
             });
@@ -132,17 +132,17 @@
                 width: "100%",
                 /*
                 backgroundColor: "white",
-                selectedBackgroundColor: "#F3E7C2", // "#F1E2C4", "#F4FAFF",
+                focusBackgroundColor: "#F3E7C2", // "#F1E2C4", "#F4FAFF",
                 lineColor: "transparent",
-                selectedLineColor: "#A5513A", // "#F1E2C4", "#588ABE",
+                focusLineColor: "#A5513A", // "#F1E2C4", "#588ABE",
                 */
             };
 
             // INPUT: First Name
-            firstNameInput = InputB({
+            firstNameInput = TextField({
                 key: "1",
                 ...inputStyle,
-                isRequired: 1, // 1
+                required: 1, // 1
                 titleText: "FIRST NAME",
                 placeholder: "Jack",
                 leftPadding: 20,
@@ -150,10 +150,10 @@
             styleInput(that);
 
             // INPUT: Last Name
-            lastNameInput = InputB({
+            lastNameInput = TextField({
                 key: "2",
                 ...inputStyle,
-                isRequired: 0,
+                required: 0,
                 titleText: "LAST NAME",
                 placeholder: "Brown",
                 leftPadding: 20,
@@ -162,25 +162,25 @@
             form.addDoubleInput(firstNameInput, lastNameInput);
 
             // INPUT: Email
-            emailInput = EmailInputB({
+            emailInput = EmailField({
                 key: "3",
                 ...inputStyle,
-                isRequired: 1, // 1
+                required: 1, // 1
                 titleText: "YOUR EMAIL",
                 placeholder: "example@site.com",
                 warningText: "Invalid email format",
                 warningColor: "#E5885E", // "#F1BF3C"
-                maxChar: 35,
+                maxLength: 35,
             });
             styleInput(that);
             form.addInput(emailInput);
             //box.inputList.push(that);
 
             // INPUT: Phone        
-            phoneInput = PhoneInputB({
+            phoneInput = PhoneField({
                 key: "4",
                 ...inputStyle,
-                isRequired: 0,
+                required: 0,
                 titleText: "PHONE NUMBER",
                 placeholder: "(auto)",
                 warningText: "Invalid phone number format",
@@ -194,22 +194,22 @@
             form.addInput(phoneInput);
 
             // INPUT: Subject
-            subjectInput = InputB({
+            subjectInput = TextField({
                 key: "5",
                 ...inputStyle,
                 titleText: "SUBJECT",
                 placeholder: "What's your message about?",
                 descriptionText: "",
-                isRequired: 0,
+                required: 0,
             });
             styleInput(that);
             form.addInput(subjectInput);
 
             // INPUT: Textarea
-            messageTextarea = TextareaB({
+            messageTextarea = TextAreaField({
                 key: "6",
                 ...inputStyle,
-                isRequired: 1, // 1
+                required: 1, // 1
                 titleText: "MESSAGE",
                 placeholder: "How can we help you?",
                 minCharCount: 80, // 80, 0
@@ -217,7 +217,7 @@
                 lengthText: "length: ",
                 warningText: "The entered text must be longer than 80",
                 warningColor: "#E5885E", // "#F1BF3C"
-                maxChar: 255,
+                maxLength: 255,
                 height: 170, // 170 (4line)
                 rightPadding: 5,
                 unitStyle: {
@@ -256,12 +256,12 @@
             .from('contactTable')
             .insert([
                 { 
-                    first_name: firstNameInput.getInputValue(), 
-                    last_name: lastNameInput.getInputValue(), 
-                    email: emailInput.getInputValue(), 
-                    phone: phoneInput.getInputValue(), 
-                    subject: subjectInput.getInputValue(), 
-                    message: messageTextarea.getInputValue() 
+                    first_name: firstNameInput.getValue(), 
+                    last_name: lastNameInput.getValue(), 
+                    email: emailInput.getValue(), 
+                    phone: phoneInput.getValue(), 
+                    subject: subjectInput.getValue(), 
+                    message: messageTextarea.getValue() 
                 },
             ]);
 
@@ -290,12 +290,12 @@
                     onClose: function() {
 
                         // Clean the form.
-                        firstNameInput.setInputValue(""); 
-                        lastNameInput.setInputValue(""); 
-                        emailInput.setInputValue(""); 
-                        phoneInput.setInputValue("");
-                        subjectInput.setInputValue("");
-                        messageTextarea.setInputValue("");
+                        firstNameInput.setValue(""); 
+                        lastNameInput.setValue(""); 
+                        emailInput.setValue(""); 
+                        phoneInput.setValue("");
+                        subjectInput.setValue("");
+                        messageTextarea.setValue("");
 
                         form.refresh();
 
@@ -338,12 +338,12 @@
                     onClose: function() {
 
                         // Clean the form.
-                        firstNameInput.setInputValue("");
-                        lastNameInput.setInputValue("");
-                        emailInput.setInputValue("");
-                        phoneInput.setInputValue("");
-                        subjectInput.setInputValue("");
-                        messageTextarea.setInputValue("");
+                        firstNameInput.setValue("");
+                        lastNameInput.setValue("");
+                        emailInput.setValue("");
+                        phoneInput.setValue("");
+                        subjectInput.setValue("");
+                        messageTextarea.setValue("");
 
                         form.refresh();
 

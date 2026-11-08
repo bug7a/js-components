@@ -160,11 +160,11 @@
             const inputStyle = {
                 width: "100%",
                 backgroundColor: THEME.field,
-                selectedBackgroundColor: THEME.selectedField,
+                focusBackgroundColor: THEME.selectedField,
                 lineColor: Black(0),
-                selectedLineColor: Black(0),
+                focusLineColor: Black(0),
                 backBorderColor: THEME.line,
-                selectedBackBorderColor: THEME.selectedLine,
+                focusBackBorderColor: THEME.selectedLine,
                 backBorderTopRound: 14,
                 backBorderBottomRound: 14,
                 warningBallType: "icon", // "color", "icon"
@@ -183,10 +183,10 @@
             };
 
             // INPUT: First Name
-            firstNameInput = InputB({
+            firstNameInput = TextField({
                 key: "1",
                 ...inputStyle,
-                isRequired: 1, // 1
+                required: 1, // 1
                 titleText: "FIRST NAME",
                 placeholder: "Jack",
                 leftPadding: 20,
@@ -194,10 +194,10 @@
             styleInput(that);
 
             // INPUT: Last Name
-            lastNameInput = InputB({
+            lastNameInput = TextField({
                 key: "2",
                 ...inputStyle,
-                isRequired: 0,
+                required: 0,
                 titleText: "LAST NAME",
                 placeholder: "Brown",
                 leftPadding: 20,
@@ -206,24 +206,24 @@
             form.addDoubleInput(firstNameInput, lastNameInput);
 
             // INPUT: Email
-            emailInput = EmailInputB({
+            emailInput = EmailField({
                 key: "3",
                 ...inputStyle,
-                isRequired: 1, // 1
+                required: 1, // 1
                 titleText: "YOUR EMAIL",
                 placeholder: "example@site.com",
                 warningText: "Invalid email format",
                 warningColor: THEME.warning,
-                maxChar: 60,
+                maxLength: 60,
             });
             styleInput(that);
             form.addInput(emailInput);
 
             // INPUT: Phone
-            phoneInput = PhoneInputB({
+            phoneInput = PhoneField({
                 key: "4",
                 ...inputStyle,
-                isRequired: 0,
+                required: 0,
                 titleText: "PHONE NUMBER",
                 placeholder: "(auto)",
                 warningText: "Invalid phone number format",
@@ -243,23 +243,23 @@
             // NOTE: Not in form.inputList: one is always selected, so Form does not check it.
 
             // INPUT: Subject
-            subjectInput = InputB({
+            subjectInput = TextField({
                 key: "5",
                 ...inputStyle,
                 titleText: "SUBJECT",
                 placeholder: "What's your message about?",
                 descriptionText: "",
-                isRequired: 0,
-                maxChar: 80,
+                required: 0,
+                maxLength: 80,
             });
             styleInput(that);
             form.addInput(subjectInput);
 
             // INPUT: Textarea
-            messageTextarea = TextareaB({
+            messageTextarea = TextAreaField({
                 key: "6",
                 ...inputStyle,
-                isRequired: 1, // 1
+                required: 1, // 1
                 titleText: "MESSAGE",
                 placeholder: "How can we help you?",
                 minCharCount: 20, // 80, 0
@@ -267,7 +267,7 @@
                 lengthText: "length: ",
                 warningText: "The message must be longer than 20 characters",
                 warningColor: THEME.warning,
-                maxChar: 2000,
+                maxLength: 2000,
                 height: 190, // 170 (4line)
                 rightPadding: 5,
                 unitStyle: unitStyle,
@@ -313,13 +313,13 @@
                 formTitle: FORM_MAIL_TITLE,
                 website: honeypot.value,
                 fields: [
-                    { key: "first_name", type: "text", titleText: "FIRST NAME", inputValue: firstNameInput.getInputValue() },
-                    { key: "last_name", type: "text", titleText: "LAST NAME", inputValue: lastNameInput.getInputValue() },
-                    { key: "email", type: "email", titleText: "E-MAIL", inputValue: emailInput.getInputValue() },
-                    { key: "phone", type: "text", titleText: "PHONE", inputValue: phoneInput.getInputValue() },
+                    { key: "first_name", type: "text", titleText: "FIRST NAME", inputValue: firstNameInput.getValue() },
+                    { key: "last_name", type: "text", titleText: "LAST NAME", inputValue: lastNameInput.getValue() },
+                    { key: "email", type: "email", titleText: "E-MAIL", inputValue: emailInput.getValue() },
+                    { key: "phone", type: "text", titleText: "PHONE", inputValue: phoneInput.getValue() },
                     { key: "topic", type: "text", titleText: "TOPIC", inputValue: getTopicText() },
-                    { key: "subject", type: "text", titleText: "SUBJECT", inputValue: subjectInput.getInputValue() },
-                    { key: "message", type: "textarea", titleText: "MESSAGE", inputValue: messageTextarea.getInputValue() },
+                    { key: "subject", type: "text", titleText: "SUBJECT", inputValue: subjectInput.getValue() },
+                    { key: "message", type: "textarea", titleText: "MESSAGE", inputValue: messageTextarea.getValue() },
                 ],
             };
 
@@ -367,13 +367,13 @@
                     onClose: function() {
 
                         // Clean the form.
-                        firstNameInput.setInputValue("");
-                        lastNameInput.setInputValue("");
-                        emailInput.setInputValue("");
-                        phoneInput.setInputValue("");
+                        firstNameInput.setValue("");
+                        lastNameInput.setValue("");
+                        emailInput.setValue("");
+                        phoneInput.setValue("");
                         RadioButton.setValue(TOPIC_GROUP, TOPIC_DEFAULT, 1);
-                        subjectInput.setInputValue("");
-                        messageTextarea.setInputValue("");
+                        subjectInput.setValue("");
+                        messageTextarea.setValue("");
 
                         form.refresh();
 
@@ -564,7 +564,7 @@
 
         };
 
-        // Style: An InputB (or an extended one) in the colors of the page.
+        // Style: An TextField (or an extended one) in the colors of the page.
         const styleInput = function(obj) {
 
             // LABEL: Title
@@ -594,7 +594,7 @@
                 Object.assign(obj.input.inputElement.style, textStyle);
             }
 
-            // TextareaB: its <textarea> and its scroll bar
+            // TextAreaField: its <textarea> and its scroll bar
             if (obj.type == "textarea") {
                 const textarea = obj.inputBox.elem.querySelector("textarea");
                 if (textarea) Object.assign(textarea.style, textStyle, { fontSize: "16px", lineHeight: "1.6" });

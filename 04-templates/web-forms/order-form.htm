@@ -36,9 +36,9 @@
         /* Bismillah */
 
         - An order form for a small shop. (Bakery, coffee roaster, florist, farm shop, restaurant...)
-        - InputB, EmailInputB, PhoneInputB, TextareaB, Form (comp-m2)
+        - TextField, EmailField, PhoneField, TextAreaField, Form (comp-m2)
         - CheckBox, RadioButton (comp-m3)
-        - SelectDate, SmartButton, LoadingScreen (comp-m4)
+        - DatePicker, SmartButton, LoadingScreen (comp-m4)
 
         - Products with quantity steppers (- 1 +). The order summary (subtotal, discount, delivery, total) is
           updated on every change.
@@ -50,7 +50,7 @@
         - Payment method, gift option with a message, order notes and the terms check box.
         - After the order, the visitor gets an order number and can download the receipt (.txt).
 
-        - CheckBox, RadioButton and SelectDate are placed in an InputB field (createInput: 0).
+        - CheckBox, RadioButton and DatePicker are placed in an TextField field (createInput: 0).
           So they look like the other inputs and the Form checks them too. (See: createField)
 
         -->
@@ -130,11 +130,11 @@
             inputStyle = {
                 width: "100%",
                 backgroundColor: "#F6F6F6",
-                selectedBackgroundColor: "#F6F6F6",
+                focusBackgroundColor: "#F6F6F6",
                 lineColor: Black(0),
-                selectedLineColor: Black(0),
+                focusLineColor: Black(0),
                 backBorderColor: Black(0),
-                selectedBackBorderColor: Black(0.4),
+                focusBackBorderColor: Black(0.4),
                 backBorderTopRound: 8,
                 backBorderBottomRound: 8,
             };
@@ -155,7 +155,7 @@
                 onSendClick: function(json) {
                     sendOrder(json);
                 },
-                onEdit: function(input) {
+                onChange: function(self, input) {
                     updateSummary();
                 },
             });
@@ -189,7 +189,7 @@
                 type: "items",
                 titleText: "YOUR BASKET",
                 descriptionText: "Add at least one product.",
-                isRequired: 1,
+                required: 1,
             }, function(field) {
 
                 field.rows = {};
@@ -199,7 +199,7 @@
                 });
 
                 // [{ id, name, quantity, price, total }] (only the products with a quantity)
-                field.getInputValue = function() {
+                field.getValue = function() {
                     return getBasket();
                 };
 
@@ -207,16 +207,16 @@
             form.addInput(itemsField);
 
             // INPUT: Coupon code
-            couponInput = InputB({
+            couponInput = TextField({
                 key: "coupon",
                 ...inputStyle,
-                isRequired: 0,
+                required: 0,
                 titleText: "COUPON CODE",
                 descriptionText: "Try WELCOME10, COFFEE5 or FREESHIP. (Optional)",
                 placeholder: "Have a code?",
                 warningText: "Unknown coupon code",
                 warningColor: WARNING_COLOR,
-                maxChar: 20,
+                maxLength: 20,
                 leftPadding: 20,
             });
             couponInput.input.elem.style.textTransform = "uppercase";
@@ -242,7 +242,7 @@
                 key: "fulfillment",
                 type: "radio",
                 titleText: "HOW DO YOU WANT TO GET IT?",
-                isRequired: 1,
+                required: 1,
             }, function(field) {
 
                 createWrapGroup();
@@ -273,7 +273,7 @@
                     visible: 0,
                 });
 
-                field.getInputValue = function() {
+                field.getValue = function() {
                     return RadioButton.getValue("fulfillment");
                 };
 
@@ -281,42 +281,42 @@
             form.addInput(fulfillmentField);
 
             // INPUT: Address
-            addressInput = InputB({
+            addressInput = TextField({
                 key: "address",
                 ...inputStyle,
-                isRequired: 1,
+                required: 1,
                 titleText: "STREET ADDRESS",
                 placeholder: "Street, building, apartment",
-                maxChar: 120,
+                maxLength: 120,
                 leftPadding: 20,
             });
             form.addInput(addressInput);
 
             // INPUT: City
-            cityInput = InputB({
+            cityInput = TextField({
                 key: "city",
                 ...inputStyle,
-                isRequired: 1,
+                required: 1,
                 titleText: "CITY / DISTRICT",
                 placeholder: "Kadikoy",
-                maxChar: 40,
+                maxLength: 40,
                 leftPadding: 20,
             });
 
             // INPUT: Postal code
-            postalInput = InputB({
+            postalInput = TextField({
                 key: "postalCode",
                 ...inputStyle,
-                isRequired: 1,
+                required: 1,
                 titleText: "POSTAL CODE",
                 placeholder: "34710",
                 warningText: "Postal code must be 5 digits",
                 warningColor: WARNING_COLOR,
-                maxChar: 5,
+                maxLength: 5,
                 leftPadding: 20,
             });
             postalInput.isValid = function() {
-                return (/^\d{5}$/.test(postalInput.getInputValue().trim())) ? 1 : 0;
+                return (/^\d{5}$/.test(postalInput.getValue().trim())) ? 1 : 0;
             };
             form.addDoubleInput(cityInput, postalInput);
 
@@ -325,12 +325,12 @@
                 key: "date",
                 type: "date",
                 titleText: "DELIVERY DATE",
-                isRequired: 1,
+                required: 1,
                 warningText: "We do not deliver on this day",
                 warningColor: WARNING_COLOR,
             }, function(field) {
 
-                field.picker = SelectDate({
+                field.picker = DatePicker({
                     width: "100%",
                     height: 40,
                     minDate: getFirstDeliveryDate(),
@@ -361,7 +361,7 @@
                     textColor: Black(0.45),
                 });
 
-                field.getInputValue = function() {
+                field.getValue = function() {
                     return field.picker.value; // "YYYY-MM-DD"
                 };
 
@@ -378,7 +378,7 @@
                 key: "timeWindow",
                 type: "radio",
                 titleText: "TIME WINDOW",
-                isRequired: 1,
+                required: 1,
             }, function(field) {
 
                 createWrapGroup();
@@ -395,7 +395,7 @@
 
                 endGroup();
 
-                field.getInputValue = function() {
+                field.getValue = function() {
                     return RadioButton.getValue("timeWindow");
                 };
 
@@ -407,20 +407,20 @@
             addSectionTitle("3. Your Details");
 
             // INPUT: First Name
-            firstNameInput = InputB({
+            firstNameInput = TextField({
                 key: "firstName",
                 ...inputStyle,
-                isRequired: 1,
+                required: 1,
                 titleText: "FIRST NAME",
                 placeholder: "Jack",
                 leftPadding: 20,
             });
 
             // INPUT: Last Name
-            lastNameInput = InputB({
+            lastNameInput = TextField({
                 key: "lastName",
                 ...inputStyle,
-                isRequired: 1,
+                required: 1,
                 titleText: "LAST NAME",
                 placeholder: "Brown",
                 leftPadding: 20,
@@ -428,22 +428,22 @@
             form.addDoubleInput(firstNameInput, lastNameInput);
 
             // INPUT: Email
-            emailInput = EmailInputB({
+            emailInput = EmailField({
                 key: "email",
                 ...inputStyle,
-                isRequired: 1,
+                required: 1,
                 titleText: "YOUR EMAIL",
                 placeholder: "example@site.com",
                 warningText: "Invalid email format",
                 warningColor: WARNING_COLOR,
-                maxChar: 50,
+                maxLength: 50,
             });
 
             // INPUT: Phone
-            phoneInput = PhoneInputB({
+            phoneInput = PhoneField({
                 key: "phone",
                 ...inputStyle,
-                isRequired: 1,
+                required: 1,
                 titleText: "PHONE NUMBER",
                 placeholder: "(auto)",
                 warningText: "Invalid phone number format",
@@ -463,7 +463,7 @@
                 key: "payment",
                 type: "radio",
                 titleText: "PAYMENT METHOD",
-                isRequired: 1,
+                required: 1,
             }, function(field) {
 
                 PAYMENT_METHODS.forEach(function(method) {
@@ -476,7 +476,7 @@
                     });
                 });
 
-                field.getInputValue = function() {
+                field.getValue = function() {
                     return RadioButton.getValue("payment");
                 };
 
@@ -488,7 +488,7 @@
                 key: "gift",
                 type: "checkbox",
                 titleText: "GIFT",
-                isRequired: 0,
+                required: 0,
             }, function(field) {
 
                 field.checkBox = CheckBox({
@@ -497,7 +497,7 @@
                     onChange: function() { field.update(); updateGift(); },
                 });
 
-                field.getInputValue = function() {
+                field.getValue = function() {
                     return (field.checkBox.checked == 1) ? "yes" : "";
                 };
 
@@ -505,16 +505,16 @@
             form.addInput(giftField);
 
             // TEXTAREA: Gift message (shown when "gift" is checked)
-            giftMessageTextarea = TextareaB({
+            giftMessageTextarea = TextAreaField({
                 key: "giftMessage",
                 ...inputStyle,
-                isRequired: 0,
+                required: 0,
                 titleText: "GIFT MESSAGE",
                 placeholder: "We print this on the card. (Optional)",
                 minCharCount: 0,
                 showCount: 1,
                 lengthText: "length: ",
-                maxChar: 200,
+                maxLength: 200,
                 height: 110,
                 rightPadding: 5,
                 unitStyle: {
@@ -526,16 +526,16 @@
             form.addInput(giftMessageTextarea);
 
             // TEXTAREA: Order notes
-            notesTextarea = TextareaB({
+            notesTextarea = TextAreaField({
                 key: "notes",
                 ...inputStyle,
-                isRequired: 0,
+                required: 0,
                 titleText: "ORDER NOTES",
                 placeholder: "Grind size, door code, allergies... (Optional)",
                 minCharCount: 0,
                 showCount: 1,
                 lengthText: "length: ",
-                maxChar: 400,
+                maxLength: 400,
                 height: 120,
                 rightPadding: 5,
                 unitStyle: {
@@ -551,7 +551,7 @@
                 key: "terms",
                 type: "checkbox",
                 titleText: "TERMS",
-                isRequired: 1,
+                required: 1,
             }, function(field) {
 
                 field.checkBox = CheckBox({
@@ -566,7 +566,7 @@
                 field.checkBox.label.elem.style.whiteSpace = "normal";
                 field.checkBox.label.elem.style.flex = "1 1 0";
 
-                field.getInputValue = function() {
+                field.getValue = function() {
                     return (field.checkBox.checked == 1) ? "accepted" : "";
                 };
 
@@ -666,7 +666,7 @@
                 if (next == quantities[product.id]) return;
                 quantities[product.id] = next;
                 render();
-                field.update(); // Form checks the basket and updates the summary. (onEdit)
+                field.update(); // Form checks the basket and updates the summary. (onChange)
                 couponInput.showWarningIfNotValid(couponInput.isValid()); // WHY: A coupon can need a minimum subtotal.
             };
 
@@ -717,7 +717,7 @@
         };
 
         const getCouponCode = function() {
-            return (couponInput) ? couponInput.getInputValue().trim().toUpperCase() : "";
+            return (couponInput) ? couponInput.getValue().trim().toUpperCase() : "";
         };
 
         // The valid coupon or null
@@ -803,7 +803,7 @@
         // Gift: the message textarea is shown only when "gift" is checked.
         const updateGift = function() {
             giftMessageTextarea.visible = (giftField.checkBox.checked == 1) ? 1 : 0;
-            if (giftField.checkBox.checked != 1) giftMessageTextarea.setInputValue("");
+            if (giftField.checkBox.checked != 1) giftMessageTextarea.setValue("");
         };
 
         // *** SUMMARY:
@@ -854,20 +854,20 @@
 
         };
 
-        // *** FORM FIELDS (for CheckBox, RadioButton, SelectDate and the product list):
+        // *** FORM FIELDS (for CheckBox, RadioButton, DatePicker and the product list):
 
-        // Creates an InputB field without an input and puts custom content in it.
-        // The field works with Form: title, required warning, status, getInputValue().
+        // Creates an TextField field without an input and puts custom content in it.
+        // The field works with Form: title, required warning, status, getValue().
         const createField = function(params, buildContent) {
 
-            const field = InputB({
+            const field = TextField({
                 ...inputStyle,
                 rightPadding: 20,
                 ...params,
                 createInput: 0, // No text input, we add our own content.
             });
 
-            // BOX: Content area (created by InputB)
+            // BOX: Content area (created by TextField)
             field.inputBox.height = "auto";
             field.inputBox.elem.style.marginTop = "10px";
             field.inputBox.elem.style.marginBottom = "4px";
@@ -877,7 +877,7 @@
             field.update = function() {
                 field.checkIfInputIsRequiredAndEmpty();
                 field.showWarningIfNotValid(field.isValid());
-                field.onEdit(); // Form checks all fields.
+                field.onChange(); // Form checks all fields.
             };
 
             const previousContainer = getDefaultContainerBox();
@@ -893,7 +893,7 @@
                 });
                 field.content.clipContent = 0;
 
-                    buildContent(field); // Must set field.getInputValue()
+                    buildContent(field); // Must set field.getValue()
 
                 endGroup();
 
@@ -922,7 +922,7 @@
 
         // Selected field look (like focused inputs)
         const setFieldFocus = function(field, isFocused) {
-            field.background.borderColor = (isFocused) ? field.selectedBackBorderColor : field.backBorderColor;
+            field.background.borderColor = (isFocused) ? field.focusBackBorderColor : field.backBorderColor;
         };
 
         // STYLE PACKAGE: "form" for CheckBox and RadioButton (like the modern style, with the form colors)
@@ -1042,14 +1042,14 @@
             const order = {
                 number: createOrderNumber(),
                 createdAt: new Date(),
-                customer: firstNameInput.getInputValue().trim() + " " + lastNameInput.getInputValue().trim(),
-                email: emailInput.getInputValue(),
+                customer: firstNameInput.getValue().trim() + " " + lastNameInput.getValue().trim(),
+                email: emailInput.getValue(),
                 delivery: delivery,
-                address: (delivery) ? addressInput.getInputValue() + ", " + postalInput.getInputValue() + " " + cityInput.getInputValue() : "",
+                address: (delivery) ? addressInput.getValue() + ", " + postalInput.getValue() + " " + cityInput.getValue() : "",
                 when: dateField.picker.date.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" }) + ", " + RadioButton.getValue("timeWindow"),
                 paymentName: (payment) ? payment.name : "",
                 gift: (giftField.checkBox.checked == 1),
-                notes: notesTextarea.getInputValue().trim(),
+                notes: notesTextarea.getValue().trim(),
                 basket: getBasket(),
                 totals: getTotals(),
             };
@@ -1155,7 +1155,7 @@
             PRODUCTS.forEach(function(product) { quantities[product.id] = 0; itemsField.rows[product.id].render(); });
 
             [couponInput, addressInput, cityInput, postalInput, firstNameInput, lastNameInput, emailInput, phoneInput, giftMessageTextarea, notesTextarea].forEach(function(input) {
-                input.setInputValue("");
+                input.setValue("");
             });
 
             RadioButton.setValue("fulfillment", "delivery", 1);

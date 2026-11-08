@@ -38,11 +38,11 @@
         /* Bismillah */
 
         - A job application form.
-        - InputB, EmailInputB, PhoneInputB, TextareaB (comp-m2)
+        - TextField, EmailField, PhoneField, TextAreaField (comp-m2)
         - CheckBox, RadioButton (comp-m3)
-        - SelectDate, SelectFile (comp-m4)
+        - DatePicker, FilePicker (comp-m4)
 
-        - CheckBox, RadioButton, SelectDate and SelectFile are placed in an InputB field (createInput: 0).
+        - CheckBox, RadioButton, DatePicker and FilePicker are placed in an TextField field (createInput: 0).
           So they look like the other inputs and the Form checks them too. (See: createField)
 
         -->
@@ -82,11 +82,11 @@
             inputStyle = {
                 width: "100%",
                 backgroundColor: "#F6F6F6",
-                selectedBackgroundColor: "#F6F6F6",
+                focusBackgroundColor: "#F6F6F6",
                 lineColor: Black(0),
-                selectedLineColor: Black(0),
+                focusLineColor: Black(0),
                 backBorderColor: Black(0),
-                selectedBackBorderColor: Black(0.4),
+                focusBackBorderColor: Black(0.4),
                 backBorderTopRound: 8,
                 backBorderBottomRound: 8,
             };
@@ -107,7 +107,7 @@
                 onSendClick: function(json) {
                     sendApplication(json);
                 },
-                onEdit: function(input) {
+                onChange: function(self, input) {
                     //console.log(input.titleText);
                 },
             });
@@ -137,20 +137,20 @@
             addSectionTitle("1. Personal Information");
 
             // INPUT: First Name
-            firstNameInput = InputB({
+            firstNameInput = TextField({
                 key: "firstName",
                 ...inputStyle,
-                isRequired: 1,
+                required: 1,
                 titleText: "FIRST NAME",
                 placeholder: "Jack",
                 leftPadding: 20,
             });
 
             // INPUT: Last Name
-            lastNameInput = InputB({
+            lastNameInput = TextField({
                 key: "lastName",
                 ...inputStyle,
-                isRequired: 1,
+                required: 1,
                 titleText: "LAST NAME",
                 placeholder: "Brown",
                 leftPadding: 20,
@@ -158,22 +158,22 @@
             form.addDoubleInput(firstNameInput, lastNameInput);
 
             // INPUT: Email
-            emailInput = EmailInputB({
+            emailInput = EmailField({
                 key: "email",
                 ...inputStyle,
-                isRequired: 1,
+                required: 1,
                 titleText: "YOUR EMAIL",
                 placeholder: "example@site.com",
                 warningText: "Invalid email format",
                 warningColor: "#E5885E",
-                maxChar: 50,
+                maxLength: 50,
             });
 
             // INPUT: Phone
-            phoneInput = PhoneInputB({
+            phoneInput = PhoneField({
                 key: "phone",
                 ...inputStyle,
-                isRequired: 1,
+                required: 1,
                 titleText: "PHONE NUMBER",
                 placeholder: "(auto)",
                 warningText: "Invalid phone number format",
@@ -193,7 +193,7 @@
                 key: "position",
                 type: "radio",
                 titleText: "POSITION",
-                isRequired: 1,
+                required: 1,
             }, function(field) {
 
                 createWrapGroup();
@@ -211,7 +211,7 @@
 
                 endGroup();
 
-                field.getInputValue = function() {
+                field.getValue = function() {
                     return RadioButton.getValue("position");
                 };
 
@@ -223,7 +223,7 @@
                 key: "experience",
                 type: "radio",
                 titleText: "EXPERIENCE",
-                isRequired: 1,
+                required: 1,
             }, function(field) {
 
                 createWrapGroup();
@@ -240,7 +240,7 @@
 
                 endGroup();
 
-                field.getInputValue = function() {
+                field.getValue = function() {
                     return RadioButton.getValue("experience");
                 };
 
@@ -252,10 +252,10 @@
                 key: "startDate",
                 type: "date",
                 titleText: "AVAILABLE FROM",
-                isRequired: 1,
+                required: 1,
             }, function(field) {
 
-                field.picker = SelectDate({
+                field.picker = DatePicker({
                     width: "100%",
                     height: 40,
                     minDate: new Date(), // Not in the past
@@ -278,7 +278,7 @@
                     },
                 });
 
-                field.getInputValue = function() {
+                field.getValue = function() {
                     return field.picker.value; // "YYYY-MM-DD"
                 };
 
@@ -289,7 +289,7 @@
                 key: "workModel",
                 type: "checkbox",
                 titleText: "WORK MODEL",
-                isRequired: 1,
+                required: 1,
             }, function(field) {
 
                 field.checkBoxes = [];
@@ -307,7 +307,7 @@
 
                 endGroup();
 
-                field.getInputValue = function() {
+                field.getValue = function() {
                     return getCheckedLabels(field.checkBoxes); // [] when nothing is checked
                 };
 
@@ -325,7 +325,7 @@
                 type: "checkbox",
                 titleText: "SKILLS",
                 descriptionText: "Select all that apply.",
-                isRequired: 0,
+                required: 0,
             }, function(field) {
 
                 field.checkBoxes = [];
@@ -344,7 +344,7 @@
 
                 endGroup();
 
-                field.getInputValue = function() {
+                field.getValue = function() {
                     return getCheckedLabels(field.checkBoxes);
                 };
 
@@ -356,10 +356,10 @@
                 key: "cv",
                 type: "file",
                 titleText: "CV / RESUME",
-                isRequired: 1,
+                required: 1,
             }, function(field) {
 
-                field.fileSelector = SelectFile({
+                field.fileSelector = FilePicker({
                     width: "100%",
                     accept: ".pdf,.doc,.docx",
                     maxSize: 5 * 1024 * 1024,
@@ -371,7 +371,7 @@
                         field.update();
                     },
                     onError: function(self, errors) {
-                        cvErrorLabel.text = errors.map(function(e) { return SelectFile.escapeHtml(e.message); }).join("<br>");
+                        cvErrorLabel.text = errors.map(function(e) { return FilePicker.escapeHtml(e.message); }).join("<br>");
                     },
                     style: {
                         zone: { color: White(1), borderColor: Black(0.15), round: 8 },
@@ -391,7 +391,7 @@
                     textColor: "#E5885E",
                 });
 
-                field.getInputValue = function() {
+                field.getValue = function() {
                     return field.fileSelector.files.map(function(info) { return info.name; });
                 };
 
@@ -399,27 +399,27 @@
             form.addInput(cvField);
 
             // INPUT: Portfolio
-            portfolioInput = InputB({
+            portfolioInput = TextField({
                 key: "portfolio",
                 ...inputStyle,
-                isRequired: 0,
+                required: 0,
                 titleText: "PORTFOLIO / LINKEDIN",
                 placeholder: "https://",
-                maxChar: 120,
+                maxLength: 120,
             });
             form.addInput(portfolioInput);
 
             // INPUT: Cover letter
-            coverLetterTextarea = TextareaB({
+            coverLetterTextarea = TextAreaField({
                 key: "coverLetter",
                 ...inputStyle,
-                isRequired: 0,
+                required: 0,
                 titleText: "COVER LETTER",
                 placeholder: "Why would you like to work with us?",
                 minCharCount: 0,
                 showCount: 1,
                 lengthText: "length: ",
-                maxChar: 1000,
+                maxLength: 1000,
                 height: 170,
                 rightPadding: 5,
                 unitStyle: {
@@ -435,7 +435,7 @@
                 key: "consent",
                 type: "checkbox",
                 titleText: "CONSENT",
-                isRequired: 1,
+                required: 1,
             }, function(field) {
 
                 field.checkBox = CheckBox({
@@ -450,7 +450,7 @@
                 field.checkBox.label.elem.style.whiteSpace = "normal";
                 field.checkBox.label.elem.style.flex = "1 1 0";
 
-                field.getInputValue = function() {
+                field.getValue = function() {
                     return (field.checkBox.checked == 1) ? "accepted" : "";
                 };
 
@@ -472,20 +472,20 @@
 
         };
 
-        // *** FORM FIELDS (for CheckBox, RadioButton, SelectDate, SelectFile):
+        // *** FORM FIELDS (for CheckBox, RadioButton, DatePicker, FilePicker):
 
-        // Creates an InputB field without an input and puts custom content in it.
-        // The field works with Form: title, required warning, status, getInputValue().
+        // Creates an TextField field without an input and puts custom content in it.
+        // The field works with Form: title, required warning, status, getValue().
         const createField = function(params, buildContent) {
 
-            const field = InputB({
+            const field = TextField({
                 ...inputStyle,
                 rightPadding: 20,
                 ...params,
                 createInput: 0, // No text input, we add our own content.
             });
 
-            // BOX: Content area (created by InputB)
+            // BOX: Content area (created by TextField)
             field.inputBox.height = "auto";
             field.inputBox.elem.style.marginTop = "10px";
             field.inputBox.elem.style.marginBottom = "4px";
@@ -494,7 +494,7 @@
             // Call after the value is changed:
             field.update = function() {
                 field.checkIfInputIsRequiredAndEmpty();
-                field.onEdit(); // Form checks all fields.
+                field.onChange(); // Form checks all fields.
             };
 
             const previousContainer = getDefaultContainerBox();
@@ -510,7 +510,7 @@
                 });
                 field.content.clipContent = 0;
 
-                    buildContent(field); // Must set field.getInputValue()
+                    buildContent(field); // Must set field.getValue()
 
                 endGroup();
 
@@ -538,7 +538,7 @@
 
         // Selected field look (like focused inputs)
         const setFieldFocus = function(field, isFocused) {
-            field.background.borderColor = (isFocused) ? field.selectedBackBorderColor : field.backBorderColor;
+            field.background.borderColor = (isFocused) ? field.focusBackBorderColor : field.backBorderColor;
         };
 
         // In a double row, fields with different heights start at the top and have the same height.
@@ -668,7 +668,7 @@
         const clearForm = function() {
 
             [firstNameInput, lastNameInput, emailInput, phoneInput, portfolioInput, coverLetterTextarea].forEach(function(input) {
-                input.setInputValue("");
+                input.setValue("");
             });
 
             RadioButton.clear("position");

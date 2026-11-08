@@ -83,7 +83,7 @@
                     sendFormToService();
 
                 },
-                onEdit: function(input) {
+                onChange: function(self, input) {
                     console.log(input.titleText);
                 },
             });
@@ -126,26 +126,26 @@
                 width: "100%",
                 /*
                 backgroundColor: "white",
-                selectedBackgroundColor: "#F3E7C2", // "#F1E2C4", "#F4FAFF",
+                focusBackgroundColor: "#F3E7C2", // "#F1E2C4", "#F4FAFF",
                 lineColor: "transparent",
-                selectedLineColor: "#A5513A", // "#F1E2C4", "#588ABE",
+                focusLineColor: "#A5513A", // "#F1E2C4", "#588ABE",
                 */
                 backgroundColor: "#F6F6F6",
-                selectedBackgroundColor: "#F6F6F6",
+                focusBackgroundColor: "#F6F6F6",
                 lineColor: Black(0),
-                selectedLineColor: Black(0), // "#F1E2C4", "#588ABE",
+                focusLineColor: Black(0), // "#F1E2C4", "#588ABE",
                 backBorderColor: Black(0),
-                selectedBackBorderColor: Black(0.4),
+                focusBackBorderColor: Black(0.4),
                 backBorderTopRound: 8,
                 backBorderBottomRound: 8,
                 warningBallType: "icon", // "color", "icon"
             };
 
             // INPUT: First Name
-            firstNameInput = InputB({
+            firstNameInput = TextField({
                 key: "1",
                 ...inputStyle,
-                isRequired: 1, // 1
+                required: 1, // 1
                 titleText: "FIRST NAME",
                 placeholder: "Jack",
                 leftPadding: 20,
@@ -153,10 +153,10 @@
             styleInput(that);
 
             // INPUT: Last Name
-            lastNameInput = InputB({
+            lastNameInput = TextField({
                 key: "2",
                 ...inputStyle,
-                isRequired: 0,
+                required: 0,
                 titleText: "LAST NAME",
                 placeholder: "Brown",
                 leftPadding: 20,
@@ -165,25 +165,25 @@
             form.addDoubleInput(firstNameInput, lastNameInput);
 
             // INPUT: Email
-            emailInput = EmailInputB({
+            emailInput = EmailField({
                 key: "3",
                 ...inputStyle,
-                isRequired: 1, // 1
+                required: 1, // 1
                 titleText: "YOUR EMAIL",
                 placeholder: "example@site.com",
                 warningText: "Invalid email format",
                 warningColor: "#E5885E", // "#F1BF3C"
-                maxChar: 35,
+                maxLength: 35,
             });
             styleInput(that);
             form.addInput(emailInput);
             //box.inputList.push(that);
 
             // INPUT: Phone        
-            phoneInput = PhoneInputB({
+            phoneInput = PhoneField({
                 key: "4",
                 ...inputStyle,
-                isRequired: 0,
+                required: 0,
                 titleText: "PHONE NUMBER",
                 placeholder: "(auto)",
                 warningText: "Invalid phone number format",
@@ -197,22 +197,22 @@
             form.addInput(phoneInput);
 
             // INPUT: Subject
-            subjectInput = InputB({
+            subjectInput = TextField({
                 key: "5",
                 ...inputStyle,
                 titleText: "SUBJECT",
                 placeholder: "What's your message about?",
                 descriptionText: "",
-                isRequired: 0,
+                required: 0,
             });
             styleInput(that);
             form.addInput(subjectInput);
 
             // INPUT: Textarea
-            messageTextarea = TextareaB({
+            messageTextarea = TextAreaField({
                 key: "6",
                 ...inputStyle,
-                isRequired: 1, // 1
+                required: 1, // 1
                 titleText: "MESSAGE",
                 placeholder: "How can we help you?",
                 minCharCount: 80, // 80, 0
@@ -220,7 +220,7 @@
                 lengthText: "length: ",
                 warningText: "The entered text must be longer than 80",
                 warningColor: "#E5885E", // "#F1BF3C"
-                maxChar: 255,
+                maxLength: 255,
                 height: 170, // 170 (4line)
                 rightPadding: 5,
                 unitStyle: {
@@ -256,12 +256,12 @@
                 formName: FORM_NAME,
                 formTitle: FORM_MAIL_TITLE,
                 fields: [
-                    { key: "first_name", type: "text", titleText: "FIRST NAME", inputValue: firstNameInput.getInputValue() },
-                    { key: "last_name", type: "text", titleText: "LAST NAME", inputValue: lastNameInput.getInputValue() },
-                    { key: "email", type: "email", titleText: "E-MAIL", inputValue: emailInput.getInputValue() },
-                    { key: "phone", type: "text", titleText: "PHONE", inputValue: phoneInput.getInputValue() },
-                    { key: "subject", type: "text", titleText: "SUBJECT", inputValue: subjectInput.getInputValue() },
-                    { key: "message", type: "textarea", titleText: "MESSAGE", inputValue: messageTextarea.getInputValue() },
+                    { key: "first_name", type: "text", titleText: "FIRST NAME", inputValue: firstNameInput.getValue() },
+                    { key: "last_name", type: "text", titleText: "LAST NAME", inputValue: lastNameInput.getValue() },
+                    { key: "email", type: "email", titleText: "E-MAIL", inputValue: emailInput.getValue() },
+                    { key: "phone", type: "text", titleText: "PHONE", inputValue: phoneInput.getValue() },
+                    { key: "subject", type: "text", titleText: "SUBJECT", inputValue: subjectInput.getValue() },
+                    { key: "message", type: "textarea", titleText: "MESSAGE", inputValue: messageTextarea.getValue() },
                 ],
             };
 
@@ -311,12 +311,12 @@
                     onClose: function() {
 
                         // Clean the form.
-                        firstNameInput.setInputValue(""); 
-                        lastNameInput.setInputValue(""); 
-                        emailInput.setInputValue(""); 
-                        phoneInput.setInputValue("");
-                        subjectInput.setInputValue("");
-                        messageTextarea.setInputValue("");
+                        firstNameInput.setValue(""); 
+                        lastNameInput.setValue(""); 
+                        emailInput.setValue(""); 
+                        phoneInput.setValue("");
+                        subjectInput.setValue("");
+                        messageTextarea.setValue("");
 
                         form.refresh();
 

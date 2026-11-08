@@ -37,9 +37,9 @@
         /* Bismillah */
 
         - An event registration (ticket order) form. (Conference, workshop, seminar, concert...)
-        - InputB, EmailInputB, PhoneInputB, TextareaB, Form (comp-m2)
+        - TextField, EmailField, PhoneField, TextAreaField, Form (comp-m2)
         - CheckBox, RadioButton (comp-m3)
-        - SelectFile, SmartButton, LoadingScreen (comp-m4)
+        - FilePicker, SmartButton, LoadingScreen (comp-m4)
 
         - Ticket types with a quantity stepper (limits: stock, max per order).
         - Attendee fields are shown for each extra ticket. (The buyer is the first attendee.)
@@ -47,7 +47,7 @@
         - Promo codes (with rules) and a live order summary (subtotal, discount, VAT, total).
         - Hidden questions are not required and not sent.
 
-        - CheckBox, RadioButton, SelectFile and the ticket list are placed in an InputB field (createInput: 0).
+        - CheckBox, RadioButton, FilePicker and the ticket list are placed in an TextField field (createInput: 0).
           So they look like the other inputs and the Form checks them too. (See: createField)
 
         -->
@@ -126,11 +126,11 @@
             inputStyle = {
                 width: "100%",
                 backgroundColor: "#F6F6F6",
-                selectedBackgroundColor: "#F6F6F6",
+                focusBackgroundColor: "#F6F6F6",
                 lineColor: Black(0),
-                selectedLineColor: Black(0),
+                focusLineColor: Black(0),
                 backBorderColor: Black(0),
-                selectedBackBorderColor: Black(0.4),
+                focusBackBorderColor: Black(0.4),
                 backBorderTopRound: 8,
                 backBorderBottomRound: 8,
             };
@@ -151,7 +151,7 @@
                 onSendClick: function(json) {
                     sendRegistration(json);
                 },
-                onEdit: function(input) {
+                onChange: function(self, input) {
                     if (input === promoInput) checkPromoCode(); // Also updates the summary
                     else updateSummary();
                 },
@@ -194,7 +194,7 @@
                 type: "tickets",
                 titleText: "TICKETS",
                 descriptionText: "Up to " + MAX_TICKETS_PER_ORDER + " tickets in one order. Prices include VAT.",
-                isRequired: 1,
+                required: 1,
             }, function(field) {
 
                 field.rows = {};
@@ -206,7 +206,7 @@
                     });
                 });
 
-                field.getInputValue = function() {
+                field.getValue = function() {
                     // [] when no ticket is selected (so it is empty for "required")
                     return TICKETS
                         .filter(function(ticket) { return quantities[ticket.id] > 0; })
@@ -222,10 +222,10 @@
                 type: "file",
                 titleText: "STUDENT ID",
                 descriptionText: "A photo or PDF of a valid student ID. One file for each student ticket.",
-                isRequired: 0, // WHY: Required only when it is shown. (updateTicketDependencies)
+                required: 0, // WHY: Required only when it is shown. (updateTicketDependencies)
             }, function(field) {
 
-                field.fileSelector = SelectFile({
+                field.fileSelector = FilePicker({
                     width: "100%",
                     multiple: 1,
                     maxFiles: MAX_TICKETS_PER_ORDER,
@@ -240,14 +240,14 @@
                         field.update();
                     },
                     onError: function(self, errors) {
-                        errorLabel.text = errors.map(function(e) { return SelectFile.escapeHtml(e.message); }).join("<br>");
+                        errorLabel.text = errors.map(function(e) { return FilePicker.escapeHtml(e.message); }).join("<br>");
                     },
                     style: fileStyle(),
                 });
 
                 const errorLabel = Label({ text: "", fontSize: 14, textColor: WARNING_COLOR });
 
-                field.getInputValue = function() {
+                field.getValue = function() {
                     return field.fileSelector.files.map(function(info) { return info.name; });
                 };
 
@@ -264,20 +264,20 @@
             addSectionTitle("2. Your Details");
 
             // INPUT: First Name
-            firstNameInput = InputB({
+            firstNameInput = TextField({
                 key: "firstName",
                 ...inputStyle,
-                isRequired: 1,
+                required: 1,
                 titleText: "FIRST NAME",
                 placeholder: "Jack",
                 leftPadding: 20,
             });
 
             // INPUT: Last Name
-            lastNameInput = InputB({
+            lastNameInput = TextField({
                 key: "lastName",
                 ...inputStyle,
-                isRequired: 1,
+                required: 1,
                 titleText: "LAST NAME",
                 placeholder: "Brown",
                 leftPadding: 20,
@@ -285,23 +285,23 @@
             form.addDoubleInput(firstNameInput, lastNameInput);
 
             // INPUT: Email
-            emailInput = EmailInputB({
+            emailInput = EmailField({
                 key: "email",
                 ...inputStyle,
-                isRequired: 1,
+                required: 1,
                 titleText: "YOUR EMAIL",
                 placeholder: "example@site.com",
                 descriptionText: "Tickets are sent to this address.",
                 warningText: "Invalid email format",
                 warningColor: WARNING_COLOR,
-                maxChar: 50,
+                maxLength: 50,
             });
 
             // INPUT: Phone
-            phoneInput = PhoneInputB({
+            phoneInput = PhoneField({
                 key: "phone",
                 ...inputStyle,
-                isRequired: 1,
+                required: 1,
                 titleText: "PHONE NUMBER",
                 placeholder: "(auto)",
                 warningText: "Invalid phone number format",
@@ -317,25 +317,25 @@
             // WHY: Form can not remove inputs. All rows are created one time; extra rows are hidden.
             for (let i = 2; i <= MAX_TICKETS_PER_ORDER; i++) {
 
-                const nameInput = InputB({
+                const nameInput = TextField({
                     key: "attendee" + i + "Name",
                     ...inputStyle,
-                    isRequired: 0,
+                    required: 0,
                     titleText: "ATTENDEE " + i + " – FULL NAME",
                     placeholder: "Full name",
                     leftPadding: 20,
-                    maxChar: 60,
+                    maxLength: 60,
                 });
 
-                const attendeeEmailInput = EmailInputB({
+                const attendeeEmailInput = EmailField({
                     key: "attendee" + i + "Email",
                     ...inputStyle,
-                    isRequired: 0,
+                    required: 0,
                     titleText: "ATTENDEE " + i + " – EMAIL",
                     placeholder: "example@site.com",
                     warningText: "Invalid email format",
                     warningColor: WARNING_COLOR,
-                    maxChar: 50,
+                    maxLength: 50,
                 });
 
                 form.addDoubleInput(nameInput, attendeeEmailInput);
@@ -353,7 +353,7 @@
                 type: "checkbox",
                 titleText: "WORKSHOPS",
                 descriptionText: "Optional. Seats are limited; you get a place in the order of registration.",
-                isRequired: 0,
+                required: 0,
             }, function(field) {
 
                 field.checkBoxes = [];
@@ -372,7 +372,7 @@
 
                 endGroup();
 
-                field.getInputValue = function() {
+                field.getValue = function() {
                     return getCheckedLabels(field.checkBoxes);
                 };
 
@@ -384,7 +384,7 @@
                 key: "diet",
                 type: "radio",
                 titleText: "LUNCH",
-                isRequired: 1,
+                required: 1,
             }, function(field) {
 
                 createWrapGroup();
@@ -402,7 +402,7 @@
 
                 endGroup();
 
-                field.getInputValue = function() {
+                field.getValue = function() {
                     return RadioButton.getValue("diet");
                 };
 
@@ -410,15 +410,15 @@
             form.addInput(dietField);
 
             // INPUT: Accessibility
-            accessibilityTextarea = TextareaB({
+            accessibilityTextarea = TextAreaField({
                 key: "accessibility",
                 ...inputStyle,
-                isRequired: 0,
+                required: 0,
                 titleText: "ACCESSIBILITY NEEDS",
                 placeholder: "Wheelchair access, sign language, allergies... (Optional)",
                 minCharCount: 0,
                 showCount: 0,
-                maxChar: 300,
+                maxLength: 300,
                 height: 110,
                 rightPadding: 5,
             });
@@ -433,7 +433,7 @@
                 key: "companyInvoice",
                 type: "checkbox",
                 titleText: "INVOICE",
-                isRequired: 0,
+                required: 0,
             }, function(field) {
 
                 field.checkBox = CheckBox({
@@ -445,7 +445,7 @@
                     },
                 });
 
-                field.getInputValue = function() {
+                field.getValue = function() {
                     return (field.checkBox.checked == 1) ? "yes" : "";
                 };
 
@@ -453,50 +453,50 @@
             form.addInput(invoiceField);
 
             // INPUT: Company
-            companyInput = InputB({
+            companyInput = TextField({
                 key: "companyName",
                 ...inputStyle,
-                isRequired: 0,
+                required: 0,
                 titleText: "COMPANY NAME",
                 placeholder: "Acme Ltd.",
                 leftPadding: 20,
-                maxChar: 80,
+                maxLength: 80,
             });
 
             // INPUT: Tax number
-            taxNumberInput = InputB({
+            taxNumberInput = TextField({
                 key: "taxNumber",
                 ...inputStyle,
-                isRequired: 0,
+                required: 0,
                 titleText: "TAX OFFICE / NUMBER",
                 placeholder: "Kadikoy / 1234567890",
                 leftPadding: 20,
-                maxChar: 50,
+                maxLength: 50,
             });
             form.addDoubleInput(companyInput, taxNumberInput);
             companyGroup = form.groupList[form.groupList.length - 1];
 
             // INPUT: Billing address
-            addressInput = InputB({
+            addressInput = TextField({
                 key: "billingAddress",
                 ...inputStyle,
-                isRequired: 0,
+                required: 0,
                 titleText: "BILLING ADDRESS",
                 placeholder: "Street, number, district, city",
-                maxChar: 150,
+                maxLength: 150,
             });
             form.addInput(addressInput);
 
             // INPUT: Promo code
-            promoInput = InputB({
+            promoInput = TextField({
                 key: "promoCode",
                 ...inputStyle,
-                isRequired: 0,
+                required: 0,
                 titleText: "PROMO CODE",
                 placeholder: "Optional",
                 descriptionText: " ",
                 warningColor: WARNING_COLOR,
-                maxChar: 20,
+                maxLength: 20,
             });
             // Upper case, no spaces
             promoInput.input.inputElement.style.textTransform = "uppercase";
@@ -510,7 +510,7 @@
                 key: "terms",
                 type: "checkbox",
                 titleText: "TERMS",
-                isRequired: 1,
+                required: 1,
             }, function(field) {
 
                 field.checkBox = CheckBox({
@@ -525,7 +525,7 @@
                 field.checkBox.label.elem.style.whiteSpace = "normal";
                 field.checkBox.label.elem.style.flex = "1 1 0";
 
-                field.getInputValue = function() {
+                field.getValue = function() {
                     return (field.checkBox.checked == 1) ? "accepted" : "";
                 };
 
@@ -703,7 +703,7 @@
             if (setOwnVisible) field.visible = (isVisible) ? 1 : 0;
             field.setRequired(isVisible);
             // WHY: setRequired() only checks "empty". A visible field with a wrong value must show the error again.
-            if (isVisible && field.getInputValue().length) field.showWarningIfNotValid(field.isValid());
+            if (isVisible && field.getValue().length) field.showWarningIfNotValid(field.isValid());
             form.refresh();
         };
 
@@ -718,7 +718,7 @@
         // *** PROMO CODE AND PRICES:
 
         const getPromoCode = function() {
-            return promoInput.getInputValue().trim().toUpperCase();
+            return promoInput.getValue().trim().toUpperCase();
         };
 
         // "" when the code is empty or can be used.
@@ -795,20 +795,20 @@
 
         };
 
-        // *** FORM FIELDS (for CheckBox, RadioButton, SelectFile and the ticket list):
+        // *** FORM FIELDS (for CheckBox, RadioButton, FilePicker and the ticket list):
 
-        // Creates an InputB field without an input and puts custom content in it.
-        // The field works with Form: title, required warning, status, getInputValue().
+        // Creates an TextField field without an input and puts custom content in it.
+        // The field works with Form: title, required warning, status, getValue().
         const createField = function(params, buildContent) {
 
-            const field = InputB({
+            const field = TextField({
                 ...inputStyle,
                 rightPadding: 20,
                 ...params,
                 createInput: 0, // No text input, we add our own content.
             });
 
-            // BOX: Content area (created by InputB)
+            // BOX: Content area (created by TextField)
             field.inputBox.height = "auto";
             field.inputBox.elem.style.marginTop = "10px";
             field.inputBox.elem.style.marginBottom = "4px";
@@ -817,8 +817,8 @@
             // Call after the value is changed:
             field.update = function() {
                 field.checkIfInputIsRequiredAndEmpty();
-                if (field.getInputValue().length) field.showWarningIfNotValid(field.isValid());
-                field.onEdit(); // Form checks all fields.
+                if (field.getValue().length) field.showWarningIfNotValid(field.isValid());
+                field.onChange(); // Form checks all fields.
             };
 
             const previousContainer = getDefaultContainerBox();
@@ -834,7 +834,7 @@
                 });
                 field.content.clipContent = 0;
 
-                    buildContent(field); // Must set field.getInputValue()
+                    buildContent(field); // Must set field.getValue()
 
                 endGroup();
 
@@ -957,7 +957,7 @@
                 });
             }
 
-            const email = emailInput.getInputValue();
+            const email = emailInput.getValue();
 
             waiting.open();
 
@@ -990,7 +990,7 @@
                     iconColor: "#3C8553",
                     iconFile: "assets/success.png",
                     messageText: "<b>You are registered!</b><br>Order number: <b>" + orderNumber + "</b> · Total: <b>" + formatMoney(prices.total) + "</b>" +
-                        "<br>Payment link and tickets are sent to " + SelectFile.escapeHtml(email) + ".",
+                        "<br>Payment link and tickets are sent to " + FilePicker.escapeHtml(email) + ".",
                     buttonText: "OKAY",
                     backgroundColor: "rgba(255,255,255,0.92)",
                     onClose: clearForm,
@@ -1029,7 +1029,7 @@
 
             const textInputs = [firstNameInput, lastNameInput, emailInput, phoneInput, accessibilityTextarea, companyInput, taxNumberInput, addressInput, promoInput];
             attendeeRows.forEach(function(row) { textInputs.push(row.nameInput, row.emailInput); });
-            textInputs.forEach(function(input) { input.setInputValue(""); });
+            textInputs.forEach(function(input) { input.setValue(""); });
 
             studentIdField.fileSelector.clear(1);
             workshopsField.checkBoxes.forEach(function(chk) { chk.setChecked(0, 1); });

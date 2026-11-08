@@ -36,18 +36,18 @@
         /* Bismillah */
 
         - A customer feedback (satisfaction survey) form.
-        - InputB, EmailInputB, TextareaB, Form (comp-m2)
+        - TextField, EmailField, TextAreaField, Form (comp-m2)
         - CheckBox, RadioButton (comp-m3)
-        - SelectFile, SmartButton, LoadingScreen (comp-m4)
+        - FilePicker, SmartButton, LoadingScreen (comp-m4)
 
-        - Star rating (1-5) and NPS score (0-10) are drawn with labels in an InputB field.
+        - Star rating (1-5) and NPS score (0-10) are drawn with labels in an TextField field.
           They work with the keyboard too (Tab, arrow keys).
         - Questions change with the answers:
           Rating 1-3: "What went wrong?" (required), rating 4-5: "What did you like?" (optional).
           "May we contact you?" Yes: name and e-mail are shown and required.
         - Hidden questions are not required, so the Form does not wait for them.
 
-        - CheckBox, RadioButton, SelectFile and the ratings are placed in an InputB field (createInput: 0).
+        - CheckBox, RadioButton, FilePicker and the ratings are placed in an TextField field (createInput: 0).
           So they look like the other inputs and the Form checks them too. (See: createField)
 
         -->
@@ -96,11 +96,11 @@
             inputStyle = {
                 width: "100%",
                 backgroundColor: "#F6F6F6",
-                selectedBackgroundColor: "#F6F6F6",
+                focusBackgroundColor: "#F6F6F6",
                 lineColor: Black(0),
-                selectedLineColor: Black(0),
+                focusLineColor: Black(0),
                 backBorderColor: Black(0),
-                selectedBackBorderColor: Black(0.4),
+                focusBackBorderColor: Black(0.4),
                 backBorderTopRound: 8,
                 backBorderBottomRound: 8,
             };
@@ -151,7 +151,7 @@
                 key: "rating",
                 type: "rating",
                 titleText: "OVERALL, HOW SATISFIED ARE YOU?",
-                isRequired: 1,
+                required: 1,
             }, function(field) {
 
                 createRating(field, {
@@ -196,7 +196,7 @@
                 key: "nps",
                 type: "nps",
                 titleText: "HOW LIKELY ARE YOU TO RECOMMEND US TO A FRIEND?",
-                isRequired: 1,
+                required: 1,
             }, function(field) {
 
                 createRating(field, {
@@ -250,7 +250,7 @@
                 type: "checkbox",
                 titleText: "WHAT DID YOU USE?",
                 descriptionText: "Select all that apply.",
-                isRequired: 0,
+                required: 0,
             }, function(field) {
                 createCheckBoxList(field, USED_CHANNELS, 190);
             });
@@ -262,7 +262,7 @@
                 type: "checkbox",
                 titleText: "WHAT WENT WRONG?",
                 descriptionText: "Sorry to hear that. Select all that apply.",
-                isRequired: 0, // WHY: Required only when it is shown. (updateQuestions)
+                required: 0, // WHY: Required only when it is shown. (updateQuestions)
             }, function(field) {
                 createCheckBoxList(field, PROBLEMS, 240);
             });
@@ -274,7 +274,7 @@
                 type: "checkbox",
                 titleText: "WHAT DID YOU LIKE THE MOST?",
                 descriptionText: "Great! Select all that apply. (Optional)",
-                isRequired: 0,
+                required: 0,
             }, function(field) {
                 createCheckBoxList(field, GOOD_POINTS, 240);
             });
@@ -285,16 +285,16 @@
             addSectionTitle("2. Tell Us More");
 
             // TEXTAREA: Comments
-            commentsTextarea = TextareaB({
+            commentsTextarea = TextAreaField({
                 key: "comments",
                 ...inputStyle,
-                isRequired: 0,
+                required: 0,
                 titleText: "COMMENTS",
                 placeholder: "What should we keep doing, or do better? (Optional)",
                 minCharCount: 0,
                 showCount: 1,
                 lengthText: "length: ",
-                maxChar: 1000,
+                maxLength: 1000,
                 height: 170,
                 rightPadding: 5,
                 unitStyle: {
@@ -311,10 +311,10 @@
                 type: "file",
                 titleText: "SCREENSHOTS",
                 descriptionText: "Optional. Up to 3 images, 5 MB each.",
-                isRequired: 0,
+                required: 0,
             }, function(field) {
 
-                field.fileSelector = SelectFile({
+                field.fileSelector = FilePicker({
                     width: "100%",
                     multiple: 1,
                     maxFiles: 3,
@@ -329,7 +329,7 @@
                         field.update();
                     },
                     onError: function(self, errors) {
-                        errorLabel.text = errors.map(function(e) { return SelectFile.escapeHtml(e.message); }).join("<br>");
+                        errorLabel.text = errors.map(function(e) { return FilePicker.escapeHtml(e.message); }).join("<br>");
                     },
                     style: {
                         zone: { color: White(1), borderColor: Black(0.15), round: 8 },
@@ -345,7 +345,7 @@
                 // LABEL: File errors
                 const errorLabel = Label({ text: "", fontSize: 14, textColor: WARNING_COLOR });
 
-                field.getInputValue = function() {
+                field.getValue = function() {
                     return field.fileSelector.files.map(function(info) { return info.name; });
                 };
 
@@ -361,7 +361,7 @@
                 key: "contactMe",
                 type: "radio",
                 titleText: "MAY WE CONTACT YOU ABOUT YOUR FEEDBACK?",
-                isRequired: 1,
+                required: 1,
             }, function(field) {
 
                 createWrapGroup();
@@ -381,7 +381,7 @@
 
                 endGroup();
 
-                field.getInputValue = function() {
+                field.getValue = function() {
                     return RadioButton.getValue("contactMe");
                 };
 
@@ -389,27 +389,27 @@
             form.addInput(contactField);
 
             // INPUT: Name
-            nameInput = InputB({
+            nameInput = TextField({
                 key: "name",
                 ...inputStyle,
-                isRequired: 0, // WHY: Required only when "Yes" is selected. (updateQuestions)
+                required: 0, // WHY: Required only when "Yes" is selected. (updateQuestions)
                 requiredText: "Required",
                 titleText: "YOUR NAME",
                 placeholder: "Jack Brown",
                 leftPadding: 20,
-                maxChar: 50,
+                maxLength: 50,
             });
 
             // INPUT: Email
-            emailInput = EmailInputB({
+            emailInput = EmailField({
                 key: "email",
                 ...inputStyle,
-                isRequired: 0,
+                required: 0,
                 titleText: "YOUR EMAIL",
                 placeholder: "example@site.com",
                 warningText: "Invalid email format",
                 warningColor: WARNING_COLOR,
-                maxChar: 50,
+                maxLength: 50,
             });
             form.addDoubleInput(nameInput, emailInput);
             contactGroup = form.groupList[form.groupList.length - 1];
@@ -436,7 +436,7 @@
         // Shows the questions for the current answers. A hidden question is not required.
         const updateQuestions = function() {
 
-            const rating = Number(ratingField.getInputValue()) || 0;
+            const rating = Number(ratingField.getValue()) || 0;
             const wantsContact = (RadioButton.getValue("contactMe") == "yes");
 
             setQuestionVisible(problemsField, rating > 0 && rating <= LOW_RATING, 1);
@@ -446,7 +446,7 @@
             nameInput.setRequired(wantsContact);
             emailInput.setRequired(wantsContact);
             // WHY: A hidden e-mail with a wrong text must not block the form.
-            if (!wantsContact) emailInput.setInputValue("");
+            if (!wantsContact) emailInput.setValue("");
 
             form.refresh();
 
@@ -532,8 +532,8 @@
 
             endGroup();
 
-            field.getInputValue = function() {
-                // WHY: InputB checks ".length" for required fields. A text is used, so 0 is not empty.
+            field.getValue = function() {
+                // WHY: TextField checks ".length" for required fields. A text is used, so 0 is not empty.
                 return (selectedValue === null) ? "" : String(selectedValue);
             };
 
@@ -560,20 +560,20 @@
             return "rgba(" + (n >> 16) + ", " + ((n >> 8) & 255) + ", " + (n & 255) + ", " + alpha + ")";
         };
 
-        // *** FORM FIELDS (for CheckBox, RadioButton, SelectFile and ratings):
+        // *** FORM FIELDS (for CheckBox, RadioButton, FilePicker and ratings):
 
-        // Creates an InputB field without an input and puts custom content in it.
-        // The field works with Form: title, required warning, status, getInputValue().
+        // Creates an TextField field without an input and puts custom content in it.
+        // The field works with Form: title, required warning, status, getValue().
         const createField = function(params, buildContent) {
 
-            const field = InputB({
+            const field = TextField({
                 ...inputStyle,
                 rightPadding: 20,
                 ...params,
                 createInput: 0, // No text input, we add our own content.
             });
 
-            // BOX: Content area (created by InputB)
+            // BOX: Content area (created by TextField)
             field.inputBox.height = "auto";
             field.inputBox.elem.style.marginTop = "10px";
             field.inputBox.elem.style.marginBottom = "4px";
@@ -582,7 +582,7 @@
             // Call after the value is changed:
             field.update = function() {
                 field.checkIfInputIsRequiredAndEmpty();
-                field.onEdit(); // Form checks all fields.
+                field.onChange(); // Form checks all fields.
             };
 
             const previousContainer = getDefaultContainerBox();
@@ -598,7 +598,7 @@
                 });
                 field.content.clipContent = 0;
 
-                    buildContent(field); // Must set field.getInputValue()
+                    buildContent(field); // Must set field.getValue()
 
                 endGroup();
 
@@ -611,7 +611,7 @@
 
         };
 
-        // Check boxes in columns. field.checkBoxes, field.getInputValue()
+        // Check boxes in columns. field.checkBoxes, field.getValue()
         const createCheckBoxList = function(field, labels, columnWidth) {
 
             field.checkBoxes = [];
@@ -630,7 +630,7 @@
 
             endGroup();
 
-            field.getInputValue = function() {
+            field.getValue = function() {
                 return getCheckedLabels(field.checkBoxes); // [] when nothing is checked
             };
 
@@ -721,7 +721,7 @@
                 formData.append("screenshots[]", info.file, info.name);
             });
 
-            const nps = Number(npsField.getInputValue());
+            const nps = Number(npsField.getValue());
 
             waiting.open();
 
@@ -788,11 +788,11 @@
             [channelsField, problemsField, goodPointsField].forEach(function(field) {
                 field.checkBoxes.forEach(function(chk) { chk.setChecked(0, 1); });
             });
-            commentsTextarea.setInputValue("");
+            commentsTextarea.setValue("");
             screenshotField.fileSelector.clear(1);
             RadioButton.clear("contactMe");
-            nameInput.setInputValue("");
-            emailInput.setInputValue("");
+            nameInput.setValue("");
+            emailInput.setValue("");
 
             [ratingField, npsField, channelsField, screenshotField, contactField].forEach(function(field) {
                 field.checkIfInputIsRequiredAndEmpty();

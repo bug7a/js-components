@@ -37,15 +37,15 @@
         /* Bismillah */
 
         - An appointment booking form. (Clinic, consultant, salon, service desk...)
-        - InputB, EmailInputB, PhoneInputB, TextareaB, Form (comp-m2)
+        - TextField, EmailField, PhoneField, TextAreaField, Form (comp-m2)
         - CheckBox, RadioButton (comp-m3)
-        - SelectDate, SmartButton, LoadingScreen (comp-m4)
+        - DatePicker, SmartButton, LoadingScreen (comp-m4)
 
         - Time slots are created from the opening hours, the service duration and the booked times.
           A slot is shown only if the whole service fits before closing and does not overlap a booked time.
         - After the booking, the visitor can download a calendar file (.ics).
 
-        - CheckBox, RadioButton and SelectDate are placed in an InputB field (createInput: 0).
+        - CheckBox, RadioButton and DatePicker are placed in an TextField field (createInput: 0).
           So they look like the other inputs and the Form checks them too. (See: createField)
 
         -->
@@ -114,11 +114,11 @@
             inputStyle = {
                 width: "100%",
                 backgroundColor: "#F6F6F6",
-                selectedBackgroundColor: "#F6F6F6",
+                focusBackgroundColor: "#F6F6F6",
                 lineColor: Black(0),
-                selectedLineColor: Black(0),
+                focusLineColor: Black(0),
                 backBorderColor: Black(0),
-                selectedBackBorderColor: Black(0.4),
+                focusBackBorderColor: Black(0.4),
                 backBorderTopRound: 8,
                 backBorderBottomRound: 8,
             };
@@ -139,7 +139,7 @@
                 onSendClick: function(json) {
                     sendBooking(json);
                 },
-                onEdit: function(input) {
+                onChange: function(self, input) {
                     updateSummary();
                 },
             });
@@ -172,7 +172,7 @@
                 key: "service",
                 type: "radio",
                 titleText: "SERVICE",
-                isRequired: 1,
+                required: 1,
             }, function(field) {
 
                 SERVICES.forEach(function(service) {
@@ -188,7 +188,7 @@
                     });
                 });
 
-                field.getInputValue = function() {
+                field.getValue = function() {
                     return RadioButton.getValue("service");
                 };
 
@@ -200,7 +200,7 @@
                 key: "meetingType",
                 type: "radio",
                 titleText: "MEETING TYPE",
-                isRequired: 1,
+                required: 1,
             }, function(field) {
 
                 createWrapGroup();
@@ -217,7 +217,7 @@
 
                 endGroup();
 
-                field.getInputValue = function() {
+                field.getValue = function() {
                     return RadioButton.getValue("meetingType");
                 };
 
@@ -233,12 +233,12 @@
                 key: "date",
                 type: "date",
                 titleText: "DATE",
-                isRequired: 1,
+                required: 1,
                 warningText: "We are closed on this day",
                 warningColor: WARNING_COLOR,
             }, function(field) {
 
-                field.picker = SelectDate({
+                field.picker = DatePicker({
                     width: "100%",
                     height: 40,
                     minDate: new Date(),
@@ -272,7 +272,7 @@
                     textColor: Black(0.45),
                 });
 
-                field.getInputValue = function() {
+                field.getValue = function() {
                     return field.picker.value; // "YYYY-MM-DD"
                 };
 
@@ -289,7 +289,7 @@
                 key: "time",
                 type: "radio",
                 titleText: "TIME",
-                isRequired: 1,
+                required: 1,
             }, function(field) {
 
                 // LABEL: Info (no date, closed day, no free slot)
@@ -299,7 +299,7 @@
                     textColor: Black(0.45),
                 });
 
-                field.getInputValue = function() {
+                field.getValue = function() {
                     return RadioButton.getValue("time"); // "HH:mm"
                 };
 
@@ -311,20 +311,20 @@
             addSectionTitle("3. Your Details");
 
             // INPUT: First Name
-            firstNameInput = InputB({
+            firstNameInput = TextField({
                 key: "firstName",
                 ...inputStyle,
-                isRequired: 1,
+                required: 1,
                 titleText: "FIRST NAME",
                 placeholder: "Jack",
                 leftPadding: 20,
             });
 
             // INPUT: Last Name
-            lastNameInput = InputB({
+            lastNameInput = TextField({
                 key: "lastName",
                 ...inputStyle,
-                isRequired: 1,
+                required: 1,
                 titleText: "LAST NAME",
                 placeholder: "Brown",
                 leftPadding: 20,
@@ -332,22 +332,22 @@
             form.addDoubleInput(firstNameInput, lastNameInput);
 
             // INPUT: Email
-            emailInput = EmailInputB({
+            emailInput = EmailField({
                 key: "email",
                 ...inputStyle,
-                isRequired: 1,
+                required: 1,
                 titleText: "YOUR EMAIL",
                 placeholder: "example@site.com",
                 warningText: "Invalid email format",
                 warningColor: WARNING_COLOR,
-                maxChar: 50,
+                maxLength: 50,
             });
 
             // INPUT: Phone
-            phoneInput = PhoneInputB({
+            phoneInput = PhoneField({
                 key: "phone",
                 ...inputStyle,
-                isRequired: 1,
+                required: 1,
                 titleText: "PHONE NUMBER",
                 placeholder: "(auto)",
                 warningText: "Invalid phone number format",
@@ -359,16 +359,16 @@
             form.addDoubleInput(emailInput, phoneInput);
 
             // INPUT: Notes
-            notesTextarea = TextareaB({
+            notesTextarea = TextAreaField({
                 key: "notes",
                 ...inputStyle,
-                isRequired: 0,
+                required: 0,
                 titleText: "NOTES",
                 placeholder: "Anything we should know before the appointment? (Optional)",
                 minCharCount: 0,
                 showCount: 1,
                 lengthText: "length: ",
-                maxChar: 500,
+                maxLength: 500,
                 height: 140,
                 rightPadding: 5,
                 unitStyle: {
@@ -385,7 +385,7 @@
                 type: "checkbox",
                 titleText: "REMINDERS",
                 descriptionText: "We remind you one day before the appointment.",
-                isRequired: 0,
+                required: 0,
             }, function(field) {
 
                 field.checkBoxes = [];
@@ -404,7 +404,7 @@
 
                 endGroup();
 
-                field.getInputValue = function() {
+                field.getValue = function() {
                     return getCheckedLabels(field.checkBoxes);
                 };
 
@@ -416,7 +416,7 @@
                 key: "consent",
                 type: "checkbox",
                 titleText: "CANCELLATION POLICY",
-                isRequired: 1,
+                required: 1,
             }, function(field) {
 
                 field.checkBox = CheckBox({
@@ -431,7 +431,7 @@
                 field.checkBox.label.elem.style.whiteSpace = "normal";
                 field.checkBox.label.elem.style.flex = "1 1 0";
 
-                field.getInputValue = function() {
+                field.getValue = function() {
                     return (field.checkBox.checked == 1) ? "accepted" : "";
                 };
 
@@ -618,20 +618,20 @@
 
         };
 
-        // *** FORM FIELDS (for CheckBox, RadioButton, SelectDate):
+        // *** FORM FIELDS (for CheckBox, RadioButton, DatePicker):
 
-        // Creates an InputB field without an input and puts custom content in it.
-        // The field works with Form: title, required warning, status, getInputValue().
+        // Creates an TextField field without an input and puts custom content in it.
+        // The field works with Form: title, required warning, status, getValue().
         const createField = function(params, buildContent) {
 
-            const field = InputB({
+            const field = TextField({
                 ...inputStyle,
                 rightPadding: 20,
                 ...params,
                 createInput: 0, // No text input, we add our own content.
             });
 
-            // BOX: Content area (created by InputB)
+            // BOX: Content area (created by TextField)
             field.inputBox.height = "auto";
             field.inputBox.elem.style.marginTop = "10px";
             field.inputBox.elem.style.marginBottom = "4px";
@@ -641,7 +641,7 @@
             field.update = function() {
                 field.checkIfInputIsRequiredAndEmpty();
                 field.showWarningIfNotValid(field.isValid());
-                field.onEdit(); // Form checks all fields.
+                field.onChange(); // Form checks all fields.
             };
 
             const previousContainer = getDefaultContainerBox();
@@ -657,7 +657,7 @@
                 });
                 field.content.clipContent = 0;
 
-                    buildContent(field); // Must set field.getInputValue()
+                    buildContent(field); // Must set field.getValue()
 
                 endGroup();
 
@@ -686,7 +686,7 @@
 
         // Selected field look (like focused inputs)
         const setFieldFocus = function(field, isFocused) {
-            field.background.borderColor = (isFocused) ? field.selectedBackBorderColor : field.backBorderColor;
+            field.background.borderColor = (isFocused) ? field.focusBackBorderColor : field.backBorderColor;
         };
 
         const getCheckedLabels = function(checkBoxes) {
@@ -938,7 +938,7 @@
         const clearForm = function() {
 
             [firstNameInput, lastNameInput, emailInput, phoneInput, notesTextarea].forEach(function(input) {
-                input.setInputValue("");
+                input.setValue("");
             });
 
             RadioButton.clear("service");

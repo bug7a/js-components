@@ -37,9 +37,9 @@
         /* Bismillah */
 
         - A support ticket (help desk) form.
-        - InputB, EmailInputB, PhoneInputB, TextareaB, Form (comp-m2)
+        - TextField, EmailField, PhoneField, TextAreaField, Form (comp-m2)
         - CheckBox, RadioButton (comp-m3)
-        - SelectFile, SmartButton, LoadingScreen (comp-m4)
+        - FilePicker, SmartButton, LoadingScreen (comp-m4)
 
         - Help articles are suggested while the subject is written. (Fewer tickets for known questions.)
         - Questions change with the category:
@@ -49,7 +49,7 @@
         - The ticket number can be copied from the success message.
         - Hidden questions are not required and not sent.
 
-        - CheckBox, RadioButton and SelectFile are placed in an InputB field (createInput: 0).
+        - CheckBox, RadioButton and FilePicker are placed in an TextField field (createInput: 0).
           So they look like the other inputs and the Form checks them too. (See: createField)
 
         -->
@@ -129,11 +129,11 @@
             inputStyle = {
                 width: "100%",
                 backgroundColor: "#F6F6F6",
-                selectedBackgroundColor: "#F6F6F6",
+                focusBackgroundColor: "#F6F6F6",
                 lineColor: Black(0),
-                selectedLineColor: Black(0),
+                focusLineColor: Black(0),
                 backBorderColor: Black(0),
-                selectedBackBorderColor: Black(0.4),
+                focusBackBorderColor: Black(0.4),
                 backBorderTopRound: 8,
                 backBorderBottomRound: 8,
             };
@@ -154,7 +154,7 @@
                 onSendClick: function(json) {
                     sendTicket(json);
                 },
-                onEdit: function(input) {
+                onChange: function(self, input) {
                     if (input === subjectInput) updateArticles();
                 },
             });
@@ -181,26 +181,26 @@
             addSectionTitle("1. Your Details");
 
             // INPUT: Name
-            nameInput = InputB({
+            nameInput = TextField({
                 key: "name",
                 ...inputStyle,
-                isRequired: 1,
+                required: 1,
                 titleText: "FULL NAME",
                 placeholder: "Jack Brown",
                 leftPadding: 20,
-                maxChar: 60,
+                maxLength: 60,
             });
 
             // INPUT: Email
-            emailInput = EmailInputB({
+            emailInput = EmailField({
                 key: "email",
                 ...inputStyle,
-                isRequired: 1,
+                required: 1,
                 titleText: "YOUR EMAIL",
                 placeholder: "example@site.com",
                 warningText: "Invalid email format",
                 warningColor: WARNING_COLOR,
-                maxChar: 50,
+                maxLength: 50,
             });
             form.addDoubleInput(nameInput, emailInput);
 
@@ -213,7 +213,7 @@
                 key: "category",
                 type: "radio",
                 titleText: "CATEGORY",
-                isRequired: 1,
+                required: 1,
             }, function(field) {
 
                 createWrapGroup();
@@ -234,7 +234,7 @@
 
                 endGroup();
 
-                field.getInputValue = function() {
+                field.getValue = function() {
                     return RadioButton.getValue("category");
                 };
 
@@ -242,31 +242,31 @@
             form.addInput(categoryField);
 
             // INPUT: Order number (order, payment, return)
-            orderInput = InputB({
+            orderInput = TextField({
                 key: "orderNumber",
                 ...inputStyle,
-                isRequired: 0, // WHY: Required only when it is shown. (updateQuestions)
+                required: 0, // WHY: Required only when it is shown. (updateQuestions)
                 titleText: "ORDER NUMBER",
                 placeholder: "ORD-000000",
                 descriptionText: "You can find it in your order confirmation e-mail.",
                 warningText: "Use this format: ORD-104582",
                 warningColor: WARNING_COLOR,
-                maxChar: 10,
+                maxLength: 10,
             });
             orderInput.input.inputElement.style.textTransform = "uppercase";
             orderInput.isValid = function() {
-                return ORDER_NUMBER_PATTERN.test(orderInput.getInputValue().trim().toUpperCase()) ? 1 : 0;
+                return ORDER_NUMBER_PATTERN.test(orderInput.getValue().trim().toUpperCase()) ? 1 : 0;
             };
             form.addInput(orderInput);
 
             // INPUT: Subject
-            subjectInput = InputB({
+            subjectInput = TextField({
                 key: "subject",
                 ...inputStyle,
-                isRequired: 1,
+                required: 1,
                 titleText: "SUBJECT",
                 placeholder: "Short summary, e.g. “My order has not arrived”",
-                maxChar: 80,
+                maxLength: 80,
             });
             form.addInput(subjectInput);
 
@@ -289,10 +289,10 @@
             articlesBox.elem.setAttribute("aria-live", "polite");
 
             // TEXTAREA: Description
-            descriptionTextarea = TextareaB({
+            descriptionTextarea = TextAreaField({
                 key: "description",
                 ...inputStyle,
-                isRequired: 1,
+                required: 1,
                 titleText: "DESCRIPTION",
                 placeholder: "What happened? What did you expect to happen?",
                 minCharCount: 30,
@@ -300,7 +300,7 @@
                 lengthText: "min 30 · length: ",
                 warningText: "Please write at least 30 characters",
                 warningColor: WARNING_COLOR,
-                maxChar: 2000,
+                maxLength: 2000,
                 height: 170,
                 rightPadding: 5,
                 unitStyle: {
@@ -312,15 +312,15 @@
             form.addInput(descriptionTextarea);
 
             // TEXTAREA: Steps (technical)
-            stepsTextarea = TextareaB({
+            stepsTextarea = TextAreaField({
                 key: "steps",
                 ...inputStyle,
-                isRequired: 0,
+                required: 0,
                 titleText: "STEPS TO REPRODUCE",
                 placeholder: "1. Open the app\n2. Go to ...\n3. Click ...",
                 minCharCount: 0,
                 showCount: 0,
-                maxChar: 1000,
+                maxLength: 1000,
                 height: 170, // WHY: The placeholder has 3 lines.
                 rightPadding: 5,
             });
@@ -331,14 +331,14 @@
                 key: "systemInfo",
                 type: "checkbox",
                 titleText: "SYSTEM INFORMATION",
-                isRequired: 0,
+                required: 0,
             }, function(field) {
 
                 field.info = getSystemInfo();
 
                 Label({
                     text: Object.keys(field.info).map(function(key) {
-                        return "<span style='color:" + Black(0.45) + "'>" + key + ":</span> " + SelectFile.escapeHtml(field.info[key]);
+                        return "<span style='color:" + Black(0.45) + "'>" + key + ":</span> " + FilePicker.escapeHtml(field.info[key]);
                     }).join("<br>"),
                     fontSize: 14,
                     textColor: TEXT_COLOR,
@@ -352,7 +352,7 @@
                     onChange: field.update,
                 });
 
-                field.getInputValue = function() {
+                field.getValue = function() {
                     return (field.checkBox.checked == 1) ? field.info : "";
                 };
 
@@ -364,7 +364,7 @@
                 key: "priority",
                 type: "radio",
                 titleText: "PRIORITY",
-                isRequired: 1,
+                required: 1,
             }, function(field) {
 
                 PRIORITIES.forEach(function(priority, index) {
@@ -385,7 +385,7 @@
                 field.responseLabel = Label({ text: "", fontSize: 14, textColor: ACCENT_COLOR });
                 that.elem.style.marginTop = "4px";
 
-                field.getInputValue = function() {
+                field.getValue = function() {
                     return RadioButton.getValue("priority");
                 };
 
@@ -398,10 +398,10 @@
                 type: "file",
                 titleText: "ATTACHMENTS",
                 descriptionText: "Optional. Screenshots, PDF or log files. Up to 5 files, 10 MB each.",
-                isRequired: 0,
+                required: 0,
             }, function(field) {
 
-                field.fileSelector = SelectFile({
+                field.fileSelector = FilePicker({
                     width: "100%",
                     multiple: 1,
                     maxFiles: 5,
@@ -416,7 +416,7 @@
                         field.update();
                     },
                     onError: function(self, errors) {
-                        errorLabel.text = errors.map(function(e) { return SelectFile.escapeHtml(e.message); }).join("<br>");
+                        errorLabel.text = errors.map(function(e) { return FilePicker.escapeHtml(e.message); }).join("<br>");
                     },
                     style: {
                         zone: { color: White(1), borderColor: Black(0.15), round: 8 },
@@ -431,7 +431,7 @@
 
                 const errorLabel = Label({ text: "", fontSize: 14, textColor: WARNING_COLOR });
 
-                field.getInputValue = function() {
+                field.getValue = function() {
                     return field.fileSelector.files.map(function(info) { return info.name; });
                 };
 
@@ -447,7 +447,7 @@
                 key: "contactMethod",
                 type: "radio",
                 titleText: "REPLY BY",
-                isRequired: 1,
+                required: 1,
             }, function(field) {
 
                 createWrapGroup();
@@ -468,7 +468,7 @@
 
                 endGroup();
 
-                field.getInputValue = function() {
+                field.getValue = function() {
                     return RadioButton.getValue("contactMethod");
                 };
 
@@ -476,10 +476,10 @@
             form.addInput(contactField);
 
             // INPUT: Phone (phone call)
-            phoneInput = PhoneInputB({
+            phoneInput = PhoneField({
                 key: "phone",
                 ...inputStyle,
-                isRequired: 0,
+                required: 0,
                 titleText: "PHONE NUMBER",
                 placeholder: "(auto)",
                 descriptionText: "We call on weekdays between 09:00 and 18:00.",
@@ -537,7 +537,7 @@
             field.visible = (isVisible) ? 1 : 0;
             field.setRequired(isVisible && isRequiredWhenVisible);
             // WHY: setRequired() only checks "empty". A shown field with a wrong value must show the error again.
-            if (isVisible && field.getInputValue().length) field.showWarningIfNotValid(field.isValid());
+            if (isVisible && field.getValue().length) field.showWarningIfNotValid(field.isValid());
         };
 
         const updatePriorityText = function() {
@@ -552,7 +552,7 @@
         // Shows the articles that match the words of the subject.
         const updateArticles = function() {
 
-            const words = subjectInput.getInputValue().toLowerCase().split(/[^a-z0-9-]+/).filter(function(word) {
+            const words = subjectInput.getValue().toLowerCase().split(/[^a-z0-9-]+/).filter(function(word) {
                 return word.length >= 3 && !STOP_WORDS.includes(word);
             });
 
@@ -647,20 +647,20 @@
 
         };
 
-        // *** FORM FIELDS (for CheckBox, RadioButton and SelectFile):
+        // *** FORM FIELDS (for CheckBox, RadioButton and FilePicker):
 
-        // Creates an InputB field without an input and puts custom content in it.
-        // The field works with Form: title, required warning, status, getInputValue().
+        // Creates an TextField field without an input and puts custom content in it.
+        // The field works with Form: title, required warning, status, getValue().
         const createField = function(params, buildContent) {
 
-            const field = InputB({
+            const field = TextField({
                 ...inputStyle,
                 rightPadding: 20,
                 ...params,
                 createInput: 0, // No text input, we add our own content.
             });
 
-            // BOX: Content area (created by InputB)
+            // BOX: Content area (created by TextField)
             field.inputBox.height = "auto";
             field.inputBox.elem.style.marginTop = "10px";
             field.inputBox.elem.style.marginBottom = "4px";
@@ -669,7 +669,7 @@
             // Call after the value is changed:
             field.update = function() {
                 field.checkIfInputIsRequiredAndEmpty();
-                field.onEdit(); // Form checks all fields.
+                field.onChange(); // Form checks all fields.
             };
 
             const previousContainer = getDefaultContainerBox();
@@ -685,7 +685,7 @@
                 });
                 field.content.clipContent = 0;
 
-                    buildContent(field); // Must set field.getInputValue()
+                    buildContent(field); // Must set field.getValue()
 
                 endGroup();
 
@@ -786,7 +786,7 @@
 
             const priority = PRIORITIES.find(function(p) { return p.id == RadioButton.getValue("priority"); });
             const replyByPhone = RadioButton.getValue("contactMethod") == "phone";
-            const email = emailInput.getInputValue();
+            const email = emailInput.getValue();
 
             waiting.open();
 
@@ -823,7 +823,7 @@
                     iconColor: "#3C8553",
                     iconFile: "assets/success.png",
                     messageText: "<b>Your ticket is created: " + ticketNumber + "</b><br>" +
-                        "We will " + ((replyByPhone) ? "call you" : "reply to " + SelectFile.escapeHtml(email)) + " " + priority.response + ".<br>" +
+                        "We will " + ((replyByPhone) ? "call you" : "reply to " + FilePicker.escapeHtml(email)) + " " + priority.response + ".<br>" +
                         "<span style='font-size:14px; color:" + Black(0.5) + "'>Keep the ticket number to follow your request.</span>",
                     buttonText: "OKAY",
                     backgroundColor: "rgba(255,255,255,0.92)",
@@ -880,7 +880,7 @@
         const clearForm = function() {
 
             [nameInput, emailInput, orderInput, subjectInput, descriptionTextarea, stepsTextarea, phoneInput].forEach(function(input) {
-                input.setInputValue("");
+                input.setValue("");
             });
 
             RadioButton.clear("category");
