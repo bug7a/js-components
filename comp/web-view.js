@@ -44,7 +44,7 @@ const WebViewDefaults = {
     height: 300,
     url: "", // "": Nothing is loaded (placeholder is shown)
     htmlText: "", // HTML text instead of a URL (srcdoc). NOTE: Not "html": that is the innerHTML setter of a basic.js Box.
-    title: "Web view", // iframe title (accessibility)
+    ariaLabel: "Web view", // the name a screen reader says (the title of the iframe)
     sandbox: null, // null: No sandbox. Ex: "allow-scripts allow-same-origin allow-forms allow-popups"
     allow: "", // Ex: "fullscreen; clipboard-write"
     referrerPolicy: "", // Ex: "no-referrer"
@@ -115,6 +115,7 @@ const WebView = function (params = {}) {
 
     // BOX: Component container
     let box = startObject(params);
+    basic.keepOldNames(box, WebView.OLD_NAMES, "WebView"); // the pages made with the old names, for a while
 
     // *** PRIVATE VARIABLES:
     const _s = box.style;
@@ -466,7 +467,7 @@ const WebView = function (params = {}) {
 
         // IFRAME:
         iframe = document.createElement("iframe");
-        iframe.title = box.title;
+        iframe.title = box.ariaLabel;
         iframe.style.display = "block";
         iframe.style.border = "none";
         iframe.style.width = "100%";
@@ -583,4 +584,10 @@ WebView.getOpenSvg = function (color) {
 // The spinner animation can not be set with inline styles.
 WebView.injectCss = function () {
     basic.addCss("web-view-css", "@keyframes webViewSpin { to { transform: rotate(360deg); } }");
+};
+
+// THE OLD NAMES of the params, the properties and the methods (basic.keepOldNames): the pages made with them keep
+// working until they move to the new names. Delete a name when no page uses it any more.
+WebView.OLD_NAMES = {
+    title: "ariaLabel",
 };

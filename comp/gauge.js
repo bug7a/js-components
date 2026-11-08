@@ -57,7 +57,7 @@ const GaugeDefaults = {
     titleText: "", // Under the whole gauge.
     duration: 600, // Length of the animation, in milliseconds.
     ariaLabel: "Gauge",
-    onValueChange: function (self) { },
+    onChange: function (self) { },
     styleName: "light", // "light" ("classic": its old name), "dark", "modern" or a name added to Gauge.styles
     style: { // Light style package (default)
         track: {
@@ -104,6 +104,7 @@ const Gauge = function (params = {}) {
 
     // BOX: Component container
     let box = startObject(params);
+    basic.keepOldNames(box, Gauge.OLD_NAMES, "Gauge"); // the pages made with the old names, for a while
 
     const _s = box.style;
 
@@ -325,7 +326,7 @@ const Gauge = function (params = {}) {
     box.setValue = function (value, silent = 0) {
         box.value = value;
         paint();
-        if (!silent) box.onValueChange(box);
+        if (!silent) box.onChange(box);
     };
     // USAGE: get: gauge.value, set: gauge.setValue(72)
 
@@ -434,3 +435,9 @@ Gauge.styles = {
 
 };
 Gauge.styles.classic = Gauge.styles.light; // the old name of light: the pages made with it keep their look
+
+// THE OLD NAMES of the params, the properties and the methods (basic.keepOldNames): the pages made with them keep
+// working until they move to the new names. Delete a name when no page uses it any more.
+Gauge.OLD_NAMES = {
+    onValueChange: "onChange",
+};

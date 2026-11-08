@@ -61,7 +61,7 @@
                         HGroup({ width: "100%", height: "auto", align: "left top", gap: 16, wrap: 1 });
 
                             graphSold = SparkLineBox({
-                                title: "Sold Items",
+                                titleText: "Sold Items",
                                 valueText: "1.3K",
                                 iconFile: ICON_FOLDER + "carrot.png",
                                 lineColor: "tomato",
@@ -69,7 +69,7 @@
                             });
 
                             graphUsers = SparkLineBox({
-                                title: "Active Users",
+                                titleText: "Active Users",
                                 valueText: "248",
                                 iconFile: ICON_FOLDER + "blueberries.png",
                                 lineColor: "#5B7BD5",
@@ -79,7 +79,7 @@
                             });
 
                             graphCpu = SparkLineBox({
-                                title: "CPU",
+                                titleText: "CPU",
                                 valueText: "42%",
                                 lineColor: "#65A293",
                                 minValue: 0, // Base line: 0%
@@ -112,7 +112,7 @@
 
                         graphWide = SparkLineBox({
                             width: "100%",
-                            title: "Strawberry Orders",
+                            titleText: "Strawberry Orders",
                             valueText: "86",
                             iconFile: ICON_FOLDER + "strawberry.png",
                             lineColor: "#E0457B",
@@ -172,7 +172,7 @@
 
                             graphBars = MiniGraphBox({
                                 width: 320,
-                                title: "Orders (bars)",
+                                titleText: "Orders (bars)",
                                 valueText: String(data[data.length - 1]),
                                 barColor: "#8E6CC9",
                                 values: data,
@@ -181,7 +181,7 @@
 
                             graphLine = SparkLineBox({
                                 width: 320,
-                                title: "Orders (line)",
+                                titleText: "Orders (line)",
                                 valueText: String(data[data.length - 1]),
                                 lineColor: "#8E6CC9",
                                 minValue: 0,

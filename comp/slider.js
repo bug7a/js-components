@@ -28,10 +28,10 @@ UI COMPONENT TEMPLATE
 - Needs basic.js v26.10.27 (a package of params).
 
 USAGE:
-const volume = Slider({ width: 280, currentValue: 70, onDragMove: function (value) { println(value); } });
+const volume = Slider({ width: 280, value: 70, onDragMove: function (value) { println(value); } });
 volume.setValue(40);
-Slider({ styleName: "round", width: "100%", currentValue: 30 });
-Slider({ styleName: "round", minValue: 12, maxValue: 24, step: 0.5, currentValue: 16 }); // 12, 12.5 ... 24
+Slider({ styleName: "round", width: "100%", value: 30 });
+Slider({ styleName: "round", minValue: 12, maxValue: 24, step: 0.5, value: 16 }); // 12, 12.5 ... 24
 
 Started Date: June 2024
 Developer: Bugra Ozden
@@ -47,7 +47,7 @@ const SliderDefaults = {
     key: 0,
     width: 250,
 
-    currentValue: 0, // Current selected value
+    value: 0, // Current selected value
     minValue: 0, // The value at the left end (setMinValue)
     maxValue: 100, // The value at the right end (setMaxValue)
     step: 1, // The values are min + n * step (Ex: 0.5). setStep()
@@ -120,6 +120,7 @@ const Slider = function(params = {}) {
 
     // BOX: Component container
     const box = startObject(params);
+    basic.keepOldNames(box, Slider.OLD_NAMES, "Slider"); // the pages made with the old names, for a while
 
     const _s = box.style;
     // WHY: A value from a page can be a text ("12"): "12" + 1 * 0.5 would be "120.5".
@@ -202,7 +203,7 @@ const Slider = function(params = {}) {
     // The value under a point of the screen: the middle of the thumb goes there.
     const getValueAtClientX = function(clientX) {
         const maxLeft = getMaxLeft();
-        if (maxLeft <= 0) return box.currentValue;
+        if (maxLeft <= 0) return box.value;
         const pointLeft = (clientX - box.elem.getBoundingClientRect().left) / getScreenScale();
         const thumbLeft = Math.min(Math.max(pointLeft - thumbBox.width / 2, 0), maxLeft);
         return toStepValue((thumbLeft / maxLeft) * getValueRange() + box.minValue);
@@ -210,7 +211,7 @@ const Slider = function(params = {}) {
 
     // The value, its text in the bubble and for a screen reader. (Only this function writes them.)
     const writeValue = function(value) {
-        box.currentValue = value;
+        box.value = value;
         valueBox.text = value;
         box.aria = {
             valuenow: String(value),
@@ -249,7 +250,7 @@ const Slider = function(params = {}) {
         // WHY round: parseInt cut the fraction of the position, so setValue(50) gave 49 (46 of 101 values were one less)
         // WHY only with a width: a slider not drawn yet (a closed tab, a hidden group: width 0) has no position to read;
         //     its value became the minimum, and a settings page saved 0
-        let value = box.currentValue;
+        let value = box.value;
         if (maxLeft > 0) {
             value = toStepValue(((newLeft / maxLeft) * getValueRange()) + box.minValue);
             newLeft = getLeftOfValue(value); // WHY: the thumb stands on its step (a step of 1 on 0 - 10 is 30 px)
@@ -357,7 +358,7 @@ const Slider = function(params = {}) {
     // Sets the current slider value and updates UI
 
     box.getValue = function() {
-        return box.currentValue;
+        return box.value;
     };
     // Returns the current slider value
 
@@ -376,7 +377,7 @@ const Slider = function(params = {}) {
 
     // The value is put inside the new range and on a step; the thumb moves to it without the bubble.
     const applyRange = function() {
-        moveThumbToValue(toStepValue(box.currentValue), 0);
+        moveThumbToValue(toStepValue(box.value), 0);
     };
 
     // The value at the left end. USAGE: slider.setMinValue(12)
@@ -543,7 +544,7 @@ const Slider = function(params = {}) {
     // The thumb goes to a point of the track; the page hears it when the value changes (onDragMove).
     const moveThumbToPoint = (clientX, animated) => {
         const value = getValueAtClientX(clientX);
-        if (value === box.currentValue) return;
+        if (value === box.value) return;
         moveThumbToValue(value, animated);
         box.onDragMove(value);
     };
@@ -629,8 +630,8 @@ const Slider = function(params = {}) {
         if (newLeft > maxLeft) newLeft = maxLeft;
 
         updateThumbPosition(newLeft);
-        showHideTracks(box.currentValue, 0);
-        box.onDragMove(box.currentValue);
+        showHideTracks(box.value, 0);
+        box.onDragMove(box.value);
     };
 
     const onMouseUp = () => {
@@ -642,12 +643,12 @@ const Slider = function(params = {}) {
 
     // The keys that change the value (a key is a short drag for the page: onDragStart, onDragMove, onDragEnd).
     const keyValues = {
-        ArrowRight: () => box.currentValue + getStep(),
-        ArrowUp: () => box.currentValue + getStep(),
-        ArrowLeft: () => box.currentValue - getStep(),
-        ArrowDown: () => box.currentValue - getStep(),
-        PageUp: () => box.currentValue + getStep() * PAGE_STEPS,
-        PageDown: () => box.currentValue - getStep() * PAGE_STEPS,
+        ArrowRight: () => box.value + getStep(),
+        ArrowUp: () => box.value + getStep(),
+        ArrowLeft: () => box.value - getStep(),
+        ArrowDown: () => box.value - getStep(),
+        PageUp: () => box.value + getStep() * PAGE_STEPS,
+        PageDown: () => box.value - getStep() * PAGE_STEPS,
         Home: () => box.minValue,
         End: () => box.maxValue,
     };
@@ -658,7 +659,7 @@ const Slider = function(params = {}) {
         isKeyboardFocus = 1;
         paintFocus();
         const value = toStepValue(keyValues[e.key]());
-        if (value === box.currentValue) return;
+        if (value === box.value) return;
         box.onDragStart();
         moveThumbToValue(value, 1);
         if (box.showValueOnDrag) box.showValue();
@@ -694,10 +695,10 @@ const Slider = function(params = {}) {
     //      the page. The thumb must stay on its value. (No animation and no value bubble here.)
     box.onResize(function() {
         if (isDragging) return;
-        moveThumbToValue(box.currentValue, 0);
+        moveThumbToValue(box.value, 0);
     });
 
-    box.setValue(box.currentValue);
+    box.setValue(box.value);
 
     return endObject(box);
 
@@ -819,3 +820,9 @@ Slider.MINIMAL_COLORS = { ground: "#FFFFFF", ink: "#1F1F1F", onInk: "#FFFFFF", t
 Slider.styles.minimal = Slider.createMinimalStyle(Slider.MINIMAL_COLORS);
 Slider.MINIMAL_DARK_COLORS = { ground: "#1A1A19", ink: "#EDEDEB", onInk: "#1A1A19", track: White(0.14), focus: "#7FB6DE" };
 Slider.styles.minimalDark = Slider.createMinimalStyle(Slider.MINIMAL_DARK_COLORS);
+
+// THE OLD NAMES of the params, the properties and the methods (basic.keepOldNames): the pages made with them keep
+// working until they move to the new names. Delete a name when no page uses it any more.
+Slider.OLD_NAMES = {
+    currentValue: "value",
+};

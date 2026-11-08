@@ -58,11 +58,11 @@ const SearchInputDefaults = {
     searchIconLeft: 16, // px: the search icon from the left side of the box
     searchIconGap: 8, // px: between the search icon and the text
     clearIconRight: 16, // px: the clear icon from the right side of the box (more: the right end is for an object of the page)
-    isCancelEnabled: 1,
+    showClearIcon: 1,
     clearIconMinTextWidth: 0, // px: the clear icon is not shown when the text beside it would be narrower (0: always shown)
     textFadeWidth: 24, // px: a text longer than the box fades out over this width where it is cut (0: cut sharply)
     clearOnEscape: 0, // 1: Escape clears the text (as the clear icon); in an empty field it goes on to the page
-    placeholderText: "Search",
+    placeholder: "Search",
     color: "whitesmoke",
     textColor: "rgba(0, 0, 0, 0.8)",
     placeholderColor: "", // "": Tarayıcının kendi rengi. Koyu zeminde White(0.35) gibi bir renk verin.
@@ -107,7 +107,8 @@ const SearchInput = function(params = {}) {
 
     // BOX: Component container
     const box = startObject(params);
-    
+    basic.keepOldNames(box, SearchInput.OLD_NAMES, "SearchInput"); // the pages made with the old names, for a while
+
     // *** Private variables:
     const ICONS_SPACE = 80; // The width of the box that is not for the text, with the default icon place (16 + 8)
     const CLEAR_ICON_PLACE = 16; // px: the text is longer by this when the clear icon is not used
@@ -148,7 +149,7 @@ const SearchInput = function(params = {}) {
 
     // The clear icon is used: it is on, and the box has room for it (clearIconMinTextWidth)
     const isClearIconUsed = function() {
-        if (!box.isCancelEnabled) return false;
+        if (!box.showClearIcon) return false;
         if (!box.clearIconMinTextWidth) return true;
         return getTextWidthWithClearIcon() >= box.clearIconMinTextWidth;
     };
@@ -374,8 +375,8 @@ const SearchInput = function(params = {}) {
         return box.txtSearch.text;
     }
 
-    box.setPlaceholderText = function(text) {
-        box.placeholderText = text;
+    box.setPlaceholder = function(text) {
+        box.placeholder = text;
         box.txtSearch.inputElement.setAttribute("placeholder", text);
     }
 
@@ -418,7 +419,7 @@ const SearchInput = function(params = {}) {
             color: "transparent",
         });
         that.inputElement.style.paddingLeft = "0px";
-        that.inputElement.setAttribute("placeholder", box.placeholderText);
+        that.inputElement.setAttribute("placeholder", box.placeholder);
         // WHY: ::placeholder rengi sadece CSS ile değişir. Kural sayfaya bir kez eklenir; rengi her input kendi değişkeninde taşır.
         if (box.placeholderColor !== "") {
             SearchInput.addPlaceholderStyle();
@@ -650,3 +651,11 @@ SearchInput.MINIMAL_COLORS = { invertIcons: 0, text: Black(0.85), placeholder: B
 SearchInput.styles.minimal = SearchInput.createMinimalStyle(SearchInput.MINIMAL_COLORS);
 SearchInput.MINIMAL_DARK_COLORS = { invertIcons: 1, text: White(0.88), placeholder: White(0.48), edge: White(0.42), ink: "#EDEDEB" };
 SearchInput.styles.minimalDark = SearchInput.createMinimalStyle(SearchInput.MINIMAL_DARK_COLORS);
+
+// THE OLD NAMES of the params, the properties and the methods (basic.keepOldNames): the pages made with them keep
+// working until they move to the new names. Delete a name when no page uses it any more.
+SearchInput.OLD_NAMES = {
+    isCancelEnabled: "showClearIcon",
+    placeholderText: "placeholder",
+    setPlaceholderText: "setPlaceholder",
+};

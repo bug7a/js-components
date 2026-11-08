@@ -29,7 +29,7 @@ const URLInputBDefaults = {
     maxLength: 255,
     rightPadding: 20,
     tinySelectParams: {
-        title: "",
+        titleText: "",
         list: [
             { id: "1", label: "http://" },
             { id: "2", label: "https://" },

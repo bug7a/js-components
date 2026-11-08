@@ -67,7 +67,7 @@ list.updateItem("tomato", { desc: "Fruit, really" });
 list.setLayout("grid");
 ItemList({ selection: "multiple", styleName: "modern" });
 ItemList({ layout: "horizontal", height: 200, styleName: "dark" });
-ItemList({ showSearch: 1, searchParams: { placeholderText: "Ara" } });
+ItemList({ showSearch: 1, searchParams: { placeholder: "Ara" } });
 ItemList({
     style: { row: { height: "auto" } },
     createItemView: function (item, row, self) {     // Objects created here go into the row.
@@ -103,7 +103,7 @@ const ItemListDefaults = {
     createSectionView: null, // function (item, row, self) { ... } Your own section row (instead of its title)
     animated: 0, // 1: addItem / removeItem move the rows (a new row fades in, a removed one fades out). setAnimated(0/1)
     showSearch: 0, // 1: a search box over the list (comp/search-input.js SearchInput must be loaded)
-    searchParams: {}, // More params of the SearchInput. Ex: { placeholderText: "Ara", searchIconFile: "../comp/search-input/search.svg" }
+    searchParams: {}, // More params of the SearchInput. Ex: { placeholder: "Ara", searchIconFile: "../comp/search-input/search.svg" }
     emptyText: "No items",
     noResultText: "No results",
     enabled: 1,

@@ -11,7 +11,7 @@ UI COMPONENT TEMPLATE
   only the path data changes. (Fast for live data)
 - Trend badge: "▲ 12%" or "▼ 3%", the last value compared with the first visible value. (showTrend, or your own trendText)
 - Last value dot, optional min / max dots, and marked values: addValue(95, "red") draws a dot in that color.
-- Mouse over: a tooltip shows the value of the nearest point. (hover: 1)
+- Mouse over: a tooltip shows the value of the nearest point. (showTooltip: 1)
 - maxPoints: How many values are kept. New values are added to the right, the first value is removed when it is full.
 - minValue / maxValue: 0 or null means auto (the smallest / biggest visible value). minValue: 0 keeps the base line at zero.
 - curve: "smooth" or "linear".
@@ -39,7 +39,7 @@ const SparkLineBoxDefaults = {
     key: "0",
     width: 200,
     height: 80,
-    title: "Sold Items",
+    titleText: "Sold Items",
     valueText: "1.3K",
     iconFile: "", // "": No icon
     lineColor: "tomato",
@@ -53,7 +53,7 @@ const SparkLineBoxDefaults = {
     showMinMax: 0, // 1: Dots on the smallest and the biggest value
     showTrend: 1, // 1: Trend badge (last value compared with the first visible value)
     trendText: "", // Your own badge text. "": Calculated. (Ex: "▲ 12%")
-    hover: 1, // 1: Tooltip with the value on mouse over
+    showTooltip: 1, // 1: Tooltip with the value on mouse over
     animated: 1, // 1: The line moves with a short motion when a value is added.
     valueFormat: function (value) { return String(value); }, // Tooltip text
     onClick: function (self) { },
@@ -124,6 +124,7 @@ const SparkLineBox = function (params = {}) {
 
     // BOX: Component container
     let box = startObject(params);
+    basic.keepOldNames(box, SparkLineBox.OLD_NAMES, "SparkLineBox"); // the pages made with the old names, for a while
 
     // *** PRIVATE VARIABLES:
     const _s = box.style;
@@ -466,7 +467,7 @@ const SparkLineBox = function (params = {}) {
     };
 
     const onMouseMove = function (self, event) {
-        if (box.hover != 1 || points.length == 0) return;
+        if (box.showTooltip != 1 || points.length == 0) return;
         const rect = box.elem.getBoundingClientRect();
         const x = withPageZoom(event.clientX - rect.left) - _s.graph.padding;
         const slots = getSlotCount();
@@ -519,7 +520,7 @@ const SparkLineBox = function (params = {}) {
     };
 
     box.setTitle = function (text) {
-        box.title = text;
+        box.titleText = text;
         box.lblTitle.text = text;
     };
 
@@ -624,7 +625,7 @@ const SparkLineBox = function (params = {}) {
     });
 
         box.lblTitle = Label({
-            text: box.title,
+            text: box.titleText,
             fontSize: _s.title.fontSize,
             textColor: _s.title.textColor,
         });
@@ -727,3 +728,10 @@ SparkLineBox.withAlpha = function (color, alpha) {
 
 // Chrome and Edge can animate the path with the CSS "d" property.
 SparkLineBox.supportsCssPath = (typeof CSS !== "undefined" && CSS.supports && CSS.supports("d", 'path("M 0 0 L 1 1")'));
+
+// THE OLD NAMES of the params, the properties and the methods (basic.keepOldNames): the pages made with them keep
+// working until they move to the new names. Delete a name when no page uses it any more.
+SparkLineBox.OLD_NAMES = {
+    title: "titleText",
+    hover: "showTooltip",
+};

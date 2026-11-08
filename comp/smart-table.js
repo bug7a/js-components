@@ -129,7 +129,7 @@ const SmartTableDefaults = {
         fontSize: 15,
         searchIconSize: 16,
         searchIconOpacity: 0.5,
-        placeholderText: "Filter",
+        placeholder: "Filter",
         searchIconFile: "../comp/search-input/filter.png",
         clearIconMinTextWidth: 80, // (a narrow filter box has no clear icon; its text keeps that place)
         clearOnEscape: 1, // Escape clears the filter (a narrow box has no clear icon)
@@ -1796,7 +1796,7 @@ SmartTable.styles = {
             round: 8,
             color: "white",
             searchIconSize: 16,
-            placeholderText: "Filter",
+            placeholder: "Filter",
             fontSize: 16,
             borderColor: Black(0.15), // (light edges in the filter)
             borderBottomStyle: "1px solid " + Black(0.15),

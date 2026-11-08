@@ -86,7 +86,7 @@
                             Dialog.confirm({ styleName: "minimalBlue", titleText: "Send the report?", messageText: "It goes to the three people of the team.", confirmText: "Send" });
                         } });
                         SmartButton({ styleName: "minimalBlue", labelText: "A toast", onClick: function () {
-                            Toast.show({ theme: "minimalBlue", type: "success", title: "Sent", message: "The report is sent.", action: { text: "Undo", onClick: function () { } } });
+                            Toast.show({ theme: "minimalBlue", type: "success", titleText: "Sent", messageText: "The report is sent.", action: { text: "Undo", onClick: function () { } } });
                         } });
                     endGroup();
 
@@ -117,7 +117,7 @@
                     ] });
 
                     Label({ text: "SLIDER, PROGRESS", fontSize: 11, bold: 1, textColor: LIGHT_CAPTION_COLOR });
-                    Slider({ styleName: "minimalBlue", width: 260, currentValue: 40 });
+                    Slider({ styleName: "minimalBlue", width: 260, value: 40 });
                     ProgressBar({ styleName: "minimalBlue", width: 260, titleText: "Uploading files", value: 62 });
 
                     Label({ text: "TABS, STEPS", fontSize: 11, bold: 1, textColor: LIGHT_CAPTION_COLOR });
@@ -140,7 +140,7 @@
                             Dialog.confirm({ styleName: "minimalBlueDark", titleText: "Send the report?", messageText: "It goes to the three people of the team.", confirmText: "Send" });
                         } });
                         SmartButton({ styleName: "minimalBlueDark", labelText: "A toast", onClick: function () {
-                            Toast.show({ theme: "minimalBlueDark", type: "success", title: "Sent", message: "The report is sent.", action: { text: "Undo", onClick: function () { } } });
+                            Toast.show({ theme: "minimalBlueDark", type: "success", titleText: "Sent", messageText: "The report is sent.", action: { text: "Undo", onClick: function () { } } });
                         } });
                     endGroup();
 
@@ -171,7 +171,7 @@
                     ] });
 
                     Label({ text: "SLIDER, PROGRESS", fontSize: 11, bold: 1, textColor: DARK_CAPTION_COLOR });
-                    Slider({ styleName: "minimalBlueDark", width: 260, currentValue: 40 });
+                    Slider({ styleName: "minimalBlueDark", width: 260, value: 40 });
                     ProgressBar({ styleName: "minimalBlueDark", width: 260, titleText: "Uploading files", value: 62 });
 
                     Label({ text: "TABS, STEPS", fontSize: 11, bold: 1, textColor: DARK_CAPTION_COLOR });

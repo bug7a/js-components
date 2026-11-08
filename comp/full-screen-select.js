@@ -269,7 +269,7 @@ const FullScreenSelect = function (params = {}) {
             searchIconOpacity: search.iconOpacity,
             border: 0,
             borderBottomStyle: "none",
-            placeholderText: box.placeholderText,
+            placeholder: box.placeholderText,
             onSearch: function (text) { filterRows(text); },
         };
         // WHY only when given: a file given here would win over the icon of the style package of SearchInput

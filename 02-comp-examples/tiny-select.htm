@@ -22,7 +22,7 @@
             const tinySelectA = TinySelect({
                 left: 40,
                 top: 40,
-                title: "Theme",
+                titleText: "Theme",
                 list: [
                     { id: "1", label: "(none)" },
                     { id: "2", label: "Star Wars" },
@@ -36,7 +36,7 @@
 
             // TINY SELECT:
             const tinySelectB = TinySelect({
-                title: "Language",
+                titleText: "Language",
                 label: "",
                 list: [
                     { id: "1", label: "English" },
@@ -51,12 +51,12 @@
             // Put second object bottom of the previous object.
             tinySelectB.aline(tinySelectA, "bottom", 4, "left");
 
-            // Other functions: setList(list, selectedIndex), setSelectedIndex(), setTitle(), setDisabled(), setColor()
+            // Other functions: setList(list, selectedIndex), setSelectedIndex(), setTitle(), setEnabled(), setColor()
 
         };
 
-        const showSelected = function (index, id, label, title) {
-            console.log(`${title}: ${label} (${id})`);
+        const showSelected = function (index, id, label, titleText) {
+            console.log(`${titleText}: ${label} (${id})`);
         };
 
         </script>

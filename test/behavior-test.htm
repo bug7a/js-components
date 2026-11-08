@@ -54,6 +54,8 @@
         <script src="../comp/context-menu.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/numeric-keyboard.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/mini-graph-box.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/spark-line-box.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/gauge.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/scrolling-text.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/tap-effect.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/stepper.js" type="text/javascript" charset="utf-8"></script>
@@ -1080,8 +1082,8 @@
             const plainRow = plainTree.elem.querySelector("[role=treeitem]");
             check("TreeView minimal: the selected row has an ink line", treeRow.style.borderColor === "rgb(31, 31, 31)", treeRow.style.borderColor);
             check("TreeView: the default rows have no edge", !plainRow.style.borderWidth || plainRow.style.borderWidth === "0px", plainRow.style.borderWidth);
-            const minimalToast = Toast.show({ theme: "minimal", message: "Minimal", duration: 0 });
-            const plainToast = Toast.show({ theme: "light", message: "Plain", duration: 0 });
+            const minimalToast = Toast.show({ theme: "minimal", messageText: "Minimal", duration: 0 });
+            const plainToast = Toast.show({ theme: "light", messageText: "Plain", duration: 0 });
             await basic.nextFrame();
             check("Toast minimal: the shapes of its theme (round 4, no shadow)", minimalToast.card.elem.style.borderRadius === "4px" && minimalToast.card.elem.style.boxShadow === "none", minimalToast.card.elem.style.borderRadius + " / " + minimalToast.card.elem.style.boxShadow);
             check("Toast: the default shapes stay (round 10)", plainToast.card.elem.style.borderRadius === "10px", plainToast.card.elem.style.borderRadius);
@@ -1647,6 +1649,39 @@
             password.remove();
         });
 
+        test("The old names of TinySelect, SearchInput, Slider, Gauge, Toast, the graph boxes and WebView still work", async function () {
+            const realWarn = console.warn;
+            console.warn = function () { };
+            const select = TinySelect({ title: "Theme", disabled: 1, labelBoldFont: 0, list: [{ id: "1", label: "Light" }] });
+            const isSelectKept = select.titleText === "Theme" && select.enabled === 0 && select.clickable === 0 && select.labelBold === 0;
+            select.setDisabled(0); // the old method: the reverse of setEnabled
+            const isSelectEnabled = select.enabled === 1 && select.clickable === 1;
+            const search = SearchInput({ placeholderText: "Find", isCancelEnabled: 0 });
+            const searchElement = search.txtSearch.inputElement;
+            const isSearchKept = search.placeholder === "Find" && search.showClearIcon === 0 && searchElement.getAttribute("placeholder") === "Find";
+            search.setPlaceholderText("Look");
+            const isSearchMethodKept = searchElement.getAttribute("placeholder") === "Look";
+            const slider = Slider({ width: 200, currentValue: 40 });
+            const isSliderKept = slider.value === 40 && slider.currentValue === 40 && slider.getValue() === 40;
+            let gaugeChanges = 0;
+            const gauge = Gauge({ value: 10, onValueChange: function () { gaugeChanges++; } });
+            gauge.setValue(20);
+            const toast = Toast.show({ title: "File", message: "Saved", duration: 0 });
+            toast.update({ message: "Saved again" });
+            const isToastKept = toast.titleText === "File" && toast.messageText === "Saved again" && toast.title === "File";
+            const spark = SparkLineBox({ title: "Orders", hover: 0, values: [1, 2] });
+            const mini = MiniGraphBox({ title: "Sales", values: [1, 2] });
+            const isGraphKept = spark.titleText === "Orders" && spark.showTooltip === 0 && mini.titleText === "Sales";
+            const view = WebView({ title: "Help page" });
+            console.warn = realWarn;
+            check("The old names of TinySelect, SearchInput, Slider, Gauge, Toast, the graph boxes and WebView still work",
+                isSelectKept && isSelectEnabled && isSearchKept && isSearchMethodKept && isSliderKept && gaugeChanges === 1 && isToastKept && isGraphKept && view.ariaLabel === "Help page",
+                "select: " + isSelectKept + "/" + isSelectEnabled + ", search: " + isSearchKept + "/" + isSearchMethodKept + ", slider: " + isSliderKept
+                + ", gauge: " + gaugeChanges + ", toast: " + isToastKept + ", graphs: " + isGraphKept + ", view: " + view.ariaLabel);
+            [select, search, slider, gauge, spark, mini, view].forEach(function (object) { object.remove(); });
+            Toast.closeAll();
+        });
+
         // *** PHONE INPUT (comp/phone-input-b.js)
 
         test("PhoneInputB: a pasted number keeps all its digits", async function () {
@@ -1866,7 +1901,7 @@
         });
 
         test("Slider: minValue, maxValue and step: the value stays in the range and on a step (setValue, a drag, the setters)", async function () {
-            const slider = Slider({ width: 250, minValue: 12, maxValue: 24, step: 0.5, currentValue: 16 });
+            const slider = Slider({ width: 250, minValue: 12, maxValue: 24, step: 0.5, value: 16 });
             await wait(50);
             const row = [slider.getValue()];
             slider.setValue(30);
@@ -1884,7 +1919,7 @@
             slider.setMinValue(0);
             slider.setStep(5);
             row.push(slider.getValue());
-            const tenths = Slider({ minValue: 0, maxValue: 1, step: 0.1, currentValue: 0.3 });
+            const tenths = Slider({ minValue: 0, maxValue: 1, step: 0.1, value: 0.3 });
             row.push(tenths.getValue());
             slider.remove();
             tenths.remove();
@@ -1952,7 +1987,7 @@
 
         test("Slider: the keys change the value by its step (a key is a short drag); role slider, aria-valuenow; the ring only for the keyboard", async function () {
             let endCount = 0;
-            const slider = Slider({ width: 250, maxValue: 10, step: 0.5, currentValue: 5, onDragEnd: function () { endCount++; } });
+            const slider = Slider({ width: 250, maxValue: 10, step: 0.5, value: 5, onDragEnd: function () { endCount++; } });
             await wait(50);
             const values = [];
             ["ArrowRight", "ArrowLeft", "ArrowLeft", "PageUp", "End", "ArrowUp", "Home", "ArrowDown"].forEach(function (keyName) {
@@ -2924,7 +2959,7 @@
             await document.fonts.ready;
             // WHY the slot of the toast (toast.elem), not its card: the card slides in with a transform
             const measureToast = function () {
-                const toast = Toast.info("Saved", { title: "File", duration: 0 });
+                const toast = Toast.info("Saved", { titleText: "File", duration: 0 });
                 const place = toast.elem.parentElement.getBoundingClientRect();
                 const sizes = { toast: screenSize(toast.elem), top: place.top, right: place.right };
                 toast.remove();
@@ -3486,7 +3521,7 @@
 
         test("Slider: made in a hidden group it keeps its value, also one set while hidden", async function () {
             const group = VGroup({ width: 400, height: 80, visible: 0 });
-                const slider = Slider({ width: "100%", currentValue: 60 });
+                const slider = Slider({ width: "100%", value: 60 });
             endGroup();
             const hiddenValue = slider.getValue();
             slider.setValue(80);

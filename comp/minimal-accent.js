@@ -27,7 +27,7 @@ const look = MinimalAccent.addPackages("minimalBlue", "#2A78D6"); // { light: "m
 Toggle({ styleName: "minimalBlue", value: 1 });
 CheckBox({ styleName: "minimalBlue", text: "Remember me" });
 SmartButton({ styleName: "minimalBlue", tone: "minimalBlue", labelText: "Save" }); // the main action
-Toast.show({ message: "Saved", theme: "minimalBlue" });
+Toast.show({ messageText: "Saved", theme: "minimalBlue" });
 MinimalAccent.addPackages("minimalGreen", "#1F7A5C", "#7FE3B5"); // the color of the dark window too
 
 Started Date: November 2026

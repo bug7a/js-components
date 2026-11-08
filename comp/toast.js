@@ -24,16 +24,16 @@ UI COMPONENT TEMPLATE
 
 USAGE:
 Toast.success("Changes are saved.");
-Toast.error("Could not save the file.", { title: "Upload failed", duration: 0 });
-Toast.show({ type: "info", title: "Item deleted", message: "report.pdf", action: { text: "Undo", onClick: undoDelete } });
-Toast.show({ key: "copy", type: "success", message: "Link is copied." }); // Same key: updates the visible toast
+Toast.error("Could not save the file.", { titleText: "Upload failed", duration: 0 });
+Toast.show({ type: "info", titleText: "Item deleted", messageText: "report.pdf", action: { text: "Undo", onClick: undoDelete } });
+Toast.show({ key: "copy", type: "success", messageText: "Link is copied." }); // Same key: updates the visible toast
 Toast.promise(saveData(), { loading: "Saving...", success: "Saved.", error: (err) => "Failed: " + err.message });
 Toast.setOptions({ position: "bottom-right", theme: "dark" });
 Toast.setOptions({ scale: 1.5 }); // every toast and its place x 1.5 (default: basic.uiScale)
 
-const toast = Toast.show({ type: "loading", message: "Uploading 0%" });
-toast.update({ message: "Uploading 60%" });
-toast.update({ type: "success", message: "Uploaded." }); // Starts its timer (loading has no timer)
+const toast = Toast.show({ type: "loading", messageText: "Uploading 0%" });
+toast.update({ messageText: "Uploading 60%" });
+toast.update({ type: "success", messageText: "Uploaded." }); // Starts its timer (loading has no timer)
 toast.close();
 
 Started Date: September 2026
@@ -49,9 +49,9 @@ Webpage: https://bug7a.github.io/js-components/
 const ToastDefaults = {
     key: "", // Same key: updates the visible toast.
     type: "info", // "success", "error", "warning", "info", "loading"
-    title: "",
-    message: "",
-    allowHtml: 0, // 0: title and message are shown as text. 1: As HTML (use only your own texts).
+    titleText: "",
+    messageText: "",
+    allowHtml: 0, // 0: titleText and messageText are shown as text. 1: As HTML (use only your own texts).
     duration: null, // ms. null: Toast.options.durations[type]. 0: Stays until it is closed.
     closable: 1, // 1: Close button
     showProgress: 1, // 1: Time bar
@@ -104,6 +104,8 @@ const ToastDefaults = {
 
 const Toast = function (params = {}) {
 
+    basic.renameOldParams(params, Toast.OLD_NAMES, "Toast"); // WHY first: the same key updates a visible toast with these params
+
     // Merge params: the shapes of its theme (Toast.THEMES[name].style: minimal), then the defaults
     // WHY before the defaults: the shapes of a theme win over the default shapes, a style of the page over both
     const themeOfParams = Toast.THEMES[params.theme || Toast.options.theme];
@@ -149,6 +151,7 @@ const Toast = function (params = {}) {
 
     // BOX: Component container (a slot in the stack; its height is animated on close)
     let box = startObject(params);
+    basic.keepOldNames(box, Toast.OLD_NAMES, "Toast"); // the pages made with the old names, for a while
 
     // *** PRIVATE VARIABLES:
     const _s = box.style;
@@ -214,13 +217,13 @@ const Toast = function (params = {}) {
 
         box.icon.text = Toast.getIconSvg(box.type, color, _s.icon.size);
 
-        box.lblTitle.visible = (box.title) ? 1 : 0;
-        box.lblTitle.text = getViewText(box.title);
+        box.lblTitle.visible = (box.titleText) ? 1 : 0;
+        box.lblTitle.text = getViewText(box.titleText);
         box.lblTitle.textColor = theme.title;
 
-        box.lblMessage.visible = (box.message) ? 1 : 0;
-        box.lblMessage.text = getViewText(box.message);
-        box.lblMessage.textColor = (box.title) ? theme.message : theme.title; // WHY: Without a title, the message is the main text.
+        box.lblMessage.visible = (box.messageText) ? 1 : 0;
+        box.lblMessage.text = getViewText(box.messageText);
+        box.lblMessage.textColor = (box.titleText) ? theme.message : theme.title; // WHY: Without a title, the message is the main text.
 
         const hasAction = !!(box.action && box.action.text);
         box.btnAction.visible = (hasAction) ? 1 : 0;
@@ -327,7 +330,8 @@ const Toast = function (params = {}) {
     // Changes the toast and starts its timer again.
     box.update = function (values = {}) {
         if (!box || box.isClosing) return box;
-        ["type", "title", "message", "allowHtml", "duration", "closable", "showProgress", "pauseOnHover", "theme", "onClick", "action"].forEach(function (key) {
+        basic.renameOldParams(values, Toast.OLD_NAMES, "Toast");
+        ["type", "titleText", "messageText", "allowHtml", "duration", "closable", "showProgress", "pauseOnHover", "theme", "onClick", "action"].forEach(function (key) {
             if (key in values) box[key] = values[key];
         });
         if (!("duration" in values)) box.duration = null; // WHY: A new type (loading -> success) uses its own duration.
@@ -335,7 +339,7 @@ const Toast = function (params = {}) {
         startTimer();
         return box;
     };
-    // USAGE: toast.update({ type: "success", message: "Uploaded." })
+    // USAGE: toast.update({ type: "success", messageText: "Uploaded." })
 
     // A small move to show that the toast is updated.
     box.bump = function () {
@@ -697,19 +701,19 @@ Toast.show = function (params = {}) {
 };
 
 Toast.success = function (message, params = {}) {
-    return Toast(Object.assign({}, params, { type: "success", message: message }));
+    return Toast(Object.assign({}, params, { type: "success", messageText: message }));
 };
 
 Toast.error = function (message, params = {}) {
-    return Toast(Object.assign({}, params, { type: "error", message: message }));
+    return Toast(Object.assign({}, params, { type: "error", messageText: message }));
 };
 
 Toast.warning = function (message, params = {}) {
-    return Toast(Object.assign({}, params, { type: "warning", message: message }));
+    return Toast(Object.assign({}, params, { type: "warning", messageText: message }));
 };
 
 Toast.info = function (message, params = {}) {
-    return Toast(Object.assign({}, params, { type: "info", message: message }));
+    return Toast(Object.assign({}, params, { type: "info", messageText: message }));
 };
 
 // A "loading" toast that becomes "success" or "error". Returns the promise.
@@ -718,7 +722,7 @@ Toast.promise = function (promise, texts = {}, params = {}) {
 
     const toast = Toast(Object.assign({}, params, {
         type: "loading",
-        message: texts.loading || "Loading...",
+        messageText: texts.loading || "Loading...",
         duration: 0,
         closable: 0,
     }));
@@ -728,9 +732,9 @@ Toast.promise = function (promise, texts = {}, params = {}) {
     };
 
     promise.then(function (data) {
-        toast.update({ type: "success", message: getText(texts.success, data) || "Done.", closable: 1 });
+        toast.update({ type: "success", messageText: getText(texts.success, data) || "Done.", closable: 1 });
     }, function (error) {
-        toast.update({ type: "error", message: getText(texts.error, error) || "Something went wrong.", closable: 1 });
+        toast.update({ type: "error", messageText: getText(texts.error, error) || "Something went wrong.", closable: 1 });
     });
 
     return promise;
@@ -884,3 +888,9 @@ Toast.getCloseSvg = function (color, size = 16) {
         '" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>';
 };
 
+// THE OLD NAMES of the params, the properties and the methods (basic.keepOldNames): the pages made with them keep
+// working until they move to the new names. Delete a name when no page uses it any more.
+Toast.OLD_NAMES = {
+    title: "titleText",
+    message: "messageText",
+};

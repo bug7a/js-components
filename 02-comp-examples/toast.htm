@@ -55,12 +55,12 @@
                         startButtonRow();
                             smallButton("Success", function () { Toast.success("Changes are saved."); });
                             smallButton("Error", function () {
-                                Toast.error("Could not connect to the server. Check your internet connection.", { title: "Connection error" });
+                                Toast.error("Could not connect to the server. Check your internet connection.", { titleText: "Connection error" });
                             });
                             smallButton("Warning", function () { Toast.warning("Only 2 products are left in stock."); });
                             smallButton("Info", function () { Toast.info("A new version is available."); });
                             smallButton("Loading (stays)", function () {
-                                Toast.show({ type: "loading", message: "Waiting for the server..." });
+                                Toast.show({ type: "loading", messageText: "Waiting for the server..." });
                             });
                         endGroup();
 
@@ -83,8 +83,8 @@
                                 lblUndo.text = "Files: <b>" + fileCount + "</b>";
                                 Toast.show({
                                     type: "info",
-                                    title: "File is deleted",
-                                    message: "report-" + (fileCount + 1) + ".pdf",
+                                    titleText: "File is deleted",
+                                    messageText: "report-" + (fileCount + 1) + ".pdf",
                                     duration: 6000,
                                     action: {
                                         text: "Undo",
@@ -118,15 +118,15 @@
                                 });
                             });
                             smallButton("Upload with progress", function () {
-                                const toast = Toast.show({ type: "loading", title: "Uploading photos.zip", message: "0%" });
+                                const toast = Toast.show({ type: "loading", titleText: "Uploading photos.zip", messageText: "0%" });
                                 let percent = 0;
                                 const timer = setInterval(function () {
                                     percent += 20;
                                     if (percent < 100) {
-                                        toast.update({ type: "loading", title: "Uploading photos.zip", message: percent + "%" });
+                                        toast.update({ type: "loading", titleText: "Uploading photos.zip", messageText: percent + "%" });
                                     } else {
                                         clearInterval(timer);
-                                        toast.update({ type: "success", title: "Upload is complete", message: "photos.zip (24 MB)" });
+                                        toast.update({ type: "success", titleText: "Upload is complete", messageText: "photos.zip (24 MB)" });
                                     }
                                 }, 500);
                             });
@@ -143,7 +143,7 @@
                             smallButton("Copy link", function () {
                                 copyCount++;
                                 const countText = (copyCount > 1) ? " (" + copyCount + " times)" : "";
-                                Toast.show({ key: "copy", type: "success", message: "Link is copied." + countText });
+                                Toast.show({ key: "copy", type: "success", messageText: "Link is copied." + countText });
                             });
                             smallButton("Without key", function () {
                                 Toast.success("Link is copied.");

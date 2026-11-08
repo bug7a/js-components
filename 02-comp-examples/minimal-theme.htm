@@ -211,7 +211,7 @@
                     ] });
 
                     Label({ text: "SLIDER, PROGRESS", fontSize: 11, bold: 1, textColor: LIGHT_CAPTION_COLOR });
-                    Slider({ styleName: "minimal", width: 260, currentValue: 40 });
+                    Slider({ styleName: "minimal", width: 260, value: 40 });
                     ProgressBar({ styleName: "minimal", width: 260, titleText: "Uploading files", value: 62 });
 
                     Label({ text: "TABS", fontSize: 11, bold: 1, textColor: LIGHT_CAPTION_COLOR });
@@ -264,7 +264,7 @@
                             Dialog.confirm({ styleName: "minimal", titleText: "Delete the file?", messageText: "report.pdf goes to the trash.", confirmText: "Delete", danger: 1 });
                         } });
                         SmartButton({ styleName: "minimal", labelText: "A toast", onClick: function () {
-                            Toast.show({ theme: "minimal", type: "success", title: "Saved", message: "report.pdf is saved.", action: { text: "Undo", onClick: function () { } } });
+                            Toast.show({ theme: "minimal", type: "success", titleText: "Saved", messageText: "report.pdf is saved.", action: { text: "Undo", onClick: function () { } } });
                         } });
                     endGroup();
                     const lightPanel = SidePanel({ styleName: "minimal", side: "right", panelSize: 300, titleText: "Filters" });
@@ -331,7 +331,7 @@
                     ] });
 
                     Label({ text: "SLIDER, PROGRESS", fontSize: 11, bold: 1, textColor: DARK_CAPTION_COLOR });
-                    Slider({ styleName: "minimalDark", width: 260, currentValue: 40 });
+                    Slider({ styleName: "minimalDark", width: 260, value: 40 });
                     ProgressBar({ styleName: "minimalDark", width: 260, titleText: "Uploading files", value: 62 });
 
                     Label({ text: "TABS", fontSize: 11, bold: 1, textColor: DARK_CAPTION_COLOR });
@@ -384,7 +384,7 @@
                             Dialog.confirm({ styleName: "minimalDark", titleText: "Delete the file?", messageText: "report.pdf goes to the trash.", confirmText: "Delete", danger: 1 });
                         } });
                         SmartButton({ styleName: "minimalDark", labelText: "A toast", onClick: function () {
-                            Toast.show({ theme: "minimalDark", type: "success", title: "Saved", message: "report.pdf is saved.", action: { text: "Undo", onClick: function () { } } });
+                            Toast.show({ theme: "minimalDark", type: "success", titleText: "Saved", messageText: "report.pdf is saved.", action: { text: "Undo", onClick: function () { } } });
                         } });
                     endGroup();
                     const darkPanel = SidePanel({ styleName: "minimalDark", side: "right", panelSize: 300, titleText: "Filters" });

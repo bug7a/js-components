@@ -1965,7 +1965,7 @@ const JsonEditor = function (params = {}) {
                     left: 0,
                     top: 0,
                     width: "100%",
-                    placeholderText: box.texts.search,
+                    placeholder: box.texts.search,
                     onSearch: searchRows,
                 });
             endGroup();

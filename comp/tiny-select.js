@@ -19,9 +19,9 @@ Webpage: https://bug7a.github.io/js-components/
 
 // Default values
 const TinySelectDefaults = {
-    title: "",
+    titleText: "",
     list: [], // [{ id: "1", label: "(none)" },]
-    onSelect: function(index, id, label, title) {}, // Not called at create time. setSelectedIndex(index) calls it, setSelectedIndex(index, 1) does not.
+    onSelect: function(index, id, label, titleText) {}, // Not called at create time. setSelectedIndex(index) calls it, setSelectedIndex(index, 1) does not.
     selectedIndex: 0,
     fontSize: 20,
     border: 0,
@@ -30,8 +30,8 @@ const TinySelectDefaults = {
     width: "auto",
     height: 50,
     paddingX: 12,
-    disabled: 0,
-    arrowIcon: "data:image/svg+xml;utf8," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#141414"><path d="M480-344 240-584l56-56 184 184 184-184 56 56-240 240Z"/></svg>'),
+    enabled: 1, // 0: it can not be opened, a little transparent (setEnabled)
+    arrowIconFile: "data:image/svg+xml;utf8," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#141414"><path d="M480-344 240-584l56-56 184 184 184-184 56 56-240 240Z"/></svg>'),
     arrowBorder: 0, // 1
     arrowBorderColor: "rgba(0, 0, 0, 0.2)",
     arrowBackgroundColor: "transparent", // "white"
@@ -45,17 +45,25 @@ const TinySelectDefaults = {
     listBorderColor: "rgba(0, 0, 0, 0.6)",
     emptyText: "Empty",
     invertIconColor: 0,
-    labelBoldFont: 1,
+    labelBold: 1,
     labelTextColor: "rgba(0,0,0,0.8)",
 };
 
 const TinySelect = function(params = {}) {
+
+    // THE OLD NAME disabled, for a while. WHY by hand: it is the reverse of enabled (basic.keepOldNames moves a value
+    //     as it is)
+    if ("disabled" in params) {
+        basic.renameOldParams(params, { disabled: "enabled" }, "TinySelect");
+        params.enabled = basic.isOn(params.enabled) ? 0 : 1;
+    }
 
     // Merge params:
     mergeIntoIfMissing(params, TinySelectDefaults);
 
     // BOX: Component container
     const box = startObject(params);
+    basic.keepOldNames(box, TinySelect.OLD_NAMES, "TinySelect"); // the pages made with the old names, for a while
 
     // *** PRIVATE VARIABLES:
     const DISABLED_OPACITY = 0.6;
@@ -88,7 +96,7 @@ const TinySelect = function(params = {}) {
 
         if (box.list.length > box.selectedIndex) {
             box.lblLabel.text = box.list[box.selectedIndex].label;
-            if (!silent) box.onSelect(index, box.list[index].id, box.list[index].label, box.title);
+            if (!silent) box.onSelect(index, box.list[index].id, box.list[index].label, box.titleText);
         } else {
             box.lblLabel.text = box.emptyText;
         }
@@ -98,21 +106,26 @@ const TinySelect = function(params = {}) {
     };
 
     // Başlığı değiştir
-    box.setTitle = function(title) {
+    box.setTitle = function(titleText) {
 
-        box.title = title;
-        box.lblTitle.text = (box.title) ? box.title + ":" : "";
+        box.titleText = titleText;
+        box.lblTitle.text = (box.titleText) ? box.titleText + ":" : "";
 
     };
 
-    // Nesneyi kullanılamaz yap.
+    // 0: it can not be opened (a little transparent)
+    box.setEnabled = function(value) {
+
+        box.enabled = basic.isOn(value) ? 1 : 0;
+        box.clickable = box.enabled;
+        box.opacity = (box.enabled) ? 1 : DISABLED_OPACITY;
+
+    };
+    // USAGE: tinySelect.setEnabled(0)
+
+    // THE OLD NAME, for a while: setDisabled(1) is setEnabled(0)
     box.setDisabled = function(value) {
-
-        box.disabled = value;
-        const isDisabled = (value == 1);
-        box.clickable = (isDisabled) ? 0 : 1;
-        box.opacity = (isDisabled) ? DISABLED_OPACITY : 1;
-
+        box.setEnabled(basic.isOn(value) ? 0 : 1);
     };
 
     box.getIndexById = function(id) {
@@ -151,7 +164,7 @@ const TinySelect = function(params = {}) {
         fontSize: box.fontSize,
         textColor: box.labelTextColor,
     });
-    if (box.labelBoldFont == 1) that.css.fontFamily = "opensans-bold";
+    if (box.labelBold == 1) that.css.fontFamily = "opensans-bold";
     that.css = { marginLeft: "6px", marginRight: "4px" };
 
     // ICON: Arrow
@@ -164,7 +177,7 @@ const TinySelect = function(params = {}) {
         round: box.arrowRound,
         space: 0,
     });
-    that.load(box.arrowIcon);
+    that.load(box.arrowIconFile);
     that.setMotion("transform 0.3s");
     that.css = { marginTop: "2px", marginRight: box.paddingX + "px" };
     if (box.invertIconColor == 1) that.css.filter = "invert(100%)";
@@ -186,14 +199,23 @@ const TinySelect = function(params = {}) {
     box.on("click", function() {
         TinySelect.createList(box);
     });
-    box.setTitle(box.title);
+    box.setTitle(box.titleText);
     // WHY: Silent: onSelect is a choice of the user, not the start value (the pages that use it
     //      guarded against this first call with isReady / isRendering).
     box.setSelectedIndex(box.selectedIndex, 1);
-    box.setDisabled(box.disabled);
+    box.setEnabled(box.enabled);
 
     return endObject(box);
 
+};
+
+// THE OLD NAMES of the params, the properties and the methods (basic.keepOldNames): the pages made with them keep
+// working until they move to the new names. Delete a name when no page uses it any more.
+// (disabled is turned by hand at the start: it is the reverse of enabled)
+TinySelect.OLD_NAMES = {
+    title: "titleText",
+    arrowIcon: "arrowIconFile",
+    labelBoldFont: "labelBold",
 };
 
 TinySelect.Z_INDEX = 1000; // the list on page; over a Dialog or a SidePanel that holds the field (basic.zIndexAbove)

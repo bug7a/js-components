@@ -60,7 +60,7 @@
                         HGroup({ width: "100%", height: "auto", align: "left top", gap: 16, wrap: 1 });
 
                             graphSold = MiniGraphBox({
-                                title: "Sold Items",
+                                titleText: "Sold Items",
                                 valueText: "1.3K",
                                 iconFile: ICON_FOLDER + "carrot.png",
                                 barColor: "tomato",
@@ -68,7 +68,7 @@
                             });
 
                             graphUsers = MiniGraphBox({
-                                title: "Active Users",
+                                titleText: "Active Users",
                                 valueText: "248",
                                 iconFile: ICON_FOLDER + "blueberries.png",
                                 barColor: "#5B7BD5",
@@ -76,7 +76,7 @@
                             });
 
                             graphCpu = MiniGraphBox({
-                                title: "CPU",
+                                titleText: "CPU",
                                 valueText: "42%",
                                 barColor: "#65A293",
                                 maxValue: 100, // Fixed top: 100%
@@ -106,7 +106,7 @@
 
                         graphWide = MiniGraphBox({
                             width: "100%", // The bar count changes with the width.
-                            title: "Strawberry Orders",
+                            titleText: "Strawberry Orders",
                             valueText: "86",
                             iconFile: ICON_FOLDER + "strawberry.png",
                             barColor: "#E0457B",
