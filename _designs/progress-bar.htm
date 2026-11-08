@@ -16,21 +16,33 @@
 
         /* Bismillah */
 
-        // DRAFT DESIGN of comp/progress-bar.js (ProgressBar), 2026-10-30 (ozden: the look of SmartButton, 2026-11-06).
-        // Every state of every style package side by side, drawn with plain basic.js objects (no ProgressBar here).
-        // Change a color, a size, an edge in basic-designer; then the change is carried to the component by hand
-        // (ProgressBarDefaults.style / ProgressBar.styles). The values below are copies of the packages: keep them
-        // in step with progress-bar.js when the component changes.
+        // DRAFT DESIGN of comp/progress-bar.js (ProgressBar): every state of the packages side by side, each package on a
+        // card in the color of its page: "light" (the default; its old name "classic"), "dark" (a proposal: the component
+        // has ozdenDark, but no dark twin of light), "modern" and "ozden" (the look of SmartButton). Plain basic.js
+        // objects (no ProgressBar here); the moving bar and the stripes are still frames. Change a color, a size, an
+        // edge in basic-designer; then the change is carried to the component by hand (ProgressBarDefaults.style /
+        // ProgressBar.styles). The values below are copies of the packages: keep them in step with progress-bar.js
+        // when the component changes.
         // http://127.0.0.1:5505/_basic-designer/index.htm?page=_designs/progress-bar.htm
 
+        const PAGE_COLOR = "#F4F5F2"; // the ground of the draft, not of the bars
+        const PAGE_TEXT = { title: Black(0.8), note: Black(0.5), state: Black(0.45), stateTitle: Black(0.4) }; // the texts of the draft
         const BAR_WIDTH = 300;
         const ROW_GAP = 10; // the component: between the title and the value text, the track and the value text
         const STATE_COLUMN_WIDTH = 190;
+        const ROW_HEIGHT = 64; // a state without a limit text (one with it: its own rowHeight)
+        const HEADER_HEIGHT = 24;
+        const CARD_PADDING = 24;
+        const COLUMN_GAP = 24;
         const SOFT_BLUE = "#7BA7D9"; // a limit with its own color (the ozden sample)
+        const LIGHT_PAGE = { color: "white", textColor: Black(0.45) }; // the page of a light package
+        const DARK_PAGE = { color: "#1A1A19", textColor: White(0.5) }; // the dark card of the kit
 
-        // THE STYLE PACKAGES (copies of ProgressBar.styles)
+        // THE STYLE PACKAGES (copies of ProgressBar.styles; dark is a proposal)
         const LOOKS = {
-            classic: {
+            light: {
+                name: "light (default)",
+                page: LIGHT_PAGE,
                 gap: 6,
                 track: { height: 16, color: "#F2F2F2", round: 4, border: 2, borderColor: "rgba(0, 0, 0, 0.1)" },
                 darkTrack: { color: "#242424", borderColor: White(0.4), limitColor: White(0.7) },
@@ -43,7 +55,26 @@
                 title: { fontSize: 14, textColor: Black(0.8) },
                 valueText: { fontSize: 14, textColor: Black(0.55) },
             },
+            // A proposal: the dark twin of light. The track of ozdenDark, a light bar (the ink of the dark kit), dark
+            // stripes on it, the texts in white.
+            dark: {
+                name: "dark (a proposal)",
+                page: DARK_PAGE,
+                gap: 6,
+                track: { height: 16, color: "#2A2A29", round: 4, border: 2, borderColor: White(0.18) },
+                darkTrack: { color: "#242424", borderColor: White(0.4), limitColor: White(0.7) },
+                bar: { color: "#E6E6E4", fillOpacity: 1, border: 0, borderColor: "", boxShadow: "none", innerRound: "", joinEdge: 1 },
+                secondBar: { color: White(0.35), fillOpacity: 0.2, lighten: 0, borderOpacity: 0.45 },
+                stripes: { color: "rgba(0, 0, 0, 0.15)", size: 14 },
+                limit: { shape: "line", color: "#FF8A7A", width: 1, round: 0, overhang: 6, dotSize: 6, dotOpacity: 1, barColor: "#141414", secondBarColor: "", textSize: 13, textColor: White(0.7), textSpace: 6 },
+                successColor: "#5DBE86",
+                errorColor: "#FF6B6B",
+                title: { fontSize: 14, textColor: White(0.88) },
+                valueText: { fontSize: 14, textColor: White(0.6) },
+            },
             modern: {
+                name: "modern",
+                page: LIGHT_PAGE,
                 gap: 8,
                 track: { height: 10, color: "#DFECEC", round: 100, border: 0, borderColor: "transparent" },
                 darkTrack: { color: "#242424", borderColor: White(0.4), limitColor: White(0.7) },
@@ -57,6 +88,8 @@
                 valueText: { fontSize: 14, textColor: "cadetblue" },
             },
             ozden: {
+                name: "ozden",
+                page: LIGHT_PAGE,
                 gap: 8,
                 track: { height: 16, color: "#F2F2F2", round: 100, border: 2, borderColor: "rgba(0, 0, 0, 0.1)" },
                 darkTrack: { color: Black(0.85), borderColor: "transparent", limitColor: White(0.7) },
@@ -82,7 +115,7 @@
             { name: "Stripes on the value", value: 55, valuePosition: "right", stripes: 1 },
             { name: "Stripes on both parts", value: 45, secondValue: 20, valuePosition: "right", stripes: 1, secondStripes: 1, valueText: "45% + 20%" },
             { name: "Limits (lines or dots)", value: 60, valuePosition: "none", limits: [{ value: 30, color: SOFT_BLUE }, { value: 80 }] },
-            { name: "A limit with its text", titleText: "Speed", value: 85, valuePosition: "top", limits: [{ value: 80, text: "limit 80" }] },
+            { name: "A limit with its text", titleText: "Speed", value: 85, valuePosition: "top", limits: [{ value: 80, text: "limit 80" }], rowHeight: 96 },
             { name: "Status: success", titleText: "Saved", value: 100, valuePosition: "top", status: "success" },
             { name: "Status: error", titleText: "Failed", value: 35, valuePosition: "top", status: "error" },
             { name: "Indeterminate (a still frame)", titleText: "Connecting...", valuePosition: "top", indeterminate: 1 },
@@ -94,37 +127,59 @@
 
         const start = function () {
 
-            page.color = "#F4F5F2";
+            page.color = PAGE_COLOR;
 
             // BOX: Scrolling page
             startBox(0, 0, "100%", "100%", { color: "transparent", scrollY: 1, scrollX: 1 });
 
                 VGroup({ width: "max-content", height: "auto", align: "left top", gap: 22, padding: 40, clipContent: 0 });
 
-                    Label({ text: "ProgressBar · draft (comp/progress-bar.js)", fontSize: 20, bold: 1, textColor: Black(0.8) });
+                    Label({ text: "ProgressBar · draft (comp/progress-bar.js)", fontSize: 20, bold: 1, textColor: PAGE_TEXT.title });
+                    Label({ text: "light is the default package (its old name classic); dark is a proposal (the component has ozdenDark, no dark). Every row is a state.", fontSize: 13, textColor: PAGE_TEXT.note });
 
-                    // GROUP: The names of the packages over their column
-                    HGroup({ width: "auto", height: "auto", align: "left top", gap: 40 });
-                        Label({ width: STATE_COLUMN_WIDTH, text: "state", fontSize: 12, textColor: Black(0.4) });
+                    // GROUP: The names of the states, then a card for every package
+                    HGroup({ width: "auto", height: "auto", align: "left top", gap: COLUMN_GAP, clipContent: 0 });
+                        drawStateColumn();
                         Object.keys(LOOKS).forEach(function (name) {
-                            Label({ width: BAR_WIDTH, text: name + (name == "classic" ? " (default)" : ""), fontSize: 13, bold: 1, textColor: Black(0.6) });
+                            drawLookCard(LOOKS[name]);
                         });
                     endGroup();
-
-                    STATES.forEach(function (state) {
-                        // GROUP: A state in every package
-                        HGroup({ width: "auto", height: "auto", align: "left center", gap: 40, clipContent: 0 });
-                            Label({ width: STATE_COLUMN_WIDTH, text: state.name, fontSize: 12, textColor: Black(0.45) });
-                            Object.keys(LOOKS).forEach(function (name) {
-                                drawBar(LOOKS[name], state);
-                            });
-                        endGroup();
-                    });
 
                 endGroup();
 
             endBox();
 
+        };
+
+        const getRowHeight = function (state) {
+            return state.rowHeight || ROW_HEIGHT;
+        };
+
+        // GROUP: The names of the states, one per row (the rows of the cards have the same heights)
+        const drawStateColumn = function () {
+            const column = VGroup({ width: STATE_COLUMN_WIDTH, height: "auto", align: "left top", gap: 0, padding: [0, CARD_PADDING] });
+                Label({ height: HEADER_HEIGHT, text: "state", fontSize: 12, textColor: PAGE_TEXT.stateTitle });
+                STATES.forEach(function (state) {
+                    HGroup({ width: "100%", height: getRowHeight(state), align: "left center" });
+                        Label({ width: "100%", text: state.name, fontSize: 12, textColor: PAGE_TEXT.state, css: { lineHeight: "1.3" } });
+                    endGroup();
+                });
+            endGroup();
+            return column;
+        };
+
+        // GROUP: A card in the color of the page of a package: its name, then one row per state
+        const drawLookCard = function (look) {
+            const card = VGroup({ width: "auto", height: "auto", align: "left top", gap: 0, padding: CARD_PADDING, color: look.page.color, round: 10, border: 1, borderColor: Black(0.08), clipContent: 0 });
+                Label({ height: HEADER_HEIGHT, text: look.name, fontSize: 13, bold: 1, textColor: look.page.textColor, css: { whiteSpace: "nowrap" } });
+                STATES.forEach(function (state) {
+                    // GROUP: A row: the bar in this state
+                    HGroup({ width: BAR_WIDTH, height: getRowHeight(state), align: "left center", clipContent: 0 });
+                        drawBar(look, state);
+                    endGroup();
+                });
+            endGroup();
+            return card;
         };
 
         // GROUP: One bar as the component draws it: the top row (title, value), the track with the bars over it,
