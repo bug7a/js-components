@@ -58,7 +58,7 @@ Pages load the source files (`name.js`). Components have no `.min.js` files.
 - A dialog: `Dialog` (`Dialog.confirm`, `Dialog.alert`, `Dialog.prompt`).
 - A bubble or popover: `Tooltip`.
 - A search box: `SearchInput` with `styleName: "ozden"`, or `"ozdenDark"` on a dark page.
-- A text field: `InputB` and the fields made from it (`EmailInputB`, `PhoneInputB`, `PasswordInputB`, `URLInputB`, `NumberInputB`, `CurrencyInputB`, `TextareaB`) with `styleName: "ozden"`, or `"ozdenDark"` on a dark page.
+- A text field: `TextField` and the fields made from it (`EmailField`, `PhoneField`, `PasswordField`, `UrlField`, `NumberField`, `CurrencyField`, `TextAreaField`) with `styleName: "ozden"`, or `"ozdenDark"` on a dark page.
 - A list: `ItemList` with `styleName: "ozden"` (its default), or `"ozdenDark"` on a dark page.
 - A dropdown select: `SelectBox` with its default look (`styleName: "light"`; its old name "classic" works too), or `"dark"` on a dark page.
 - A chart: `GraphBox`, with `theme: "dark"` on a dark page.

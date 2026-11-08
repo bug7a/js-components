@@ -73,6 +73,38 @@ Bu kurallar `comp/`, sayfalar, şablonlar ve projeler (oyun, designer...) için 
 - Kısa ama anlaşılmaz bir hile yerine iki satır açık kod.
 - Okuyanı şaşırtacak bir yol (bir reflow zorlaması, bir tarayıcı açığı) gerekiyorsa tek satırlık `// WHY:` ile.
 
+## 9. Bileşen parametrelerinin adları
+
+Bir bileşenin parametreleri kitin geri kalanındaki adları taşır: bir sayfayı yazan, bir bileşenden ötekine geçerken ad aramaz. Yeni bir bileşen ve yeni bir parametre bu tabloya uyar. (Bugra, 2026-11-08)
+
+| Ne | Ad | Böyle değil |
+|---|---|---|
+| Bir denetimin değeri | `value`; bir sayı listesi `values`; işaret kutusu, radyo düğmesi `checked`. Aralığı: `minValue`, `maxValue`, `step` | `inputValue`, `currentValue` |
+| Gösterilen bir metin | `...Text`: `titleText`, `labelText`, `messageText`, `descriptionText`, `emptyText` | `title`, `message`, `text` |
+| Bir alanın ipucu | `placeholder` (HTML'in adı) | `placeholderText` |
+| Ekran okuyucunun okuduğu ad | `ariaLabel` | bir iframe'in `title`'ı |
+| Açık / kapalı (0 / 1) | yalın sıfat: `enabled`, `required`, `multiple`, `animated`, `selected`, `checked` | `isRequired`, `isEnabled`, tersi olan `disabled` |
+| Bir parçanın olması | `show...`: `showSearch`, `showTooltip`, `showClearIcon`, `showUnit`, `showDescription` | `create...`, `is...Enabled`, `hover` |
+| Kendi görünümün | `create...View: function (item, row, self)` | |
+| Bir resim, bir ikon | `...IconFile` (tek ikonu olan: `iconFile`); setter'ı `set...Icon()` | `...Icon` |
+| Uzunluk sınırı | `maxLength`, `minLength` (HTML'in adları, aynı anlamla: en çok, en az) | `maxChar`, `minChar` |
+| Kalın yazı | `...Bold: 1` (`titleBold`, `labelBold`) | `labelBoldFont` |
+| Bir durumun rengi (düz parametrelerde) | durum önde: `hover...`, `focus...` (yazarken, klavyeyle), `pressed...`, `selected...` (seçilmiş bir öğe) | yazarken için `selected...` |
+| Değer değişti | `onChange(self)`: oluşturulurken, `setValue()` ile ve `silent` ile çağrılmaz | `onEdit`, `onValueChange` |
+| Bir olay | `onXxx(self, ...)`: ilk argüman `self` | |
+| Görünüş | `styleName` + `style` (`Comp.styles`). Renkleri `"auto"` ile sistemi izleyenler (GraphBox, Toast): `theme` (`basic.resolveTheme`) | |
+| Sonradan değiştirmek | `setX()`, parametrenin adıyla: `setValue`, `setRequired`, `setMaxLength` | `setInputValue` |
+
+- Bir parametre bir basic.js setter'ının adını almaz (`text`, `color`, `html`, `title`, `visible`, `zoom`...: CLAUDE.md). Kutunun kendisi alan olan bir bileşen (SearchInput) `color`, `border`, `round`'u bilerek kutuya verir.
+
+**Eski adlar (geçici bir köprü):**
+
+- Bir parametre yeni bir ad alınca eski adı bir süre çalışır: bileşen eski adlarını `Comp.OLD_NAMES` içinde (`{ eskiAd: "yeniAd" }`) tutar ve `startObject()`'ten hemen sonra `basic.keepOldNames(box, Comp.OLD_NAMES, "Comp")` çağırır (basic.js v26.11.08). Eski adı kullanan bir sayfada konsol yeni adı bir kez söyler.
+- Yeni kod eski adları kullanmaz. Bir şablona ya da bir projeye dokunulunca onun sayfaları yeni adlara geçer. Hiçbir sayfa kullanmayınca ad listeden silinir; liste boşalınca çağrı da silinir.
+- Bir olayın argümanları da değişirse (`onEdit(input)` → `onChange(self, input)`) köprü bunu kuramaz: bileşen eski fonksiyonu eski biçimde çağıran küçük bir sarmalayıcı yazar (`comp/form.js`), ya da değişiklik ayrı bir iş olur.
+- Bir verinin anahtarı (bir sunucuya giden JSON) parametre değildir: değişirse o veriyi okuyan bozulur; ayrı bir karar ister (Form'un `inputValue`'su).
+- Hangi bileşenin hangi adları değişti, hangi klasörler henüz geçmedi: `context/repo-map.md`, "Parameter names".
+
 ---
 
 ## Denge (kuralların esnediği yerler)
@@ -89,3 +121,4 @@ Bu kurallar `comp/`, sayfalar, şablonlar ve projeler (oyun, designer...) için 
 3. Uzun bir satır, iç içe bir ternary ya da adsız bir sayı kaldı mı?
 4. Global bir şeyi kutunun üzerinden mi kaydettim (`listenTo`, `after`, `own`)?
 5. Yorumlarım NEDEN'i mi anlatıyor (tarih, kişi ve hikâyeyi değil)?
+6. Yeni bir parametrenin adı 9. bölümün tablosuna uyuyor mu?
