@@ -145,6 +145,7 @@
                 maxWidth: 700,
                 buttonColor: ACCENT_COLOR,
                 buttonText: "PLACE ORDER",
+                allowHtml: 1, // the message after sending is HTML (showMessage)
                 showDetailWarning: 1,
                 missingEntryText: "{{count}} missing entry",
                 missingEntriesText: "{{count}} missing entries",
@@ -252,6 +253,7 @@
                         group: "fulfillment",
                         value: "delivery",
                         labelText: "Delivery <span style='color:" + Black(0.45) + "; font-size: 15px'>· " + formatPrice(DELIVERY_FEE) + ", free over " + formatPrice(FREE_DELIVERY_OVER) + "</span>",
+                        allowHtml: 1,
                         checked: 1,
                         onChange: function() { field.update(); updateFulfillment(); },
                     });
@@ -260,6 +262,7 @@
                         group: "fulfillment",
                         value: "pickup",
                         labelText: "Pick up at the shop <span style='color:" + Black(0.45) + "; font-size: 15px'>· Free</span>",
+                        allowHtml: 1,
                         onChange: function() { field.update(); updateFulfillment(); },
                     });
 
@@ -472,6 +475,7 @@
                         group: "payment",
                         value: method.id,
                         labelText: method.name + " <span style='color:" + Black(0.45) + "; font-size: 15px'>· " + method.description + "</span>",
+                        allowHtml: 1,
                         onChange: field.update,
                     });
                 });
@@ -494,6 +498,7 @@
                 field.checkBox = CheckBox({
                     styleName: "form",
                     labelText: "This is a gift <span style='color:" + Black(0.45) + "; font-size: 15px'>· gift wrap, no prices on the receipt</span>",
+                    allowHtml: 1,
                     onChange: function() { field.update(); updateGift(); },
                 });
 
@@ -1100,7 +1105,7 @@
                     iconFile: "assets/success.png",
                     messageText: "<b>Thank you! Your order " + order.number + " is received.</b><br>" +
                         ((delivery) ? "Delivery" : "Pick up") + ": " + order.when + " · Total: " + formatPrice(order.totals.total) + "<br>" +
-                        "<span style='color:" + Black(0.55) + "; font-size: 14px'>" + nextStep + " A confirmation is sent to " + order.email + ".</span>",
+                        "<span style='color:" + Black(0.55) + "; font-size: 14px'>" + nextStep + " A confirmation is sent to " + basic.escapeHtml(order.email) + ".</span>",
                     buttonText: "OKAY",
                     backgroundColor: "rgba(255,255,255,0.92)",
                     onClose: clearForm,

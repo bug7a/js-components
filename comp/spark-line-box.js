@@ -43,6 +43,7 @@ const SparkLineBoxDefaults = {
     height: 80,
     titleText: "Sold Items",
     valueText: "1.3K",
+    allowHtml: 0, // 1: titleText, valueText, trendText and the text of valueFormat are HTML (only for your own texts)
     iconFile: "", // "": No icon
     lineColor: "tomato",
     values: [], // [10, 20, { value: 15, color: "orange" }]
@@ -145,6 +146,12 @@ const SparkLineBox = function (params = {}) {
     box.values = [];
 
     // *** PRIVATE FUNCTIONS:
+
+    const setText = function (label, text) {
+        const value = (text === undefined || text === null) ? "" : String(text);
+        if (box.allowHtml == 1) label.text = value;
+        else label.plainText = value;
+    };
 
     const normalizeValue = function (item) {
         if (item !== null && typeof item == "object") {
@@ -381,7 +388,7 @@ const SparkLineBox = function (params = {}) {
     const updateTrend = function () {
 
         if (box.trendText) {
-            box.lblTrend.text = box.trendText;
+            setText(box.lblTrend, box.trendText);
             paintTrend(0);
             box.lblTrend.visible = 1;
             return;
@@ -405,7 +412,7 @@ const SparkLineBox = function (params = {}) {
             text = getTrendArrow(direction) + percent + "%";
         }
 
-        box.lblTrend.text = text;
+        setText(box.lblTrend, text);
         paintTrend(direction);
         box.lblTrend.visible = 1;
 
@@ -447,7 +454,7 @@ const SparkLineBox = function (params = {}) {
         hoverDot.setAttribute("fill", p.item.color || box.lineColor);
         setShown(hoverDot, 1);
 
-        box.lblTooltip.text = box.valueFormat(p.item.value, p.item);
+        setText(box.lblTooltip, box.valueFormat(p.item.value, p.item));
         box.lblTooltip.visible = 1;
         // Above the point, inside the box
         const tipWidth = box.lblTooltip.elem.offsetWidth;
@@ -522,12 +529,12 @@ const SparkLineBox = function (params = {}) {
 
     box.setTitleText = function (text) {
         box.titleText = text;
-        box.lblTitle.text = text;
+        setText(box.lblTitle, text);
     };
 
     box.setValueText = function (text) {
         box.valueText = text;
-        box.lblValueText.text = text;
+        setText(box.lblValueText, text);
     };
 
     box.setIcon = function (iconFile) {
@@ -626,10 +633,10 @@ const SparkLineBox = function (params = {}) {
     });
 
         box.lblTitle = Label({
-            text: box.titleText,
             fontSize: _s.title.fontSize,
             textColor: _s.title.textColor,
         });
+        setText(box.lblTitle, box.titleText);
         // WHY: marginBottom: Line heights of the two texts leave a big space between them.
         box.lblTitle.css = { whiteSpace: "nowrap", marginBottom: "-6px" };
 
@@ -637,10 +644,10 @@ const SparkLineBox = function (params = {}) {
         HGroup({ width: "auto", height: "auto", align: "left center", gap: 6 });
 
             box.lblValueText = Label({
-                text: box.valueText,
                 fontSize: _s.valueText.fontSize,
                 textColor: _s.valueText.textColor,
             });
+            setText(box.lblValueText, box.valueText);
             box.lblValueText.css.whiteSpace = "nowrap";
 
             box.lblTrend = Label({

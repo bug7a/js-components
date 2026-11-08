@@ -25,11 +25,12 @@ const FormDefaults = {
     maxWidth: 700,
     buttonColor:  "#65A293",
     buttonText: "SEND",
+    allowHtml: 0, // 1: buttonText and the texts of showMessage() are HTML (only for your own texts)
     showDetailWarning: 1,
     missingEntryText: "{{count}} missing entry",
     missingEntriesText: "{{count}} missing entries",
-    warningText: "<b>{{name}}</b> can't be empty",
-    errorText: "<b>{{name}}</b> is not valid",
+    warningText: "<b>{{name}}</b> can't be empty", // HTML of the page; {{name}}: the title of the field, as it is written
+    errorText: "<b>{{name}}</b> is not valid", // HTML of the page, as warningText
     minimalButton: 0,
     doubleInputAlwaysHorizontal: 0,
     showPassiveButtonHint: 1, // 1: A hint is shown when the mouse is over the passive send button.
@@ -73,6 +74,12 @@ const Form = function(params = {}) {
 
 
     // *** PRIVATE FUNCTIONS:
+
+    const setText = function (label, text) {
+        const value = (text === undefined || text === null) ? "" : String(text);
+        if (box.allowHtml == 1) label.text = value;
+        else label.plainText = value;
+    };
 
     // Give effects to a button
     const actionButtonEffect = function(btn) {
@@ -144,13 +151,11 @@ const Form = function(params = {}) {
             endGroup();
 
             // LABEL: Message
-            Label({
-                text: messageData.messageText,
-            });
+            Label();
+            setText(that, messageData.messageText);
 
             // LABEL: Close button
             Label({
-                text: messageData.buttonText,
                 padding: [12, 4],
                 round: 12,
                 color: "#373836",
@@ -158,6 +163,7 @@ const Form = function(params = {}) {
                 fontSize: 14,
                 clickable: 1,
             });
+            setText(that, messageData.buttonText);
             that.cursor = "pointer";
             that.on("click", function(self) {
                 messageData.onClose();
@@ -192,8 +198,9 @@ const Form = function(params = {}) {
 
     // The detail line of one input. status: 1 empty, 2 not valid ("" for any other status)
     const getWarningLine = function(item) {
-        if (item.status == 1) return box.warningText.replace("{{name}}", item.titleText) + "<br>";
-        if (item.status == 2) return box.errorText.replace("{{name}}", item.titleText) + "<br>";
+        const name = basic.escapeHtml(item.titleText);
+        if (item.status == 1) return box.warningText.replace("{{name}}", name) + "<br>";
+        if (item.status == 2) return box.errorText.replace("{{name}}", name) + "<br>";
         return "";
     };
 
@@ -461,10 +468,10 @@ const Form = function(params = {}) {
                     // BUTTON: Send Button
                     box.btnSend = Button({
                         width: "100%",
-                        text: box.buttonText,
                         color: box.buttonColor,
                         minimal: box.minimalButton,
                     });
+                    setText(box.btnSend, box.buttonText);
                     actionButtonEffect(that);
                     // WHY click, not mousedown: a right click, or a press dragged away from the button, sent the
                     //     form; and Enter / Space on the focused button (a <button>: they give a click) did nothing

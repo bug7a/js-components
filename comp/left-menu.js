@@ -45,6 +45,7 @@ const LeftMenuDefaults = {
     titleColor: "#8E342F",
     textColor: "rgba(255, 255, 255, 0.6)",           // Text color
     selectedTextColor: "rgba(255, 255, 255, 0.95)",
+    allowHtml: 0, // 1: the texts of the items are HTML (only for your own texts)
     invertIconColor: 1,
     lineColor: "",                // A line at the right side of the menu ("": none)
     expandedShadow: "",           // The shadow of the open menu over the page ("": none). Ex: "6px 0 18px rgba(0, 0, 0, 0.08)"
@@ -82,6 +83,12 @@ const LeftMenu = function(params = {}) {
     box.state = "collapsed";      // "collapsed", "expanded"
 
     // *** PRIVATE FUNCTIONS:
+
+    const setText = function (label, text) {
+        const value = (text === undefined || text === null) ? "" : String(text);
+        if (box.allowHtml == 1) label.text = value;
+        else label.plainText = value;
+    };
 
     // The look of a button item: "normal", "hover" or "selected" (a gradient from the left)
     const paintButtonItem = function(buttonBox, look) {
@@ -132,11 +139,11 @@ const LeftMenu = function(params = {}) {
 
                 // Text label (hidden when collapsed)
                 buttonBox.textLabel = Label({
-                    text: item.text,
                     textColor: box.textColor,
                     fontSize: 18,
                     color: "transparent",
                 });
+                setText(buttonBox.textLabel, item.text);
 
             endGroup();
 
@@ -206,12 +213,12 @@ const LeftMenu = function(params = {}) {
 
                 // Header text
                 const headerText = Label({
-                    text: item.text,
                     textColor: box.titleColor,
                     fontSize: 12,
                     color: box.backgroundColor,
                     padding: [12, 0],
                 });
+                setText(headerText, item.text);
                 headerText.css = { fontWeight: "bold", textTransform: "uppercase" };
 
             endAutoLayout();

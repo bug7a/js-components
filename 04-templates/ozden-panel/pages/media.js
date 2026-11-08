@@ -651,6 +651,7 @@ const MediaPage = function(params = {}) {
                         width: "100%",
                         height: 40, // WHY: the height of the fields and the selects of the panel (SmartButton: 44)
                         labelText: folder || "All files",
+                        allowHtml: 1, // WHY: the count is HTML of the page (setLabelText in renderFolders)
                         iconFile: "",
                         onClick: function() { openFolder(folder); },
                         style: {

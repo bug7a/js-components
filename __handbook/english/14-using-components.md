@@ -147,6 +147,7 @@ const selLanguage = SelectBox({
 - **`animated: 0`** stops the motion of a component that moves. Its motion also stops when the system asks for less motion.
 - **The keyboard:** the components work with Tab, Enter, Space and the arrows. An icon button (no `labelText`) needs an `ariaLabel`.
 - A list or a menu that opens from a field goes over a `Dialog` by itself.
+- **Texts are shown as they are written:** a `labelText` or a `titleText` with `<b>` shows `<b>`, so a name a user typed can not run as HTML. For HTML of your own page, give the component `allowHtml: 1`.
 
 ---
 

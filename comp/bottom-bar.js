@@ -74,6 +74,7 @@ const BottomBarDefaults = {
     onItemClick: function (self, item, index) { },
     hoverEffect: true, // For desktop usage
     labelMode: "inline", // "inline": the name next to the selected icon, "float": over it for a moment, "none": no names
+    allowHtml: 0, // 1: the names of the items are HTML (only for your own texts)
     floatLabelTime: 600, // ms: from the moment the name shows over the selected item to its fade out ("float")
     badge: { // The params of the Badge of every item (comp/badge.js)
         showZero: 0, // 1: a badge set to 0 shows "0" (0: hidden)
@@ -165,6 +166,12 @@ const BottomBar = function (params = {}) {
     // NOTE: box.lblFloat is the pill of the name over the selected item (only with labelMode: "float").
 
     // *** PRIVATE FUNCTIONS:
+
+    const setText = function (label, text) {
+        const value = (text === undefined || text === null) ? "" : String(text);
+        if (box.allowHtml == 1) label.text = value;
+        else label.plainText = value;
+    };
 
     const isFloatMode = function () {
         return box.labelMode === "float";
@@ -285,7 +292,7 @@ const BottomBar = function (params = {}) {
     const showFloatLabel = function (item) {
         hideFloatLabel(); // WHY: Its timer starts again.
         if (!item.data.text) return; // No name: no pill
-        box.lblFloat.text = item.data.text;
+        setText(box.lblFloat, item.data.text);
         placeFloatLabel();
         box.lblFloat.opacity = 1;
         cancelFloatLabelHide = box.after(box.floatLabelTime, hideFloatLabel);
@@ -424,11 +431,11 @@ const BottomBar = function (params = {}) {
             width: "auto",
             height: "auto",
             color: "transparent",
-            text: itemData.text,
             textColor: box.style.label.textColor,
             position: "absolute", // WHY: refresh() places the items itself (left), not a flex layout.
             opacity: 0,
         });
+        setText(itemView.label, itemData.text);
         itemView.label.css = { whiteSpace: "nowrap" }; // WHY: A name of two words broke while the bar was growing.
         box.innerBox.add(itemView.label);
         itemView.label.center("top");

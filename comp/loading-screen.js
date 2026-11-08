@@ -56,7 +56,8 @@ const LoadingScreenDefaults = {
     iconFile: "", // An image file (Ex: the app icon)
     iconSvg: "", // Or an SVG text (works with no file, also offline)
     titleText: "",
-    messageText: "", // HTML can be used (Ex: "Please wait.<br>It takes a few seconds.")
+    allowHtml: 0, // 1: titleText and messageText are HTML, only for your own texts (Ex: "Please wait.<br>It takes a few seconds.")
+    messageText: "",
     spinnerType: "clock", // "clock" (the default wait, the user), "ring", "dots", "none"
     progress: -1, // 0 - 1: a progress bar is shown. -1: no progress bar
     opened: 1, // 0: created closed, open() shows it
@@ -139,6 +140,12 @@ const LoadingScreen = function (params = {}) {
 
     // *** PRIVATE FUNCTIONS:
 
+    const setText = function (label, text) {
+        const value = (text === undefined || text === null) ? "" : String(text);
+        if (box.allowHtml == 1) label.text = value;
+        else label.plainText = value;
+    };
+
     const clearTimers = function () {
         if (cancelClose) cancelClose();
         if (cancelFade) cancelFade();
@@ -190,13 +197,13 @@ const LoadingScreen = function (params = {}) {
 
     box.setTitleText = function (text) {
         box.titleText = text || "";
-        box.titleLabel.text = box.titleText;
+        setText(box.titleLabel, box.titleText);
         box.titleLabel.visible = box.titleText ? 1 : 0;
     };
 
     box.setMessageText = function (text) {
         box.messageText = text || "";
-        box.messageLabel.text = box.messageText;
+        setText(box.messageLabel, box.messageText);
         box.messageLabel.visible = box.messageText ? 1 : 0;
     };
 
@@ -232,20 +239,20 @@ const LoadingScreen = function (params = {}) {
 
         // LABEL: Title
         box.titleLabel = Label({
-            text: box.titleText,
             fontSize: _s.title.fontSize,
             textColor: _s.title.textColor,
         });
+        setText(box.titleLabel, box.titleText);
         if (_s.title.bold) box.titleLabel.css.fontFamily = "opensans-bold";
         box.titleLabel.css.textAlign = "center";
 
         // LABEL: Message
         box.messageLabel = Label({
-            text: box.messageText,
             width: _s.message.width,
             fontSize: _s.message.fontSize,
             textColor: _s.message.textColor,
         });
+        setText(box.messageLabel, box.messageText);
         box.messageLabel.css = {
             textAlign: "center",
             lineHeight: "1.45",

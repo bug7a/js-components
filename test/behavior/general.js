@@ -2,7 +2,8 @@
 
 /*
 BEHAVIOR TESTS: GENERAL
-The tests of test/behavior-test.htm for the reviews of comp/, the scale of a zoomed page, the dark packages of a window, TapEffect.
+The tests of test/behavior-test.htm for the reviews of comp/, the scale of a zoomed page, the dark packages of a window, TapEffect,
+the texts of the components (as they are written; allowHtml).
 Every check is a bug that was found and fixed, written as its repro. A new test of a component goes into the
 file of its group (the category of the component in index/catalog.js). The page loads every file, then runs
 the tests in this order; its helpers (test, check, wait, key, pointer, findByText...) are there.
@@ -756,4 +757,61 @@ test("Dark packages: Toggle dark and Dialog ozdenDark take the dark tones", asyn
     check("Dark packages: Toggle dark and Dialog ozdenDark take the dark tones",
         toggleLooks && cardIsDark && titleIsLight && fieldIsDark && buttonIsDarkTone && keepsSizes && confirmIsDark && packageStays,
         [toggleLooks, cardIsDark, titleIsLight, fieldIsDark, buttonIsDarkTone, keepsSizes, confirmIsDark, packageStays].join(" "));
+});
+
+// *** THE TEXTS OF THE COMPONENTS: shown as they are written; allowHtml: 1 makes them HTML
+
+test("Texts: a component shows its texts as they are written, also after its setters; allowHtml: 1 makes them HTML", async function () {
+    const TYPED = "<b>Ada</b> & Can";
+    // WHY: a name a user typed or a file name ran as HTML: a "<b>" was bold, an "<img onerror=...>" ran
+    const isPlain = function (box) { return box.elem.querySelector("b") === null && box.elem.textContent.includes(TYPED); };
+    const isHtml = function (box) { return box.elem.querySelector("b") !== null; };
+
+    const made = {
+        SmartButton: SmartButton({ labelText: TYPED }),
+        CheckBox: CheckBox({ labelText: TYPED }),
+        RadioButton: RadioButton({ labelText: TYPED, group: "texts-test", value: "a" }),
+        TextField: TextField({ titleText: TYPED, showDescription: 1, descriptionText: TYPED, showRightBox: 1, showUnit: 1, unitText: TYPED }),
+        ProgressBar: ProgressBar({ titleText: TYPED }),
+        FilePicker: FilePicker({ titleText: TYPED, descriptionText: TYPED }),
+        SmartTable: SmartTable({ titleDataList: [{ name: TYPED, dataTitle: "a", width: 200 }], itemDataList: [{ a: TYPED }] }),
+        MiniGraphBox: MiniGraphBox({ titleText: TYPED, valueText: TYPED }),
+        SparkLineBox: SparkLineBox({ titleText: TYPED, valueText: TYPED, trendText: TYPED }),
+        TinySelect: TinySelect({ titleText: TYPED, list: [{ value: "1", label: TYPED }] }),
+        SidePanel: SidePanel({ side: "right", titleText: TYPED }),
+    };
+    await wait(30);
+    const madeProblems = Object.keys(made).filter(function (name) { return !isPlain(made[name]); });
+
+    made.SmartButton.setLabelText(TYPED + "!");
+    made.CheckBox.setLabelText(TYPED + "!");
+    made.RadioButton.setLabelText(TYPED + "!");
+    made.TextField.setTitleText(TYPED + "!");
+    made.TextField.setDescriptionText(TYPED + "!");
+    made.TextField.setUnitText(TYPED + "!");
+    made.ProgressBar.setTitleText(TYPED + "!");
+    made.FilePicker.setDescriptionText(TYPED + "!");
+    made.MiniGraphBox.setValueText(TYPED + "!");
+    made.SparkLineBox.setTitleText(TYPED + "!");
+    made.TinySelect.setTitleText(TYPED + "!");
+    made.SidePanel.setTitleText(TYPED + "!");
+    await wait(30);
+    const setterProblems = Object.keys(made).filter(function (name) { return !isPlain(made[name]); });
+    Object.keys(made).forEach(function (name) { made[name].remove(); });
+
+    const loading = LoadingScreen({ titleText: TYPED, messageText: TYPED });
+    loading.setMessageText(TYPED + "!");
+    const loadingIsPlain = isPlain(loading);
+    loading.remove();
+
+    const htmlButton = SmartButton({ labelText: TYPED, allowHtml: 1 });
+    const htmlField = TextField({ titleText: TYPED, allowHtml: 1 });
+    const htmlLoading = LoadingScreen({ messageText: "Wait.<br><b>Now</b>", allowHtml: 1 });
+    await wait(30);
+    const htmlWorks = isHtml(htmlButton) && isHtml(htmlField) && isHtml(htmlLoading);
+    [htmlButton, htmlField, htmlLoading].forEach(function (box) { box.remove(); });
+
+    check("Texts: a component shows its texts as they are written, also after its setters; allowHtml: 1 makes them HTML",
+        madeProblems.length === 0 && setterProblems.length === 0 && loadingIsPlain && htmlWorks,
+        "HTML at create: " + madeProblems.join(", ") + " | after a setter: " + setterProblems.join(", ") + " | LoadingScreen plain: " + loadingIsPlain + " | allowHtml: " + htmlWorks);
 });

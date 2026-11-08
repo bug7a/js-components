@@ -110,6 +110,7 @@ const TextFieldDefaults = {
     maxLength: 30,
     showDescription: 0,
     descriptionText: "",
+    allowHtml: 0, // 1: titleText, descriptionText and unitText are HTML (only for your own texts)
 
     backgroundColor: "#F6F6F6",
     focusBackgroundColor: "#F3F4E0",
@@ -231,6 +232,12 @@ const TextField = function(params = {}) {
     box.fieldTop = fieldTop;
 
     // *** PRIVATE FUNCTIONS:
+
+    const setText = function (label, text) {
+        const value = (text === undefined || text === null) ? "" : String(text);
+        if (box.allowHtml == 1) label.text = value;
+        else label.plainText = value;
+    };
 
     const makeWarningBallVisible = function() {
         // WHY: withMotion() shows the ball a moment later; a fast typing or a paste may make the value valid before it
@@ -359,7 +366,7 @@ const TextField = function(params = {}) {
         box.titleText = titleText;
         if (!box.title || typeof box.title.text === "undefined") return;
 
-        box.title.text = titleText;
+        setText(box.title, titleText);
         if (box.input) {
             box.input.inputElement.setAttribute("aria-label", box.titleText);
         }
@@ -370,7 +377,7 @@ const TextField = function(params = {}) {
         box.descriptionText = descriptionText;
         if (!box.description || typeof box.description.text === "undefined") return;
 
-        box.description.text = descriptionText;
+        setText(box.description, descriptionText);
     };
     
     // Sets the maximum number of characters allowed in the input
@@ -505,7 +512,7 @@ const TextField = function(params = {}) {
         box.unitText = text;
         if (!box.unit || typeof box.unit.text === "undefined") return;
 
-        box.unit.text = text;
+        setText(box.unit, text);
     };
 
     // *** OBJECT VIEW:
@@ -550,11 +557,11 @@ const TextField = function(params = {}) {
 
             // LABEL: Title 
             box.title = Label({
-                text: box.titleText,
                 fontSize: box.titleFontSize,
                 textColor: box.titleTextColor,
                 bold: box.titleBold,
             });
+            setText(box.title, box.titleText);
             if (box.titleLetterSpacing) that.css.letterSpacing = box.titleLetterSpacing;
             // WHY: over the field the title starts at its edge, not at the text inside it
             if (isTitleAbove) that.css = { lineHeight: titleLineHeight + "px", marginLeft: -box.leftPadding + "px", whiteSpace: "nowrap" };
@@ -587,10 +594,10 @@ const TextField = function(params = {}) {
             // LABEL: Description
             if (box.showDescription == 1) {
                 box.description = Label({
-                    text: box.descriptionText,
                     fontSize: box.descriptionFontSize,
                     textColor: box.descriptionTextColor,
                 });
+                setText(box.description, box.descriptionText);
                 box.description.css.fontStyle = "italic";
                 if (isTitleAbove) box.description.css = { marginLeft: -box.leftPadding + "px" };
             }
@@ -609,7 +616,7 @@ const TextField = function(params = {}) {
             // LABEL: Unit
             if (box.showUnit == 1) {
             box.unit = Label(box.unitStyle);
-            box.unit.text = box.unitText;
+            setText(box.unit, box.unitText);
             }
 
         endAutoLayout();

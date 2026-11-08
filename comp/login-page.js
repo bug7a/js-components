@@ -69,6 +69,7 @@ const LoginPageDefaults = {
     orTextColor: White(0.75), // White(0.75), Black(0.75)
     orLineColor: White(0.1), // White(0.1), Black(0.1)
     panelName: "MY PANEL v25.08.11",
+    allowHtml: 0, // 1: panelName, the alerts and the texts of the buttons are HTML (only for your own texts)
     onLoginClick: function() {},
     onSignupClick: function() {},
     showPasswordIconInvert: 1,
@@ -139,6 +140,14 @@ const LoginPage = function(params = {}) {
     const WAITING_FADE_TIME = 0.2; // seconds
     const ACTION_BUTTON_HEIGHT = 50; // px: LOGIN / SIGN UP (the height of the buttons of the page under them)
 
+    // *** PRIVATE FUNCTIONS:
+
+    const setText = function (label, text) {
+        const value = (text === undefined || text === null) ? "" : String(text);
+        if (box.allowHtml == 1) label.text = value;
+        else label.plainText = value;
+    };
+
     box.customButtonCount = 0;
 
     const initView = function() {
@@ -155,13 +164,13 @@ const LoginPage = function(params = {}) {
 
             // Title
             box.title = Label({
-                text: box.panelName,
                 right: 30,
                 bottom: 30,
                 fontSize: 20,
                 textColor: White(0.4),
                 position: "absolute",
             });
+            setText(box.title, box.panelName);
 
             // Tab Bar
             createTabBar();
@@ -371,7 +380,7 @@ const LoginPage = function(params = {}) {
 
         box.showAlert = function(text = "Error", color = "indianred") {
 
-            box.lblAlert.text = text;
+            setText(box.lblAlert, text);
             box.lblAlert.textColor = color;
             box.alertBox.opacity = 1;
             box.alertBox.clickable = 1;
@@ -456,10 +465,10 @@ const LoginPage = function(params = {}) {
             that.load(iconFile);
 
             Label({
-                text: text,
                 textColor: box.style.customLoginButton.textColor,
                 fontSize: 20,
             });
+            setText(that, text);
 
         endBox();
 
@@ -574,6 +583,7 @@ const LoginPage = function(params = {}) {
                 styleName: box.buttonStyleName,
                 tone: box.buttonTone,
                 labelText: text,
+                allowHtml: box.allowHtml,
                 width: "100%",
                 height: ACTION_BUTTON_HEIGHT,
                 onClick: action,
@@ -581,7 +591,6 @@ const LoginPage = function(params = {}) {
         }
 
         const button = Button({
-            text: text,
             textColor: White(0.75),
             fontSize: 20,
             width: "100%",
@@ -590,6 +599,7 @@ const LoginPage = function(params = {}) {
             color: box.primaryColor,
             minimal: 1,
         });
+        setText(button, text);
         button.clickable = 1;
         button.cursor = "pointer";
         UIEffects.press(button);

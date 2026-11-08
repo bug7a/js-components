@@ -771,6 +771,7 @@ const ProductEditor = function(params = {}) {
                             value: status,
                             checked: (draft.status == status) ? 1 : 0,
                             labelText: ProductsPage.STATUSES[status].label + " <span style='font-size:12px; color:" + Ink(0.4) + "'>" + ProductsPage.STATUSES[status].desc + "</span>",
+                            allowHtml: 1,
                             style: {
                                 mark: { width: 20, height: 20, color: "transparent", borderColor: Ink(0.35) },
                                 checkedMark: { color: "transparent", borderColor: S.ACCENT_COLOR },

@@ -21,7 +21,7 @@ Bu kurallar `comp/`, sayfalar, şablonlar ve projeler (oyun, designer...) için 
 - Global kayıtlar kutunun üzerinden: `box.listenTo(window, ...)`, `box.onPageResize(...)`, `box.after(...)`, `box.every(...)`, `box.own(menu)`. Böylece `remove()` yazmak gerekmez.
 - Sonradan nesne eklemek `createIn(box, function () { ... })` ile.
 - "Açık mı?" sorusu `basic.isOn(value)` ile; `(v == 1 || v === true)` yazılmaz.
-- Kullanıcıdan / sunucudan gelen metin `plainText` ile (Label.text HTML'dir).
+- Kullanıcıdan / sunucudan gelen metin `plainText` ile (Label.text HTML'dir). Bir bileşenin metinleri (`...Text` parametreleri, öğelerin metinleri) de düz metin gösterilir; HTML yalnız `allowHtml: 1` ile, sayfanın kendi metinleri için (`test/components-test.htm` her `...Text` parametresini denetler).
 
 ## 3. Bir fonksiyon bir iş yapar
 

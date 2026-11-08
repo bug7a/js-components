@@ -87,6 +87,7 @@ const SmartButtonDefaults = {
     width: "auto", // an icon button (labelText: "") is a square
     height: 44, // "auto": as high as its padding and content (an icon on top of a text is "auto")
     labelText: "Button", // "": an icon button
+    allowHtml: 0, // 1: labelText is HTML (only for your own texts)
     iconFile: "", // "": no icon (Ex: "../comp/smart-button/alert-black.png")
     iconPosition: "left", // "left", "top"
     enabled: 1, // 0: gray, can not be pressed (set later with setEnabled)
@@ -208,6 +209,12 @@ const SmartButton = function (params = {}) {
     let isMotionStarted = 0; // the transitions are on after the first view (startMotion)
 
     // *** PRIVATE FUNCTIONS:
+
+    const setText = function (label, text) {
+        const value = (text === undefined || text === null) ? "" : String(text);
+        if (box.allowHtml == 1) label.text = value;
+        else label.plainText = value;
+    };
 
     const canPress = function () {
         return box.enabled == 1 && box.waiting != 1;
@@ -463,7 +470,7 @@ const SmartButton = function (params = {}) {
 
     box.setLabelText = function (text) {
         box.labelText = text;
-        if (box.label) box.label.text = text;
+        if (box.label) setText(box.label, text);
         render(); // (the label read by a screen reader)
     };
  // USAGE: button.setLabelText("Save")
@@ -597,7 +604,7 @@ const SmartButton = function (params = {}) {
         // LABEL: only when there is a text
         if (box.labelText) {
             box.label = Label(0, 0, box.style.label);
-            box.label.text = box.labelText;
+            setText(box.label, box.labelText);
             box.label.css.whiteSpace = "nowrap";
         }
 

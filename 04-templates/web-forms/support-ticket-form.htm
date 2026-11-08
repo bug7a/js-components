@@ -144,6 +144,7 @@
                 maxWidth: 700,
                 buttonColor: ACCENT_COLOR,
                 buttonText: "SUBMIT TICKET",
+                allowHtml: 1, // the message after sending is HTML (showMessage)
                 showDetailWarning: 1,
                 missingEntryText: "{{count}} missing entry",
                 missingEntriesText: "{{count}} missing entries",
@@ -373,6 +374,7 @@
                         group: "priority",
                         value: priority.id,
                         labelText: priority.name + " <span style='color:" + Black(0.45) + "; font-size: 15px'>· " + priority.desc + "</span>",
+                        allowHtml: 1,
                         checked: (priority.id == "normal") ? 1 : 0,
                         onChange: function() {
                             field.update();

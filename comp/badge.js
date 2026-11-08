@@ -120,7 +120,7 @@ const Badge = function (params = {}) {
 
         if (isNumberValue()) {
             box.label.color = box.numberStyle.color || box.badgeStyle.color;
-            box.label.text = getNumberText();
+            box.label.plainText = getNumberText();
             box.setState("number");
             return;
         }

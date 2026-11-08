@@ -821,6 +821,7 @@
                             RadioButton({
                                 group: "zoneMode", value: mode.value,
                                 labelText: mode.text + " <span style='color:" + Ink(0.4) + "; font-size: 12px'>" + mode.desc + "</span>",
+                                allowHtml: 1,
                                 style: DARK_RADIO_STYLE,
                                 onChange: function (self) { if (isRendering) return; setMode(zone, self.value); renderAll(); },
                             });

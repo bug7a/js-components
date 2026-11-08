@@ -145,7 +145,7 @@ const Tooltip = function(params = {}) {
         box.hintText = text;
         // WHY owner: one bubble is shared; a late call must not write on the bubble of another object.
         if (!window.lblHint || !window.lblHint.label || window.lblHint.owner !== box) return;
-        window.lblHint.label.text = text;
+        window.lblHint.label.plainText = text;
         if (box.mouseX === undefined) return; // The mouse did not move yet: the first mousemove places it
         // WHY: A new text changes the width of the bubble: the bubble and its arrow must go to the mouse again.
         Tooltip.place(window.lblHint, { left: box.mouseX, top: box.mouseY, width: 0, height: 0 }, box.hintPosition);
@@ -184,8 +184,10 @@ const Tooltip = function(params = {}) {
         // WHY: when the mouse stays on an object that shows a tooltip, and
         // another event changes the text and the color of the tooltip, a mouse moved without entering the object
         // could show the text of the other event. So the text is checked.
-        if (window.lblHint.label && window.lblHint.label.text != box.hintText) {
-            window.lblHint.label.text = box.hintText;
+        // WHY plainText: the bubble is made with it (Tooltip.createBubble); text read the escaped HTML, so a hint with
+        //     "&" or "<" was never the same and was written again as HTML
+        if (window.lblHint.label && window.lblHint.label.plainText != box.hintText) {
+            window.lblHint.label.plainText = box.hintText;
         }
         // WHY getColor(): a color of look must stay (lbl_color painted a dark bubble of a content white)
         if (window.lblHint.look.color != getColor()) {

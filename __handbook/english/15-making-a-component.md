@@ -177,6 +177,7 @@ let box = startObject(params);
 - **One component, one file**, named like it (`star-rating.js`), with a header comment at the top: its name and version, what it does, its `USAGE` lines.
 - **The sections** are in the same order in every component: `// *** PRIVATE VARIABLES:`, `// *** PUBLIC VARIABLES:`, `// *** PRIVATE FUNCTIONS:`, `// *** PUBLIC FUNCTIONS:`, `// *** OBJECT VIEW:`, `// *** OBJECT INIT CODE:`, then `// *** STYLE PACKAGES:` after the function.
 - **A default icon is an SVG in the file** (`"data:image/svg+xml;utf8," + encodeURIComponent('<svg ...>')`), so a copy of the file works alone. Other files go into a folder with the same name (`star-rating/`).
+- **A text goes in with `plainText`** (`Label.text` is HTML). When the texts of the component may be HTML of the page, it has an `allowHtml: 0` param and one `setText(label, text)` that writes `text` or `plainText` (`comp/dialog.js`). `test/components-test.htm` checks every `...Text` param.
 
 ---
 

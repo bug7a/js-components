@@ -61,6 +61,7 @@ const SidePanelDefaults = {
     duration: 300, // Length of the animation, in milliseconds.
     fade: 1, // 1: The panel fades in / out with its slide. 0: It only slides. (The backdrop always fades.) (Only at create time)
     titleText: "",
+    allowHtml: 0, // 1: titleText is HTML (only for your own texts)
     showHeader: 1, // 0: No header. (The close button goes with it.)
     showCloseButton: 1,
     showBackdrop: 1,
@@ -160,6 +161,12 @@ const SidePanel = function (params = {}) {
     const OPEN_TRANSFORM = "translate(0px, 0px)";
 
     // *** PRIVATE FUNCTIONS:
+
+    const setText = function (label, text) {
+        const value = (text === undefined || text === null) ? "" : String(text);
+        if (box.allowHtml == 1) label.text = value;
+        else label.plainText = value;
+    };
 
     const isVertical = function () {
         return (box.side === "bottom" || box.side === "top");
@@ -347,7 +354,7 @@ const SidePanel = function (params = {}) {
 
     box.setTitleText = function (text) {
         box.titleText = text;
-        if (box.lblTitle) box.lblTitle.text = text;
+        if (box.lblTitle) setText(box.lblTitle, text);
     };
     // USAGE: get: panel.titleText, set: panel.setTitleText("Filters (3)")
 
@@ -435,12 +442,12 @@ const SidePanel = function (params = {}) {
 
                 // LABEL: Title
                 box.lblTitle = Label({
-                    text: box.titleText,
                     fontSize: _s.title.fontSize,
                     textColor: _s.title.textColor,
                     fontFamily: _s.title.fontFamily,
                     grow: 1,
                 });
+                setText(box.lblTitle, box.titleText);
                 that.ellipsis = 1;
 
                 // BOX: Close button (the X is drawn with two lines, no image file)

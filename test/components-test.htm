@@ -46,6 +46,9 @@
           the objects it created on the page, window/document listeners (page.onResize, page.on...),
           setInterval timers, requestAnimationFrame loops, ResizeObserver (onResize) watches.
           (The first instance may make one shared thing for all instances, like the Toast container.)
+        - Its texts are shown as they are written: a third instance gets a bold tag in every ...Text param, in its
+          placeholder and in the texts of the items of COMPONENTS; none of them may become an element (plainText;
+          HTML only with allowHtml: 1).
 
         NEW COMPONENT: add a line to COMPONENTS.
         - deps: the files it needs, loaded before it.
@@ -373,7 +376,56 @@
             check("onResize of removed objects cleared", leftObserved.length === 0, leftObserved.length + " removed element(s) still watched by a ResizeObserver", "warn");
             check("second instance has no errors", probe.errors.length === errorsBeforeSecond, newItems(probe.errors, errorsBeforeSecond).join(" | "));
 
+            // *** THIRD INSTANCE: its texts are shown as they are written
+            const htmlTexts = await __findHtmlTexts(test, Comp, makeParams());
+            if (htmlTexts !== null) {
+                check("a text is shown as it is written (code rules: plainText, HTML only with allowHtml: 1)", htmlTexts.length === 0, "written as HTML: " + htmlTexts.join(", "));
+            }
+
             return { steps: steps, keys: keys };
+        };
+
+        // A text of the component is shown as it is written: a "<b>" stays "<b>" (code rules: plainText; allowHtml: 1
+        // for HTML, only for the texts of the page's own code). Every ...Text param, the placeholder and the texts of the
+        // items of the test get a bold tag with their name; the names of the tags that became elements are the texts
+        // written as HTML. Runs in the frame. null: nothing to check (no defaults).
+        // WHY: a name a user typed, a file name or the message of a server ran as HTML ("<img src=x onerror=...>").
+        const findHtmlTexts = async function (test, Comp, params) {
+            let defaults = null;
+            try { defaults = (0, eval)(test.name + "Defaults"); } catch (e) { return null; }
+            if (!defaults || typeof defaults !== "object" || test.kind === "group") return null;
+            const ITEM_TEXT_KEYS = ["text", "title", "label", "description", "hint", "message"];
+            const SEPARATORS = ["-", " "];
+            const probeText = function (name) { return '<b class="html-probe" data-text="' + name + '">x</b>'; };
+            const probeItem = function (item, name) {
+                if (typeof item === "string") return (SEPARATORS.includes(item)) ? item : probeText(name);
+                if (!item || typeof item !== "object" || Array.isArray(item)) return item;
+                const copy = Object.assign({}, item);
+                ITEM_TEXT_KEYS.forEach(function (key) {
+                    if (typeof copy[key] === "string") copy[key] = probeText(name + "." + key);
+                });
+                return copy;
+            };
+            Object.keys(defaults).forEach(function (key) {
+                // WHY not a name with html: it is the HTML of the page on purpose
+                if (/html/i.test(key)) return;
+                if (/[a-z]Text$/.test(key) || key === "placeholder") params[key] = probeText(key);
+            });
+            Object.keys(test.params || {}).forEach(function (key) {
+                if (!Array.isArray(params[key])) return;
+                params[key] = params[key].map(function (item, index) { return probeItem(item, key + "[" + index + "]"); });
+            });
+            if ("allowHtml" in defaults) params.allowHtml = 0;
+            let box = null;
+            try {
+                box = Comp(params);
+            } catch (e) {
+                return ["(it is not made with such texts: " + e.message + ")"];
+            }
+            await new Promise(function (resolve) { setTimeout(resolve, test.wait || 400); });
+            const found = Array.from(document.querySelectorAll("b.html-probe")).map(function (el) { return el.getAttribute("data-text"); });
+            box.remove();
+            return Array.from(new Set(found));
         };
 
         // The names of the params that the kit does not use (context/basic-js-code-rules.md, 9). Runs in the frame.
@@ -484,6 +536,7 @@
                 "const __findNameProblems = " + findNameProblems.toString() + ";" +
                 "const __findSetterProblems = " + findSetterProblems.toString() + ";" +
                 "const __findSameValueChanges = " + findSameValueChanges.toString() + ";" +
+                "const __findHtmlTexts = " + findHtmlTexts.toString() + ";" +
                 "const __setup = " + (test.setup ? test.setup.toString() : "null") + ";" +
                 "function start() { __runProbe(" + JSON.stringify(probeTest) + ", __setup)" +
                 ".then(function (r) { parent.__frameDone(" + id + ", r); })" +

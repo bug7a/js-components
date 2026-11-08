@@ -45,6 +45,7 @@
                 maxWidth: 700,
                 buttonColor: ACCENT_COLOR,
                 buttonText: "SEND",
+                allowHtml: 1, // the message after sending is HTML (showMessage)
                 onSendClick: function (self, json) {
                     console.log(json);
                     showThanks();

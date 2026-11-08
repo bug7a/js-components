@@ -41,6 +41,7 @@ const CheckBoxDefaults = {
     checked: 0, // 0, 1
     enabled: 1, // 0, 1
     labelText: "",
+    allowHtml: 0, // 1: labelText is HTML (only for your own texts)
     labelPosition: "right", // "right", "left"
     wrapLabel: 0, // 1: a long label wraps (the check box needs a width); 0: one line
     animated: 0, // 1: the square grows a little under the mouse, the tick draws in (box.setAnimated(0/1))
@@ -133,6 +134,12 @@ const CheckBox = function (params = {}) {
     // NOTE: Default values are also public variables. (box.checked, box.enabled, box.labelText)
 
     // *** PRIVATE FUNCTIONS:
+
+    const setText = function (label, text) {
+        const value = (text === undefined || text === null) ? "" : String(text);
+        if (box.allowHtml == 1) label.text = value;
+        else label.plainText = value;
+    };
 
     // The keyboard focus (style.focus.ringColor) on the mark: its edge in that color and 1 px more inside it.
     // WHY on the mark, inside it: a ring around the whole object hid its text, and an outer ring was cut by the groups.
@@ -254,7 +261,7 @@ const CheckBox = function (params = {}) {
 
     box.setLabelText = function (text) {
         box.labelText = text;
-        box.label.text = text;
+        setText(box.label, text);
         box.label.visible = (text) ? 1 : 0;
     };
     // USAGE: get: checkBox.labelText, set: checkBox.setLabelText("Remember me")
@@ -290,7 +297,7 @@ const CheckBox = function (params = {}) {
     // LABEL: label (left or right of the mark)
     const createLabel = function () {
         box.label = Label(box.style.label);
-        box.label.text = box.labelText;
+        setText(box.label, box.labelText);
         if (!box.labelText) box.label.visible = 0;
         if (!isWrapLabel) {
             box.label.css.whiteSpace = "nowrap";

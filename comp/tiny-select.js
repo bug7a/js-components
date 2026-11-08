@@ -46,6 +46,7 @@ const TinySelectDefaults = {
     listBorder: 1,
     listBorderColor: "rgba(0, 0, 0, 0.6)",
     emptyText: "Empty",
+    allowHtml: 0, // 1: titleText, emptyText and the labels of the list are HTML (only for your own texts)
     invertIconColor: 0,
     labelBold: 1,
     labelTextColor: "rgba(0,0,0,0.8)",
@@ -61,6 +62,14 @@ const TinySelect = function(params = {}) {
 
     // *** PRIVATE VARIABLES:
     const DISABLED_OPACITY = 0.6;
+
+    // *** PRIVATE FUNCTIONS:
+
+    const setText = function (label, text) {
+        const value = (text === undefined || text === null) ? "" : String(text);
+        if (box.allowHtml == 1) label.text = value;
+        else label.plainText = value;
+    };
 
     // *** PUBLIC VARIABLES:
 
@@ -89,10 +98,10 @@ const TinySelect = function(params = {}) {
         box.selectedIndex = index;
 
         if (box.list.length > box.selectedIndex) {
-            box.lblLabel.text = box.list[box.selectedIndex].label;
+            setText(box.lblLabel, box.list[box.selectedIndex].label);
             if (!silent) box.onChange(box);
         } else {
-            box.lblLabel.text = box.emptyText;
+            setText(box.lblLabel, box.emptyText);
         }
 
         if (box.closeListBox != null) box.closeListBox();
@@ -103,7 +112,7 @@ const TinySelect = function(params = {}) {
     box.setTitleText = function(titleText) {
 
         box.titleText = titleText;
-        box.lblTitle.text = (box.titleText) ? box.titleText + ":" : "";
+        setText(box.lblTitle, (box.titleText) ? box.titleText + ":" : "");
 
     };
 
@@ -245,11 +254,12 @@ TinySelect.createList = function(connectedUI) {
             for (let i = 0; i < connectedUI.list.length; i++) {
                 const lbl = Label({
                     fontSize: connectedUI.listFontSize,
-                    text: connectedUI.list[i].label,
                     index: i,
                     spaceX: 6,
                     textColor: connectedUI.listTextColor,
                 });
+                if (connectedUI.allowHtml == 1) lbl.text = connectedUI.list[i].label;
+                else lbl.plainText = connectedUI.list[i].label;
                 lbl.elem.style.flexShrink = "0"; // WHY: in a list made shorter to fit the page, the items scroll, not shrink
 
                 if (connectedUI.selectedIndex != lbl.index) {

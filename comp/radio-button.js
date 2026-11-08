@@ -39,6 +39,7 @@ const RadioButtonDefaults = {
     checked: 0, // 0, 1
     enabled: 1, // 0, 1
     labelText: "",
+    allowHtml: 0, // 1: labelText is HTML (only for your own texts)
     labelPosition: "right", // "right", "left"
     onChange: function (self) { }, // Called when this radio button is selected.
     styleName: "light", // "light" ("classic": its old name), "modern", "dark", "minimal", "minimalDark" or a name added to RadioButton.styles
@@ -119,6 +120,12 @@ const RadioButton = function (params = {}) {
     // NOTE: Default values are also public variables. (box.checked, box.value, box.group)
 
     // *** PRIVATE FUNCTIONS:
+
+    const setText = function (label, text) {
+        const value = (text === undefined || text === null) ? "" : String(text);
+        if (box.allowHtml == 1) label.text = value;
+        else label.plainText = value;
+    };
 
     // The keyboard focus (style.focus.ringColor) on the mark: its edge in that color and 1 px more inside it.
     // WHY on the mark, inside it: a ring around the whole object hid its text, and an outer ring was cut by the groups.
@@ -241,7 +248,7 @@ const RadioButton = function (params = {}) {
 
     box.setLabelText = function (text) {
         box.labelText = text;
-        box.label.text = text;
+        setText(box.label, text);
         box.label.visible = (text) ? 1 : 0;
     };
     // USAGE: get: radio.labelText, set: radio.setLabelText("Option A")
@@ -278,7 +285,7 @@ const RadioButton = function (params = {}) {
     // LABEL: label (left or right of the mark)
     const createLabel = function () {
         box.label = Label(box.style.label);
-        box.label.text = box.labelText;
+        setText(box.label, box.labelText);
         box.label.css.whiteSpace = "nowrap";
         if (!box.labelText) box.label.visible = 0;
     };

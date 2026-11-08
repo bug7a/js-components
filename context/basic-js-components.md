@@ -91,7 +91,7 @@ MyComp.styles = {
 - The state is decided in one place (`getState()` or `getLook()`): normal, hover, selected, disabled. `paint()` draws it, without measuring.
 - Drawing functions named by their job: `createItems()` (from the data; one item: `createItem()`), `applyContent()`, `paint()`, `refreshLayout()` (what depends on the sizes), `drawAll()`. A setter calls only the one it needs.
 - Keyboard: `box.role`, `box.aria = {...}`, `box.tabIndex`, Enter / Space like a click, `box.setFocusRing(color)` (only for the keyboard). In a list only one row is in the Tab order.
-- A text of the user is written with `plainText`.
+- A text of the user is written with `plainText`, and so is every text of a component (its `...Text` params, the texts of its items): a typed `<b>` stays `<b>`. A component whose texts may be HTML of the page has `allowHtml: 0` (1: HTML, only for the page's own texts) and one `setText(label, text)` (`comp/dialog.js`). `test/components-test.htm` checks every `...Text` param.
 
 ## Sizes
 - **Read `"auto"` / `"100%"` from `params` before `startObject()`.** After it `box.width` / `box.height` are the measured numbers, so `box.height === "auto"` is never true (a TreeView with `height: "auto"` was 0 px high because of it).

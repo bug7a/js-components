@@ -62,6 +62,7 @@ const ProgressBarDefaults = {
     indeterminate: 0, // 1: Progress is not known, show a moving bar.
     status: "normal", // "normal", "success", "error"
     titleText: "",
+    allowHtml: 0, // 1: titleText and the text of valueFormat are HTML (only for your own texts)
     valuePosition: "top", // "top", "right", "none" (Only at create time)
     valueFormat: function (self) { // Returns the value text.
         return Math.round(self.getPercent()) + "%";
@@ -165,6 +166,12 @@ const ProgressBar = function (params = {}) {
     // NOTE: Default values are also public variables. (box.value, box.maxValue, box.status)
 
     // *** PRIVATE FUNCTIONS:
+
+    const setText = function (label, text) {
+        const value = (text === undefined || text === null) ? "" : String(text);
+        if (box.allowHtml == 1) label.text = value;
+        else label.plainText = value;
+    };
 
     const clampValue = function (value) {
         value = Number(value);
@@ -467,7 +474,7 @@ const ProgressBar = function (params = {}) {
         paintLimitDots();
 
         if (box.valueLabel) {
-            box.valueLabel.text = (box.indeterminate == 1) ? "" : box.valueFormat(box);
+            setText(box.valueLabel, (box.indeterminate == 1) ? "" : box.valueFormat(box));
         }
 
         box.aria = { valuemax: String(box.maxValue) };
@@ -570,7 +577,7 @@ const ProgressBar = function (params = {}) {
 
     box.setTitleText = function (text) {
         box.titleText = text;
-        box.titleLabel.text = text;
+        setText(box.titleLabel, text);
         box.titleLabel.visible = (text) ? 1 : 0;
         updateTopRow();
     };
@@ -614,7 +621,7 @@ const ProgressBar = function (params = {}) {
 
             // LABEL: Title
             box.titleLabel = Label(box.style.title);
-            box.titleLabel.text = box.titleText;
+            setText(box.titleLabel, box.titleText);
             box.titleLabel.css = { flex: "1 1 auto", minWidth: "0" };
             box.titleLabel.ellipsis = 1;
             if (!box.titleText) box.titleLabel.visible = 0;

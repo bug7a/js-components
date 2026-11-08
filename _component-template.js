@@ -53,7 +53,8 @@ GOTCHAS (CLAUDE.md):
 - A group clips its content. Give clipContent: 0 to a group whose content moves out of it (a lift, a glow, a badge).
 - visible: 0 in the props is undone if elem.style.display is set after it: set the display first, then visible = 0.
   Hide a group after its children are created.
-- A text of the user goes in with plainText (Label.text is innerHTML).
+- A text of the user goes in with plainText (Label.text is innerHTML), and so does every text of the component; HTML only with
+  an allowHtml: 0 param (1: HTML, only for the page's own texts) and one setText(label, text) (comp/dialog.js).
 - A Box with height: "auto" does not grow with basic.js children: put them in a group (box.layout) with position: "relative".
 
 WHEN THE NEW COMPONENT IS READY (only in the kit repository: a project made from the starter has none of these;

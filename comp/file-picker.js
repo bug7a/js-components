@@ -61,6 +61,7 @@ const FilePickerDefaults = {
     descriptionText: "or click to select",
     hintText: "", // Empty: created from accept and maxSize
     dropText: "Drop to add",
+    allowHtml: 0, // 1: titleText, descriptionText and dropText are HTML (only for your own texts)
     onChange: function (self) { }, // self.files: [{ file, name, displayName, path, size, sizeText, type, extension, lastModified }]
     onError: function (self, errors) { }, // errors: [{ type: "accept" | "maxSize" | "maxFiles", name, message }]
     onOpenDialog: null, // function (self): the dialog of a program, in the place of the dialog of the page (see above)
@@ -173,6 +174,12 @@ const FilePicker = function (params = {}) {
     box.state = "normal";
 
     // *** PRIVATE FUNCTIONS:
+
+    const setText = function (label, text) {
+        const value = (text === undefined || text === null) ? "" : String(text);
+        if (box.allowHtml == 1) label.text = value;
+        else label.plainText = value;
+    };
 
     // The parts the zone can lose, first the one it needs least. (The title always stays.)
     const getOptionalParts = function () {
@@ -302,7 +309,7 @@ const FilePicker = function (params = {}) {
         box.icon.textColor = iconColor;
         paintMotion();
 
-        box.title.text = (state == "dragover") ? box.dropText : box.titleText;
+        setText(box.title, (state == "dragover") ? box.dropText : box.titleText);
 
     };
 
@@ -634,13 +641,13 @@ const FilePicker = function (params = {}) {
 
     box.setTitleText = function (text) {
         box.titleText = text;
-        if (box.state != "dragover") box.title.text = text;
+        if (box.state != "dragover") setText(box.title, text);
         fitZoneContent();
     };
 
     box.setDescriptionText = function (text) {
         box.descriptionText = text;
-        box.desc.text = text;
+        setText(box.desc, text);
         fitZoneContent();
     };
 
@@ -708,19 +715,19 @@ const FilePicker = function (params = {}) {
 
             // LABEL: Title
             box.title = Label({
-                text: box.titleText,
                 textAlign: "center",
                 shrink: 0,
                 ..._s.title,
             });
+            setText(box.title, box.titleText);
 
             // LABEL: Description
             box.desc = Label({
-                text: box.descriptionText,
                 textAlign: "center",
                 shrink: 0,
                 ..._s.desc,
             });
+            setText(box.desc, box.descriptionText);
 
             // LABEL: Hint (accept, max size)
             box.hint = Label({

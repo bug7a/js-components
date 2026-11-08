@@ -147,6 +147,7 @@ const selLanguage = SelectBox({
 - **`animated: 0`** hareket eden bir bileşenin hareketini durdurur. Sistem daha az hareket istediğinde de hareketi durur.
 - **Klavye:** bileşenler Tab, Enter, Boşluk ve ok tuşlarıyla çalışır. Bir ikon butonu (`labelText` olmadan) bir `ariaLabel` ister.
 - Bir alandan açılan liste ya da menü, bir `Dialog`'un üstüne kendiliğinden çıkar.
+- **Metinler yazıldığı gibi gösterilir:** `<b>` içeren bir `labelText` ya da `titleText` `<b>` olarak görünür; böylece bir kullanıcının yazdığı ad HTML olarak çalışamaz. Sayfanızın kendi HTML'i için bileşene `allowHtml: 1` verin.
 
 ---
 

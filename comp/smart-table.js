@@ -77,7 +77,7 @@ const SmartTableDefaults = {
     searchTitleIndex: -1, // -1: Search in all columns (ALL). 0, 1...: Search only in this column.
     showSearchTitleSelect: 1, // 0: Hide the column select box (ALL) next to the search input.
     wheelScroll: 0, // 1: The mouse wheel scrolls the rows (and the page does not scroll). 0: The wheel is left to the page.
-    allowHtml: 0, // 1: The cell values are written as HTML. 0: As plain text (safe for the text of the users)
+    allowHtml: 0, // 1: The cell values, the titles of the columns and the texts are written as HTML. 0: As plain text (safe for the text of the users)
     showCellTooltip: 1, // 1: a cell whose text does not fit shows all of it in a bubble (comp/tooltip.js). 0: no bubble
     allTitlesText: "ALL",
     canSelect: 1, // 1: a click or a key selects a row; Enter runs onSelect. 0: no selection, no keys
@@ -226,6 +226,12 @@ const SmartTable = function (params = {}) {
 
     // *** PRIVATE FUNCTIONS:
 
+    const setText = function (label, text) {
+        const value = (text === undefined || text === null) ? "" : String(text);
+        if (box.allowHtml == 1) label.text = value;
+        else label.plainText = value;
+    };
+
     // The last top index: the last page of rows ends with the last record.
     const getMaxScrollIndex = function () {
         return Math.max(0, box.visibleItemDataList.length - box.itemLineCount);
@@ -336,8 +342,7 @@ const SmartTable = function (params = {}) {
             if (!("lastValue" in cell) || cell.lastValue !== newValue) { // WHY: without !==, 0 and "" were the same.
                 cell.lastValue = newValue;
                 // WHY plainText: a value from a user (a name, a title) ran as HTML in the cell
-                if (box.allowHtml == 1) cell.label.text = newValue;
-                else cell.label.plainText = newValue;
+                setText(cell.label, newValue);
             }
 
             if (box.updateCellView) box.updateCellView(cell, j, newValue, box);
@@ -513,9 +518,9 @@ const SmartTable = function (params = {}) {
         that.sortable = titleData.sortable;
 
         titleCell.label = Label({
-            text: titleData.name,
             ...box.style.lblTitleCell,
         });
+        setText(titleCell.label, titleData.name);
         that.css.fontFamily = box.style.lblTitleCell.fontFamily;
         if (box.style.titleUppercase == 1) that.css.textTransform = "uppercase";
 
@@ -1256,7 +1261,6 @@ const SmartTable = function (params = {}) {
         // LABEL: The choice of the search column (ALL): in the filter box, at its right end
         box.lblSelectedSortKey = createIn(box.searchInput, function () {
             return Label({
-                text: box.allTitlesText,
                 right: SEARCH_TITLE_RIGHT,
                 opacity: 1,
                 clickable: 1,
@@ -1264,6 +1268,7 @@ const SmartTable = function (params = {}) {
                 ...box.style.lblSearchTitle, // WHY: the label is in the filter box: it gets a look apart from the "no data" label.
             });
         });
+        setText(box.lblSelectedSortKey, box.allTitlesText);
         that.cursor = "pointer";
         that.ellipsis = 1;
         that.css.maxWidth = SEARCH_TITLE_MAX_WIDTH;
@@ -1412,10 +1417,10 @@ const SmartTable = function (params = {}) {
         HGroup();
 
         box.lblNoDataFound = Label({
-            text: box.noDataFoundAlert,
             opacity: 0,
             ...box.style.lblNoDataFound,
         });
+        setText(box.lblNoDataFound, box.noDataFoundAlert);
         that.setMotion("opacity 0.2s");
 
         endGroup();
@@ -1434,7 +1439,7 @@ const SmartTable = function (params = {}) {
         if (!box.titleDataList[box.searchTitleIndex]) box.searchTitleIndex = -1;
 
         const selectedTitleData = box.titleDataList[box.searchTitleIndex];
-        box.lblSelectedSortKey.text = (selectedTitleData) ? getTitleText(selectedTitleData) : box.allTitlesText;
+        setText(box.lblSelectedSortKey, (selectedTitleData) ? getTitleText(selectedTitleData) : box.allTitlesText);
         box.lblSelectedSortKey.visible = (box.showSearchTitleSelect == 1) ? 1 : 0;
 
         if (!box.searchTitleMenu) return;

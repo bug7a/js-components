@@ -850,6 +850,7 @@
                             const radio = RadioButton({
                                 group: "carMode", value: mode.value,
                                 labelText: mode.text + "<br><span style='color:" + Ink(0.4) + "; font-size: 12px'>" + mode.desc + "</span>",
+                                allowHtml: 1,
                                 style: DARK_RADIO_STYLE,
                                 onChange: function (self) { onModeChange(self.value); },
                             });

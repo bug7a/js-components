@@ -296,6 +296,7 @@ const RolesPage = function(params = {}) {
                     height: "auto", // WHY: two lines (the name of the role and its counts)
                     // WHY the bold name: the new templates have a regular text; the name leads, its counts under it
                     labelText: "<span style='font-family: opensans-bold'>" + escapeHtml(role.name) + "</span>" + tag + "<br><span style='font-size:12px; color:" + Ink(0.45) + "'>" + countsText + "</span>",
+                    allowHtml: 1, // WHY: the label is HTML of the page (the name is escaped)
                     ariaLabel: role.name + ((role.isSystem) ? " (system)" : "") + ", " + countsText, // WHY: the label is HTML (it was read with its tags)
                     iconFile: "",
                     onClick: function() {

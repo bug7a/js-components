@@ -141,6 +141,7 @@
                 maxWidth: 700,
                 buttonColor: ACCENT_COLOR,
                 buttonText: "COMPLETE REGISTRATION",
+                allowHtml: 1, // the message after sending is HTML (showMessage)
                 showDetailWarning: 1,
                 missingEntryText: "{{count}} missing entry",
                 missingEntriesText: "{{count}} missing entries",
@@ -495,6 +496,7 @@
                 titleText: "PROMO CODE",
                 placeholder: "Optional",
                 descriptionText: " ",
+                allowHtml: 1, // WHY: the description of a promo code is HTML of the page (a colored check)
                 warningColor: WARNING_COLOR,
                 maxLength: 20,
             });

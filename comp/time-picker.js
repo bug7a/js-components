@@ -226,10 +226,10 @@ const TimePicker = function (params = {}) {
         if (box.inline == 1) return;
 
         if (box.minutesOfDay !== null) {
-            box.fieldText.text = box.timeText;
+            box.fieldText.plainText = box.timeText;
             box.fieldText.textColor = _s.fieldText.textColor;
         } else {
-            box.fieldText.text = box.placeholder || texts.placeholder;
+            box.fieldText.plainText = box.placeholder || texts.placeholder;
             box.fieldText.textColor = _s.placeholder.textColor;
         }
 

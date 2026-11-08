@@ -43,6 +43,7 @@ const MiniGraphBoxDefaults = {
     height: 80,
     titleText: "Sold Items",
     valueText: "1.3K",
+    allowHtml: 0, // 1: titleText and valueText are HTML (only for your own texts)
     iconFile: "", // "": No icon
     barColor: "tomato",
     values: [], // [10, 20, { value: 15, color: "orange" }]
@@ -124,6 +125,12 @@ const MiniGraphBox = function (params = {}) {
     box.barCount = 0;
 
     // *** PRIVATE FUNCTIONS:
+
+    const setText = function (label, text) {
+        const value = (text === undefined || text === null) ? "" : String(text);
+        if (box.allowHtml == 1) label.text = value;
+        else label.plainText = value;
+    };
 
     const normalizeValue = function (item) {
         if (item !== null && typeof item == "object") {
@@ -355,12 +362,12 @@ const MiniGraphBox = function (params = {}) {
 
     box.setTitleText = function (text) {
         box.titleText = text;
-        box.lblTitle.text = text;
+        setText(box.lblTitle, text);
     };
 
     box.setValueText = function (text) {
         box.valueText = text;
-        box.lblValueText.text = text;
+        setText(box.lblValueText, text);
     };
 
     box.setIcon = function (iconFile) {
@@ -406,18 +413,18 @@ const MiniGraphBox = function (params = {}) {
     });
 
         box.lblTitle = Label({
-            text: box.titleText,
             fontSize: _s.title.fontSize,
             textColor: _s.title.textColor,
         });
+        setText(box.lblTitle, box.titleText);
         // WHY: marginBottom: Line heights of the two texts leave a big space between them.
         box.lblTitle.css = { whiteSpace: "nowrap", marginBottom: "-6px" };
 
         box.lblValueText = Label({
-            text: box.valueText,
             fontSize: _s.valueText.fontSize,
             textColor: _s.valueText.textColor,
         });
+        setText(box.lblValueText, box.valueText);
         box.lblValueText.css.whiteSpace = "nowrap";
 
     endGroup();

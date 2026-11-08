@@ -230,10 +230,10 @@ const DatePicker = function (params = {}) {
         if (box.inline == 1) return;
 
         if (box.date) {
-            box.fieldText.text = box.dateText;
+            box.fieldText.plainText = box.dateText;
             box.fieldText.textColor = _s.fieldText.textColor;
         } else {
-            box.fieldText.text = box.placeholder || texts.placeholder;
+            box.fieldText.plainText = box.placeholder || texts.placeholder;
             box.fieldText.textColor = _s.placeholder.textColor;
         }
 
@@ -440,13 +440,13 @@ const DatePicker = function (params = {}) {
     const renderPanel = function () {
 
         if (view == "days") {
-            box.title.text = texts.months[viewMonth] + " " + viewYear;
+            box.title.plainText = texts.months[viewMonth] + " " + viewYear;
             box.weekRow.visible = 1;
             box.daysBox.visible = 1;
             box.monthsBox.visible = 0;
             renderDays();
         } else {
-            box.title.text = String(viewYear);
+            box.title.plainText = String(viewYear);
             box.weekRow.visible = 0;
             box.daysBox.visible = 0;
             box.monthsBox.visible = 1;

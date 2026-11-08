@@ -129,6 +129,7 @@
                 maxWidth: 700,
                 buttonColor: ACCENT_COLOR,
                 buttonText: "BOOK APPOINTMENT",
+                allowHtml: 1, // the message after sending is HTML (showMessage)
                 showDetailWarning: 1,
                 missingEntryText: "{{count}} missing entry",
                 missingEntriesText: "{{count}} missing entries",
@@ -181,6 +182,7 @@
                         group: "service",
                         value: service.id,
                         labelText: service.name + " <span style='color:" + Black(0.45) + "; font-size: 15px'>· " + service.duration + " min · " + formatPrice(service.price) + "</span>",
+                        allowHtml: 1,
                         onChange: function() {
                             field.update();
                             renderTimeSlots(); // WHY: A longer service can not use the late slots.
