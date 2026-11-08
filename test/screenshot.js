@@ -5,6 +5,7 @@ SCREENSHOT: one picture of a page (or of a part of it) for a report, in one comm
 
     node test/screenshot.js tabs.htm                         a sample at 1280 px (a name alone is in 02-comp-examples)
     node test/screenshot.js tabs.htm --width 390             at the width of a phone
+    node test/screenshot.js "index.htm#/text-field"           a page with a #hash (or a ?query)
     node test/screenshot.js _basic-designer/index.htm --run "BasicDesigner.openFolderDialog()" --clip "[role=dialog]"
     node test/screenshot.js tabs.htm --before                the page of the last commit left, the page now right
     node test/screenshot.js tabs.htm --before HEAD~2 --name tabs-fix
@@ -224,7 +225,7 @@ const readOptions = function (args) {
     }
     if (!options.height) options.height = (options.width < PHONE_WIDTH) ? PHONE_HEIGHT : DEFAULT_HEIGHT;
     if (!options.scale) options.scale = (options.clips.length) ? 2 : 1;
-    if (!options.name) options.name = path.basename(options.page.split("?")[0]).replace(/\.html?$/i, "");
+    if (!options.name) options.name = path.basename(options.page.split(/[?#]/)[0]).replace(/\.html?$/i, "");
     return options;
 };
 
@@ -239,7 +240,8 @@ const main = async function () {
         return 0;
     }
 
-    const pageFile = options.page.split("?")[0];
+    // WHY # too: a page of the catalog is index.htm#/text-field
+    const pageFile = options.page.split(/[?#]/)[0];
     if (!fs.existsSync(path.join(ROOT, pageFile))) throw new Error("No such page: " + pageFile);
     if (options.before && !isInCommit(options.before, pageFile)) throw new Error(pageFile + " is not in " + options.before);
 
