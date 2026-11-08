@@ -124,9 +124,9 @@
                 },
             });
             lightResults.attachTo(lightInput.txtSearch.inputElement);
-            // NOTE: getSearchText() is the text in lower case, getText() the text as it is typed.
+            // NOTE: getSearchText() is the text in lower case, value the text as it is typed.
             lightInput.onChange = function (self) {
-                lightResults.setItems(findResults(self.getSearchText()), self.getText());
+                lightResults.setItems(findResults(self.getSearchText()), self.value);
             };
 
             darkResults = SearchResults({
@@ -140,7 +140,7 @@
             });
             darkResults.attachTo(darkInput.txtSearch.inputElement);
             darkInput.onChange = function (self) {
-                darkResults.setItems(findResults(self.getSearchText()), self.getText());
+                darkResults.setItems(findResults(self.getSearchText()), self.value);
             };
 
         };
@@ -178,7 +178,7 @@
 
         // Cleans a SearchInput after a result was opened. (The clear (x) icon goes with the text.)
         const clearSearchInput = function (input) {
-            input.setText("");
+            input.setValue("", 1);
             input.imgClearIcon.opacity = 0;
             input.imgClearIcon.clickable = 0;
             input.txtSearch.inputElement.blur();

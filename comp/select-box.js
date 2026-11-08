@@ -1189,7 +1189,7 @@ const SelectBox = function (params = {}) {
     };
 
     const setSearchBoxText = function (text) {
-        if (usesSearchInput) box.searchGroup.setText(text);
+        if (usesSearchInput) box.searchGroup.setValue(text, 1);
         else box.searchInput.text = text;
     };
 

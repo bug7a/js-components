@@ -178,7 +178,7 @@ BasicDesigner.applyParamFilter = function () {
 BasicDesigner.clearParamFilter = function () {
     const ui = BasicDesigner.ui;
     BasicDesigner.state.paramFilter = "";
-    if (ui.paramSearch) ui.paramSearch.setText("");
+    if (ui.paramSearch) ui.paramSearch.setValue("", 1);
 };
 
 // GROUP: The search and the button of the changed values

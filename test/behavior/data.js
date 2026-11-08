@@ -123,8 +123,8 @@ test("SmartTable: classic is the default; a page's own style over \"green\" keep
 test("SmartTable: the column chip is at the right end of the filter box; the text and the clear icon stay at its left; a narrow box has no clear icon", async function () {
     const wideTable = SmartTable({ itemLineCount: 2, style: { width: 700, height: "auto" } });
     const narrowTable = SmartTable({ itemLineCount: 2, style: { width: 260, height: "auto" } });
-    wideTable.searchInput.setText("abc");
-    narrowTable.searchInput.setText("abc");
+    wideTable.searchInput.setValue("abc", 1);
+    narrowTable.searchInput.setValue("abc", 1);
     await wait(150);
     const right = function (obj) { return obj.elem.getBoundingClientRect().right; };
     const left = function (obj) { return obj.elem.getBoundingClientRect().left; };

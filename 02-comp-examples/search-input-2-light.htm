@@ -49,13 +49,13 @@
                         onChange: showSearched,
                     });
 
-                    caption("light · with text (setText shows the clear icon)");
-                    const searchWithText = SearchInput({
+                    caption("light · with text (value shows the clear icon)");
+                    SearchInput({
                         styleName: "light",
                         placeholder: "Search products",
+                        value: "running shoes",
                         onChange: showSearched,
                     });
-                    searchWithText.setText("running shoes");
 
                     // GROUP: A white card with a search box as wide as the card
                     VGroup({

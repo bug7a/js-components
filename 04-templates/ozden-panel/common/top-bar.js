@@ -655,7 +655,7 @@ const TopBar = function(params = {}) {
         styleName: T.compStyle,
         onSelect: function(self, item) {
             // Clean the search input and open what was found.
-            box.searchInput.setText("");
+            box.searchInput.setValue("", 1);
             box.searchInput.imgClearIcon.opacity = 0;
             box.searchInput.imgClearIcon.clickable = 0;
             searchText = "";

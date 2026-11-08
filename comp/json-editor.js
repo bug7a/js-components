@@ -439,7 +439,7 @@ const JsonEditor = function (params = {}) {
 
     const showLevel = function () {
         searchText = "";
-        searchInput.setText("");
+        searchInput.setValue("", 1);
         drawPath();
         drawHead();
         refreshViewRows();
@@ -539,7 +539,7 @@ const JsonEditor = function (params = {}) {
         commitEdit();
         remember();
         searchText = "";
-        searchInput.setText("");
+        searchInput.setValue("", 1);
         const row = newRow();
         const index = (place === undefined) ? level.rows.length : place;
         level.rows.splice(index, 0, row);

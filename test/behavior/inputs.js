@@ -865,7 +865,7 @@ test("SearchInput: a cut text fades out where it goes on; while typing only the 
     const getMask = function () { return search.txtSearch.elem.style.maskImage || search.txtSearch.elem.style.webkitMaskImage || ""; };
     const isRightFade = function (mask) { return mask.includes("transparent 100%") && !mask.includes("transparent 0px"); };
     const isLeftFade = function (mask) { return mask.includes("transparent 0px") && !mask.includes("transparent 100%"); };
-    search.setText("a text that is much longer than the box of the search");
+    search.setValue("a text that is much longer than the box of the search", 1);
     await wait(50);
     const restMask = getMask();
     // (the events, not focus(): the window of the test may not be in focus)
@@ -878,7 +878,7 @@ test("SearchInput: a cut text fades out where it goes on; while typing only the 
     input.dispatchEvent(new KeyboardEvent("keyup", { key: "Home" }));
     const caretInTextMask = getMask();
     input.dispatchEvent(new FocusEvent("blur"));
-    search.setText("short");
+    search.setValue("short", 1);
     const shortMask = getMask();
     check("SearchInput: a cut text fades out where it goes on; while typing only the far side of a caret at the end",
         isRightFade(restMask) && isLeftFade(typingMask) && caretInTextMask === "" && shortMask === "",
@@ -897,29 +897,45 @@ test("SearchInput: clearOnEscape: Escape clears the text and uses the key; an em
         input.dispatchEvent(event);
         return event.defaultPrevented ? 1 : 0;
     };
-    search.setText("abc");
+    search.setValue("abc", 1);
     const usedWithText = pressEscape(search.txtSearch.inputElement);
-    const isCleared = (search.getText() === "" && submitted[submitted.length - 1] === "");
+    const isCleared = (search.getValue() === "" && submitted[submitted.length - 1] === "");
     const usedWhenEmpty = pressEscape(search.txtSearch.inputElement);
-    plain.setText("abc");
+    plain.setValue("abc", 1);
     const usedByPlain = pressEscape(plain.txtSearch.inputElement);
-    table.searchInput.setText("abc");
+    table.searchInput.setValue("abc", 1);
     table.searchKeyword = "abc";
     pressEscape(table.searchInput.txtSearch.inputElement);
-    const isTableCleared = (table.searchKeyword === "" && table.searchInput.getText() === "");
+    const isTableCleared = (table.searchKeyword === "" && table.searchInput.getValue() === "");
     const dataTable = DataTable({ width: 500, height: 300, showSearch: 1, columns: [{ key: "name", title: "Name" }], rows: [["Paris"], ["London"], ["Berlin"]] });
-    dataTable.searchInput.setText("paris");
+    dataTable.searchInput.setValue("paris", 1);
     dataTable.search("paris");
     const foundCount = dataTable.shownRows.length;
     pressEscape(dataTable.searchInput.txtSearch.inputElement);
-    const isDataTableCleared = (foundCount === 1 && dataTable.shownRows.length === 3 && dataTable.searchInput.getText() === "");
+    const isDataTableCleared = (foundCount === 1 && dataTable.shownRows.length === 3 && dataTable.searchInput.getValue() === "");
     check("SearchInput: clearOnEscape: Escape clears the text and uses the key; an empty field leaves it to the page; off by default",
-        usedWithText === 1 && isCleared && usedWhenEmpty === 0 && usedByPlain === 0 && plain.getText() === "abc" && isTableCleared && isDataTableCleared,
-        "used with a text: " + usedWithText + ", cleared: " + isCleared + ", used when empty: " + usedWhenEmpty + ", plain: " + usedByPlain + " / " + plain.getText() + ", SmartTable: " + isTableCleared + ", DataTable: " + isDataTableCleared + " (" + foundCount + " found)");
+        usedWithText === 1 && isCleared && usedWhenEmpty === 0 && usedByPlain === 0 && plain.getValue() === "abc" && isTableCleared && isDataTableCleared,
+        "used with a text: " + usedWithText + ", cleared: " + isCleared + ", used when empty: " + usedWhenEmpty + ", plain: " + usedByPlain + " / " + plain.getValue() + ", SmartTable: " + isTableCleared + ", DataTable: " + isDataTableCleared + " (" + foundCount + " found)");
     search.remove();
     plain.remove();
     table.remove();
     dataTable.remove();
+});
+test("SearchInput: value at create shows its clear icon; typing changes value; setValue() calls onChange, setValue(value, 1) does not", async function () {
+    const changes = [];
+    const search = SearchInput({ value: "boat", onChange: function (self) { changes.push(self.value); } });
+    await wait(80);
+    const input = search.txtSearch.inputElement;
+    const atCreate = [search.value, input.value, search.getValue(), changes.length, search.imgClearIcon.opacity > 0].join("|");
+    input.value = "boats";
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+    search.setValue("ship");
+    search.setValue("ship"); // the same text: no onChange
+    search.setValue("car", 1);
+    check("SearchInput: value at create shows its clear icon; typing changes value; setValue() calls onChange, setValue(value, 1) does not",
+        atCreate === "boat|boat|boat|0|true" && changes.join(",") === "boats,ship" && search.value === "car" && input.value === "car",
+        "at create: " + atCreate + ", changes: " + changes.join(",") + ", value: " + search.value);
+    search.remove();
 });
 
 test("SearchInput: right / bottom place it (the default left / top does not win)", async function () {

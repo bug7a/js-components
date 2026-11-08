@@ -64,6 +64,7 @@ const SearchInputDefaults = {
     clearIconMinTextWidth: 0, // px: the clear icon is not shown when the text beside it would be narrower (0: always shown)
     textFadeWidth: 24, // px: a text longer than the box fades out over this width where it is cut (0: cut sharply)
     clearOnEscape: 0, // 1: Escape clears the text (as the clear icon); in an empty field it goes on to the page
+    value: "", // The text in the box: typing changes it. setValue(), getValue()
     placeholder: "Search",
     color: "whitesmoke",
     textColor: "rgba(0, 0, 0, 0.8)",
@@ -85,7 +86,7 @@ const SearchInputDefaults = {
     animated: 0, // 1: small hover / focus / clear motions. (box.setAnimated(0/1))
     hoverRingColor: "rgba(0, 0, 0, 0.08)", // animated: the thin line inside the border under the mouse
     focusRingColor: "rgba(0, 0, 0, 0.16)", // animated: the line while typing
-    onChange: function(self) {}, // The text changed (typed, pasted, cleared): self.getSearchText() (lower case), self.getText()
+    onChange: function(self) {}, // The text changed (typed, pasted, cleared, setValue()): self.value, self.getSearchText() (lower case). Not at create time, not with setValue(value, 1)
     onEnter: function(self) {}, // Enter, and the clear icon: self.getSearchText()
     styleName: "original", // "original" (the look of these defaults), "light" ("classic": its old name), "ozden", "ozdenDark", "minimal", "minimalDark" or a name added to SearchInput.styles
     style: {}, // WHY: the look is in the flat params above; the packages are packages of params (see SearchInput.styles).
@@ -343,6 +344,7 @@ const SearchInput = function(params = {}) {
     const clearText = function() {
         setClearIconVisible(0);
         box.txtSearch.text = "";
+        box.value = "";
         refreshTextFade();
         box.onChange(box);
         box.onEnter(box);
@@ -362,15 +364,21 @@ const SearchInput = function(params = {}) {
     // *** Public functions:
     box.publicFunc = () => {};
 
-    box.setText = function(text) {
+    // silent: 1 -> onChange is not called.
+    box.setValue = function(value, silent = 0) {
+        const text = (value === null || value === undefined) ? "" : String(value);
+        if (text === box.txtSearch.text) return;
         box.txtSearch.text = text;
+        box.value = text;
         refreshClearIcon();
         refreshTextFade();
-    }
+        if (!silent) box.onChange(box);
+    };
+    // USAGE: get: search.value, set: search.setValue("shoes") / search.setValue("", 1) // silent
 
-    box.getText = function() {
+    box.getValue = function() {
         return box.txtSearch.text;
-    }
+    };
 
     // The text to search with: the text in lower case
     box.getSearchText = function() {
@@ -447,6 +455,7 @@ const SearchInput = function(params = {}) {
     // WHY "input", not keyup: a text pasted with the mouse, dropped or filled by the browser was never searched
     //     (the list kept the old text); and the arrows, Enter, Escape, which change nothing, searched again.
     box.listenTo(box.txtSearch.inputElement, "input", function() {
+        box.value = box.txtSearch.text;
         box.onChange(box);
         refreshClearIcon();
         refreshTextFade();
@@ -461,6 +470,9 @@ const SearchInput = function(params = {}) {
     box.listenTo(box.txtSearch.inputElement, "scroll", refreshTextFade);
     box.listenTo(box.txtSearch.inputElement, "mouseup", refreshTextFade);
     box.listenTo(box.txtSearch.inputElement, "keydown", onEscapeKey);
+    // The text at create: its clear icon and its fade come with the first refreshLayout (onResize).
+    box.value = (box.value === null || box.value === undefined) ? "" : String(box.value);
+    box.txtSearch.text = box.value;
     box.onResize(refreshLayout);
     box.imgClearIcon.onClick(clearText);
     box.imgClearIcon.onHoverChange(function(self, isOver) {

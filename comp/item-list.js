@@ -1248,8 +1248,8 @@ const ItemList = function (params = {}) {
     // WHY: Only when it is another text: the box gives a lower case text to search(); it must not change what is typed.
     const syncSearchInput = function (text) {
         if (!box.searchInput) return;
-        if (normalizeText(box.searchInput.getText()).trim() === normalizeText(text).trim()) return;
-        box.searchInput.setText(String(text || ""));
+        if (normalizeText(box.searchInput.value).trim() === normalizeText(text).trim()) return;
+        box.searchInput.setValue(String(text || ""), 1);
     };
 
     // *** PUBLIC FUNCTIONS:

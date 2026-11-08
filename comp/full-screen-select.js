@@ -197,7 +197,7 @@ const FullScreenSelect = function (params = {}) {
 
     // Every open starts with an empty search and the selected item in sight.
     const resetPanel = function () {
-        if (box.panel.searchInput) box.panel.searchInput.setText("");
+        if (box.panel.searchInput) box.panel.searchInput.setValue("", 1);
         searchText = null;
         filterRows("");
         box.panel.listBox.elem.scrollTop = 0;

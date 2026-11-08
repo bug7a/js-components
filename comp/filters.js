@@ -461,8 +461,8 @@ const Filters = function (params = {}) {
         const searchParams = Object.assign({}, box.searchInputParams);
         searchParams.placeholder = box.searchPlaceholder;
         if (searchParams.animated === undefined) searchParams.animated = box.animated;
-        // WHY getText(), not getSearchText(): that one is in lower case, and the field must keep what is typed
-        searchParams.onChange = function () { box.search(box.searchInput.getText()); };
+        // WHY value, not getSearchText(): that one is in lower case, and the field must keep what is typed
+        searchParams.onChange = function () { box.search(box.searchInput.value); };
         box.searchInput = SearchInput(searchParams);
         box.searchInput.shrink = 0;
     };
@@ -656,7 +656,7 @@ const Filters = function (params = {}) {
     box.search = function (text) {
         const value = String(text || "");
         searchText = value.trim().toLocaleLowerCase();
-        if (box.searchInput && box.searchInput.getText() !== value) box.searchInput.setText(value);
+        if (box.searchInput && box.searchInput.value !== value) box.searchInput.setValue(value, 1);
         if (box.inpSearch && box.inpSearch.text !== value) box.inpSearch.text = value;
         paint();
     };
