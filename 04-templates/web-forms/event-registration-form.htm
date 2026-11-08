@@ -943,7 +943,7 @@
 
             const prices = getPrices();
             const orderNumber = "EVT-" + new Date().getFullYear() + "-" + String(Math.floor(Math.random() * 90000) + 10000);
-            json.push({ key: "order", type: "order", titleText: "ORDER", inputValue: { number: orderNumber, ...prices } });
+            json.push({ key: "order", type: "order", titleText: "ORDER", value: { number: orderNumber, ...prices } });
 
             // Form values + student ID files in one request:
             const formData = new FormData();
@@ -968,7 +968,7 @@
                 if (SERVICE_URL == "") {
                     // DEMO MODE:
                     console.table(json.map(function(item) {
-                        return { key: item.key, type: item.type, title: item.titleText, value: JSON.stringify(item.inputValue) };
+                        return { key: item.key, type: item.type, title: item.titleText, value: JSON.stringify(item.value) };
                     }));
                     await new Promise(function(resolve) { setTimeout(resolve, 1200); });
                     isSent = true;

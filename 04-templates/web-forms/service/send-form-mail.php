@@ -15,7 +15,7 @@ USAGE:
 3. Write that URL to the SERVICE_URL constant of the form page. Nothing else is needed.
 
 WHAT IT ACCEPTS:
-- application/json  : [ { key, type, titleText, inputValue }, ... ]          (js-form Form JSON)
+- application/json  : [ { key, type, titleText, value }, ... ]          (js-form Form JSON)
                       { formName, formTitle, fields: [ ... ] }              (the same, with a title)
                       { first_name: "...", email: "..." }                   (a flat object)
 - multipart/form-data : a JSON string in a field (fields, formJSON, ticket, application...)
@@ -190,7 +190,7 @@ if ($isJsonPost) {
 
     if (isJsonFieldList($data)) {
 
-        // [ { key, type, titleText, inputValue }, ... ]
+        // [ { key, type, titleText, value }, ... ]
         $fields = $data;
 
     } else {
@@ -430,7 +430,7 @@ function isJsonFieldList($data) {
 
 }
 
-// { first_name: "Bugra" } -> [ { key: "first_name", titleText: "First Name", inputValue: "Bugra" } ]
+// { first_name: "Bugra" } -> [ { key: "first_name", titleText: "First Name", value: "Bugra" } ]
 function fieldsFromFlatData($data, $skipKeys) {
 
     $fields = [];
@@ -441,7 +441,7 @@ function fieldsFromFlatData($data, $skipKeys) {
             "key" => (string)$key,
             "type" => "text",
             "titleText" => prettifyKey((string)$key),
-            "inputValue" => $value,
+            "value" => $value,
         ];
     }
 
@@ -559,7 +559,7 @@ function findEmail($fields) {
 
         $type = isset($field["type"]) ? strtolower((string)$field["type"]) : "";
         $key = isset($field["key"]) ? strtolower((string)$field["key"]) : "";
-        $value = isset($field["inputValue"]) ? $field["inputValue"] : "";
+        $value = isset($field["value"]) ? $field["value"] : "";
 
         if (!is_string($value)) continue;
         if ($type !== "email" && strpos($key, "email") === false && strpos($key, "mail") === false) continue;
@@ -582,7 +582,7 @@ function findSummary($fields) {
         foreach ($fields as $field) {
             $key = isset($field["key"]) ? strtolower((string)$field["key"]) : "";
             if ($key !== strtolower($wanted)) continue;
-            $value = isset($field["inputValue"]) ? $field["inputValue"] : "";
+            $value = isset($field["value"]) ? $field["value"] : "";
             if (is_string($value) && trim($value) !== "") return shorten(trim($value), 60);
         }
     }
@@ -662,7 +662,7 @@ function buildHtmlMail($formTitle, $reference, $fields, $attachments) {
 
     foreach ($fields as $field) {
 
-        $value = isset($field["inputValue"]) ? $field["inputValue"] : "";
+        $value = isset($field["value"]) ? $field["value"] : "";
         $title = htmlspecialchars(fieldTitle($field), ENT_QUOTES, "UTF-8");
         $valueHtml = isEmptyValue($value) ? '<span style="color:' . LABEL_COLOR . ';">&mdash;</span>' : valueToHtml($value);
 
@@ -756,7 +756,7 @@ function buildTextMail($formTitle, $reference, $fields, $attachments) {
     $lines[] = str_repeat("-", 48);
 
     foreach ($fields as $field) {
-        $value = isset($field["inputValue"]) ? $field["inputValue"] : "";
+        $value = isset($field["value"]) ? $field["value"] : "";
         $lines[] = fieldTitle($field) . ":";
         $lines[] = isEmptyValue($value) ? "-" : valueToText($value);
         $lines[] = "";

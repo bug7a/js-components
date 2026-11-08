@@ -1055,8 +1055,8 @@
             };
 
             // The totals are also sent, so the server can compare them with its own calculation.
-            json.push({ key: "orderNumber", type: "text", titleText: "ORDER NUMBER", inputValue: order.number });
-            json.push({ key: "totals", type: "totals", titleText: "TOTALS", inputValue: { subtotal: order.totals.subtotal, discount: order.totals.discount, deliveryFee: order.totals.deliveryFee, total: order.totals.total, coupon: (order.totals.coupon) ? order.totals.coupon.code : "" } });
+            json.push({ key: "orderNumber", type: "text", titleText: "ORDER NUMBER", value: order.number });
+            json.push({ key: "totals", type: "totals", titleText: "TOTALS", value: { subtotal: order.totals.subtotal, discount: order.totals.discount, deliveryFee: order.totals.deliveryFee, total: order.totals.total, coupon: (order.totals.coupon) ? order.totals.coupon.code : "" } });
 
             waiting.open();
 
@@ -1067,7 +1067,7 @@
                 if (SERVICE_URL == "") {
                     // DEMO MODE:
                     console.table(json.map(function(item) {
-                        return { key: item.key, type: item.type, title: item.titleText, value: JSON.stringify(item.inputValue) };
+                        return { key: item.key, type: item.type, title: item.titleText, value: JSON.stringify(item.value) };
                     }));
                     await new Promise(function(resolve) { setTimeout(resolve, 1200); });
                     result = "sent";

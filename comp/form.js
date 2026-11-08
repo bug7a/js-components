@@ -242,7 +242,7 @@ const Form = function(params = {}) {
             itemData.key = item.key;
             itemData.type = item.type;
             itemData.titleText = item.titleText;
-            itemData.inputValue = item.getValue(); // WHY "inputValue": the name the receiver of the form reads
+            itemData.value = item.getValue();
 
             result.push(itemData);
 

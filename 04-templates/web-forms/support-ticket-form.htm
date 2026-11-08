@@ -770,7 +770,7 @@
 
             // Order number in upper case
             json.forEach(function(item) {
-                if (item.key == "orderNumber") item.inputValue = item.inputValue.trim().toUpperCase();
+                if (item.key == "orderNumber") item.value = item.value.trim().toUpperCase();
             });
 
             // Form values + attachments in one request:
@@ -797,7 +797,7 @@
                 if (SERVICE_URL == "") {
                     // DEMO MODE:
                     console.table(json.map(function(item) {
-                        return { key: item.key, type: item.type, title: item.titleText, value: JSON.stringify(item.inputValue) };
+                        return { key: item.key, type: item.type, title: item.titleText, value: JSON.stringify(item.value) };
                     }));
                     await new Promise(function(resolve) { setTimeout(resolve, 1200); });
                     ticketNumber = "TCK-" + String(Math.floor(Math.random() * 900000) + 100000);

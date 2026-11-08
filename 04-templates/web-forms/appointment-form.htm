@@ -846,7 +846,7 @@
                 if (SERVICE_URL == "") {
                     // DEMO MODE:
                     console.table(json.map(function(item) {
-                        return { key: item.key, type: item.type, title: item.titleText, value: JSON.stringify(item.inputValue) };
+                        return { key: item.key, type: item.type, title: item.titleText, value: JSON.stringify(item.value) };
                     }));
                     await new Promise(function(resolve) { setTimeout(resolve, 1200); });
                     result = "sent";
