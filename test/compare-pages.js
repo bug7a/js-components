@@ -12,6 +12,8 @@ The old page loads the old basic/ and comp/ too, so a change in a component is m
     node test/compare-pages.js tabs.htm dialog.htm      these pages (of 02-comp-examples, or a path from the root)
     node test/compare-pages.js --all                    every sample (long)
     node test/compare-pages.js --base HEAD~3 tabs.htm   against another commit
+    node test/compare-pages.js --width 1280 tabs.htm    at this width only: a quick check (a big page in half the time)
+                                                        (any width; under 500 px the window is 844 high, else 800)
     node test/compare-pages.js old.htm=new.htm          a page that got a new name: old.htm of the commit, new.htm now
 
 The results:
@@ -41,10 +43,10 @@ const { ROOT, SAMPLES_FOLDER, OLD_PATH, readGitLines, isInCommit, listSamples, s
 
 const OUT_FOLDER = path.join(os.tmpdir(), "compare-pages");
 
-const SIZES = [
-    { width: 1280, height: 800 },
-    { width: 390, height: 844 },
-];
+const DESKTOP_SIZE = { width: 1280, height: 800 };
+const PHONE_SIZE = { width: 390, height: 844 };
+const SIZES = [DESKTOP_SIZE, PHONE_SIZE];
+const PHONE_WIDTH = 500; // px: a --width under it gets the height of a phone
 
 const LOAD_WAIT = 900; // ms: after the load event, for the first animations of a page
 const PRESS_WAIT = 90; // ms: after a press
@@ -626,11 +628,18 @@ const printTotals = function (totals) {
 
 // *** START:
 
+const readWidth = function (text) {
+    const width = Number(text);
+    if (Number.isInteger(width) && width > 0) return width;
+    throw new Error("--width takes a number of px: --width 390");
+};
+
 const readOptions = function (args) {
-    const options = { base: "HEAD", isAll: false, isHelp: false, pages: [] };
+    const options = { base: "HEAD", isAll: false, isHelp: false, pages: [], widths: [] };
     for (let i = 0; i < args.length; i++) {
         if (args[i] === "--base") options.base = args[++i];
         else if (args[i] === "--all") options.isAll = true;
+        else if (args[i] === "--width") options.widths.push(readWidth(args[++i]));
         else if (args[i] === "--help") options.isHelp = true;
         else options.pages.push(toPagePair(args[i]));
     }
@@ -641,6 +650,14 @@ const choosePages = function (options) {
     if (options.isAll) return listSamples().map(toPagePair);
     if (options.pages.length > 0) return options.pages;
     return findChangedPages(options.base).map(toPagePair);
+};
+
+const chooseSizes = function (options) {
+    if (options.widths.length === 0) return SIZES;
+    return options.widths.map(function (width) {
+        const height = (width < PHONE_WIDTH) ? PHONE_SIZE.height : DESKTOP_SIZE.height;
+        return { width: width, height: height };
+    });
 };
 
 const compareAndPrint = async function (browser, port, pair, size) {
@@ -656,10 +673,10 @@ const compareAndPrint = async function (browser, port, pair, size) {
 };
 
 // The result of a page is the worst result of its sizes.
-const comparePage = async function (browser, port, pair) {
+const comparePage = async function (browser, port, pair, sizes) {
     console.log(describePair(pair));
     const statuses = [];
-    for (const size of SIZES) {
+    for (const size of sizes) {
         statuses.push(await compareAndPrint(browser, port, pair, size));
     }
     if (statuses.includes("DIFF")) return "DIFF";
@@ -675,6 +692,7 @@ const main = async function () {
     }
 
     const pages = choosePages(options);
+    const sizes = chooseSizes(options);
     if (pages.length === 0) {
         console.log("No sample is changed since " + options.base + ". Name the pages, or use --all.");
         return 0;
@@ -694,7 +712,7 @@ const main = async function () {
                 totals.SKIPPED++;
                 continue;
             }
-            totals[await comparePage(browser, server.address().port, pair)]++;
+            totals[await comparePage(browser, server.address().port, pair, sizes)]++;
         }
     } finally {
         await browser.close();
