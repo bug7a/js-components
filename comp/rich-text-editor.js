@@ -5,7 +5,7 @@
 RichTextEditor - v26.09
 
 UI COMPONENT TEMPLATE
-- A simple rich text editor: a toolbar and a writing area. (Basit editör nesnesi)
+- A simple rich text editor: a toolbar and a writing area.
 - Tools: bold, italic, underline, strike, heading (h2, h3), bullet / numbered list, quote, link,
   clear formatting, undo, redo. Choose them and their order with "tools" ("|" is a separator).
 - The toolbar shows the format at the cursor (Ex: B is pressed inside bold text).

@@ -5,7 +5,7 @@
 SortableList - v26.10
 
 UI COMPONENT TEMPLATE
-- A list whose order can be changed. (Sıralama nesnesi: verilen itemlerin sırasını düzenleyebildiğin liste.)
+- A list whose order can be changed.
 - Items: strings or objects { key, text, desc, locked }. getItems() / getKeys() give the new order.
 - Mouse and touch: drag the handle (dragBy: "handle", default) or the whole row (dragBy: "row").
   The other rows slide out of the way. Near the top / bottom edge the list scrolls by itself.

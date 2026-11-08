@@ -92,7 +92,7 @@ const CurrencyField = function(params = {}) {
 
         let newValue = "";
         let digitCount = 0;
-        // Eğer küsüratsız bir sayı ise, direk gruplamaya başla.
+        // A number with no fraction: the grouping starts at once.
         let isGrouping = !value.includes(box.decimalSeparator);
         // WHY: No separator before the first digit (index 0, or 1 after a "-").
         const firstDigitIndex = (value[0] == "-") ? 1 : 0;
@@ -114,7 +114,7 @@ const CurrencyField = function(params = {}) {
 
             }
             
-            // Eğer küsürat kısmı geçmiş ise, gruplamaya başla.
+            // Past the fraction: the grouping starts.
             if (!isGrouping && value[i] == box.decimalSeparator) {
                 isGrouping = true;
             }
@@ -136,7 +136,7 @@ const CurrencyField = function(params = {}) {
 
         let value = clearGroupFormat(box.getValue());
 
-        // 1. Geçerli karakter kümesini oluştur
+        // 1. The characters that may be typed
         let allowedChars = "0-9";
         if (box.allowNegative) allowedChars += "-";
         if (box.allowDecimal) allowedChars += "\\" + box.decimalSeparator;
@@ -144,12 +144,12 @@ const CurrencyField = function(params = {}) {
         const regex = new RegExp(`[^${allowedChars}]`, "g");
         value = value.replace(regex, "");
 
-        // 2. "-" sadece başta olacaksa diğerlerini sil
+        // 2. "-" only at the start: the others go
         if (box.allowNegative) {
             value = value.replace(/(?!^)-/g, "");
         }
 
-        // 3. Ondalık ayraç sadece bir kez geçmeli
+        // 3. The decimal mark only once
         if (box.allowDecimal) {
             const separator = box.decimalSeparator;
             const parts = value.split(separator);
@@ -165,17 +165,17 @@ const CurrencyField = function(params = {}) {
             }
         }
 
-        // Eğer birden fazla "0" girilir ise "00*" -> "0"
+        // More than one "0": "00*" -> "0"
         if (parseFloat(value) == 0 && !value.includes(box.decimalSeparator) && !value.includes("-")) {
             value = "0";
         }
 
-        // Eğer "." ile başlarsa "0." ya çevir
+        // It starts with ".": "0."
         if (value == box.decimalSeparator) {
             value = "0" + box.decimalSeparator;
         }
 
-        // Eğer "-." ile başlarsa "0." ya çevir
+        // It starts with "-.": "-0."
         if (value == ("-"+box.decimalSeparator)) {
             value = "-0" + box.decimalSeparator;
         }

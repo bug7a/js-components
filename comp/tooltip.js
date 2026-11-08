@@ -181,9 +181,9 @@ const Tooltip = function(params = {}) {
         if (isClick() || !window.lblHint) return;
         window.lblHint.owner = box;
 
-        // WHY: Eğer mouse tooltip tetikleyen bir object üzerinde bırakılırsa ve
-        // başka bir olay, tooltip in text ve rengini değiştirirse; objeye giriş yapmadan hareket ettirilen mouse,
-        // diğer olayın metnini gösterebilir. O yüzden, metin kontrol ediliyor.
+        // WHY: when the mouse stays on an object that shows a tooltip, and
+        // another event changes the text and the color of the tooltip, a mouse moved without entering the object
+        // could show the text of the other event. So the text is checked.
         if (window.lblHint.label && window.lblHint.label.text != box.hintText) {
             window.lblHint.label.text = box.hintText;
         }

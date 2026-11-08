@@ -74,37 +74,37 @@ const PasswordField = function(params = {}) {
     // *** PUBLIC FUNCTIONS:
     box.isValid = function() { // OVERRIDE
         const value = box.getValue();
-        // 1. Minimum karakter kontrolü
+        // 1. The minimum length
         if (value.length < box.minLength) {
             box.setWarningText(box.minLengthWarningText);
             return 0;
         }
-        // 2. Rakam kontrolü
+        // 2. A digit
         if (box.mustUseNumber == 1 && !(/[0-9]/.test(value))) {
             box.setWarningText(box.mustUseNumberWarningText);
             return 0;
         }
-        // 3. Harf kontrolü
+        // 3. A letter
         if (box.mustUseLetter == 1 && !(/[a-zA-Z]/.test(value))) {
             box.setWarningText(box.mustUseLetterWarningText);
             return 0;
         }
-        // 4. Büyük harf kontrolü
+        // 4. A capital letter
         if (box.mustUseUppercase == 1 && !(/[A-Z]/.test(value))) {
             box.setWarningText(box.mustUseUppercaseWarningText);
             return 0;
         }
-        // 5. Küçük harf kontrolü
+        // 5. A small letter
         if (box.mustUseLowercase == 1 && !(/[a-z]/.test(value))) {
             box.setWarningText(box.mustUseLowercaseWarningText);
             return 0;
         }
-        // 6. Özel karakter kontrolü
+        // 6. A special character
         if (box.mustUseSpecialChar == 1 && !(/[^a-zA-Z0-9]/.test(value))) {
             box.setWarningText(box.mustUseSpecialCharWarningText);
             return 0;
         }
-        // Geçtiyse uyarı yok
+        // Passed: no warning
         return 1;
     };
 

@@ -5,7 +5,7 @@
 LabelEditor - v26.09
 
 UI COMPONENT TEMPLATE
-- An object based editor for labels. (Nesne tabanlı editör nesnesi)
+- An object based editor for labels.
 - "Add label" adds a label to the list. The labels are stacked one under the other.
 - Click a label: the properties panel opens at the right side of the screen (full height, SidePanel).
   Text, font size, bold, italic, alignment, width (auto / full), text color, background, padding,

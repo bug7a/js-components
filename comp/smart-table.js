@@ -32,13 +32,13 @@ Licensed under the Apache License, Version 2.0
 SPDX-License-Identifier: Apache-2.0
 
 
-- Arama sütunu: Arama kutusunun sağ ucundaki etikete (ALL) basınca sütun listesi açılır. Arama sadece seçilen sütunda yapılır.
+- The search column: a press on the label at the right end of the search box (ALL) opens the list of the columns. The search looks only in the chosen column.
 -- The chip is in the filter box at its right end; the clear icon shows at its left while
    there is a text, and a narrow box shows no clear icon (searchInputParams.clearIconMinTextWidth: 80 px of text).
    A narrow table gives the filter box the room up to the count (up to 240 px). Escape clears the filter
    (searchInputParams.clearOnEscape: 1); in an empty filter it goes on to the page (a Dialog around closes).
--- searchTitleIndex: -1 (ALL: tüm sütunlar), showSearchTitleSelect: 0 ise kutu gizlenir.
--- Liste için comp/context-menu.js yüklenmelidir. Yüklenmemiş ise, kutuya her basışta sıradaki sütuna geçer.
+-- searchTitleIndex: -1 (ALL: every column); showSearchTitleSelect: 0 hides the label.
+-- The list needs comp/context-menu.js. Without it, every press on the label goes to the next column.
 - fitLineCount: 1: the rows are about itemHeight px high and their count follows the height of the table
   (style.height "100%" in a window that grows or shrinks). 0 (default): itemLineCount rows share the height of the table.
   setItemLineCount(count) makes another count of rows.
@@ -50,8 +50,8 @@ SPDX-License-Identifier: Apache-2.0
   box.selectedItemData. canSelect: 0: no selection and no keys (a click only runs onSelect).
 - locale: the language of the numbers of the info line. "": the language of the page (<html lang>); a page
   with no language keeps "tr-TR". Ex: "en-US" -> 12,499, "tr-TR" -> 12.499. setLocale(locale).
-- wheelScroll: 1 ise fare tekerleği tablonun satırlarını kaydırır (sayfa kaymaz). Varsayılan 0: tekerlek sayfayı kaydırır, satırlar scroll çubuğu ve butonlar ile kaydırılır.
--- smartTable.setWheelScroll(1) ile sonradan açılabilir.
+- wheelScroll: 1: the mouse wheel scrolls the rows of the table (the page does not move). The default 0: the wheel scrolls the page; the rows move with the scroll bar and its buttons.
+-- smartTable.setWheelScroll(1) turns it on later.
 - allowHtml: 0 (default): the values of the cells are written as plain text (a name or a title a user wrote does not
   run as HTML). 1: the values are written as HTML (Ex: "<b>12</b>"). Your own values written with cell.label.text in
   createCellView / updateCellView are not touched.
@@ -121,7 +121,7 @@ const SmartTableDefaults = {
         neverHide: 0,
         showDots: 0,
     },
-    // Filtredeki sütun listesinin (ContextMenu) parametreleri. (Sadece stil için; onClick bileşen tarafından verilir.)
+    // The params of the list of the columns in the filter (ContextMenu): only its look, the component gives its onClick.
     searchTitleMenuParams: {},
     // The filter box (a SearchInput): its colors and edges come from the SearchInput package of styleName.
     searchInputParams: {
@@ -176,7 +176,7 @@ const SmartTableDefaults = {
         boxInfoLine: { color: "white", borderTop: "1px solid " + Black(0.2) },
         lblBoxInfoLine: { fontSize: 14, textColor: Black(0.5) },
         lblNoDataFound: { color: "transparent", textColor: Black(0.45), padding: [8, 2], fontSize: 15, round: 8, border: 0, borderColor: "transparent" },
-        // Filtre kutusundaki sütun seçim etiketi (ALL), lblNoDataFound stilinin üstüne.
+        // The label that chooses the column in the filter box (ALL), over the style of lblNoDataFound.
         lblSearchTitle: { color: "white", textColor: Black(0.6), padding: [8, 2], fontSize: 12, round: 50, border: 1, borderColor: Black(0.12) },
         btnScrollCenter: { color: "white", round: 100, border: 1, borderColor: Black(0.2) },
         btnScrollUp: { color: "whitesmoke", round: 100, border: 1, borderColor: Black(0.15) },
@@ -197,7 +197,7 @@ const SmartTable = function (params = {}) {
     // BOX: Component container
     let box = startObject(params);
 
-    // WHY: mergeIntoIfMissing dizileri referansla kopyalıyor. Kopyalanmaz ise setTitleCellWidth, SmartTableDefaults (ve diğer tabloları) değiştirir.
+    // WHY: mergeIntoIfMissing copies an array by reference. Without a copy, setTitleCellWidth would change SmartTableDefaults (and the other tables).
     box.titleDataList = box.titleDataList.map(titleData => ({ ...titleData }));
     box.itemDataList = [...box.itemDataList];
 
@@ -215,7 +215,7 @@ const SmartTable = function (params = {}) {
     const COUNT_RIGHT = 14; // px: the count from the right side of the info line
     const FILTER_DELAY = 50; // ms
     const RESIZE_DELAY = 3; // ms
-    const LOADING_MIN_ITEM_COUNT = 1000; // WHY: Küçük listelerde loading bir an yanıp sönmesin.
+    const LOADING_MIN_ITEM_COUNT = 1000; // WHY: a short list must not flash the loading for a moment.
     const TEST_DATA_REPEAT_COUNT = 100000;
     const DEFAULT_LOCALE = "tr-TR"; // WHY: the numbers were always Turkish before; a page with no language keeps them
     const targetItemHeight = box.itemHeight; // fitLineCount: the height of a row, before the rows share the height
@@ -236,7 +236,7 @@ const SmartTable = function (params = {}) {
         return Math.min(index, getMaxScrollIndex());
     };
 
-    // WHY: isNaN("") false döndüğü için boş değerler sayı sanılıyor, parseFloat("") NaN verip sıralamayı bozuyordu.
+    // WHY: isNaN("") is false, so an empty value was taken as a number, and parseFloat("") gave NaN and broke the sorting.
     const toSortNumber = function (value) {
         if (typeof value === "number") return value;
         if (typeof value === "string" && value.trim() !== "") return Number(value);
@@ -258,9 +258,9 @@ const SmartTable = function (params = {}) {
     box.titleCellCount = 0;
     // [var]
     box.itemLineList = [];
-    // [var] en üstteki kaydın index i
+    // [var] the index of the record at the top
     box.startedItemIndexForScrolling = 0;
-    // Scroll haraketi için gerekli değişkenler [var]
+    // The variables of the scroll [var]
     box.scrollVars = {};
     // [var] if height not auto will recallItemHeight
     box.recalcItemHeight = 0;
@@ -299,7 +299,7 @@ const SmartTable = function (params = {}) {
         clearTimeout(box.refreshTimer);
         clearTimeout(box.filterTimer);
 
-        // WHY: Menü page üzerinde oluşturuluyor; box.remove() onu silmez. (Before the cascade: it detaches from its target label.)
+        // WHY: the menu is made on the page: box.remove() does not remove it. (Before the cascade: it detaches from its target label.)
         if (box.searchTitleMenu) box.searchTitleMenu.remove();
         closeCellTooltip(); // WHY: the bubble is on the page too
 
@@ -322,7 +322,7 @@ const SmartTable = function (params = {}) {
         itemLine.opacity = 1;
         itemLine.clickable = 1;
         itemLine.cursor = "pointer";
-        itemLine.itemData = rowData; // WHY: Line a basıldığında bu bilgi kullanılacak.
+        itemLine.itemData = rowData; // WHY: a press on the row uses it
         paintItemLine(itemLine);
 
         for (let j = 0; j < box.titleCellCount; j++) {
@@ -331,9 +331,9 @@ const SmartTable = function (params = {}) {
             const cell = itemLine["itemCell" + j];
             const newValue = rowData[titleData.dataTitle] ?? "";
 
-            // Sadece değer değişmişse DOM'a dokun
-            // WHY: label.text innerHTML (string) döndürüyor; sayı veya "&" içeren değerlerle karşılaştırma hep farklı çıkıyordu. Son yazılan değer hücrede tutuluyor.
-            if (!("lastValue" in cell) || cell.lastValue !== newValue) { // WHY: eğer !== olmaz ise, 0 ile "" aynı sayılıyor.
+            // The DOM is touched only when the value changed
+            // WHY: label.text gives the innerHTML (a string): a number or a value with "&" was always different. The cell keeps the last value it wrote.
+            if (!("lastValue" in cell) || cell.lastValue !== newValue) { // WHY: without !==, 0 and "" were the same.
                 cell.lastValue = newValue;
                 // WHY plainText: a value from a user (a name, a title) ran as HTML in the cell
                 if (box.allowHtml == 1) cell.label.text = newValue;
@@ -379,7 +379,7 @@ const SmartTable = function (params = {}) {
 
     box.setVerticalScrollEnabled = function (enabled) {
 
-        // Sadece kullanılabilir durumda ise enabled yapılabilir.
+        // It is enabled only when it can be used.
         if (enabled && box.visibleItemDataList.length > box.itemLineCount) {
             setScrollButtonState(box.btnScrollCenter, 1, 1);
             setScrollButtonState(box.btnScrollUp, 1, 1);
@@ -406,7 +406,7 @@ const SmartTable = function (params = {}) {
 
     }
 
-    // Başlık listesini oluştur
+    // The row of the titles
     box.createTitleLine = function () { // [GOOD]
 
         box.titleCellList = [];
@@ -428,13 +428,13 @@ const SmartTable = function (params = {}) {
 
         box.titleDataList = titleDataList.map(titleData => ({ ...titleData }));
         box.createTitleLine();
-        // WHY: Satırlardaki hücre sayısı başlık sayısı ile aynı olmalı. Yoksa refreshData olmayan hücreye erişir.
+        // WHY: a row has as many cells as there are titles, or refreshData reaches a cell that is not there.
         box.createItemLines();
         if (box.recalcItemHeight) box.setItemHeight(box.itemHeight);
         box.stretchLastCell(box.calcLastCellWidth());
         if (!box.titleDataList[box.sortByTitleIndex]) box.sortByTitleIndex = 0;
         box.updateSortIcon();
-        box.updateSearchTitleSelect(); // WHY: Sütunlar değişti; liste yenilensin, olmayan sütun seçili ise ALL olsun.
+        box.updateSearchTitleSelect(); // WHY: the columns changed: the list is made again, and a chosen column that is gone becomes ALL.
         box.filterAndSortData();
 
     }
@@ -487,7 +487,7 @@ const SmartTable = function (params = {}) {
 
     };
 
-    // Başlık hücresi oluştur
+    // A title cell
     box.createTitleCell = function (titleData, titleCellIndex) {
 
         // TitleCell
@@ -551,7 +551,7 @@ const SmartTable = function (params = {}) {
     box.updateSortIcon = function() {
 
         const titleCell = box.titleCellList[box.sortByTitleIndex];
-        if (!titleCell) return; // WHY: Geçersiz sortByTitleIndex verilirse hata vermesin.
+        if (!titleCell) return; // WHY: a sortByTitleIndex with no column must not throw.
 
         if (box.sortDirection == "A-Z") {
             titleCell.sortDirection = "A-Z";
@@ -583,7 +583,7 @@ const SmartTable = function (params = {}) {
         paintColumn(titleCell, box.style.highlightTitleCellColor, box.style.highlightItemCellColor);
     };
 
-    // Tüm bilgi satırlarını oluştur.
+    // All the rows.
     box.createItemLines = function () {
 
         setHoveredCell(null); // WHY: the cell under the mouse is removed with its row
@@ -601,7 +601,7 @@ const SmartTable = function (params = {}) {
 
     }
 
-    // Bir bilgi satırı oluştur
+    // A row
     box.createItemLine = function (itemData, itemLineIndex) {
 
         // GROUP: ItemLine
@@ -631,7 +631,7 @@ const SmartTable = function (params = {}) {
             box.onSelect(box, self.itemData);
         });
 
-        if (box.style.height != "auto") itemLine.visible = 0; // WHY: Yüksekli yeniden hesaplanması gerekirse, ekranda kırpma yapması için gizli oluşturuluyor.
+        if (box.style.height != "auto") itemLine.visible = 0; // WHY: made hidden, so it is not seen cut while its height is measured again.
         return itemLine;
 
     };
@@ -749,7 +749,7 @@ const SmartTable = function (params = {}) {
     };
     // USAGE: smartTable.setShowCellTooltip(0)
 
-    // Hücre oluştur.
+    // A cell.
     box.createItemCell = function (cellWidth, titleDataIndex, itemLine) {
 
         // GROUP: ItemCell
@@ -806,7 +806,7 @@ const SmartTable = function (params = {}) {
     // RIGHT Scroll
     box.initScrollMetrics = function () {
 
-        // Değişkenler
+        // Variables
         box.scrollVars.minY = box.titleHeight;
         box.scrollVars.scrollAreaHeight = box.height - box.titleHeight - box.infoHeight;
         box.scrollVars.scrollIconHeight = box.btnScrollCenter.height;
@@ -840,7 +840,7 @@ const SmartTable = function (params = {}) {
         // WHEEL: one row for each wheel step.
         box.on("wheel", function (self, event) {
 
-            // WHY: Varsayılan olarak tekerlek sayfaya bırakılır; tablo sayfanın kaymasını engellemesin. (wheelScroll: 1 ile açılır)
+            // WHY: the wheel is left to the page by default: the table must not stop the page from scrolling (wheelScroll: 1 turns it on).
             if (box.wheelScroll != 1) return;
 
             // WHY: A mostly horizontal move is left to the browser (the horizontal scroll of the columns).
@@ -890,7 +890,7 @@ const SmartTable = function (params = {}) {
 
         box.btnScrollCenter.top = newTop;
 
-        // WHY: Tablo çok kısa ise totalPath 0 olabilir; 0'a bölme NaN index üretir.
+        // WHY: totalPath can be 0 in a very short table, and a division by 0 makes a NaN index.
         if (box.scrollVars.totalPath <= 0) return;
 
         const currentProgress = (newTop - box.scrollVars.minY) / box.scrollVars.totalPath;
@@ -1002,7 +1002,7 @@ const SmartTable = function (params = {}) {
 
     };
 
-    box.scrollPage = function (direction) { // +1 ise aşağı (bir sayfa boyu), -1 ise yukarı
+    box.scrollPage = function (direction) { // +1: down (one page), -1: up
 
         const newIndex = clampScrollIndex(box.startedItemIndexForScrolling + (direction * box.itemLineCount));
         if (newIndex === box.startedItemIndexForScrolling) return;
@@ -1026,10 +1026,10 @@ const SmartTable = function (params = {}) {
 
         box.lblNoDataFound.opacity = 0;
 
-        // Başlangıç indeksi (İnsanların okuması için +1 ekliyoruz, 0 yerine 1'den başlasın)
+        // The first index (+1: people count from 1, not from 0)
         const start = box.startedItemIndexForScrolling + 1;
 
-        // Bitiş indeksi (Ya sayfa sonu ya da toplam veri miktarı)
+        // The last index (the end of the page or the count of the data)
         let end = box.startedItemIndexForScrolling + box.itemLineCount;
         if (end > totalData) end = totalData;
 
@@ -1063,7 +1063,7 @@ const SmartTable = function (params = {}) {
         box.filterAndSortData();
     };
 
-    // WHY: "value ?" kontrolü 0 ve false değerlerini aranamaz yapıyordu.
+    // WHY: a "value ?" check made 0 and false impossible to find.
     const hasKeyword = function (value, searchKeyword) {
         if (value === undefined || value === null) return false;
         return SmartTable.toSearchText(value).includes(searchKeyword);
@@ -1073,7 +1073,7 @@ const SmartTable = function (params = {}) {
 
         if (searchKeyword === "") return itemList;
 
-        // Sütun seçili ise sadece o sütunda, değil ise (ALL) tüm sütunlarda ara.
+        // A chosen column: the search looks only in it; none (ALL): in every column.
         const searchTitleData = box.titleDataList[box.searchTitleIndex];
         const searchTitleList = (searchTitleData) ? [searchTitleData] : box.titleDataList;
 
@@ -1112,7 +1112,7 @@ const SmartTable = function (params = {}) {
 
         if (box.itemDataList.length > LOADING_MIN_ITEM_COUNT) box.showLoading(1);
 
-        // WHY: Arka arkaya çağrılırsa (ör. hızlı arama) sadece son çağrı çalışsın; eski sonuç yenisinin üzerine yazılmasın.
+        // WHY: calls one after the other (a fast search): only the last one runs, an old result must not write over a new one.
         box.filterTimer = waitAndRun(box.filterTimer, function () {
 
             box.filterTimer = null;
@@ -1141,10 +1141,10 @@ const SmartTable = function (params = {}) {
         let bigData = [];
 
         for (let i = 0; i < TEST_DATA_REPEAT_COUNT; i++) {
-            // Nesneleri klonlayarak ekliyoruz ki ID'leri çakışmasın veya referans karışmasın
+            // The objects are copied: their ids must not repeat, and they must not share a reference
             const clonedBatch = box.itemDataList.map(item => ({
                 ...item,
-                id: bigData.length + item.id // Benzersiz ID oluşturmak için
+                id: bigData.length + item.id // a unique id
             }));
 
             bigData.push(...clonedBatch);
@@ -1253,7 +1253,7 @@ const SmartTable = function (params = {}) {
 
         endGroup();
 
-        // LABEL: Arama sütunu seçimi (ALL): in the filter box, at its right end
+        // LABEL: The choice of the search column (ALL): in the filter box, at its right end
         box.lblSelectedSortKey = createIn(box.searchInput, function () {
             return Label({
                 text: box.allTitlesText,
@@ -1261,7 +1261,7 @@ const SmartTable = function (params = {}) {
                 opacity: 1,
                 clickable: 1,
                 ...box.style.lblNoDataFound,
-                ...box.style.lblSearchTitle, // WHY: Etiket filtre kutusunun içinde duruyor; "no data" etiketinden ayrı stil verilebilsin.
+                ...box.style.lblSearchTitle, // WHY: the label is in the filter box: it gets a look apart from the "no data" label.
             });
         });
         that.cursor = "pointer";
@@ -1276,7 +1276,7 @@ const SmartTable = function (params = {}) {
 
         if (typeof ContextMenu === "function") {
 
-            // MENU: Sütun listesi (Items: box.updateSearchTitleSelect)
+            // MENU: The list of the columns (items: box.updateSearchTitleSelect)
             box.searchTitleMenu = ContextMenu({
                 minWidth: 160,
                 ...box.searchTitleMenuParams,
@@ -1288,7 +1288,7 @@ const SmartTable = function (params = {}) {
 
         } else {
 
-            // WHY: context-menu.js yüklenmemiş ise özellik yine çalışsın; her basışta sıradaki sütuna geç.
+            // WHY: without context-menu.js it still works: every press goes to the next column.
             box.lblSelectedSortKey.on("click", function () {
                 box.selectNextSearchTitle();
             });
@@ -1319,7 +1319,7 @@ const SmartTable = function (params = {}) {
 
         if (titleDataList.length == 0) return 0;
 
-        // WHY: createTitleCell/createItemCell width yoksa DEFAULT_CELL_WIDTH kullanıyor; burada da aynısı olmalı, yoksa basic.num(undefined) NaN olur.
+        // WHY: createTitleCell / createItemCell use DEFAULT_CELL_WIDTH when there is no width: the same here, or basic.num(undefined) is NaN.
         let totalWidth = 0;
         titleDataList.forEach(function (titleData) {
             totalWidth += basic.num(titleData.width || DEFAULT_CELL_WIDTH);
@@ -1329,7 +1329,7 @@ const SmartTable = function (params = {}) {
 
         if (tableWidth > totalWidth) return tableWidth - totalWidth + lastCellWidth;
 
-        // WHY: Tablo daraldığında son hücre, önceki genişletilmiş boyutunda kalıyordu. Orijinal genişliğe dön.
+        // WHY: when the table got narrower, the last cell kept its old wider size: back to its own width.
         return lastCellWidth;
 
     };
@@ -1340,14 +1340,14 @@ const SmartTable = function (params = {}) {
 
         box.itemLineList.forEach(function (itemLine) {
             itemLine.height = box.itemHeight;
-            itemLine.visible = 1; // WHY: Yükseklik hesaplandıktan sonra göster.
+            itemLine.visible = 1; // WHY: shown after its height is measured
         });
 
     };
 
     box.setHeight = function (height) {
 
-        // Yükseklik otomatik değil ise, ItemCell yüksekliği resize sırasında hesaplanır.
+        // When the height is not "auto", the height of the cells is measured on a resize.
         box.recalcItemHeight = (height != "auto") ? 1 : 0;
         box.height = height;
 
@@ -1355,7 +1355,7 @@ const SmartTable = function (params = {}) {
 
     box.setWidth = function (width) {
 
-        // WHY: Sayı verilirse (width: 800) .includes hata veriyordu.
+        // WHY: a number (width: 800) made .includes throw.
         const isPercent = typeof width === "string" && width.includes("%");
 
         if (!isPercent) {
@@ -1422,13 +1422,13 @@ const SmartTable = function (params = {}) {
 
     };
 
-    // Sütunun listede görünen adı. (HTML etiketleri olmadan; adı boş ise dataTitle)
+    // The name of a column in the list (without HTML tags; its dataTitle when it has no name)
     const getTitleText = function (titleData) {
         const name = String(titleData.name ?? "").replace(/<[^>]*>/g, "").trim();
         return name || String(titleData.dataTitle ?? "");
     };
 
-    // Arama sütunu kutusunu ve listesini, seçime göre yenile.
+    // The label of the search column and its list, as the choice is.
     box.updateSearchTitleSelect = function () {
 
         if (!box.titleDataList[box.searchTitleIndex]) box.searchTitleIndex = -1;
@@ -1439,7 +1439,7 @@ const SmartTable = function (params = {}) {
 
         if (!box.searchTitleMenu) return;
 
-        // WHY: Sadece seçili olanda ikon var; ContextMenu diğerlerine boş ikon alanı verir, metinler aynı hizada durur.
+        // WHY: only the chosen one has an icon; ContextMenu gives the others an empty place of an icon, so the texts stay in line.
         const getCheckIcon = function (titleIndex) {
             return (box.searchTitleIndex == titleIndex) ? box.style.searchTitleCheckIconFile : "";
         };
@@ -1458,19 +1458,19 @@ const SmartTable = function (params = {}) {
 
     };
 
-    // Arama sütununu seç. -1: ALL (tüm sütunlar)
+    // Choose the search column. -1: ALL (every column)
     box.setSearchTitleIndex = function (titleIndex) {
 
         box.searchTitleIndex = (box.titleDataList[titleIndex]) ? titleIndex : -1;
         box.updateSearchTitleSelect();
 
-        // WHY: Arama kutusu boş ise sonuç değişmez; scroll boşuna başa dönmesin.
+        // WHY: an empty search box changes no result: the scroll must not go back to the top for nothing.
         if (String(box.searchKeyword ?? "").trim() !== "") box.filterAndSortData();
 
     };
     // USAGE: smartTable.setSearchTitleIndex(1) or smartTable.setSearchTitleIndex(-1)
 
-    // Sıradaki sütuna geç: ALL -> 0 -> 1 -> ... -> ALL
+    // The next column: ALL -> 0 -> 1 -> ... -> ALL
     box.selectNextSearchTitle = function () {
         const nextIndex = box.searchTitleIndex + 1;
         box.setSearchTitleIndex((nextIndex < box.titleDataList.length) ? nextIndex : -1);
@@ -1482,7 +1482,7 @@ const SmartTable = function (params = {}) {
     };
     // USAGE: smartTable.setShowSearchTitleSelect(0)
 
-    // Fare tekerleği ile satır kaydırma. 0: Tekerlek sayfaya bırakılır.
+    // The mouse wheel scrolls the rows. 0: the wheel is left to the page.
     box.setWheelScroll = function (enabled) {
         box.wheelScroll = basic.isOn(enabled) ? 1 : 0;
     };
@@ -1504,7 +1504,7 @@ const SmartTable = function (params = {}) {
 
             const itemHeight = getRowsHeight() / box.itemLineCount;
 
-            // WHY: Hesaplanan yükseklik mevcut itemHeight ile aynı ise satırlar hiç görünür yapılmıyordu.
+            // WHY: when the measured height was the same as itemHeight, the rows were never shown.
             if (box.itemHeight != itemHeight || (box.itemLineList[0] && !box.itemLineList[0].visible)) {
                 box.setItemHeight(itemHeight);
             }
@@ -1514,7 +1514,7 @@ const SmartTable = function (params = {}) {
         box.stretchLastCell(box.calcLastCellWidth());
         box.initScrollMetrics();
         box.syncScrollPosition();
-        box.scrollBar.refreshScroll(); // Ekranı daraltırken, scroll gereksiz görünmesin diye.
+        box.scrollBar.refreshScroll(); // WHY: a narrower window must not show a scroll bar it does not need
 
         box.refreshData();
 
@@ -1582,7 +1582,7 @@ const SmartTable = function (params = {}) {
 
         // CREATE the structure:
 
-        // Tıtle and Item Lıne Group Container
+        // Title and Item Line Group Container
         box.boxHorizontalScrollable = VGroup({
             align: "top left",
             width: "auto",
@@ -1617,7 +1617,7 @@ const SmartTable = function (params = {}) {
 
         endGroup();
 
-        // Item Lıne Group
+        // Item Line Group
         box.boxItemLineGroup = VGroup({
             align: "top left",
             width: "auto",
@@ -1630,7 +1630,7 @@ const SmartTable = function (params = {}) {
 
         endGroup();
 
-        endGroup(); // Tıtle and Item Lıne Group Container
+        endGroup(); // Title and Item Line Group Container
 
         box.boxInfoLine = HGroup({
             bottom: 0,
@@ -1685,7 +1685,7 @@ const SmartTable = function (params = {}) {
     box.stretchLastCell(box.calcLastCellWidth());
     box.updateSortIcon();
     box.updateSearchTitleSelect();
-    // Add test data WHY: filterAndSortData dan önce olmalı; böylece kayıtlar düz yüklenmeden sıralanır ve büyük veri için loading gösterilir.
+    // Add test data. WHY before filterAndSortData: the records are sorted before they are shown, and big data shows the loading.
     if (box.fillTestData) box.generateTestData();
     box.filterAndSortData();
 

@@ -67,7 +67,7 @@ const SearchInputDefaults = {
     placeholder: "Search",
     color: "whitesmoke",
     textColor: "rgba(0, 0, 0, 0.8)",
-    placeholderColor: "", // "": Tarayıcının kendi rengi. Koyu zeminde White(0.35) gibi bir renk verin.
+    placeholderColor: "", // "": the color of the browser. On a dark ground give a color like White(0.35).
     searchIconOpacity: 1,
     clearIconOpacity: 0.6, // The clear icon while it is shown
     border: 0,
@@ -423,7 +423,7 @@ const SearchInput = function(params = {}) {
         });
         that.inputElement.style.paddingLeft = "0px";
         that.inputElement.setAttribute("placeholder", box.placeholder);
-        // WHY: ::placeholder rengi sadece CSS ile değişir. Kural sayfaya bir kez eklenir; rengi her input kendi değişkeninde taşır.
+        // WHY: only CSS changes the color of ::placeholder. The rule is added to the page once; every input carries its color in its own variable.
         if (box.placeholderColor !== "") {
             SearchInput.addPlaceholderStyle();
             that.inputElement.setAttribute("data-placeholder-color", "1");
@@ -507,7 +507,7 @@ const SearchInput = function(params = {}) {
 // out there.
 SearchInput.TEXT_UNDER_END = 20;
 
-// Sayfaya bir kez eklenen ::placeholder kuralı. (Sadece placeholderColor verilen inputları etkiler.)
+// The ::placeholder rule, added to the page once. (It touches only the inputs that have a placeholderColor.)
 SearchInput.addPlaceholderStyle = function() {
 
     if (document.getElementById("searchInputPlaceholderStyle")) return;

@@ -80,9 +80,9 @@ const PhoneField = function(params = {}) {
         if (inputElem.selectionStart === firstUnderscore) return;
 
         const cursorPos = (firstUnderscore !== -1) ? firstUnderscore : inputElem.value.length;
-        inputElem.setSelectionRange(cursorPos, cursorPos); // WHY: Cursorda önce sona gitmesin.
+        inputElem.setSelectionRange(cursorPos, cursorPos); // WHY: the caret must not jump to the end first.
         box.after(0, () => {
-            inputElem.setSelectionRange(cursorPos, cursorPos); // WHY: Asıl cursoru taşıma kodu (after the browser moved it).
+            inputElem.setSelectionRange(cursorPos, cursorPos); // WHY: this moves the caret (after the browser moved it).
         });
     };
 
@@ -121,21 +121,21 @@ const PhoneField = function(params = {}) {
         return digits.substring(0, maxDigits);
     };
 
-    // Backspace ile sadece rakam silinsin, countryCode ve sabit karakterler silinmesin
+    // Backspace deletes only the digits: the country code and the fixed characters stay
     const deleteDigitBeforeCursor = function(event) {
         const cursorPos = inputElem.selectionStart;
         const value = inputElem.value;
         const mask = getFullMask();
         const firstDigitIndex = mask.indexOf("_");
 
-        // Eğer cursor countryCode veya sabit karakterlerin başındaysa silmeye izin verme
+        // The caret at the start of the country code or of the fixed characters: nothing is deleted
         if (cursorPos <= firstDigitIndex) {
             event.preventDefault();
             setCursorToFirstUnderscore();
             return;
         }
 
-        // Sola doğru ilk rakamı bul
+        // The first digit to the left
         const left = value.slice(0, cursorPos);
         const right = value.slice(cursorPos);
         let i = left.length - 1;
@@ -148,7 +148,7 @@ const PhoneField = function(params = {}) {
         event.preventDefault();
         setCursorToFirstUnderscore();
 
-        // WHY: Backspace e bastığında da, güncellesin.
+        // WHY: Backspace updates it too.
         box.checkIfInputIsRequiredAndEmpty();
         box.showWarningIfNotValid(box.isValid());
         box.onChange(box); // WHY: a delete changes the value too
@@ -156,7 +156,7 @@ const PhoneField = function(params = {}) {
 
     // *** PUBLIC FUNCTIONS:
 
-    // Girilen numarayı box.phoneMask a uygun hale getir.
+    // The typed number in the form of box.phoneMask.
     box.applyFormattedValueToInput = function() { // OVERRIDE
 
         let value = inputElem.value; // WHY: The field itself, also when it holds only the mask. (getValue() is "" then.)
@@ -171,14 +171,14 @@ const PhoneField = function(params = {}) {
         codes.sort(function(a, b) { return b.length - a.length; });
         if (codes.length) value = value.substring(codes[0].length);
 
-        // 2. Yalnızca rakamlar kalsın (the characters of the mask go too)
+        // 2. Only the digits stay (the characters of the mask go too)
         let digits = value.replace(/[^0-9]/g, "");
 
-        // Fazla girilen rakamları yoksay
+        // The digits that are too many are left out
         const maxDigits = (box.phoneMask.match(/_/g) || []).length;
         digits = digits.substring(0, maxDigits);
 
-        // 3. Şimdi countryCode + phoneMask formatına uygun şekilde doldur
+        // 3. Fill countryCode + phoneMask with them
         box.setValue(fillMaskWithDigits(getFullMask(), digits));
         codeInField = box.countryCode;
         setCursorToFirstUnderscore();
@@ -230,7 +230,7 @@ const PhoneField = function(params = {}) {
 
     // Show example placeholder
     if (box.placeholder == "(auto)") {
-        // Rasgele telefon numarası üret
+        // A random phone number
         box.fillAutoPlaceholder();
     }
 
@@ -240,12 +240,12 @@ const PhoneField = function(params = {}) {
         //      border of a package (ozden, ozdenDark, dark) did not change on focus.
         box.focusFunc = function () {
             box.paintFocus(1);
-            // Eğer input boşsa countryCode + phoneMask yaz
+            // An empty field: write countryCode + phoneMask
             if (inputElem.value.trim() === "") {
                 inputElem.value = getFullMask();
             }
             setCursorToFirstUnderscore();
-            // WHY: İlk seçimde güncellesin, çünkü maske gösteriyor. ve artık input boş olmuyor.
+            // WHY: updated at the first focus: the mask shows, and the field is not empty any more.
             box.checkIfInputIsRequiredAndEmpty();
             box.showWarningIfNotValid(box.isValid());
             box.onFocus(box);
@@ -261,7 +261,7 @@ const PhoneField = function(params = {}) {
             box.onBlur(box);
         };
 
-        // Kullanıcı input içinde herhangi bir yere tıklasa veya seçim yapsa da cursor'u ilk _'a al
+        // A click or a selection anywhere in the field takes the caret to the first _
         const eventNameList = ["mousedown", "mouseup", "click", "select"];
         eventNameList.forEach(function(eventName) {
             inputElem.addEventListener(eventName, function() {
@@ -288,7 +288,7 @@ const PhoneField = function(params = {}) {
             box.onChange(box);
         });
 
-        // input event'inde, cursor yanlış yerdeyse düzelt
+        // On an input event, a caret in a wrong place is put right
         box.inputFunc = function () { // If needed, you can override function on ExtendedObject.
             box.refreshInput();
             box.onChange(box);

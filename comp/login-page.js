@@ -35,11 +35,10 @@ Copyright 2020-2026 Bugra Ozden <bugra.ozden@gmail.com> (https://bug7a.github.io
 Licensed under the Apache License, Version 2.0
 SPDX-License-Identifier: Apache-2.0
 
-- Tüm servis işlemleri dışarı alınmalı, böylece, kullanıcı istediği yapılar ile login işlemini tamamlar.
-- Karanlık ve aydınlık sayfaları parametrelerden ayarlayabilsin.
-- giriş için iki input da boş ise button pasif olsun.
-- signup form için form hatasız ise button akfif olsun.
-- login-page.js belki bir komponent gibi genel klasöre eklenebilir. Başka sistemlerle de aynı şekilde kullanılabilir.
+- Every call to a service is outside the component: a page finishes the login with its own service (onLoginClick, onSignupClick).
+- The dark and the light page are set with the params.
+- The login button is passive while both fields are empty.
+- The sign up button is active only when the form has no error.
 
 */
 

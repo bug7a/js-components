@@ -224,7 +224,7 @@ const LeftMenu = function(params = {}) {
 
     box.clearSelection = function() {
 
-        // Önceki seçili öğeyi bırak
+        // The item selected before is not selected any more
         if (selectedItemKey) {
             const prev = itemElements.find(el => el.data.key === selectedItemKey);
             if (prev && prev.data.type === "button") {
@@ -237,13 +237,13 @@ const LeftMenu = function(params = {}) {
 
     }
 
-    // Bir öğeyi seç (görsel durumu güncelle)
+    // Select an item (its look)
     const selectItem = function(itemKey) {
 
-        // Önceki seçili öğeyi bırak
+        // The item selected before is not selected any more
         box.clearSelection();
 
-        // Yeni öğeyi seç
+        // Select the new item
         const current = itemElements.find(el => el.data.key === itemKey);
         if (current && current.data.type === "button") {
             paintButtonItem(current, "selected");
@@ -353,7 +353,7 @@ const LeftMenu = function(params = {}) {
         const element = item.type === "button" ? createButtonItem(item) : createHeaderItem(item);
         itemElements.push(element);
         
-        // UI'ya alta ekle
+        // Added at the bottom of the menu
         box.bottomBox.add(element);
 
         return element;
@@ -363,7 +363,7 @@ const LeftMenu = function(params = {}) {
     // Remove item by key
     box.removeItem = function(itemKey) {
 
-        if (itemKey === selectedItemKey) box.clearSelection(); // Eğer seçili olan silinmeye çalışıyor ise, önce seçimi kaldır.
+        if (itemKey === selectedItemKey) box.clearSelection(); // The selected item is removed: the selection is cleared first.
         
         const index = itemList.findIndex(item => item.key === itemKey);
         if (index !== -1) {

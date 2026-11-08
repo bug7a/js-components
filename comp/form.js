@@ -264,7 +264,7 @@ const Form = function(params = {}) {
                 if (xhr.status >= 200 && xhr.status < 300) {
                     try {
                         const result = JSON.parse(xhr.responseText);
-                        callback(null, result); // Başarılı cevap
+                        callback(null, result); // a successful answer
                     } catch (e) {
                         callback(new Error("Geçersiz JSON cevabı"));
                     }

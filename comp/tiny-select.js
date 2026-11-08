@@ -68,7 +68,7 @@ const TinySelect = function(params = {}) {
     box.closeListBox = null;
 
     /*
-        - listeyi güncelle ve index i verileni seç
+        - the list again, and the item of the given index selected
 
         list: [{ id: "1", label: "(none)" },]
         selectedIndex: 0
@@ -99,7 +99,7 @@ const TinySelect = function(params = {}) {
 
     };
 
-    // Başlığı değiştir
+    // Change the title
     box.setTitle = function(titleText) {
 
         box.titleText = titleText;
@@ -294,7 +294,7 @@ TinySelect.createList = function(connectedUI) {
 
     endFlexBox();
 
-    // Sayfa boyutu değiştiğinde; kutu açık ise otomatik kapat.
+    // When the size of the page changes, an open list closes.
     // NOTE: The first two calls are not a page resize: they come from opening the list.
     let resizeCount = 0;
 
