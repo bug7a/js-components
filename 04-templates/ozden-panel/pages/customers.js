@@ -344,14 +344,14 @@ const CustomersPage = function(params = {}) {
             smartTable = SmartTable({
                 styleName: "green", // WHY: the colors of the panel are made over this look (the keys it does not give come from it, not from "classic")
                 titleDataList: [
-                    { name: "#", dataTitle: "order", dataType: "integer", width: 60, shortable: 1 },
-                    { name: "CUSTOMER", dataTitle: "name", dataType: "string", width: 200, shortable: 1 },
-                    { name: "E-MAIL", dataTitle: "email", dataType: "string", width: 230, shortable: 1 },
-                    { name: "CITY", dataTitle: "city", dataType: "string", width: 120, shortable: 1 },
-                    { name: "ORDERS", dataTitle: "orders", dataType: "integer", width: 90, shortable: 1 },
-                    { name: "SPENT", dataTitle: "spent", dataType: "float", width: 120, shortable: 1 },
-                    { name: "LAST ORDER", dataTitle: "lastOrder", dataType: "string", width: 120, shortable: 1 },
-                    { name: "SEGMENT", dataTitle: "segment", dataType: "string", width: 110, shortable: 1 },
+                    { name: "#", dataTitle: "order", dataType: "integer", width: 60, sortable: 1 },
+                    { name: "CUSTOMER", dataTitle: "name", dataType: "string", width: 200, sortable: 1 },
+                    { name: "E-MAIL", dataTitle: "email", dataType: "string", width: 230, sortable: 1 },
+                    { name: "CITY", dataTitle: "city", dataType: "string", width: 120, sortable: 1 },
+                    { name: "ORDERS", dataTitle: "orders", dataType: "integer", width: 90, sortable: 1 },
+                    { name: "SPENT", dataTitle: "spent", dataType: "float", width: 120, sortable: 1 },
+                    { name: "LAST ORDER", dataTitle: "lastOrder", dataType: "string", width: 120, sortable: 1 },
+                    { name: "SEGMENT", dataTitle: "segment", dataType: "string", width: 110, sortable: 1 },
                 ],
                 itemDataList: [],
                 titleHeight: 44,

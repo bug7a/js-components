@@ -853,13 +853,13 @@ const ReportsPage = function(params = {}) {
     const initTable = function() {
 
         const titleDataList = [
-            { name: "PERIOD", dataTitle: "period", dataType: "string", width: 130, shortable: 1 },
-            { name: "CATEGORY", dataTitle: "category", dataType: "string", width: 150, shortable: 1 },
-            { name: "ORDERS", dataTitle: "orders", dataType: "integer", width: 110, shortable: 1 },
-            { name: "REVENUE", dataTitle: "revenue", dataType: "float", width: 140, shortable: 1 },
-            { name: "AVG. ORDER", dataTitle: "avgOrder", dataType: "float", width: 130, shortable: 1 },
-            { name: "REFUNDS", dataTitle: "refunds", dataType: "integer", width: 110, shortable: 1 },
-            { name: "REFUND RATE", dataTitle: "refundRate", dataType: "float", width: 140, shortable: 1 },
+            { name: "PERIOD", dataTitle: "period", dataType: "string", width: 130, sortable: 1 },
+            { name: "CATEGORY", dataTitle: "category", dataType: "string", width: 150, sortable: 1 },
+            { name: "ORDERS", dataTitle: "orders", dataType: "integer", width: 110, sortable: 1 },
+            { name: "REVENUE", dataTitle: "revenue", dataType: "float", width: 140, sortable: 1 },
+            { name: "AVG. ORDER", dataTitle: "avgOrder", dataType: "float", width: 130, sortable: 1 },
+            { name: "REFUNDS", dataTitle: "refunds", dataType: "integer", width: 110, sortable: 1 },
+            { name: "REFUND RATE", dataTitle: "refundRate", dataType: "float", width: 140, sortable: 1 },
         ];
 
         const card = startCard("Report Details", "", "1 1 100%");

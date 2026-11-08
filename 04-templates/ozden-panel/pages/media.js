@@ -843,11 +843,11 @@ const MediaPage = function(params = {}) {
             smartTable = SmartTable({
                 styleName: "green", // WHY: the colors of the panel are made over this look (the keys it does not give come from it, not from "classic")
                 titleDataList: [
-                    { name: "NAME", dataTitle: "name", dataType: "string", width: 280, shortable: 1 },
-                    { name: "FOLDER", dataTitle: "folder", dataType: "string", width: 130, shortable: 1 },
-                    { name: "TYPE", dataTitle: "type", dataType: "string", width: 120, shortable: 1 },
-                    { name: "SIZE", dataTitle: "size", dataType: "integer", width: 110, shortable: 1 },
-                    { name: "UPLOADED", dataTitle: "uploaded", dataType: "string", width: 170, shortable: 1 },
+                    { name: "NAME", dataTitle: "name", dataType: "string", width: 280, sortable: 1 },
+                    { name: "FOLDER", dataTitle: "folder", dataType: "string", width: 130, sortable: 1 },
+                    { name: "TYPE", dataTitle: "type", dataType: "string", width: 120, sortable: 1 },
+                    { name: "SIZE", dataTitle: "size", dataType: "integer", width: 110, sortable: 1 },
+                    { name: "UPLOADED", dataTitle: "uploaded", dataType: "string", width: 170, sortable: 1 },
                 ],
                 itemDataList: [],
                 titleHeight: 44,

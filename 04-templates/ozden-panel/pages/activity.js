@@ -527,12 +527,12 @@ const ActivityPage = function(params = {}) {
                 smartTable = SmartTable({
                     styleName: "green", // WHY: the colors of the panel are made over this look (the keys it does not give come from it, not from "classic")
                     titleDataList: [
-                        { name: "TIME", dataTitle: "time", dataType: "string", width: 180, shortable: 1 },
-                        { name: "USER", dataTitle: "user", dataType: "string", width: 170, shortable: 1 },
-                        { name: "ACTION", dataTitle: "action", dataType: "string", width: 180, shortable: 1 },
-                        { name: "MODULE", dataTitle: "module", dataType: "string", width: 130, shortable: 1 },
-                        { name: "TARGET", dataTitle: "target", dataType: "string", width: 300, shortable: 1 },
-                        { name: "IP ADDRESS", dataTitle: "ip", dataType: "string", width: 140, shortable: 1 },
+                        { name: "TIME", dataTitle: "time", dataType: "string", width: 180, sortable: 1 },
+                        { name: "USER", dataTitle: "user", dataType: "string", width: 170, sortable: 1 },
+                        { name: "ACTION", dataTitle: "action", dataType: "string", width: 180, sortable: 1 },
+                        { name: "MODULE", dataTitle: "module", dataType: "string", width: 130, sortable: 1 },
+                        { name: "TARGET", dataTitle: "target", dataType: "string", width: 300, sortable: 1 },
+                        { name: "IP ADDRESS", dataTitle: "ip", dataType: "string", width: 140, sortable: 1 },
                     ],
                     itemDataList: [],
                     titleHeight: 44,

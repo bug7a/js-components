@@ -372,13 +372,13 @@ const ProductsPage = function(params = {}) {
             smartTable = SmartTable({
                 styleName: "green", // WHY: the colors of the panel are made over this look (the keys it does not give come from it, not from "classic")
                 titleDataList: [
-                    { name: "", dataTitle: "image", dataType: "string", width: 64, shortable: 0 },
-                    { name: "PRODUCT", dataTitle: "name", dataType: "string", width: 280, shortable: 1 },
-                    { name: "SKU", dataTitle: "sku", dataType: "string", width: 140, shortable: 1 },
-                    { name: "CATEGORY", dataTitle: "category", dataType: "string", width: 140, shortable: 1 },
-                    { name: "PRICE", dataTitle: "price", dataType: "float", width: 120, shortable: 1 },
-                    { name: "STOCK", dataTitle: "stock", dataType: "integer", width: 150, shortable: 1 },
-                    { name: "STATUS", dataTitle: "status", dataType: "string", width: 120, shortable: 1 },
+                    { name: "", dataTitle: "image", dataType: "string", width: 64, sortable: 0 },
+                    { name: "PRODUCT", dataTitle: "name", dataType: "string", width: 280, sortable: 1 },
+                    { name: "SKU", dataTitle: "sku", dataType: "string", width: 140, sortable: 1 },
+                    { name: "CATEGORY", dataTitle: "category", dataType: "string", width: 140, sortable: 1 },
+                    { name: "PRICE", dataTitle: "price", dataType: "float", width: 120, sortable: 1 },
+                    { name: "STOCK", dataTitle: "stock", dataType: "integer", width: 150, sortable: 1 },
+                    { name: "STATUS", dataTitle: "status", dataType: "string", width: 120, sortable: 1 },
                 ],
                 itemDataList: [],
                 titleHeight: 44,

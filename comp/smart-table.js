@@ -24,10 +24,12 @@ Sample: 02-comp-examples/smart-table.htm (the model page of SmartTable).
 - SmartTable is a JavaScript table component designed to run smoothly even with millions of records. Thanks to its virtual scroll architecture, it only writes the visible rows to the DOM, eliminating memory and performance issues with large datasets. It makes data exploration easy with real-time filtering, multi-column sorting, and both horizontal and vertical scroll support. Custom cell designs can be created for each column via createCustomItemCell, allowing flexible visual content per column. Since column widths, heights, and colors are all configurable through parameters, it can be quickly adapted to different projects.
 
 
-Started Date: Mar 2026
-Developer: Bugra Ozden
-Email: bugra.ozden@gmail.com
+Started Date: March 2026
 Webpage: https://bug7a.github.io/js-components/
+
+Copyright 2020-2026 Bugra Ozden <bugra.ozden@gmail.com> (https://bug7a.github.io/)
+Licensed under the Apache License, Version 2.0
+SPDX-License-Identifier: Apache-2.0
 
 
 - Arama sütunu: Arama kutusunun sağ ucundaki etikete (ALL) basınca sütun listesi açılır. Arama sadece seçilen sütunda yapılır.
@@ -88,10 +90,10 @@ const SmartTableDefaults = {
     createCustomItemCell: function (cell, titleDataIndex) { return cell },
     updateCustomItemCell: function (cell, titleDataIndex, data) { },
     titleDataList: [
-        { name: "ID", dataTitle: "id", dataType: "integer", width: 100, shortable: 1 },
-        { name: "NAME", dataTitle: "name", dataType: "string", width: 100, shortable: 1 },
-        { name: "EMAIL", dataTitle: "email", dataType: "string", width: 290, shortable: 0 },
-        { name: "", dataTitle: "active", dataType: "boolean", width: 40, shortable: 0 },
+        { name: "ID", dataTitle: "id", dataType: "integer", width: 100, sortable: 1 },
+        { name: "NAME", dataTitle: "name", dataType: "string", width: 100, sortable: 1 },
+        { name: "EMAIL", dataTitle: "email", dataType: "string", width: 290, sortable: 0 },
+        { name: "", dataTitle: "active", dataType: "boolean", width: 40, sortable: 0 },
     ],
     itemDataList: [
         { id: 1, name: "Bugra", desc: "about", email: "emainil", active: 1 },
@@ -453,7 +455,7 @@ const SmartTable = function (params = {}) {
             padding: [4, 0],
             position: "absolute",
         });
-        if (titleCell.shortable == 0) that.opacity = 0;
+        if (titleCell.sortable == 0) that.opacity = 0;
         titleCell.add(that);
         that.center("top");
 
@@ -508,7 +510,7 @@ const SmartTable = function (params = {}) {
         // DATA IN OBJECT (titleCell)
         that.titleCellIndex = titleCellIndex;
         that.titleDataTitle = titleData.dataTitle;
-        that.shortable = titleData.shortable;
+        that.sortable = titleData.sortable;
 
         titleCell.label = Label({
             text: titleData.name,
@@ -523,7 +525,7 @@ const SmartTable = function (params = {}) {
 
         titleCell.on("click", function (self, event) {
 
-            if (self.shortable != 1) return;
+            if (self.sortable != 1) return;
 
             box.resetSortIcons(self);
             box.sortByTitleIndex = self.titleCellIndex;
@@ -1091,7 +1093,7 @@ const SmartTable = function (params = {}) {
     const sortItems = function (itemList, sortByTitleIndex, sortDirection) {
 
         const titleData = box.titleDataList[sortByTitleIndex];
-        if (!titleData || titleData.shortable === 0) return;
+        if (!titleData || titleData.sortable === 0) return;
 
         const key = titleData.dataTitle;
 

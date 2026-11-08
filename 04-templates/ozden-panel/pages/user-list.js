@@ -314,12 +314,12 @@ const UserListPage = function(params = {}) {
             smartTable = SmartTable({
                 styleName: "green", // WHY: the colors of the panel are made over this look (the keys it does not give come from it, not from "classic")
                 titleDataList: [
-                    { name: "NAME", dataTitle: "name", dataType: "string", width: 210, shortable: 1 },
-                    { name: "E-MAIL", dataTitle: "email", dataType: "string", width: 260, shortable: 1 },
-                    { name: "ROLE", dataTitle: "role", dataType: "string", width: 150, shortable: 1 },
-                    { name: "STATUS", dataTitle: "status", dataType: "string", width: 130, shortable: 1 },
-                    { name: "LAST LOGIN", dataTitle: "lastLogin", dataType: "string", width: 180, shortable: 1 },
-                    { name: "2FA", dataTitle: "twoFactor", dataType: "string", width: 90, shortable: 1 },
+                    { name: "NAME", dataTitle: "name", dataType: "string", width: 210, sortable: 1 },
+                    { name: "E-MAIL", dataTitle: "email", dataType: "string", width: 260, sortable: 1 },
+                    { name: "ROLE", dataTitle: "role", dataType: "string", width: 150, sortable: 1 },
+                    { name: "STATUS", dataTitle: "status", dataType: "string", width: 130, sortable: 1 },
+                    { name: "LAST LOGIN", dataTitle: "lastLogin", dataType: "string", width: 180, sortable: 1 },
+                    { name: "2FA", dataTitle: "twoFactor", dataType: "string", width: 90, sortable: 1 },
                 ],
                 itemDataList: [],
                 titleHeight: 44,
