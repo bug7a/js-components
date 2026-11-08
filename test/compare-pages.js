@@ -12,6 +12,7 @@ The old page loads the old basic/ and comp/ too, so a change in a component is m
     node test/compare-pages.js tabs.htm dialog.htm      these pages (of 02-comp-examples, or a path from the root)
     node test/compare-pages.js --all                    every sample (long)
     node test/compare-pages.js --base HEAD~3 tabs.htm   against another commit
+    node test/compare-pages.js old.htm=new.htm          a page that got a new name: old.htm of the commit, new.htm now
 
 The results:
     SAME    no difference (a difference that goes away when the page is opened again was only timing)
@@ -426,9 +427,22 @@ const saveRun = function (fileStart, run) {
     });
 };
 
-const compareAtSize = async function (browser, port, pagePath, size) {
-    const oldUrl = "http://127.0.0.1:" + port + OLD_PATH + "/" + pagePath;
-    const newUrl = "http://127.0.0.1:" + port + "/" + pagePath;
+// A page to compare: its path in the commit and its path now (the same, unless it got a new name)
+const toPagePair = function (arg) {
+    const parts = arg.split("=");
+    const newPath = chrome.toPagePath(parts[parts.length - 1]);
+    const oldPath = (parts.length > 1) ? chrome.toPagePath(parts[0]) : newPath;
+    return { oldPath: oldPath, newPath: newPath };
+};
+
+const describePair = function (pair) {
+    if (pair.oldPath === pair.newPath) return pair.newPath;
+    return pair.newPath + " (" + pair.oldPath + " in the commit)";
+};
+
+const compareAtSize = async function (browser, port, pair, size) {
+    const oldUrl = "http://127.0.0.1:" + port + OLD_PATH + "/" + pair.oldPath;
+    const newUrl = "http://127.0.0.1:" + port + "/" + pair.newPath;
     let oldRun, newRun, differences;
 
     for (let attempt = 1; attempt <= TRIES; attempt++) {
@@ -438,7 +452,7 @@ const compareAtSize = async function (browser, port, pagePath, size) {
         if (differences.length === 0) return { status: "SAME", counts: newRun.counts };
     }
 
-    const fileStart = path.join(OUT_FOLDER, path.basename(pagePath, ".htm") + "-" + size.width);
+    const fileStart = path.join(OUT_FOLDER, path.basename(pair.newPath, ".htm") + "-" + size.width);
     saveRun(fileStart + "-old", oldRun);
     saveRun(fileStart + "-new", newRun);
 
@@ -492,20 +506,20 @@ const readOptions = function (args) {
         if (args[i] === "--base") options.base = args[++i];
         else if (args[i] === "--all") options.isAll = true;
         else if (args[i] === "--help") options.isHelp = true;
-        else options.pages.push(chrome.toPagePath(args[i]));
+        else options.pages.push(toPagePair(args[i]));
     }
     return options;
 };
 
 const choosePages = function (options) {
-    if (options.isAll) return listSamples();
+    if (options.isAll) return listSamples().map(toPagePair);
     if (options.pages.length > 0) return options.pages;
-    return findChangedPages(options.base);
+    return findChangedPages(options.base).map(toPagePair);
 };
 
-const compareAndPrint = async function (browser, port, pagePath, size) {
+const compareAndPrint = async function (browser, port, pair, size) {
     try {
-        const result = await compareAtSize(browser, port, pagePath, size);
+        const result = await compareAtSize(browser, port, pair, size);
         printResult(size, result);
         return result.status;
     } catch (error) {
@@ -516,11 +530,11 @@ const compareAndPrint = async function (browser, port, pagePath, size) {
 };
 
 // The result of a page is the worst result of its sizes.
-const comparePage = async function (browser, port, pagePath) {
-    console.log(pagePath);
+const comparePage = async function (browser, port, pair) {
+    console.log(describePair(pair));
     const statuses = [];
     for (const size of SIZES) {
-        statuses.push(await compareAndPrint(browser, port, pagePath, size));
+        statuses.push(await compareAndPrint(browser, port, pair, size));
     }
     if (statuses.includes("DIFF")) return "DIFF";
     if (statuses.includes("LIVE")) return "LIVE";
@@ -548,13 +562,13 @@ const main = async function () {
     const totals = { SAME: 0, LIVE: 0, DIFF: 0, SKIPPED: 0 };
 
     try {
-        for (const pagePath of pages) {
-            if (!isInCommit(options.base, pagePath)) {
-                console.log(pagePath + "\n  not in " + options.base + ": nothing to compare with");
+        for (const pair of pages) {
+            if (!isInCommit(options.base, pair.oldPath)) {
+                console.log(pair.oldPath + "\n  not in " + options.base + ": nothing to compare with (a new name: old.htm=new.htm)");
                 totals.SKIPPED++;
                 continue;
             }
-            totals[await comparePage(browser, server.address().port, pagePath)]++;
+            totals[await comparePage(browser, server.address().port, pair)]++;
         }
     } finally {
         await browser.close();
