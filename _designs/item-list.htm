@@ -17,12 +17,14 @@
         /* Bismillah */
 
         // DRAFT DESIGN of comp/item-list.js (ItemList): the new "light" and "dark" packages, the general look of the kit.
-        // A simple draft: one item of the vertical list in each theme, inside the box of the list, on the page of that
-        // theme. The two items are written out one by one (no shared drawing function), so basic-designer changes one
-        // without touching the other. No ItemList here: plain basic.js objects.
+        // A whole list in each theme, on the page of that theme: five rows, one selected (Strawberry), one under the
+        // mouse (Apple), the others normal; the selected one and the one under the mouse are still frames of those
+        // moments. The two themes have their own drawing lines, so basic-designer changes one theme without the other
+        // ("All N from this line" stays inside a theme; "This object only" changes one row). No ItemList here: plain
+        // basic.js objects.
         // The starting values are a proposal, taken from the light / dark lists of the kit (SelectBox and ContextMenu
         // light / dark, SearchInput classic): ItemList has no light package yet, and its dark package today is the dark
-        // twin of modern (_designs/item-list-dark.htm). The states (hover, selected, focus, disabled...) come later.
+        // twin of modern (_designs/item-list-dark.htm). The other states (focus, disabled, section, empty) come later.
         // http://127.0.0.1:5505/_basic-designer/index.htm?page=_designs/item-list.htm
 
         const PAGE_COLOR = "#F4F5F2"; // the ground of the draft, not of the list
@@ -32,27 +34,44 @@
         const CARD_GAP = 40;
         const FRUITS_PATH = "../assets/fruids/";
 
-        // THE LIGHT THEME: a white box with a thin edge, flat rows (the list of SelectBox light)
+        // THE LIGHT THEME: a white box with a thin edge, flat rows that get gray under the mouse, the selected one a
+        // little gray with a full mark (the list of SelectBox light)
         const LIGHT = {
             page: { color: "white", textColor: Black(0.45) }, // the light page the list sits on
             box: { color: "white", border: 1, borderColor: Black(0.2), round: 8, padding: 6 },
+            list: { gap: 2 }, // between the rows: the gray of two rows never meets
             row: { height: 60, padding: [12, 10], gap: 12, color: "transparent", round: 6 },
+            hover: { color: Black(0.06) },
+            selected: { color: Black(0.04), titleColor: "#141414" },
             icon: { size: 36, round: 8, color: Black(0.05) },
             title: { fontSize: 15, textColor: Black(0.85), fontFamily: "opensans" },
             desc: { fontSize: 13, textColor: Black(0.5) },
+            check: { size: 20, color: "#141414", iconColor: "white", borderColor: Black(0.3) }, // an empty circle; full on the selected row
         };
-        const LIGHT_ITEM = { title: "Broccoli", desc: "Vegetable", iconFile: FRUITS_PATH + "brokoli.png" };
 
-        // THE DARK THEME: the same shapes in the dark colors of the kit (SelectBox dark: #232322, white lines)
+        // THE DARK THEME: the same shapes in the dark colors of the kit (SelectBox dark: #232322, white lines, the green mark)
         const DARK = {
             page: { color: "#141414", textColor: White(0.5) }, // the dark page the list sits on
             box: { color: "#232322", border: 1, borderColor: White(0.12), round: 8, padding: 6 },
+            list: { gap: 2 },
             row: { height: 60, padding: [12, 10], gap: 12, color: "transparent", round: 6 },
+            hover: { color: White(0.08) },
+            selected: { color: White(0.05), titleColor: "white" },
             icon: { size: 36, round: 8, color: White(0.06) },
             title: { fontSize: 15, textColor: White(0.9), fontFamily: "opensans" },
             desc: { fontSize: 13, textColor: White(0.45) },
+            check: { size: 20, color: "#3D7A6B", iconColor: "white", borderColor: White(0.3) },
         };
-        const DARK_ITEM = { title: "Strawberry", desc: "Fruit", iconFile: FRUITS_PATH + "cilek.png" };
+
+        // THE ITEMS of both lists: selected and hover are the still frames
+        const ITEMS = [
+            { title: "Broccoli", desc: "Vegetable", iconFile: FRUITS_PATH + "brokoli.png" },
+            { title: "Strawberry", desc: "Fruit", iconFile: FRUITS_PATH + "cilek.png", selected: 1 },
+            { title: "Tomato", desc: "Vegetable", iconFile: FRUITS_PATH + "domates.png" },
+            { title: "Apple", desc: "Fruit", iconFile: FRUITS_PATH + "elma.png", hover: 1 },
+            { title: "Carrot", desc: "Vegetable", iconFile: FRUITS_PATH + "havuc.png" },
+        ];
+        const ITEMS_NOTE = "Strawberry is selected, Apple is under the mouse.";
 
         const start = function () {
 
@@ -64,12 +83,12 @@
                 VGroup({ width: "max-content", height: "auto", align: "left top", gap: 22, padding: 40, clipContent: 0 });
 
                     Label({ text: "ItemList · light / dark · draft (comp/item-list.js)", fontSize: 20, bold: 1, textColor: PAGE_TEXT.title });
-                    Label({ text: "One item of the list in each theme. The states (hover, selected, focus, disabled) come after this look is settled.", fontSize: 13, textColor: PAGE_TEXT.note });
+                    Label({ text: "The whole list in each theme. The other states (focus, disabled, section, empty list) come after this look is settled.", fontSize: 13, textColor: PAGE_TEXT.note });
 
                     // GROUP: The two themes side by side
                     HGroup({ width: "auto", height: "auto", align: "left top", gap: CARD_GAP, clipContent: 0 });
-                        drawLightItem();
-                        drawDarkItem();
+                        drawLightList();
+                        drawDarkList();
                     endGroup();
 
                 endGroup();
@@ -80,54 +99,101 @@
 
         // *** THE LIGHT THEME
 
-        // GROUP: The light page, the box of the list and its one row
-        const drawLightItem = function () {
+        // GROUP: The light page and the box of the list with its rows
+        const drawLightList = function () {
             const card = VGroup({ width: "auto", height: "auto", align: "left top", gap: 14, padding: CARD_PADDING, color: LIGHT.page.color, round: 10, border: 1, borderColor: Black(0.08), clipContent: 0 });
                 Label({ text: "light (the default of new pages)", fontSize: 12, textColor: LIGHT.page.textColor });
-                // GROUP: The box of the list (style.box)
-                VGroup({ width: LIST_WIDTH, height: "auto", align: "left top", gap: 0, padding: LIGHT.box.padding, color: LIGHT.box.color, border: LIGHT.box.border, borderColor: LIGHT.box.borderColor, round: LIGHT.box.round, clipContent: 0 });
-                    // GROUP: One item row (style.row): its icon, its title and its description
-                    HGroup({ width: "100%", height: LIGHT.row.height, align: "left center", gap: LIGHT.row.gap, padding: LIGHT.row.padding, color: LIGHT.row.color, round: LIGHT.row.round, clipContent: 0 });
-                        // ICON: The picture of the item on its own color (style.icon)
-                        const icon = Icon({ width: LIGHT.icon.size, height: LIGHT.icon.size, color: LIGHT.icon.color, round: LIGHT.icon.round });
-                        icon.shrink = 0;
-                        icon.load(LIGHT_ITEM.iconFile);
-                        // GROUP: The texts (they take the rest of the row; a long text is cut with ...)
-                        const texts = VGroup({ width: "auto", height: "auto", align: "left center", gap: 0 });
-                        texts.css = { flex: "1 1 0", minWidth: "0", alignItems: "stretch" };
-                            Label({ text: LIGHT_ITEM.title, width: "100%", fontSize: LIGHT.title.fontSize, fontFamily: LIGHT.title.fontFamily, textColor: LIGHT.title.textColor, ellipsis: 1 });
-                            Label({ text: LIGHT_ITEM.desc, width: "100%", fontSize: LIGHT.desc.fontSize, textColor: LIGHT.desc.textColor, ellipsis: 1 });
-                        endGroup();
-                    endGroup();
+                // GROUP: The box of the list (style.box, style.list)
+                VGroup({ width: LIST_WIDTH, height: "auto", align: "left top", gap: LIGHT.list.gap, padding: LIGHT.box.padding, color: LIGHT.box.color, border: LIGHT.box.border, borderColor: LIGHT.box.borderColor, round: LIGHT.box.round, clipContent: 0 });
+                    ITEMS.forEach(drawLightRow);
                 endGroup();
+                Label({ text: ITEMS_NOTE, fontSize: 12, textColor: LIGHT.page.textColor });
             endGroup();
             return card;
         };
 
+        // GROUP: One row of the light list (style.row): its icon, its texts and its mark; gray under the mouse, the selected one its own gray
+        const drawLightRow = function (item) {
+            const look = getRowLook(LIGHT, item);
+            const row = HGroup({ width: "100%", height: LIGHT.row.height, align: "left center", gap: LIGHT.row.gap, padding: LIGHT.row.padding, color: look.color, round: LIGHT.row.round, clipContent: 0 });
+                // ICON: The picture of the item on its own color (style.icon)
+                const icon = Icon({ width: LIGHT.icon.size, height: LIGHT.icon.size, color: LIGHT.icon.color, round: LIGHT.icon.round });
+                icon.shrink = 0;
+                icon.load(item.iconFile);
+                // GROUP: The texts (they take the rest of the row; a long text is cut with ...)
+                const texts = VGroup({ width: "auto", height: "auto", align: "left center", gap: 0 });
+                texts.css = { flex: "1 1 0", minWidth: "0", alignItems: "stretch" };
+                    Label({ text: item.title, width: "100%", fontSize: LIGHT.title.fontSize, fontFamily: LIGHT.title.fontFamily, textColor: look.titleColor, ellipsis: 1 });
+                    Label({ text: item.desc, width: "100%", fontSize: LIGHT.desc.fontSize, textColor: LIGHT.desc.textColor, ellipsis: 1 });
+                endGroup();
+                // LABEL: The mark (style.check): an empty circle, full with a tick on the selected row
+                const check = Label({ width: LIGHT.check.size, height: LIGHT.check.size, round: 100, border: 2, color: look.checkColor, borderColor: look.checkBorderColor, text: look.checkText });
+                check.shrink = 0;
+                check.css = { display: "flex", alignItems: "center", justifyContent: "center" };
+            endGroup();
+            return row;
+        };
+
         // *** THE DARK THEME
 
-        // GROUP: The dark page, the box of the list and its one row
-        const drawDarkItem = function () {
+        // GROUP: The dark page and the box of the list with its rows
+        const drawDarkList = function () {
             const card = VGroup({ width: "auto", height: "auto", align: "left top", gap: 14, padding: CARD_PADDING, color: DARK.page.color, round: 10, border: 1, borderColor: Black(0.08), clipContent: 0 });
                 Label({ text: "dark (a dark page)", fontSize: 12, textColor: DARK.page.textColor });
-                // GROUP: The box of the list (style.box)
-                VGroup({ width: LIST_WIDTH, height: "auto", align: "left top", gap: 0, padding: DARK.box.padding, color: DARK.box.color, border: DARK.box.border, borderColor: DARK.box.borderColor, round: DARK.box.round, clipContent: 0 });
-                    // GROUP: One item row (style.row): its icon, its title and its description
-                    HGroup({ width: "100%", height: DARK.row.height, align: "left center", gap: DARK.row.gap, padding: DARK.row.padding, color: DARK.row.color, round: DARK.row.round, clipContent: 0 });
-                        // ICON: The picture of the item on its own color (style.icon)
-                        const icon = Icon({ width: DARK.icon.size, height: DARK.icon.size, color: DARK.icon.color, round: DARK.icon.round });
-                        icon.shrink = 0;
-                        icon.load(DARK_ITEM.iconFile);
-                        // GROUP: The texts (they take the rest of the row; a long text is cut with ...)
-                        const texts = VGroup({ width: "auto", height: "auto", align: "left center", gap: 0 });
-                        texts.css = { flex: "1 1 0", minWidth: "0", alignItems: "stretch" };
-                            Label({ text: DARK_ITEM.title, width: "100%", fontSize: DARK.title.fontSize, fontFamily: DARK.title.fontFamily, textColor: DARK.title.textColor, ellipsis: 1 });
-                            Label({ text: DARK_ITEM.desc, width: "100%", fontSize: DARK.desc.fontSize, textColor: DARK.desc.textColor, ellipsis: 1 });
-                        endGroup();
-                    endGroup();
+                // GROUP: The box of the list (style.box, style.list)
+                VGroup({ width: LIST_WIDTH, height: "auto", align: "left top", gap: DARK.list.gap, padding: DARK.box.padding, color: DARK.box.color, border: DARK.box.border, borderColor: DARK.box.borderColor, round: DARK.box.round, clipContent: 0 });
+                    ITEMS.forEach(drawDarkRow);
                 endGroup();
+                Label({ text: ITEMS_NOTE, fontSize: 12, textColor: DARK.page.textColor });
             endGroup();
             return card;
+        };
+
+        // GROUP: One row of the dark list (style.row): its icon, its texts and its mark; lighter under the mouse, the selected one its own tone
+        const drawDarkRow = function (item) {
+            const look = getRowLook(DARK, item);
+            const row = HGroup({ width: "100%", height: DARK.row.height, align: "left center", gap: DARK.row.gap, padding: DARK.row.padding, color: look.color, round: DARK.row.round, clipContent: 0 });
+                // ICON: The picture of the item on its own color (style.icon)
+                const icon = Icon({ width: DARK.icon.size, height: DARK.icon.size, color: DARK.icon.color, round: DARK.icon.round });
+                icon.shrink = 0;
+                icon.load(item.iconFile);
+                // GROUP: The texts (they take the rest of the row; a long text is cut with ...)
+                const texts = VGroup({ width: "auto", height: "auto", align: "left center", gap: 0 });
+                texts.css = { flex: "1 1 0", minWidth: "0", alignItems: "stretch" };
+                    Label({ text: item.title, width: "100%", fontSize: DARK.title.fontSize, fontFamily: DARK.title.fontFamily, textColor: look.titleColor, ellipsis: 1 });
+                    Label({ text: item.desc, width: "100%", fontSize: DARK.desc.fontSize, textColor: DARK.desc.textColor, ellipsis: 1 });
+                endGroup();
+                // LABEL: The mark (style.check): an empty circle, full with a tick on the selected row
+                const check = Label({ width: DARK.check.size, height: DARK.check.size, round: 100, border: 2, color: look.checkColor, borderColor: look.checkBorderColor, text: look.checkText });
+                check.shrink = 0;
+                check.css = { display: "flex", alignItems: "center", justifyContent: "center" };
+            endGroup();
+            return row;
+        };
+
+        // *** THE LOOK OF A ROW IN ITS STATE (as the component paints it: row < hover < selected)
+
+        const getRowLook = function (theme, item) {
+            const look = {
+                color: theme.row.color,
+                titleColor: theme.title.textColor,
+                checkColor: "transparent",
+                checkBorderColor: theme.check.borderColor,
+                checkText: "",
+            };
+            if (item.hover) look.color = theme.hover.color;
+            if (!item.selected) return look;
+            look.color = theme.selected.color;
+            look.titleColor = theme.selected.titleColor;
+            look.checkColor = theme.check.color;
+            look.checkBorderColor = theme.check.color;
+            look.checkText = getCheckSvg(theme.check.iconColor, theme.check.size * 0.6);
+            return look;
+        };
+
+        // The mark of ItemList.getCheckSvg
+        const getCheckSvg = function (color, size) {
+            return '<svg xmlns="http://www.w3.org/2000/svg" width="' + size + '" height="' + size + '" viewBox="0 0 24 24" fill="none" stroke="' + color + '" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/><\/svg>';
         };
 
     </script>
