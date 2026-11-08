@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>TextField light / dark draft</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- LIBRARY FILES (a draft: no component, only basic.js objects) -->
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Bold.ttf" as="font" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="../basic/basic.css">
+    <script src="../basic/basic.js" type="text/javascript" charset="utf-8"></script>
+
+    <script>
+
+        /* Bismillah */
+
+        // DRAFT DESIGN of comp/text-field.js (TextField): the "light" and "dark" packages, every state side by side.
+        // light: TextFieldDefaults (a light field with a line under it, the title in the field over the text, the
+        // warning as a colored ball at the top right with its hint). dark: TextField.styles.dark (the same shape, every
+        // color turned to its dark side), its missing keys filled from the defaults. Plain basic.js objects (no
+        // TextField here); the typing and the hints are still frames of those moments. The values are copies: keep
+        // them in step with text-field.js when it changes.
+        // http://127.0.0.1:5505/_basic-designer/index.htm?page=_designs/text-field.htm
+
+        const PAGE_COLOR = "#F4F5F2"; // the ground of the draft, not of the fields
+        const PAGE_TEXT = { title: Black(0.8), note: Black(0.5), state: Black(0.45), stateTitle: Black(0.4) }; // the texts of the draft
+        const STATE_COLUMN_WIDTH = 250;
+        const ROW_HEIGHT = 124;
+        const HEADER_HEIGHT = 24;
+        const CARD_PADDING = 24;
+        const COLUMN_GAP = 24;
+
+        // THE SIZES (TextFieldDefaults; the same in both looks)
+        const SIZE = {
+            width: 350,
+            leftPadding: 20,
+            rightPadding: 60, // the room of the ball and the unit
+            titleFontSize: 16,
+            titleLineHeight: 22, // px: the line of the title (titlePosition "above": 1.35 of its size)
+            inputFontSize: 20,
+            inputHeight: 40, // the row of the text
+            fieldPadding: 14, // over and under the title and the text
+            descriptionFontSize: 14,
+            titleGap: 4, // between the title and the field (titlePosition "above")
+            topRound: 2, // backBorderTopRound
+            bottomRound: 0, // backBorderBottomRound
+            lineHeight: 2, // the line under the field
+            ball: { size: 16, border: 2, right: 5, top: 5 }, // warningBallSize, warningBallBorder, its place
+            hint: { fontSize: 14, padding: [8, 3], round: 4, border: 1, gap: 12 }, // the Tooltip of the ball (tooltipStyle; lbl_spaceX / Y), its distance from the ball
+            unit: { padding: [12, 4], round: 40, fontSize: 14, right: 7, bottom: 5 }, // unitStyle; the right box: padding [5, 7]
+            caretHeight: 24,
+        };
+
+        // THE LIGHT LOOK (TextFieldDefaults)
+        const LIGHT = {
+            page: { color: "white", textColor: Black(0.45) }, // the light page the fields sit on
+            field: { color: "#F6F6F6", focusColor: "#F3F4E0", borderColor: Black(0), focusBorderColor: Black(0) }, // backgroundColor, focusBackgroundColor, backBorderColor, focusBackBorderColor
+            line: { color: "#373836", focusColor: "#65A293" }, // lineColor, focusLineColor
+            title: { textColor: "#555555", bold: 0 }, // titleTextColor, titleBold
+            input: { textColor: "#373836", placeholderColor: "#757575" }, // inputTextColor; placeholderColor "": the gray of the browser
+            description: { textColor: "#999999" }, // descriptionTextColor (italic)
+            ball: { borderColor: "#373836", requiredColor: "white", warningColor: "#E5885E" }, // warningBallBorderColor, requiredColor, warningColor
+            hint: { textColor: "#141414", borderColor: "#141414" }, // tooltipStyle (its color: the color of the ball)
+            unit: { color: "#373836", textColor: "white" }, // unitStyle
+        };
+
+        // THE DARK LOOK (TextField.styles.dark)
+        const DARK = {
+            page: { color: "#1A1A19", textColor: White(0.5) }, // the dark page of the text-field sample
+            field: { color: "#232322", focusColor: "#2A2C27", borderColor: Black(0), focusBorderColor: Black(0) },
+            line: { color: White(0.75), focusColor: "#65A293" },
+            title: { textColor: White(0.6), bold: 0 },
+            input: { textColor: White(0.9), placeholderColor: White(0.3) },
+            description: { textColor: White(0.4) },
+            ball: { borderColor: White(0.75), requiredColor: "#141414", warningColor: "indianred" }, // the required ball takes the color of the page under it
+            hint: { textColor: White(0.9), borderColor: White(0.75) },
+            unit: { color: White(0.85), textColor: "#1A1A19" },
+        };
+
+        // THE STATES (one row each)
+        const STATES = [
+            { name: "Empty: the title and the placeholder", title: "INPUT NAME", placeholder: "input value" },
+            { name: "With a value", title: "NAME", value: "Buğra Özden" },
+            { name: "Typing (focus): the field and the line change color", title: "NAME", value: "Buğra Özden", focus: 1 },
+            { name: "Required and empty: the ball and its hint", title: "E-MAIL", placeholder: "name@mail.com", required: 1, hint: "Required" },
+            { name: "Not valid: the warning ball and its hint", title: "E-MAIL", value: "bugra@", warning: 1, hint: "Invalid value format" },
+            { name: "With a description", title: "E-MAIL", value: "bugra.ozden@gmail.com", description: "We never share it." },
+            { name: "With a unit (unitText)", title: "WEIGHT", value: "72", unit: "kg" },
+            { name: "The title over the field (titlePosition \"above\")", title: "NAME", value: "Buğra Özden", above: 1 },
+        ];
+
+        const start = function () {
+
+            page.color = PAGE_COLOR;
+
+            // BOX: Scrolling page
+            startBox(0, 0, "100%", "100%", { color: "transparent", scrollY: 1, scrollX: 1 });
+
+                VGroup({ width: "max-content", height: "auto", align: "left top", gap: 22, padding: 40, clipContent: 0 });
+
+                    Label({ text: "TextField · light / dark · draft (comp/text-field.js)", fontSize: 20, bold: 1, textColor: PAGE_TEXT.title });
+                    Label({ text: "light is the default package, dark is TextField.styles.dark. Every row is a state; the hints of the balls are shown open.", fontSize: 13, textColor: PAGE_TEXT.note });
+
+                    // GROUP: The names of the states, then a card for every look
+                    HGroup({ width: "auto", height: "auto", align: "left top", gap: COLUMN_GAP, clipContent: 0 });
+                        drawStateColumn();
+                        drawLookCard(LIGHT, "light (default)");
+                        drawLookCard(DARK, "dark");
+                    endGroup();
+
+                endGroup();
+
+            endBox();
+
+        };
+
+        // GROUP: The names of the states, one per row (the rows of the cards have the same heights)
+        const drawStateColumn = function () {
+            const column = VGroup({ width: STATE_COLUMN_WIDTH, height: "auto", align: "left top", gap: 0, padding: [0, CARD_PADDING] });
+                Label({ height: HEADER_HEIGHT, text: "state", fontSize: 12, textColor: PAGE_TEXT.stateTitle });
+                STATES.forEach(function (state) {
+                    HGroup({ width: "100%", height: ROW_HEIGHT, align: "left center" });
+                        Label({ width: "100%", text: state.name, fontSize: 12, textColor: PAGE_TEXT.state, css: { lineHeight: "1.3" } });
+                    endGroup();
+                });
+            endGroup();
+            return column;
+        };
+
+        // GROUP: A card in the color of the page of a look: its name, then one row per state
+        const drawLookCard = function (look, name) {
+            const card = VGroup({ width: "auto", height: "auto", align: "left top", gap: 0, padding: CARD_PADDING, color: look.page.color, round: 10, border: 1, borderColor: Black(0.08), clipContent: 0 });
+                Label({ height: HEADER_HEIGHT, text: name, fontSize: 13, bold: 1, textColor: look.page.textColor, css: { whiteSpace: "nowrap" } });
+                STATES.forEach(function (state) {
+                    // GROUP: A row: the field in this state
+                    HGroup({ width: SIZE.width, height: ROW_HEIGHT, align: "left center", clipContent: 0 });
+                        if (state.above) drawFieldWithTitleAbove(look, state);
+                        else drawField(look, state);
+                    endGroup();
+                });
+            endGroup();
+            return card;
+        };
+
+        // GROUP: The field (titlePosition "inside"): the title over the text, the description under it; the line, the ball with its hint and the unit over it
+        const drawField = function (look, state) {
+            const field = VGroup({ width: SIZE.width, height: "auto", align: "left top", gap: 0, padding: [SIZE.leftPadding, SIZE.fieldPadding, SIZE.rightPadding, SIZE.fieldPadding], color: getFieldColor(look, state), border: 1, borderColor: getFieldBorderColor(look, state), clipContent: 0 });
+            field.shrink = 0;
+            field.position = "relative";
+            field.css = getFieldRounds();
+                drawTitle(look, state);
+                drawInputText(look, state);
+                if (state.description) Label({ text: state.description, fontSize: SIZE.descriptionFontSize, textColor: look.description.textColor, css: { fontStyle: "italic" } });
+                drawLine(look, state, null);
+                if (state.required || state.warning) drawBall(look, state, SIZE.ball.right, SIZE.ball.top);
+                if (state.unit) drawUnit(look, state);
+            endGroup();
+            return field;
+        };
+
+        // GROUP: The field with its title over it (titlePosition "above"): the field is only the row of the text, the ball in the middle of the right padding
+        const drawFieldWithTitleAbove = function (look, state) {
+            const group = VGroup({ width: SIZE.width, height: "auto", align: "left top", gap: SIZE.titleGap, clipContent: 0 });
+            group.shrink = 0;
+                Label({ text: state.title, fontSize: SIZE.titleFontSize, textColor: look.title.textColor, bold: look.title.bold, css: { lineHeight: SIZE.titleLineHeight + "px", whiteSpace: "nowrap" } });
+                // GROUP: The field: the row of the text
+                const field = HGroup({ width: "100%", height: SIZE.inputHeight, align: "left center", padding: [SIZE.leftPadding, 0, SIZE.rightPadding, 0], color: getFieldColor(look, state), border: 1, borderColor: getFieldBorderColor(look, state), clipContent: 0 });
+                field.position = "relative";
+                field.css = getFieldRounds();
+                    drawInputText(look, state);
+                    drawLine(look, state, null);
+                    const ballRight = Math.round((SIZE.rightPadding - SIZE.ball.size) / 2);
+                    const ballTop = Math.round((SIZE.inputHeight - SIZE.ball.size) / 2);
+                    if (state.required || state.warning) drawBall(look, state, ballRight, ballTop);
+                endGroup();
+            endGroup();
+            return group;
+        };
+
+        // *** THE COLORS OF A STATE (as the component paints them)
+
+        const getFieldColor = function (look, state) {
+            return state.focus ? look.field.focusColor : look.field.color;
+        };
+
+        const getFieldBorderColor = function (look, state) {
+            return state.focus ? look.field.focusBorderColor : look.field.borderColor;
+        };
+
+        const getFieldRounds = function () {
+            return {
+                borderTopLeftRadius: SIZE.topRound + "px",
+                borderTopRightRadius: SIZE.topRound + "px",
+                borderBottomLeftRadius: SIZE.bottomRound + "px",
+                borderBottomRightRadius: SIZE.bottomRound + "px",
+            };
+        };
+
+        // *** THE PARTS
+
+        // LABEL: The title in the field (titleTextColor, titleBold)
+        const drawTitle = function (look, state) {
+            return Label({ text: state.title, fontSize: SIZE.titleFontSize, textColor: look.title.textColor, bold: look.title.bold, css: { whiteSpace: "nowrap" } });
+        };
+
+        // GROUP: The row of the text: the value (or the placeholder) and the caret while typing
+        const drawInputText = function (look, state) {
+            const hasValue = !!state.value;
+            const row = HGroup({ width: "100%", height: SIZE.inputHeight, align: "left center", gap: 1, clipContent: 1 });
+            row.shrink = 0;
+                Label({ text: hasValue ? state.value : state.placeholder, fontSize: SIZE.inputFontSize, textColor: hasValue ? look.input.textColor : look.input.placeholderColor, css: { whiteSpace: "nowrap" } });
+                if (state.focus) Box({ width: 1, height: SIZE.caretHeight, color: look.input.textColor, position: "relative" });
+            endGroup();
+            return row;
+        };
+
+        // BOX: The line under the field (lineColor, focusLineColor)
+        const drawLine = function (look, state) {
+            const line = Box({ left: 0, bottom: 0, width: "100%", height: SIZE.lineHeight, color: state.focus ? look.line.focusColor : look.line.color });
+            line.css = { position: "absolute" };
+            return line;
+        };
+
+        // BOX: The ball at the top right: white with a dark edge when the field is required and empty, in the warning
+        // color when the value is not valid; its hint open at its left
+        const drawBall = function (look, state, right, top) {
+            const _b = SIZE.ball;
+            const color = state.warning ? look.ball.warningColor : look.ball.requiredColor;
+            const ball = Box({ right: right, top: top, width: _b.size, height: _b.size, round: 100, border: _b.border, borderColor: look.ball.borderColor, color: color });
+            ball.css = { position: "absolute" };
+            if (state.hint) drawHint(look, state, color, right, top);
+            return ball;
+        };
+
+        // LABEL: The hint of the ball (the Tooltip of the component): in the color of the ball, at its left
+        const drawHint = function (look, state, ballColor, ballRight, ballTop) {
+            const _h = SIZE.hint;
+            const hint = Label({ right: ballRight + SIZE.ball.size + _h.gap, top: ballTop + SIZE.ball.size / 2, text: state.hint, fontSize: _h.fontSize, textColor: look.hint.textColor, color: ballColor, border: _h.border, borderColor: look.hint.borderColor, round: _h.round, padding: _h.padding });
+            hint.css = { position: "absolute", transform: "translateY(-50%)", whiteSpace: "nowrap" };
+            return hint;
+        };
+
+        // LABEL: The unit (unitStyle) at the right bottom corner of the field
+        const drawUnit = function (look, state) {
+            const _u = SIZE.unit;
+            const unit = Label({ right: _u.right, bottom: _u.bottom, text: state.unit, fontSize: _u.fontSize, textColor: look.unit.textColor, color: look.unit.color, round: _u.round, padding: _u.padding });
+            unit.css = { position: "absolute", whiteSpace: "nowrap" };
+            return unit;
+        };
+
+    </script>
+
+</head>
+
+<body>
+</body>
+
+</html>
