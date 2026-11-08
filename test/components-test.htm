@@ -31,6 +31,8 @@
         and a component that works only because another file was loaded before it is found.
 
         CHECKS (for every component):
+        - The house header: the file starts with the Bismillah line and has the license block of
+          _component-template.js (the Copyright line and "SPDX-License-Identifier: Apache-2.0").
         - The file loads without errors and defines its global.
         - It is created with its default values: returns a basic.js object, "that" is that object,
           every start call is ended (the default container is the same as before).
@@ -405,9 +407,26 @@
             });
         };
 
+        // WHY: a copy of a component carries the name and the license of its maker (Apache 2.0, 4c)
+        const checkHeader = async function (file) {
+            let text = "";
+            try {
+                const response = await fetch("../" + file);
+                if (response.ok) text = await response.text();
+            } catch (e) { }
+            const hasCopyright = /^\s*Copyright 2020-\d{4} Bugra Ozden <bugra\.ozden@gmail\.com>/m.test(text);
+            const hasLicense = text.indexOf("SPDX-License-Identifier: Apache-2.0") >= 0;
+            return [
+                { name: "starts with /* Bismillah */", ok: text.startsWith("/* Bismillah */"), info: "the first line of the file", level: "fail" },
+                { name: "has the license header", ok: hasCopyright && hasLicense, info: "the block of _component-template.js", level: "fail" },
+            ];
+        };
+
         // WHY only the source: the components have no .min.js twins in the repository any more
         const testComponent = async function (test) {
-            return await runInFrame(test, test.file);
+            const result = await runInFrame(test, test.file);
+            result.steps = (await checkHeader(test.file)).concat(result.steps);
+            return result;
         };
 
         const showRow = function (test, result) {
