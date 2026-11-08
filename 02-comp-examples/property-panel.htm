@@ -207,13 +207,13 @@
             // PROPERTY PANEL:
             panel = PropertyPanel({
                 data: PANEL_DATA,
-                onChange: function (change, self) {
+                onChange: function (self, change) {
                     addLog(change);
                 },
             });
 
             // A second listener from outside: applies the changed value to the text object.
-            panel.listen(function (change, self) {
+            panel.listen(function (self, change) {
                 if (change.kind === "value") applyValue(change.key, change.value);
                 if (change.kind === "action") runAction(change);
             });

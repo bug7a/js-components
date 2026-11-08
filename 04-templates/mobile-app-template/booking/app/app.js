@@ -659,7 +659,7 @@ App.start = function () {
             style: { color: App.colors.sale, textColor: App.colors.white },
             numberStyle: { fontSize: 11, bold: 1, round: 10, padding: [5, 1], top: -2, right: -4 },
         },
-        onItemClick: function (item, index) {
+        onItemClick: function (self, item, index) {
             // WHY App.open: a tap on the tab that is seen keeps its scroll and its typed text.
             App.open(AppSettings.tabs[index].pageId);
         },

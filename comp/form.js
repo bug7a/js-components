@@ -36,7 +36,7 @@ const FormDefaults = {
     // send button (one value, so they have the same corners)
     hintRound: 4,
     onChange: function(self, input) {}, // the user changed an input of the form
-    onSendClick: function(json) {},
+    onSendClick: function(self, json) {},
 };
 
 const Form = function(params = {}) {
@@ -472,7 +472,7 @@ const Form = function(params = {}) {
                         if (box.btnSend.clickable != 1) return;
                         if (event.detail > 1) return; // (the second click of a double click)
                         const formJSON = createJSON();
-                        box.onSendClick(formJSON);
+                        box.onSendClick(box, formJSON);
                     });
                     that.on("keydown", function(self, event) {
                         // WHY: a held Enter repeats the click of a <button>

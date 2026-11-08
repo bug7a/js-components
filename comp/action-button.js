@@ -25,7 +25,7 @@ const fab = ActionButton({
         { key: "gallery", labelText: "Add from Gallery" },
         "Add from URL", // a text: its key is the text
     ],
-    onAction: function (key, self) { println("Action: " + key); },
+    onAction: function (self, key) { println("Action: " + key); },
 });
 fab.setItems([...]);
 fab.openMenu(); fab.closeMenu(); fab.toggleMenu();
@@ -62,7 +62,7 @@ const ActionButtonDefaults = {
     menuWidth: 280,
     menuGap: 20, // Between the menu and the button
     animated: 0, // 1: small hover / press / open motions (context/basic-js-animated-rules.md). (box.setAnimated(0/1))
-    onAction: function (key, self) { }, // An action was chosen (no items: key is "", one item: its key)
+    onAction: function (self, key) { }, // An action was chosen (no items: key is "", one item: its key)
     onMenuToggle: function (self) { }, // The menu opened / closed: self.menuOpened
     styleName: "classic", // "classic", "ozden" or a name added to ActionButton.styles
     style: { // Classic style package (default)
@@ -184,7 +184,7 @@ const ActionButton = function (params = {}) {
         // WHY: the menu fades for a moment after it closes; a double click ran onAction twice
         if (!box.menuOpened) return;
         box.closeMenu();
-        box.onAction(key, box);
+        box.onAction(box, key);
     };
 
     // WHY: A user who asked the system for less motion gets the still menu and button.
@@ -344,7 +344,7 @@ const ActionButton = function (params = {}) {
             return;
         }
         const onlyItem = box.items[0];
-        box.onAction((onlyItem) ? onlyItem.key : "", box);
+        box.onAction(box, (onlyItem) ? onlyItem.key : "");
     };
 
     box.setItems = function (items) {

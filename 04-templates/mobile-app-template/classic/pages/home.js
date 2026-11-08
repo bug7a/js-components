@@ -165,8 +165,8 @@ App.addPage({
                         width: 150,
                         height: 50,
                         value: state.count,
-                        min: 1,
-                        max: 15,
+                        minValue: 1,
+                        maxValue: 15,
                         ariaLabel: "Count of " + card.title,
                         style: {
                             box: { color: Black(0.08), border: 0, round: 25, padding: 4 },

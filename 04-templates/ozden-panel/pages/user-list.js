@@ -328,7 +328,7 @@ const UserListPage = function(params = {}) {
                 itemLineCount: 13,
                 sortByTitleIndex: 0,
                 sortDirection: "A-Z",
-                onSelect: function(itemData) {
+                onSelect: function(self, itemData) {
                     openDetails(itemData.id);
                 },
                 // WHY: SmartTable writes the raw value. Status and 2FA colors are written here.

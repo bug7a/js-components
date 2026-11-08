@@ -376,7 +376,7 @@ const OrdersPage = function(params = {}) {
                 itemLineCount: 13,
                 sortByTitleIndex: 1,
                 sortDirection: "Z-A", // Newest first
-                onSelect: function(itemData) {
+                onSelect: function(self, itemData) {
                     openDetails(itemData.id);
                 },
                 // WHY: SmartTable writes the raw value (totals sort as numbers). Money and status colors are written here.

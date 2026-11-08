@@ -65,7 +65,7 @@
             const mainMenu = LeftMenu({
                 topBarHeight: TOP_BAR_HEIGHT,
                 items: menuItems,
-                onItemClick: function (item) {
+                onItemClick: function (self, item) {
                     lblPageTitle.text = item.text; // (the page of the item)
                 }
             });

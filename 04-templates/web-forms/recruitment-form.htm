@@ -104,7 +104,7 @@
                 errorText: "<b>{{name}}</b> is not valid",
                 minimalButton: 0,
                 doubleInputAlwaysHorizontal: 0,
-                onSendClick: function(json) {
+                onSendClick: function(self, json) {
                     sendApplication(json);
                 },
                 onChange: function(self, input) {
@@ -365,7 +365,7 @@
                     maxSize: 5 * 1024 * 1024,
                     zoneHeight: 140,
                     titleText: "Drag and drop your CV here",
-                    descText: "or click to select a file",
+                    descriptionText: "or click to select a file",
                     onChange: function() {
                         cvErrorLabel.text = "";
                         field.update();

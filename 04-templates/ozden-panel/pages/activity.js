@@ -541,7 +541,7 @@ const ActivityPage = function(params = {}) {
                     itemLineCount: 13,
                     sortByTitleIndex: 0,
                     sortDirection: "Z-A", // Newest first
-                    onSelect: function(itemData) {
+                    onSelect: function(self, itemData) {
                         openDetails(itemData.id);
                     },
                     // Colored action texts

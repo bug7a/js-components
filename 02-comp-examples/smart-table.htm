@@ -120,7 +120,7 @@
                 sortByTitleIndex: 0,
                 sortDirection: "A-Z",
                 style: { width: "100%", height: "auto" },
-                onSelect: function (customer) { showCustomer(info, customer); },
+                onSelect: function (self, customer) { showCustomer(info, customer); },
             });
             const info = Label({
                 plainText: "Click a row, then ↑ ↓, Page Up / Page Down, Home / End.",

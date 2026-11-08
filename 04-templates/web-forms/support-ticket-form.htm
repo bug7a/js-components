@@ -151,7 +151,7 @@
                 errorText: "<b>{{name}}</b> is not valid",
                 minimalButton: 0,
                 doubleInputAlwaysHorizontal: 0,
-                onSendClick: function(json) {
+                onSendClick: function(self, json) {
                     sendTicket(json);
                 },
                 onChange: function(self, input) {
@@ -410,7 +410,7 @@
                     zoneHeight: 110,
                     showIcon: 0,
                     titleText: "Drag and drop files here",
-                    descText: "or click to select",
+                    descriptionText: "or click to select",
                     onChange: function() {
                         errorLabel.text = "";
                         field.update();

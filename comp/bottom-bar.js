@@ -31,7 +31,7 @@ USAGE:
 const bar = BottomBar({
     top: page.height - 100,
     items: [{ icon: "home.png", text: "Home" }, { icon: "search.png", text: "Search" }],
-    onItemClick: function (item, index) { println(item.data.text); },
+    onItemClick: function (self, item, index) { println(item.data.text); },
 });
 bar.setBadge(1, 5);
 bar.selectByIndex(0);
@@ -69,7 +69,7 @@ const BottomBarDefaults = {
     width: "100%",
     height: 100,
     items: [], // JSON list for buttons: [{ icon: "file.png", text: "Home", color: "#5ABB9F" }] (color: optional)
-    onItemClick: function (item, index) { },
+    onItemClick: function (self, item, index) { },
     hoverEffect: true, // For desktop usage
     labelMode: "inline", // "inline": the name next to the selected icon, "float": over it for a moment, "none": no names
     floatLabelTime: 600, // ms: from the moment the name shows over the selected item to its fade out ("float")
@@ -320,7 +320,7 @@ const BottomBar = function (params = {}) {
     const selectByUser = function (itemView, index) {
         box.selectedIndex = index;
         isFloatLabelWaiting = 1;
-        box.onItemClick(itemView, index);
+        box.onItemClick(box, itemView, index);
         box.refresh();
     };
 

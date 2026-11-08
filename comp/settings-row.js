@@ -7,9 +7,9 @@ SettingsRow - v26.11
 A ROW OF A SETTINGS PAGE of a mobile app.
 - The sizes are px of a 600 px design: the page is fitted with page.fit(600, 800), like the mobile template
   (04-templates/mobile-app-template/classic).
-- A white row, 100 px high, a thin line at the bottom. A title (20 px) at the left; with a small text (descText,
+- A white row, 100 px high, a thin line at the bottom. A title (20 px) at the left; with a small text (descriptionText,
   one line, "..." at its end) the title stands 14 px over the middle and the small text 14 px under it.
-- setDescText(text): the small text fades in or out and the title slides to its place (0.3 s; no motion at the
+- setDescriptionText(text): the small text fades in or out and the title slides to its place (0.3 s; no motion at the
   first view, none with prefers-reduced-motion). The old text stays while it fades out.
 - A control at the right: control: function (row) { Toggle({...}); } -> the objects made in it stand in a row at
   the right side, 20 px from the right, in the middle of the row (they need no left / top / right).
@@ -23,14 +23,14 @@ A ROW OF A SETTINGS PAGE of a mobile app.
 USAGE:
 VGroup({ width: "100%", height: "auto", align: "left top", gap: 0 });
     SettingsRow.createSection("APPEARANCE");
-    SettingsRow({ titleText: "Dark Mode", descText: "Use interface colors inverted.", control: function (row) {
+    SettingsRow({ titleText: "Dark Mode", descriptionText: "Use interface colors inverted.", control: function (row) {
         Toggle({ width: 60, height: 40, onChange: function (self) { saveDarkMode(self.value); } });
     } });
-    const videoRow = SettingsRow({ titleText: "Video Quality", descText: "Remaining disk space: 2.3GB" });
+    const videoRow = SettingsRow({ titleText: "Video Quality", descriptionText: "Remaining disk space: 2.3GB" });
     SettingsRow({ titleText: "Security", arrow: 1, onClick: function (self) { App.open("security"); } });
     SettingsRow({ titleText: "Delete All Downloads", titleColor: "orangered", arrow: 1, onClick: deleteDownloads });
 endGroup();
-videoRow.setDescText("");          // the small text fades out, the title slides to the middle
+videoRow.setDescriptionText("");          // the small text fades out, the title slides to the middle
 videoRow.setTitleColor("orangered");
 
 Started Date: November 2026
@@ -49,7 +49,7 @@ const SettingsRowDefaults = {
     height: 100,
     color: "white", // The background of the row
     titleText: "",
-    descText: "", // The small text under the title. "": the title stands in the middle (setDescText)
+    descriptionText: "", // The small text under the title. "": the title stands in the middle (setDescriptionText)
     titleColor: Black(0.8), // Ex: "orangered" for a row that deletes something (setTitleColor)
     control: null, // function (row): the objects made in it stand at the right (Ex: a Toggle). Its result: row.controlObject
     arrow: 0, // 1: a chevron at the right (a row that opens a page: give it onClick)
@@ -88,7 +88,7 @@ const SettingsRow = function (params = {}) {
     mergeIntoIfMissing(params, SettingsRowDefaults);
 
     // Edit params, if needed:
-    params.descText = SettingsRow.toText(params.descText);
+    params.descriptionText = SettingsRow.toText(params.descriptionText);
 
     // BOX: Component container
     const box = startObject(params);
@@ -99,7 +99,7 @@ const SettingsRow = function (params = {}) {
 
     // *** PUBLIC VARIABLES:
     box.controlObject = null; // What control() returned (Ex: the Toggle), or null
-    // NOTE: Default values are also public variables. (box.titleText, box.descText...)
+    // NOTE: Default values are also public variables. (box.titleText, box.descriptionText...)
 
     // *** PRIVATE FUNCTIONS:
 
@@ -114,8 +114,8 @@ const SettingsRow = function (params = {}) {
 
     // The small text fades in or out (its old text stays while it fades out), the title slides to its place.
     const showTexts = function () {
-        const hasDesc = (box.descText !== "");
-        if (hasDesc) box.lblDesc.plainText = box.descText;
+        const hasDesc = (box.descriptionText !== "");
+        if (hasDesc) box.lblDesc.plainText = box.descriptionText;
         box.lblDesc.opacity = hasDesc ? 1 : 0;
         box.lblDesc.aria = { hidden: hasDesc ? null : true };
         const titleShift = hasDesc ? -_s.layout.textShift : 0;
@@ -181,11 +181,11 @@ const SettingsRow = function (params = {}) {
     // USAGE: row.setTitleText("Dark Mode")
 
     // The small text fades in / out and the title slides (0.3 s)
-    box.setDescText = function (text) {
-        box.descText = SettingsRow.toText(text);
+    box.setDescriptionText = function (text) {
+        box.descriptionText = SettingsRow.toText(text);
         showTexts();
     };
-    // USAGE: get: row.descText, set: row.setDescText("Remaining disk space: 2.3GB") / row.setDescText("")
+    // USAGE: get: row.descriptionText, set: row.setDescriptionText("Remaining disk space: 2.3GB") / row.setDescriptionText("")
 
     box.setTitleColor = function (color) {
         box.titleColor = color;

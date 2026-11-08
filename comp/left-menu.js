@@ -47,8 +47,8 @@ const LeftMenuDefaults = {
     scrollBarColor: "#FFFFFF",    // The bar of the scroll of the items (a dark one on a light menu)
     openOnClick: "auto",          // "auto": Tap on a touch device, hover with a mouse. 1: Always tap, 0: Always hover.
     items: [],                    // Menu items array
-    onItemClick: function(item) {}, // Callback when item is clicked
-    onMenuToggle: function(isExpanded) {}, // Callback when menu expands/collapses
+    onItemClick: function(self, item) {}, // Callback when item is clicked
+    onMenuToggle: function(self, isExpanded) {}, // Callback when menu expands/collapses
     styleName: "dark",            // "dark", "light" or a name added to LeftMenu.styles
     style: {},                    // WHY: the look is in the flat params above; the packages are packages of params (LeftMenu.styles)
 };
@@ -154,7 +154,7 @@ const LeftMenu = function(params = {}) {
                 if (!item.dontSelect) {
                     selectItem(item.key);
                 }
-                box.onItemClick(item);
+                box.onItemClick(box, item);
             }
 
             // Touch device: the open menu must not stay over the page.
@@ -259,7 +259,7 @@ const LeftMenu = function(params = {}) {
         box.width = box.expandedWidth;
         paintShadow();
 
-        box.onMenuToggle(1);
+        box.onMenuToggle(box, 1);
     };
 
     // Collapse menu
@@ -271,7 +271,7 @@ const LeftMenu = function(params = {}) {
         box.width = WIDTH;
         paintShadow();
 
-        box.onMenuToggle(0);
+        box.onMenuToggle(box, 0);
     };
 
     // The shadow of the open menu over the page (expandedShadow)

@@ -343,7 +343,7 @@ const ContentsPage = function(params = {}) {
                 itemLineCount: 13,
                 sortByTitleIndex: 4,
                 sortDirection: "Z-A", // Last updated first
-                onSelect: function(itemData) {
+                onSelect: function(self, itemData) {
                     const content = ContentsPage.getContents().find(function(c) { return c.id == itemData.id; });
                     if (content) openEditor(content);
                 },

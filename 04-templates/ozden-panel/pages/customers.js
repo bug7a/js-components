@@ -360,7 +360,7 @@ const CustomersPage = function(params = {}) {
                 itemLineCount: 13,
                 sortByTitleIndex: 0,
                 sortDirection: "A-Z",
-                onSelect: function(itemData) {
+                onSelect: function(self, itemData) {
                     openDetails(itemData.id);
                 },
                 // WHY: SmartTable writes the raw value (money sorts as a number). Texts and colors are written here.

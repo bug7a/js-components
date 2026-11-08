@@ -84,7 +84,7 @@ const SmartTableDefaults = {
     sortByTitleIndex: 0,
     sortDirection: "A-Z", // "A-Z" or "Z-A"
     fillTestData: 0,
-    onSelect: function (itemData) { },
+    onSelect: function (self, itemData) { },
     createCustomItemCell: function (cell, titleDataIndex) { return cell },
     updateCustomItemCell: function (cell, titleDataIndex, data) { },
     titleDataList: [
@@ -626,7 +626,7 @@ const SmartTable = function (params = {}) {
                 box.selectItem(self.itemData);
                 box.elem.focus({ preventScroll: true }); // WHY preventScroll: the page must not move to the table
             }
-            box.onSelect(self.itemData);
+            box.onSelect(box, self.itemData);
         });
 
         if (box.style.height != "auto") itemLine.visible = 0; // WHY: Yüksekli yeniden hesaplanması gerekirse, ekranda kırpma yapması için gizli oluşturuluyor.
@@ -984,7 +984,7 @@ const SmartTable = function (params = {}) {
         if (event.metaKey || event.ctrlKey || event.altKey) return;
 
         if (event.key == "Enter") {
-            if (box.selectedItemData) box.onSelect(box.selectedItemData);
+            if (box.selectedItemData) box.onSelect(box, box.selectedItemData);
             return;
         }
 

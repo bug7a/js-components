@@ -474,7 +474,7 @@ HomeView.createCard = function (comp) {
             scale: L.previewScale,
             interactive: 0, // Tıklama karta gider, önizleme kaydırılmaz.
             ariaLabel: comp.name,
-            placeholderText: "",
+            emptyText: "",
             loadTimeout: CONFIG.previewTimeout,
             style: {
                 box: { color: "#FFFFFF", border: 0, round: 0 },

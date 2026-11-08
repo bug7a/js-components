@@ -59,10 +59,10 @@
 
                             Stepper({
                                 value: 1,
-                                min: 1,
-                                max: 10,
+                                minValue: 1,
+                                maxValue: 10,
                                 onChange: function (self) {
-                                    const maxNote = (self.value === self.max) ? " (max)" : "";
+                                    const maxNote = (self.value === self.maxValue) ? " (max)" : "";
                                     lblQuantity.text = "Quantity: " + self.value + maxNote;
                                 },
                             });
@@ -81,8 +81,8 @@
                             Stepper({
                                 width: 170,
                                 value: 2.5,
-                                min: 0,
-                                max: 20,
+                                minValue: 0,
+                                maxValue: 20,
                                 step: 0.5,
                                 precision: 1,
                                 unitText: " kg",
@@ -102,8 +102,8 @@
 
                             Stepper({
                                 value: 50,
-                                min: 0,
-                                max: 100,
+                                minValue: 0,
+                                maxValue: 100,
                                 step: 5,
                                 unitText: "%",
                                 editable: 0,
@@ -111,8 +111,8 @@
 
                             Stepper({
                                 value: 9,
-                                min: 0,
-                                max: 23,
+                                minValue: 0,
+                                maxValue: 23,
                                 wrap: 1,
                                 valueFormat: toHourText,
                                 onChange: function (self) { lblHour.text = "Alarm at " + toHourText(self.value); },
@@ -129,15 +129,15 @@
 
                         HGroup({ width: "100%", height: "auto", align: "left center", gap: 16, wrap: 1 });
 
-                            Stepper({ layout: "compact", width: 130, value: 3, min: 0, max: 99 });
+                            Stepper({ layout: "compact", width: 130, value: 3, minValue: 0, maxValue: 99 });
 
                             Stepper({
-                                width: 120, height: 36, value: 2, min: 0, max: 9,
+                                width: 120, height: 36, value: 2, minValue: 0, maxValue: 9,
                                 style: { button: { width: 30, iconSize: 12 }, value: { fontSize: 15 } },
                             });
 
                             Stepper({
-                                width: 200, height: 56, value: 250, min: 0, max: 5000, step: 50, unitText: " ml",
+                                width: 200, height: 56, value: 250, minValue: 0, maxValue: 5000, step: 50, unitText: " ml",
                                 style: { button: { width: 48, iconSize: 18 }, value: { fontSize: 22 } },
                             });
 
@@ -150,18 +150,18 @@
 
                         HGroup({ width: "100%", height: "auto", align: "left center", gap: 16, wrap: 1 });
 
-                            Stepper({ styleName: "modern", value: 4, min: 1, max: 12 });
+                            Stepper({ styleName: "modern", value: 4, minValue: 1, maxValue: 12 });
                             Stepper({
                                 styleName: "modern", layout: "compact", width: 140,
-                                value: 1.5, min: 0, max: 10, step: 0.25, precision: 2, unitText: " h",
+                                value: 1.5, minValue: 0, maxValue: 10, step: 0.25, precision: 2, unitText: " h",
                             });
 
                             // GROUP: Dark background
                             HGroup({ width: "auto", height: "auto", align: "left center", gap: 16, padding: 16, color: "#1C1C1B", round: 10 });
-                                Stepper({ styleName: "dark", value: 2, min: 0, max: 5 });
+                                Stepper({ styleName: "dark", value: 2, minValue: 0, maxValue: 5 });
                                 Stepper({
                                     styleName: "dark", layout: "compact", width: 130,
-                                    value: 20, min: 0, max: 100, step: 10, unitText: "%",
+                                    value: 20, minValue: 0, maxValue: 100, step: 10, unitText: "%",
                                 });
                             endGroup();
 
@@ -174,10 +174,10 @@
 
                         const stpApi = Stepper({
                             value: 5,
-                            min: 0,
-                            max: 10,
+                            minValue: 0,
+                            maxValue: 10,
                             onChange: function (self) {
-                                lblApi.text = "Value: " + self.value + " (range " + self.min + " – " + self.max + ", step " + self.step + ")";
+                                lblApi.text = "Value: " + self.value + " (range " + self.minValue + " – " + self.maxValue + ", step " + self.step + ")";
                             },
                         });
 

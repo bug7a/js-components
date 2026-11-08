@@ -101,10 +101,10 @@ const ExampleViews = {
         // GROUP: Rows in a group
         VGroup({ width: "100%", height: "auto", align: "left top" });
             SettingsRow.createSection("A GROUP OF ROWS");
-            SettingsRow({ titleText: "A switch", descText: "A small text under the title.", control: () => Toggle({ styleName: "classic", value: 1 }) });
+            SettingsRow({ titleText: "A switch", descriptionText: "A small text under the title.", control: () => Toggle({ styleName: "classic", value: 1 }) });
             const textRow = SettingsRow({
                 titleText: "A small text comes and goes",
-                control: () => Toggle({ styleName: "classic", value: 0, onChange: (self) => textRow.setDescText(self.value ? "The title went up to make room." : "") }),
+                control: () => Toggle({ styleName: "classic", value: 0, onChange: (self) => textRow.setDescriptionText(self.value ? "The title went up to make room." : "") }),
             });
             SettingsRow({ titleText: "A row that opens a page", arrow: 1, onClick: () => Notice.show({ messageText: "onClick" }) });
             SettingsRow({ titleText: "A row that deletes", titleColor: "orangered", arrow: 1, onClick: () => Notice.show({ messageText: "Nothing is deleted." }) });
@@ -167,7 +167,7 @@ const ExampleViews = {
         ActionButton({
             iconFile: AppSettings.componentPath + "action-button/add.png",
             items: ["Take a Photo", "Add from Gallery", "Add from URL"],
-            onAction: (key) => Notice.show({ messageText: key }),
+            onAction: (self, key) => Notice.show({ messageText: key }),
         });
     },
 
@@ -181,14 +181,14 @@ const ExampleViews = {
         const BUTTON_WIDTH = 250;
         ExampleViews.startCenter(box, "white", 4);
             ExampleViews.createButton("Info Message", "whitesmoke", BUTTON_WIDTH, () => Notice.show({ messageText: "Process completed" }));
-            ExampleViews.createButton("Alert Message", App.colors.yellow, BUTTON_WIDTH, () => Notice.show({ messageText: "No internet connection.", descText: "Please, try again later.", type: "warning" }));
+            ExampleViews.createButton("Alert Message", App.colors.yellow, BUTTON_WIDTH, () => Notice.show({ messageText: "No internet connection.", descriptionText: "Please, try again later.", type: "warning" }));
             ExampleViews.createButton("Error Message", "#EE7553", BUTTON_WIDTH, () => Notice.show({ messageText: "Failed to copy", type: "error" }));
         endGroup();
     },
 
     "stepper": function (box) {
         ExampleViews.startCenter(box, App.colors.whitesmoke, 0);
-            Stepper({ styleName: "ozden", value: 8, min: 5, max: 10 });
+            Stepper({ styleName: "ozden", value: 8, minValue: 5, maxValue: 10 });
         endGroup();
     },
 

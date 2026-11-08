@@ -6,7 +6,7 @@ Progress Bar - v26.09
 
 UI COMPONENT TEMPLATE
 - A horizontal progress bar with a title and a value text.
-- Determinate: value / max (smooth animation when the value changes).
+- Determinate: value / maxValue (smooth animation when the value changes).
 - Indeterminate: a moving bar, when the progress is not known. (Ex: "Connecting...")
 - Status colors: "normal", "success", "error".
 - Value text position: "top" (right of the title), "right" (right of the bar), "none".
@@ -17,7 +17,7 @@ UI COMPONENT TEMPLATE
 - STRIPES: stripes: 1 (the value) and secondStripes: 1 (the second part) draw light diagonal stripes that move
   slowly (a job is running); setStripes() / setSecondStripes(). Still with prefers-reduced-motion. (style.stripes)
 - LIMITS: limits: [80] or [{ value: 30, color: "#7BA7D9" }, { value: 80, text: "80" }]: marks at these values (in
-  the units of value / max), a text under a mark (style.limit); setLimits(). limit.shape "line": a line over the
+  the units of value / maxValue), a text under a mark (style.limit); setLimits(). limit.shape "line": a line over the
   bar, a little longer than it; "dot" ("ozden"): a dot inside the track that has the color of
   the part under it (limit.barColor on the bar, secondBarColor on the second part, color on the track; on a dark
   track darkTrack.limitColor), half and half while the end of the bar goes over it. The own color of a limit is
@@ -50,9 +50,9 @@ const ProgressBarDefaults = {
     key: "0",
     width: 320,
     height: "auto",
-    value: 0, // 0 - max
-    secondValue: 0, // A second part after the value (value + secondValue <= max). 0: none
-    max: 100,
+    value: 0, // 0 - maxValue
+    secondValue: 0, // A second part after the value (value + secondValue <= maxValue). 0: none
+    maxValue: 100,
     stripes: 0, // 1: moving stripes on the value part
     secondStripes: 0, // 1: moving stripes on the second part
     limits: [], // Lines at these values: [80] or [{ value: 80, color: "indianred" }]
@@ -65,7 +65,7 @@ const ProgressBarDefaults = {
         return Math.round(self.getPercent()) + "%";
     },
     onChange: function (self) { }, // self.value
-    onComplete: function (self) { }, // Called once when the value reaches max.
+    onComplete: function (self) { }, // Called once when the value reaches maxValue.
     styleName: "light", // "light" ("classic": its old name), "modern", "ozden", "ozdenDark", "minimal", "minimalDark" or a name added to ProgressBar.styles
     style: { // Light style package (default)
         layout: {
@@ -160,14 +160,14 @@ const ProgressBar = function (params = {}) {
     const COLOR_MOTION = "background-color 0.2s";
 
     // *** PUBLIC VARIABLES:
-    // NOTE: Default values are also public variables. (box.value, box.max, box.status)
+    // NOTE: Default values are also public variables. (box.value, box.maxValue, box.status)
 
     // *** PRIVATE FUNCTIONS:
 
     const clampValue = function (value) {
         value = Number(value);
         if (isNaN(value)) value = 0;
-        return Math.min(Math.max(value, 0), box.max);
+        return Math.min(Math.max(value, 0), box.maxValue);
     };
 
     const getBarMotion = function () {
@@ -184,15 +184,15 @@ const ProgressBar = function (params = {}) {
         box.secondBar.setMotionNow(getBarMotion());
     };
 
-    // The second part fits in what the value leaves (value + secondValue <= max)
+    // The second part fits in what the value leaves (value + secondValue <= maxValue)
     const clampSecondValue = function (value) {
         value = Number(value);
         if (isNaN(value) || value < 0) value = 0;
-        return Math.min(value, Math.max(0, box.max - box.value));
+        return Math.min(value, Math.max(0, box.maxValue - box.value));
     };
 
     const toPercent = function (value) {
-        return (box.max > 0) ? (value / box.max) * 100 : 0;
+        return (box.maxValue > 0) ? (value / box.maxValue) * 100 : 0;
     };
 
     // The inside and the edge of a part from its main color (a status changes the main color)
@@ -241,8 +241,8 @@ const ProgressBar = function (params = {}) {
     // THE ENDS: an end at an end of the track is as round as the track (its edge follows the round of the track);
     // an end in the middle of the track has bar.innerRound. The moving bar of indeterminate is round at both ends.
     const paintEnds = function () {
-        const isBarAtRightEnd = (box.indeterminate == 1) || (box.value >= box.max);
-        const isSecondAtRightEnd = (box.value + box.secondValue >= box.max);
+        const isBarAtRightEnd = (box.indeterminate == 1) || (box.value >= box.maxValue);
+        const isSecondAtRightEnd = (box.value + box.secondValue >= box.maxValue);
         setEnds(box.bar, 1, isBarAtRightEnd);
         setEnds(box.secondBar, 1, isSecondAtRightEnd);
         paintJoin();
@@ -353,7 +353,7 @@ const ProgressBar = function (params = {}) {
     };
 
     const getLimitPercent = function (limit) {
-        return toPercent(Math.min(Math.max(Number(limit.value), 0), box.max));
+        return toPercent(Math.min(Math.max(Number(limit.value), 0), box.maxValue));
     };
 
     const getLimitLeft = function (limit) {
@@ -468,14 +468,14 @@ const ProgressBar = function (params = {}) {
             box.valueLabel.text = (box.indeterminate == 1) ? "" : box.valueFormat(box);
         }
 
-        box.aria = { valuemax: String(box.max) };
+        box.aria = { valuemax: String(box.maxValue) };
 
     };
 
     // *** PUBLIC FUNCTIONS:
 
     box.getPercent = function () {
-        return (box.max > 0) ? (box.value / box.max) * 100 : 0;
+        return (box.maxValue > 0) ? (box.value / box.maxValue) * 100 : 0;
     };
     // USAGE: progressBar.getPercent() // 0 - 100
 
@@ -484,7 +484,7 @@ const ProgressBar = function (params = {}) {
         value = clampValue(value);
         if (box.value == value && box.indeterminate != 1) return;
 
-        const _wasComplete = (box.value >= box.max);
+        const _wasComplete = (box.value >= box.maxValue);
         box.value = value;
 
         if (box.indeterminate == 1) {
@@ -496,7 +496,7 @@ const ProgressBar = function (params = {}) {
 
         if (!silent) {
             box.onChange(box);
-            if (!_wasComplete && box.value >= box.max) box.onComplete(box);
+            if (!_wasComplete && box.value >= box.maxValue) box.onComplete(box);
         }
 
     };
@@ -545,14 +545,14 @@ const ProgressBar = function (params = {}) {
     };
     // USAGE: progressBar.addValue(10)
 
-    box.setMax = function (max) {
-        max = Number(max);
-        box.max = (isNaN(max) || max < 0) ? 0 : max;
+    box.setMaxValue = function (value) {
+        value = Number(value);
+        box.maxValue = (isNaN(value) || value < 0) ? 0 : value;
         box.value = clampValue(box.value);
         updateView();
-        drawLimits(); // (the places of the limits are relative to max)
+        drawLimits(); // (the places of the limits are relative to maxValue)
     };
-    // USAGE: get: progressBar.max, set: progressBar.setMax(20) // Ex: 20 files
+    // USAGE: get: progressBar.maxValue, set: progressBar.setMaxValue(20) // Ex: 20 files
 
     box.setIndeterminate = function (indeterminate) {
         box.indeterminate = basic.isOn(indeterminate) ? 1 : 0;
@@ -725,7 +725,7 @@ const ProgressBar = function (params = {}) {
 
     // *** OBJECT INIT CODE:
 
-    box.max = (Number(box.max) >= 0) ? Number(box.max) : 100;
+    box.maxValue = (Number(box.maxValue) >= 0) ? Number(box.maxValue) : 100;
     box.value = clampValue(box.value);
     box.indeterminate = basic.isOn(box.indeterminate) ? 1 : 0;
     box.status = (box.status === "success" || box.status === "error") ? box.status : "normal";

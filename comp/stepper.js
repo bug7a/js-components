@@ -6,7 +6,7 @@ Stepper - v26.09
 
 UI COMPONENT TEMPLATE
 - A number stepper: [ − ] value [ + ].
-- min, max, step and precision (decimals). Ex: 0.5 kg steps, 0.25 hours.
+- minValue, maxValue, step and precision (decimals). Ex: 0.5 kg steps, 0.25 hours.
 - Unit text after the value ("kg", "%", "pcs") and a valueFormat() for your own text ("1,250").
 - Editable: click the value and type a number. Enter or blur applies it, Escape cancels. (editable: 1)
 - Press and hold a button: the value keeps changing, faster after a while.
@@ -23,15 +23,15 @@ UI COMPONENT TEMPLATE
    It is a package of params (basic.js v26.10.27): it also gives the size, 150 x 50.
 
 USAGE:
-const qty = Stepper({ value: 1, min: 1, max: 10, onChange: (self) => println(self.value) });
+const qty = Stepper({ value: 1, minValue: 1, maxValue: 10, onChange: (self) => println(self.value) });
 qty.setValue(5);                // onChange is called
 qty.setValue(5, 1);             // silent
-Stepper({ value: 2.5, min: 0, max: 20, step: 0.5, precision: 1, unitText: " kg" });
-Stepper({ value: 50, min: 0, max: 100, step: 5, unitText: "%", editable: 0 });
-Stepper({ value: 9, min: 0, max: 23, wrap: 1, valueFormat: (value) => String(value).padStart(2, "0") + ":00" });
+Stepper({ value: 2.5, minValue: 0, maxValue: 20, step: 0.5, precision: 1, unitText: " kg" });
+Stepper({ value: 50, minValue: 0, maxValue: 100, step: 5, unitText: "%", editable: 0 });
+Stepper({ value: 9, minValue: 0, maxValue: 23, wrap: 1, valueFormat: (value) => String(value).padStart(2, "0") + ":00" });
 Stepper({ layout: "compact", width: 140 });
 Stepper({ style: { button: { border: 1, borderColor: Black(0.3) } } }); // A line around the buttons
-Stepper({ styleName: "ozden", value: 1, min: 1, max: 10 });
+Stepper({ styleName: "ozden", value: 1, minValue: 1, maxValue: 10 });
 
 Started Date: September 2026
 Developer: Bugra Ozden
@@ -48,8 +48,8 @@ const StepperDefaults = {
     width: 150,
     height: 44,
     value: 1,
-    min: 0,
-    max: 10,
+    minValue: 0,
+    maxValue: 10,
     step: 1,
     precision: 0, // Decimals shown and used for rounding. (step: 0.5 -> precision: 1)
     unitText: "", // After the value. Ex: " kg" (with the space)
@@ -143,7 +143,7 @@ const Stepper = function (params = {}) {
     const BUTTON_COLOR_MOTION = "background-color 0.15s"; // The hover / press color of the buttons
 
     // *** PUBLIC VARIABLES:
-    // NOTE: Default values are also public variables. (box.value, box.min, box.max, box.step)
+    // NOTE: Default values are also public variables. (box.value, box.minValue, box.maxValue, box.step)
 
     // *** PRIVATE FUNCTIONS:
 
@@ -155,23 +155,23 @@ const Stepper = function (params = {}) {
     // Keeps the value in [min, max] (or wraps it).
     const clampValue = function (value) {
         value = Number(value);
-        if (isNaN(value)) value = box.min;
+        if (isNaN(value)) value = box.minValue;
         if (box.wrap == 1) {
-            const range = box.max - box.min + box.step;
+            const range = box.maxValue - box.minValue + box.step;
             if (range > 0) {
-                if (value > box.max) value = box.min + ((value - box.max - box.step) % range);
-                if (value < box.min) value = box.max - ((box.min - value - box.step) % range);
+                if (value > box.maxValue) value = box.minValue + ((value - box.maxValue - box.step) % range);
+                if (value < box.minValue) value = box.maxValue - ((box.minValue - value - box.step) % range);
             }
         }
-        return roundValue(Math.min(Math.max(value, box.min), box.max));
+        return roundValue(Math.min(Math.max(value, box.minValue), box.maxValue));
     };
 
     const canDecrease = function () {
-        return box.enabled == 1 && (box.wrap == 1 || box.value > box.min);
+        return box.enabled == 1 && (box.wrap == 1 || box.value > box.minValue);
     };
 
     const canIncrease = function () {
-        return box.enabled == 1 && (box.wrap == 1 || box.value < box.max);
+        return box.enabled == 1 && (box.wrap == 1 || box.value < box.maxValue);
     };
 
     const paintButton = function (button, isEnabled) {
@@ -188,8 +188,8 @@ const Stepper = function (params = {}) {
         paintButton(box.btnPlus, canIncrease());
         box.aria = {
             valuenow: String(box.value),
-            valuemin: String(box.min),
-            valuemax: String(box.max),
+            valuemin: String(box.minValue),
+            valuemax: String(box.maxValue),
             valuetext: valueText,
         };
     };
@@ -318,11 +318,11 @@ const Stepper = function (params = {}) {
                 break;
             case "Home":
                 event.preventDefault();
-                box.setValue(box.min);
+                box.setValue(box.minValue);
                 break;
             case "End":
                 event.preventDefault();
-                box.setValue(box.max);
+                box.setValue(box.maxValue);
                 break;
             case "Enter":
             case " ":
@@ -350,8 +350,8 @@ const Stepper = function (params = {}) {
         updateView();
         if (changed && !silent) {
             box.onChange(box);
-            if (box.value === box.min) box.onMinReached(box);
-            if (box.value === box.max) box.onMaxReached(box);
+            if (box.value === box.minValue) box.onMinReached(box);
+            if (box.value === box.maxValue) box.onMaxReached(box);
         }
         return box.value;
     };
@@ -370,21 +370,21 @@ const Stepper = function (params = {}) {
         return stepValue(-steps);
     };
 
-    box.setMin = function (min) {
-        box.min = Number(min) || 0;
-        if (box.max < box.min) box.max = box.min;
+    box.setMinValue = function (value) {
+        box.minValue = Number(value) || 0;
+        if (box.maxValue < box.minValue) box.maxValue = box.minValue;
         box.setValue(box.value, 1);
     };
 
-    box.setMax = function (max) {
-        box.max = Number(max) || 0;
-        if (box.min > box.max) box.min = box.max;
+    box.setMaxValue = function (value) {
+        box.maxValue = Number(value) || 0;
+        if (box.minValue > box.maxValue) box.minValue = box.maxValue;
         box.setValue(box.value, 1);
     };
 
-    box.setRange = function (min, max) {
-        box.min = Number(min) || 0;
-        box.max = Math.max(box.min, Number(max) || 0);
+    box.setRange = function (minValue, maxValue) {
+        box.minValue = Number(minValue) || 0;
+        box.maxValue = Math.max(box.minValue, Number(maxValue) || 0);
         box.setValue(box.value, 1);
     };
     // USAGE: stepper.setRange(0, 100)
@@ -609,10 +609,10 @@ const Stepper = function (params = {}) {
     });
     // WHY: A click on the buttons must not open the edit. It is handled in bindButton with stopPropagation.
 
-    box.min = Number(box.min) || 0;
-    box.max = Number(box.max);
-    if (isNaN(box.max)) box.max = box.min;
-    if (box.max < box.min) box.max = box.min;
+    box.minValue = Number(box.minValue) || 0;
+    box.maxValue = Number(box.maxValue);
+    if (isNaN(box.maxValue)) box.maxValue = box.minValue;
+    if (box.maxValue < box.minValue) box.maxValue = box.minValue;
     box.step = Math.abs(Number(box.step)) || 1;
     box.precision = Math.max(0, Number(box.precision) || 0);
     box.value = clampValue(startValue);

@@ -136,7 +136,7 @@
                 errorText: "<b>{{name}}</b> is not valid",
                 minimalButton: 0,
                 doubleInputAlwaysHorizontal: 0,
-                onSendClick: function(json) {
+                onSendClick: function(self, json) {
                     sendBooking(json);
                 },
                 onChange: function(self, input) {

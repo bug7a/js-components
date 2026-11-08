@@ -54,7 +54,7 @@ const WebViewDefaults = {
     autoHeight: 0, // 1: The box height follows the page height. (Same origin pages only)
     toolbar: 0, // 1: A bar with the URL, reload and "open in a new tab" buttons (Only at create time)
     showLoading: 1, // 1: Spinner until the page is loaded
-    placeholderText: "No page", // Shown when nothing is loaded
+    emptyText: "No page", // Shown when nothing is loaded
     loadTimeout: 0, // Seconds. 0: No timeout. Ex: 15 -> onTimeout is called when the page is not loaded in 15 seconds.
     onLoad: function (self) { },
     onError: function (self) { }, // Same origin URL of load() that could not be loaded (the browser shows its error page)
@@ -489,7 +489,7 @@ const WebView = function (params = {}) {
         // GROUP: Placeholder
         box.placeholderBox = VGroup({ width: "100%", height: "100%", align: "center center", color: _s.placeholder.color, position: "absolute" });
         box.placeholderBox.css = { left: "0px", top: "0px" };
-            box.lblPlaceholder = Label({ text: WebView.escapeHtml(box.placeholderText), fontSize: _s.placeholder.fontSize, textColor: _s.placeholder.textColor });
+            box.lblPlaceholder = Label({ text: WebView.escapeHtml(box.emptyText), fontSize: _s.placeholder.fontSize, textColor: _s.placeholder.textColor });
         endGroup();
 
         // GROUP: Loading (spinner)

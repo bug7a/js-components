@@ -8602,7 +8602,7 @@ BasicDesigner.build = function () {
         width: cfg.rightWidth,
         style: BasicDesigner.panelStyle(),
         data: { headerTitle: "Properties", empty: BasicDesigner.NO_SELECTION },
-        onChange: function (change) { BasicDesigner.onPropertyChange(change); },
+        onChange: function (self, change) { BasicDesigner.onPropertyChange(change); },
         palettes: function () { return BasicDesigner.colorPalettes(); },
         recentColorsKey: "basic-designer-recent-colors",
         pickColor: BasicDesigner.pickColor,

@@ -118,7 +118,7 @@
                 errorText: "<b>{{name}}</b> is not valid",
                 minimalButton: 0,
                 doubleInputAlwaysHorizontal: 0,
-                onSendClick: function(json) {
+                onSendClick: function(self, json) {
                     sendFeedback(json);
                 },
             });
@@ -323,7 +323,7 @@
                     zoneHeight: 120,
                     showIcon: 1,
                     titleText: "Drag and drop screenshots here",
-                    descText: "or click to select images",
+                    descriptionText: "or click to select images",
                     onChange: function() {
                         errorLabel.text = "";
                         field.update();

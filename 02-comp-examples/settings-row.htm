@@ -34,9 +34,9 @@
     const COLORS = ["#689BD2", "#5ABB9F", "indianred", "#FFD541"];
     const THEMES = ["StarWars", "Supernova", "Metro", "Flatty"];
     const VIDEO_QUALITIES = [
-        { name: "Low", descText: "Current quality: 25%" },
-        { name: "Standard", descText: "" },
-        { name: "High", descText: "Remaining disk space: 2.3GB" },
+        { name: "Low", descriptionText: "Current quality: 25%" },
+        { name: "Standard", descriptionText: "" },
+        { name: "High", descriptionText: "Remaining disk space: 2.3GB" },
     ];
     const RESULT_TIME = 1600; // ms: the last click shows this long
 
@@ -82,8 +82,8 @@
             width: 180,
             height: 50,
             value: 18,
-            min: 18,
-            max: 24,
+            minValue: 18,
+            maxValue: 24,
             unitText: "px",
             ariaLabel: "Font size",
             style: {
@@ -143,7 +143,7 @@
                 qualityIndex = (qualityIndex + 1) % VIDEO_QUALITIES.length;
                 const quality = VIDEO_QUALITIES[qualityIndex];
                 self.setText(quality.name);
-                row.setDescText(quality.descText); // The small text fades, the title slides
+                row.setDescriptionText(quality.descriptionText); // The small text fades, the title slides
             },
         });
     };
@@ -170,32 +170,32 @@
                 SettingsRow.createSection("APPEARANCE");
                 SettingsRow({
                     titleText: "Dark Mode",
-                    descText: "Use interface colors inverted.",
+                    descriptionText: "Use interface colors inverted.",
                     control: function () { return createToggle(1); },
                 });
                 SettingsRow({ titleText: "Theme", control: createThemeText, arrow: 1, onClick: showNextTheme });
                 SettingsRow({
                     titleText: "Menu Style",
-                    descText: "Choose how your navigation menu appears.",
+                    descriptionText: "Choose how your navigation menu appears.",
                     arrow: 1,
                     onClick: showClick,
                 });
                 SettingsRow({
                     titleText: "Primary Color",
-                    descText: "Choose a color for the colored interface buttons.",
+                    descriptionText: "Choose a color for the colored interface buttons.",
                     control: createColorSquare,
                 });
 
                 SettingsRow.createSection("SYSTEM");
                 SettingsRow({
                     titleText: "Only When Charging",
-                    descText: "The app only updates when plugged in.",
+                    descriptionText: "The app only updates when plugged in.",
                     control: function () { return createToggle(1); },
                 });
                 SettingsRow({ titleText: "Font Size", control: createFontSizeStepper });
                 SettingsRow({
                     titleText: "Video Quality",
-                    descText: VIDEO_QUALITIES[2].descText,
+                    descriptionText: VIDEO_QUALITIES[2].descriptionText,
                     control: createQualityButton,
                 });
 
@@ -203,7 +203,7 @@
                 SettingsRow({ titleText: "Download Over Wi-Fi Only", control: function () { return createToggle(1, RED); } });
                 SettingsRow({
                     titleText: "Delete All Downloads",
-                    descText: "Nothing will be deleted. It is a demo.",
+                    descriptionText: "Nothing will be deleted. It is a demo.",
                     titleColor: "orangered",
                     arrow: 1,
                     onClick: showClick,

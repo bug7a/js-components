@@ -320,7 +320,7 @@ const UsersPage = function(params = {}) {
 
             },
         });
-        smartTable1.onSelect = function (itemData) {
+        smartTable1.onSelect = function (self, itemData) {
             box.editUser(itemData);
         };
 

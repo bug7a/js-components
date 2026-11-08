@@ -31,7 +31,7 @@ UI COMPONENT TEMPLATE
 USAGE:
 const card = CompName({
     labelText: "Orders",
-    descText: "12 new orders today",
+    descriptionText: "12 new orders today",
     badgeText: "3",
     items: ["Today", "Paid"],
     onClick: function (self) { self.setSelected(!self.selected); },
@@ -78,7 +78,7 @@ const CompNameDefaults = {
     width: 240, // Standard box features are added automatically.
     height: "auto", // Grows with box.layout.
     labelText: "Label",
-    descText: "Description", // "": no description
+    descriptionText: "Description", // "": no description
     badgeText: "", // "": no badge
     iconFile: "", // WHY: Not in the style, because it is a frequently used param. "": no icon
     items: [], // ["A", "B"]: small tags under the texts. Changed later with setItems().
@@ -193,8 +193,8 @@ const CompName = function (params = {}) {
     // CONTENT: the texts, the icon, the badge
     const applyContent = function () {
         box.label.plainText = box.labelText;
-        box.lblDesc.plainText = box.descText;
-        box.lblDesc.visible = (box.descText) ? 1 : 0;
+        box.lblDesc.plainText = box.descriptionText;
+        box.lblDesc.visible = (box.descriptionText) ? 1 : 0;
         const hasBadge = (box.badgeText !== "" && box.badgeText !== null && box.badgeText !== undefined);
         box.lblBadge.plainText = (hasBadge) ? String(box.badgeText) : "";
         box.lblBadge.visible = (hasBadge) ? 1 : 0;
@@ -236,9 +236,9 @@ const CompName = function (params = {}) {
     // *** PUBLIC FUNCTIONS:
     // A param that can change after create gets a setter. It saves the value, then calls the drawing it needs.
 
-    box.setText = function (labelText, descText = box.descText) {
+    box.setText = function (labelText, descriptionText = box.descriptionText) {
         box.labelText = labelText;
-        box.descText = descText;
+        box.descriptionText = descriptionText;
         applyContent();
     };
     // USAGE: get: card.labelText, set: card.setText("Orders", "12 new")

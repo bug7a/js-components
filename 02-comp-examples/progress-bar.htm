@@ -87,16 +87,16 @@
 
                     endCard();
 
-                    // SAMPLE 2: Custom max, value text on the right, status
-                    startCard("2. Upload (max, valueFormat, status)");
+                    // SAMPLE 2: Custom maxValue, value text on the right, status
+                    startCard("2. Upload (maxValue, valueFormat, status)");
 
                         prgUpload = ProgressBar({
                             width: "100%",
                             titleText: "Uploading photos",
-                            max: 12,
+                            maxValue: 12,
                             valuePosition: "right",
                             valueFormat: function (self) {
-                                return self.value + " / " + self.max;
+                                return self.value + " / " + self.maxValue;
                             },
                             onComplete: function (self) {
                                 stopUpload();
@@ -167,10 +167,10 @@
                             styleName: "modern",
                             width: "100%",
                             titleText: "Storage",
-                            max: 50,
+                            maxValue: 50,
                             value: 32,
                             valueFormat: function (self) {
-                                return self.value + " GB of " + self.max + " GB";
+                                return self.value + " GB of " + self.maxValue + " GB";
                             },
                         });
 
@@ -257,7 +257,7 @@
 
         const startUpload = function () {
             if (uploadTimer) return;
-            if (prgUpload.value >= prgUpload.max || prgUpload.status !== "normal") {
+            if (prgUpload.value >= prgUpload.maxValue || prgUpload.status !== "normal") {
                 prgUpload.reset();
                 prgUpload.setTitleText("Uploading photos");
             }

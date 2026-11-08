@@ -61,9 +61,9 @@
 
                         HGroup({ width: "100%", height: "auto", align: "left center", gap: 16, wrap: 1 });
 
-                            Stepper({ styleName: "ozden", value: 1, min: 1, max: 10, onChange: showOzdenValue });
-                            Stepper({ styleName: "ozden", value: 5, min: 1, max: 10, onChange: showOzdenValue });
-                            Stepper({ styleName: "ozden", value: 10, min: 1, max: 10, onChange: showOzdenValue });
+                            Stepper({ styleName: "ozden", value: 1, minValue: 1, maxValue: 10, onChange: showOzdenValue });
+                            Stepper({ styleName: "ozden", value: 5, minValue: 1, maxValue: 10, onChange: showOzdenValue });
+                            Stepper({ styleName: "ozden", value: 10, minValue: 1, maxValue: 10, onChange: showOzdenValue });
 
                         endGroup();
 
@@ -79,8 +79,8 @@
 
                         HGroup({ width: "100%", height: "auto", align: "left center", gap: 16, wrap: 1 });
 
-                            Stepper({ styleName: "ozden", width: 180, value: 18, min: 18, max: 24, unitText: "px" });
-                            Stepper({ styleName: "ozden", value: 3, min: 1, max: 15, style: { box: { color: Black(0.08) } } });
+                            Stepper({ styleName: "ozden", width: 180, value: 18, minValue: 18, maxValue: 24, unitText: "px" });
+                            Stepper({ styleName: "ozden", value: 3, minValue: 1, maxValue: 15, style: { box: { color: Black(0.08) } } });
 
                         endGroup();
 
@@ -94,12 +94,12 @@
 
                         HGroup({ width: "100%", height: "auto", align: "left center", gap: 16, wrap: 1 });
 
-                            Stepper({ value: 2, min: 0, max: 9, style: { button: { border: 1, borderColor: Black(0.25) } } });
+                            Stepper({ value: 2, minValue: 0, maxValue: 9, style: { button: { border: 1, borderColor: Black(0.25) } } });
                             Stepper({
                                 styleName: "modern",
                                 value: 4,
-                                min: 1,
-                                max: 12,
+                                minValue: 1,
+                                maxValue: 12,
                                 style: { button: { border: 1, borderColor: "cadetblue" } },
                             });
 
@@ -108,8 +108,8 @@
                                 Stepper({
                                     styleName: "dark",
                                     value: 2,
-                                    min: 0,
-                                    max: 5,
+                                    minValue: 0,
+                                    maxValue: 5,
                                     style: { button: { border: 1, borderColor: White(0.25) } },
                                 });
                             endGroup();
@@ -122,8 +122,8 @@
                     startCard("4. classic (the default), to compare", "No line around the buttons, no fade.");
 
                         HGroup({ width: "100%", height: "auto", align: "left center", gap: 16, wrap: 1 });
-                            Stepper({ value: 1, min: 1, max: 10 });
-                            Stepper({ value: 10, min: 1, max: 10 });
+                            Stepper({ value: 1, minValue: 1, maxValue: 10 });
+                            Stepper({ value: 10, minValue: 1, maxValue: 10 });
                         endGroup();
 
                     endCard();
@@ -138,8 +138,8 @@
 
         const showOzdenValue = function (self) {
             let limitText = "";
-            if (self.value === self.min) limitText = " (min)";
-            if (self.value === self.max) limitText = " (max)";
+            if (self.value === self.minValue) limitText = " (min)";
+            if (self.value === self.maxValue) limitText = " (max)";
             lblOzden.text = "Value: " + self.value + limitText;
         };
 

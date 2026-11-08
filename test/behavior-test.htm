@@ -293,7 +293,7 @@
 
         test("ActionButton: a double click on an action calls onAction once", async function () {
             const calls = [];
-            const button = ActionButton({ items: ["New file", "New folder"], onAction: function (k) { calls.push(k); } });
+            const button = ActionButton({ items: ["New file", "New folder"], onAction: function (self, k) { calls.push(k); } });
             button.openMenu();
             await wait(30);
             button.itemButtons[0].elem.click();
@@ -498,7 +498,7 @@
             const changes = [];
             const panel = PropertyPanel({
                 data: { sections: [{ key: "s", title: "S", items: [{ key: "x", type: "number", prefix: "X", value: 12.4 }] }] },
-                onChange: function (change) { changes.push(change); },
+                onChange: function (self, change) { changes.push(change); },
             });
             await wait(30);
             const field = Array.from(panel.elem.querySelectorAll("input")).find(function (el) { return el.value === "12"; });
@@ -535,7 +535,7 @@
             const changes = [];
             const panel = PropertyPanel({
                 data: { sections: [{ key: "s", title: "S", items: [{ key: "left", type: "number", prefix: "Left", prefixWidth: 56, prefixClick: "__side:right", value: 10 }] }] },
-                onChange: function (change) { changes.push(change); },
+                onChange: function (self, change) { changes.push(change); },
             });
             panel.open();
             await wait(30);
@@ -563,7 +563,7 @@
                     { key: "pad", type: "number", prefix: "P", value: 10, button: { icon: "sliders", hint: "Its four sides" } },
                     { key: "shadow", type: "text", value: "", span: "full", button: { icon: "sliders", hint: "Shadow" } },
                 ] }] },
-                onChange: function (change) { changes.push(change); },
+                onChange: function (self, change) { changes.push(change); },
             });
             panel.open();
             await wait(30);
@@ -596,7 +596,7 @@
             const panel = PropertyPanel({
                 data: { sections: [{ key: "s", title: "S", items: [{ key: "fill", type: "color", label: "Fill", value: "#222222" }] }] },
                 palettes: [{ key: "mine", name: "Mine", canAdd: 1, colors: colors }, { key: "other", name: "Other", canAdd: 1, colors: [] }],
-                onChange: function (change) { changes.push(change); },
+                onChange: function (self, change) { changes.push(change); },
             });
             panel.open();
             await wait(30);
@@ -1362,7 +1362,7 @@
         test("LeftMenu: a tap opens it first; direct selects at once", async function () {
             const clicked = [];
             const items = [{ key: "a", type: "button", text: "A", icon: "" }];
-            const tapMenu = LeftMenu({ items: items, openOnClick: 1, itemHeight: 70, onItemClick: (item) => clicked.push(item.key) });
+            const tapMenu = LeftMenu({ items: items, openOnClick: 1, itemHeight: 70, onItemClick: (self, item) => clicked.push(item.key) });
             const row = tapMenu.elem.querySelector("[style*='height: 70px']");
             check("LeftMenu: itemHeight is the height of a row", !!row);
             row.click();
@@ -1372,7 +1372,7 @@
             tapMenu.remove();
 
             clicked.length = 0;
-            const directMenu = LeftMenu({ items: items, openOnClick: "direct", itemHeight: 71, onItemClick: (item) => clicked.push(item.key) });
+            const directMenu = LeftMenu({ items: items, openOnClick: "direct", itemHeight: 71, onItemClick: (self, item) => clicked.push(item.key) });
             directMenu.elem.querySelector("[style*='height: 71px']").click();
             check("LeftMenu: direct selects at once and stays closed", clicked.length === 1 && directMenu.state === "collapsed", clicked.length);
             directMenu.remove();
@@ -1475,7 +1475,7 @@
         test("SmartTable: a click on a row with no record does nothing: no onSelect(null), the selection stays", async function () {
             const selected = [];
             const record = { id: 1, name: "Ada", email: "", active: 1 };
-            const table = SmartTable({ left: 0, top: 0, itemLineCount: 3, itemDataList: [record], onSelect: function (itemData) { selected.push(itemData); }, style: { width: 500, height: "auto" } });
+            const table = SmartTable({ left: 0, top: 0, itemLineCount: 3, itemDataList: [record], onSelect: function (self, itemData) { selected.push(itemData); }, style: { width: 500, height: "auto" } });
             table.zIndex = 100000; // (over the results of the page, for elementFromPoint)
             await wait(150);
             table.itemLineList[0].itemCell1.elem.click();
@@ -3032,7 +3032,7 @@
 
         test("BottomBar: an item is a button; Enter chooses it like a click", async function () {
             let clickedIndex = -1;
-            const bar = BottomBar({ bottom: 0, items: BOTTOM_BAR_ITEMS, onItemClick: function (item, index) { clickedIndex = index; } });
+            const bar = BottomBar({ bottom: 0, items: BOTTOM_BAR_ITEMS, onItemClick: function (self, item, index) { clickedIndex = index; } });
             await wait(30);
             const button = bar.itemObjList[1].icon.elem;
             const isButton = button.getAttribute("role") === "button" && button.getAttribute("aria-label") === "Basket" && button.tabIndex === 0;
@@ -3091,7 +3091,7 @@
             header.remove();
         });
 
-        test("SettingsRow: setDescText moves the title up from the middle and back", async function () {
+        test("SettingsRow: setDescriptionText moves the title up from the middle and back", async function () {
             const TEXT_SHIFT = 14; // style.layout.textShift
             const SLIDE_WAIT = 450; // ms: the slide is 0.3 s
             const row = SettingsRow({ width: 600, titleText: "Video Quality" });
@@ -3102,15 +3102,15 @@
                 return Math.round(rect.top + rect.height / 2 - rowRect.top);
             };
             const inMiddle = middleOfTitle();
-            row.setDescText("Remaining disk space: 2.3GB");
+            row.setDescriptionText("Remaining disk space: 2.3GB");
             await wait(SLIDE_WAIT);
             const withText = middleOfTitle();
             const textOpacity = getComputedStyle(row.lblDesc.elem).opacity;
-            row.setDescText("");
+            row.setDescriptionText("");
             await wait(SLIDE_WAIT);
             const back = middleOfTitle();
             const isMoved = Math.abs(inMiddle - withText - TEXT_SHIFT) <= 1 && Math.abs(back - inMiddle) <= 1 && textOpacity === "1";
-            check("SettingsRow: setDescText moves the title up from the middle and back", isMoved, "middle: " + inMiddle + ", with a text: " + withText + ", again: " + back + ", text opacity: " + textOpacity);
+            check("SettingsRow: setDescriptionText moves the title up from the middle and back", isMoved, "middle: " + inMiddle + ", with a text: " + withText + ", again: " + back + ", text opacity: " + textOpacity);
             row.remove();
         });
 
@@ -3643,7 +3643,7 @@
                     { key: "b", type: "color", label: "B", value: "rgb(55, 56, 54)" },
                     { key: "c", type: "color", label: "C", value: "rgba(0, 0, 0, 0.125)" },
                 ] }] },
-                onChange: function (change) { changes.push(change.key); },
+                onChange: function (self, change) { changes.push(change.key); },
             });
             await wait(50);
             ["A", "B", "C"].forEach(function (name) {

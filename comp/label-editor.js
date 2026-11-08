@@ -592,7 +592,7 @@ const LabelEditor = function (params = {}) {
     // STEPPER: A number
     const createStepper = function (min, max, ariaLabel, key) {
         return Stepper({
-            width: "100%", height: _s.input.height, value: min, min: min, max: max, ariaLabel: ariaLabel,
+            width: "100%", height: _s.input.height, value: min, minValue: min, maxValue: max, ariaLabel: ariaLabel,
             styleName: _s.stepperStyleName, style: copyStyle(_s.stepperStyle),
             onChange: function (self) { setProp(key, self.value); },
         });

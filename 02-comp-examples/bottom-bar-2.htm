@@ -81,7 +81,7 @@
         column.left = Math.max(0, (page.width - DESIGN_WIDTH) / 2);
     };
 
-    const showSelected = function (item, index) {
+    const showSelected = function (self, item, index) {
         lblSelected.plainText = "Selected: " + item.data.text + " (index " + index + ")";
     };
 
@@ -186,7 +186,7 @@
         placeColumn();
         page.onResize(placeColumn);
 
-        showSelected(floatBar.itemObjList[0], 0);
+        showSelected(floatBar, floatBar.itemObjList[0], 0);
         setTasksBadge(TASKS_FIRST_BADGE);
 
     };

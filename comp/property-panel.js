@@ -53,7 +53,7 @@ UI COMPONENT TEMPLATE
 - Items of a row: put them in an array. span: 1 (one column), 2 (two columns), "full", or a width in px (a
   number over 2: Ex: a switch of 100 and a field of 108 fill a row with the gap). An iconButton takes the
   small last column. label: the caption above the item.
-- Listen to every change from outside: onChange(change, panel) or panel.listen(fn) (returns a remover).
+- Listen to every change from outside: onChange(panel, change) or panel.listen(fn): fn(panel, change) (returns a remover).
   change = { kind: "value" | "action" | "tab" | "addColor" | "removeColor" | "orderColors", key, value, oldValue, item, sectionKey }
   The panel keeps the values: getValues(), getValue(key), getData() (the JSON with the current values).
 - openColorPickerFor(request): the same color picker (its groups, its recent colors) for a color that is not an item of
@@ -78,7 +78,7 @@ const panel = PropertyPanel({
             ] },
         ],
     },
-    onChange: function (change, self) { println(change.key + " = " + change.value); },
+    onChange: function (self, change) { println(change.key + " = " + change.value); },
 });
 panel.setValue("x", 400, 1);        // silent
 panel.getValues();                  // { x: 400, y: 668, rotation: 0 }
@@ -98,7 +98,7 @@ const PropertyPanelDefaults = {
     width: 240,
     data: {}, // tabs, activeTab, headerTitle, headerItem, title, titleActions, sections, footer, empty (See the USAGE above)
     opened: 1, // 1: Open at create time.
-    onChange: function (change, self) { }, // Every change: { kind, key, value, oldValue, item, sectionKey }
+    onChange: function (self, change) { }, // Every change: { kind, key, value, oldValue, item, sectionKey }
     palettes: null, // The color groups of the color picker: [{ key, name, colors, canAdd, emptyText }] or function (panel) -> that
     recentColorsKey: "", // The recent colors of the color picker are kept in basic.storage with this key. "": only until the page closes.
     pickColor: null, // function (panel, done): the eyedropper where the browser has none (VS Code, Safari, Firefox): the page
@@ -362,9 +362,9 @@ const PropertyPanel = function (params = {}) {
 
     // Sends a change to the item, the onChange of the panel and the listeners.
     const dispatch = function (change) {
-        if (change.item && typeof change.item.onChange === "function") change.item.onChange(change, box);
-        box.onChange(change, box);
-        listeners.slice().forEach(function (fn) { fn(change, box); });
+        if (change.item && typeof change.item.onChange === "function") change.item.onChange(box, change);
+        box.onChange(box, change);
+        listeners.slice().forEach(function (fn) { fn(box, change); });
     };
 
     // Some item types fill the missing parts of a value. (Ex: constraints)
@@ -3445,7 +3445,7 @@ const PropertyPanel = function (params = {}) {
         listeners.push(fn);
         return function () { listeners = listeners.filter(function (f) { return f !== fn; }); };
     };
-    // USAGE: const stop = panel.listen(function (change) { println(change.key); }); stop();
+    // USAGE: const stop = panel.listen(function (panel, change) { println(change.key); }); stop();
 
     box.open = function () {
         box.opened = 1;

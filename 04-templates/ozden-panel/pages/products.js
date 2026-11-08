@@ -387,7 +387,7 @@ const ProductsPage = function(params = {}) {
                 itemLineCount: 10,
                 sortByTitleIndex: 1,
                 sortDirection: "A-Z",
-                onSelect: function(itemData) {
+                onSelect: function(self, itemData) {
                     const product = getProducts().find(function(p) { return p.id == itemData.id; });
                     if (product) openEditor(product);
                 },
@@ -908,7 +908,7 @@ const ProductEditor = function(params = {}) {
                     zoneHeight: 100,
                     showIcon: 0,
                     titleText: "Drop new images here",
-                    descText: "or click to select (the first image is the main image)",
+                    descriptionText: "or click to select (the first image is the main image)",
                     style: {
                         zone: { color: S.FIELD_COLOR, border: 2, borderColor: Ink(0.12), round: 10 },
                         zoneHover: { color: T.surface3, borderColor: Ink(0.3) },

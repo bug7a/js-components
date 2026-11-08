@@ -601,7 +601,7 @@ App.start = function () {
         bottom: App.safeArea.bottom,
         height: App.TAB_BAR_HEIGHT,
         items: AppSettings.tabs.map((tab) => ({ icon: tab.icon, text: tab.text })),
-        onItemClick: function (item, index) {
+        onItemClick: function (self, item, index) {
             // WHY App.open: a tap on the tab that is seen keeps its scroll and its typed text.
             App.open(AppSettings.tabs[index].pageId);
         },

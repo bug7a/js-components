@@ -25,9 +25,7 @@ const upload = LineProgressBar({ width: 360, height: 36, lineWidth: 6, lineGap: 
     primaryColor: "#7BC362", secondaryColor: "#E2E1DD", valueBubble: 1 }); // thick round lines, a bubble
 upload.setPrimaryColor("#52A8D0");
 
-NOTE (September 2026): Renamed from "ProgressBar" to "LineProgressBar".
-WHY: comp/progress-bar.js is the standard "ProgressBar". Two "const ProgressBar" on the same page
-     is an error. "ProgressBar()" still works on pages that load only this file (see the end of the file).
+WHY the name: comp/progress-bar.js is the standard "ProgressBar"; this one draws lines.
 
 Created by AI (Antigravity Gemini)
 
@@ -337,7 +335,3 @@ const LineProgressBar = function (params = {}) {
 
     return endObject(box);
 };
-
-// Old name. WHY: Pages made before the rename call ProgressBar().
-// NOTE: A property of window, not a "const". If comp/progress-bar.js is loaded too, its ProgressBar is used.
-if (typeof window.ProgressBar === "undefined") window.ProgressBar = LineProgressBar;

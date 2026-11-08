@@ -54,7 +54,7 @@ const FilePickerDefaults = {
     showPreview: 1, // Image thumbnails in the list.
     preventPageDrop: 1, // 1: A file dropped outside the zone does not open in the browser tab.
     titleText: "Drag and drop a file here",
-    descText: "or click to select",
+    descriptionText: "or click to select",
     hintText: "", // Empty: created from accept and maxSize
     dropText: "Drop to add",
     onChange: function (self) { }, // self.files: [{ file, name, displayName, path, size, sizeText, type, extension, lastModified }]
@@ -175,7 +175,7 @@ const FilePicker = function (params = {}) {
         const parts = [];
         if (box.showIcon == 1) parts.push({ object: box.icon, extra: _s.icon.space });
         if (box.hint.text) parts.push({ object: box.hint, extra: HINT_SPACE });
-        if (box.descText) parts.push({ object: box.desc, extra: 0 });
+        if (box.descriptionText) parts.push({ object: box.desc, extra: 0 });
         return parts;
     };
 
@@ -614,8 +614,8 @@ const FilePicker = function (params = {}) {
         fitZoneContent();
     };
 
-    box.setDescText = function (text) {
-        box.descText = text;
+    box.setDescriptionText = function (text) {
+        box.descriptionText = text;
         box.desc.text = text;
         fitZoneContent();
     };
@@ -692,7 +692,7 @@ const FilePicker = function (params = {}) {
 
             // LABEL: Description
             box.desc = Label({
-                text: box.descText,
+                text: box.descriptionText,
                 textAlign: "center",
                 shrink: 0,
                 ..._s.desc,

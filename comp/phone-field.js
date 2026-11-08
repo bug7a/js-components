@@ -246,7 +246,7 @@ const PhoneField = function(params = {}) {
             // WHY: İlk seçimde güncellesin, çünkü maske gösteriyor. ve artık input boş olmuyor.
             box.checkIfInputIsRequiredAndEmpty();
             box.showWarningIfNotValid(box.isValid());
-            box.onFocus();
+            box.onFocus(box);
         };
 
         box.blurFunc = function() {
@@ -256,7 +256,7 @@ const PhoneField = function(params = {}) {
                 box.setValue("");
             }
 
-            box.onBlur();
+            box.onBlur(box);
         };
 
         // Kullanıcı input içinde herhangi bir yere tıklasa veya seçim yapsa da cursor'u ilk _'a al

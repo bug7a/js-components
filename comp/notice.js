@@ -7,17 +7,17 @@ Notice - v26.10
 A short message in the middle of the screen over a soft dark cover: "Process completed", "No internet connection".
 It comes in, stays a moment (displayTime) and goes. The look:
 a round box with a thin line and a soft shadow, a big text, a color by its type, an icon at the left.
-- Notice.show({ messageText, descText, type, iconFile, displayTime }) makes it on page. Only one at a time: a new
+- Notice.show({ messageText, descriptionText, type, iconFile, displayTime }) makes it on page. Only one at a time: a new
   notice takes the place of the one that is seen.
 - type: "info" (white), "warning" (yellow), "error" (red), "note" (blue), "success" (green). Notice.COLORS
-- descText: a smaller second line. The texts are plain text (allowHtml: 1: HTML, only for your own texts).
+- descriptionText: a smaller second line. The texts are plain text (allowHtml: 1: HTML, only for your own texts).
 - A click (on the cover or the message) or Escape closes it before its time. displayTime 0: it stays until then.
 - Motion: it grows in from a little smaller with a fade in 0.2 s and goes at once; none with reduced motion.
 - Accessibility: role "status" (an error: "alert"), so a screen reader reads it.
 
 USAGE:
 Notice.show({ messageText: "Process completed" });
-Notice.show({ messageText: "No internet connection.", descText: "Please, try again later.", type: "warning" });
+Notice.show({ messageText: "No internet connection.", descriptionText: "Please, try again later.", type: "warning" });
 Notice.show({ messageText: "Failed to copy", type: "error", iconFile: "../assets/icons/alert.png" });
 const notice = Notice.show({ messageText: "Saving...", displayTime: 0 }); notice.close();
 Notice.close(); // the notice that is seen
@@ -38,7 +38,7 @@ const NoticeDefaults = {
     width: "100%",
     height: "100%",
     messageText: "No message",
-    descText: "", // "": no second line
+    descriptionText: "", // "": no second line
     type: "info", // "info", "warning", "error", "note", "success"
     iconFile: "", // "": no icon
     allowHtml: 0, // 1: the texts are HTML (only for your own texts)
@@ -167,8 +167,8 @@ const Notice = function (params = {}) {
                 // LABEL: Second line
                 box.lblDesc = Label({ ..._s.text, fontSize: _s.desc.fontSize, opacity: _s.desc.opacity, textColor: look.textColor || _s.text.textColor, textAlign: box.iconFile ? "left" : "center" });
                 box.lblDesc.css = { whiteSpace: "normal" };
-                setText(box.lblDesc, box.descText);
-                box.lblDesc.visible = (box.descText !== "" && box.descText !== null && box.descText !== undefined) ? 1 : 0; // (0 is a text too)
+                setText(box.lblDesc, box.descriptionText);
+                box.lblDesc.visible = (box.descriptionText !== "" && box.descriptionText !== null && box.descriptionText !== undefined) ? 1 : 0; // (0 is a text too)
 
             endGroup();
 

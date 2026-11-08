@@ -26,7 +26,7 @@
         Form: a page-wide form that checks its fields.
         - addTitle(obj), addInput(input), addDoubleInput(input1, input2): the fields are TextField, EmailField, TextAreaField...
         - The send button is passive until every required field is valid; "2 missing entries" shows which ones.
-        - onSendClick(json): [{ key, type, titleText, value }, ...]
+        - onSendClick(self, json): json is [{ key, type, titleText, value }, ...]
         - showMessage({ ... }): the message over the form after sending.
         More complete forms (mail, Supabase, conditional questions): 04-templates/web-forms/
         */
@@ -45,7 +45,7 @@
                 maxWidth: 700,
                 buttonColor: ACCENT_COLOR,
                 buttonText: "SEND",
-                onSendClick: function (json) {
+                onSendClick: function (self, json) {
                     console.log(json);
                     showThanks();
                 },

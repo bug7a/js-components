@@ -591,7 +591,7 @@ const MediaPage = function(params = {}) {
                 maxSize: 20 * 1024 * 1024,
                 accept: "image/*,video/*,audio/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.zip",
                 titleText: "Drag and drop files here",
-                descText: "or click to select",
+                descriptionText: "or click to select",
                 style: MediaPage.SELECT_FILE_STYLE,
                 onChange: function(self) {
                     btnStartUpload.setText("Upload " + self.files.length + " file" + ((self.files.length == 1) ? "" : "s"));
@@ -856,7 +856,7 @@ const MediaPage = function(params = {}) {
                 itemLineCount: 12,
                 sortByTitleIndex: 4,
                 sortDirection: "Z-A",
-                onSelect: function(itemData) {
+                onSelect: function(self, itemData) {
                     const item = findItem(itemData.id);
                     if (item) openDetails(item);
                 },

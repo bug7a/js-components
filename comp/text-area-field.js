@@ -193,13 +193,13 @@ const TextAreaField = function(params = {}) {
     // Event bindings
     box.focusFunc = function () {
         box.paintFocus(1);
-        box.onFocus();
+        box.onFocus(box);
     }
     textareaElem.addEventListener("focus", function(){ box.focusFunc() });
     
     box.blurFunc = function () {
         box.paintFocus(0);
-        box.onBlur();
+        box.onBlur(box);
     }
     textareaElem.addEventListener("blur", function(){ box.blurFunc() });
 

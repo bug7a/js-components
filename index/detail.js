@@ -255,7 +255,7 @@ DetailView.createPreviewPane = function () {
             width: "100%",
             height: 100,
             ariaLabel: DetailView.comp.name,
-            placeholderText: "",
+            emptyText: "",
             style: {
                 box: { color: "#FFFFFF", border: 0, round: 0 },
                 loading: { color: "#FFFFFF", spinnerColor: "rgba(0, 0, 0, 0.4)" },

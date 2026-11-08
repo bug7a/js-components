@@ -152,13 +152,13 @@ const UrlField = function(params = {}) {
     // WHY: box.paintFocus() of TextField: this copy did not change the border on focus.
     box.focusFunc = function () {
         box.paintFocus(1);
-        box.onFocus();
+        box.onFocus(box);
     }
     inputElem.addEventListener("focus", function(){ box.focusFunc() });
 
     box.blurFunc = function () {
         box.paintFocus(0);
-        box.onBlur();
+        box.onBlur(box);
     }
     inputElem.addEventListener("blur", function(){ box.blurFunc() });
 

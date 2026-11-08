@@ -602,7 +602,7 @@ const SettingsPage = function(params = {}) {
                         accept: "image/png,image/svg+xml",
                         maxSize: 512 * 1024,
                         titleText: "Drop the panel logo here",
-                        descText: "or click to select (PNG or SVG, square)",
+                        descriptionText: "or click to select (PNG or SVG, square)",
                         style: SELECT_FILE_STYLE,
                         onChange: function(self) {
                             // NOTE: Only the name is kept in this template. Upload self.files[0].file to your storage.
@@ -1165,7 +1165,7 @@ const SettingsPage = function(params = {}) {
                         showIcon: 0,
                         showList: 0,
                         titleText: "Drop a settings file here",
-                        descText: "or click to select (.json)",
+                        descriptionText: "or click to select (.json)",
                         style: SELECT_FILE_STYLE,
                         onChange: function(self) {
                             if (!self.files.length) return;
