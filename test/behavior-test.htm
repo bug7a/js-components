@@ -101,6 +101,7 @@
         // NOTE: Self-checking BEHAVIOR test (2026-10-29): every check is a bug that was found and fixed, written as
         //       its repro, so it can not come back silently. Open it in a browser: green = passed, red = failed.
         //       The summary is also in the console and in the tab title ("ALL PASS").
+        //       One component: behavior-test.htm?only=scroll-area (a part of the test names, in any case, "-" not counted).
         //       (test/components-test.htm checks the life cycle of every component; this page checks what they do.)
         //       A new fixed bug: add a test() with its repro to test/behavior/<group>.js, the group of its
         //       component in the catalog (index/catalog.js, cat).
@@ -151,9 +152,33 @@
         <script>
         "use strict";
 
+        // ?only=TEXT runs only the tests whose name has TEXT, in any case, a "-" not counted: ?only=scroll-area and
+        // ?only=ScrollArea run the "ScrollArea: ..." tests.
+        // WHY: all the tests take about a minute, the tests of one component a few seconds. WHY the "-": so
+        //      node test/run-tests.js --only scroll-area gives components-test its file and this page its tests.
+        const onlyText = new URLSearchParams(location.search).get("only") || "";
+
+        // A name as ?only= compares it: small letters, no "-"
+        const nameForOnly = function (text) {
+            return text.toLowerCase().replaceAll("-", "");
+        };
+
+        const chosenTests = tests.filter(function (item) { return nameForOnly(item.name).includes(nameForOnly(onlyText)); });
+
+        // The name of the page in its summary, with what ?only= chose: behavior test, only "scroll-area" (7 of 416 tests)
+        const summaryName = function () {
+            if (!onlyText) return "behavior test";
+            return "behavior test, only \"" + onlyText + "\" (" + chosenTests.length + " of " + tests.length + " tests)";
+        };
+
         const runTests = async function () {
 
-            for (const item of tests) {
+            // WHY: a text that is in no test name (a typo) would run nothing and say ALL PASS
+            if (onlyText && chosenTests.length === 0) {
+                check("?only=" + onlyText + ": a test has this text in its name", false, "none of the " + tests.length + " tests");
+            }
+
+            for (const item of chosenTests) {
                 try {
                     await item.func();
                 } catch (error) {
@@ -175,7 +200,7 @@
                 VGroup({ width: "100%", height: "auto", align: "left top", gap: 6, padding: 20 });
 
                     const failed = results.filter(function (r) { return !r.ok; });
-                    Label({ plainText: "behavior test: " + (results.length - failed.length) + "/" + results.length + " passed", fontSize: 20, bold: 1 });
+                    Label({ plainText: summaryName() + ": " + (results.length - failed.length) + "/" + results.length + " passed", fontSize: 20, bold: 1 });
 
                     results.forEach(function (r) {
                         Label({ plainText: ((r.ok) ? "✓ " : "✗ ") + r.name + ((r.info && !r.ok) ? "  (" + r.info + ")" : ""), fontSize: 14, textColor: (r.ok) ? "seagreen" : "crimson" });
@@ -197,7 +222,7 @@
             showResults();
 
             const failed = results.filter(function (r) { return !r.ok; });
-            const summary = "behavior test: " + (results.length - failed.length) + "/" + results.length + " passed" + ((failed.length) ? " - " + failed.length + " FAILED" : " - ALL PASS");
+            const summary = summaryName() + ": " + (results.length - failed.length) + "/" + results.length + " passed" + ((failed.length) ? " - " + failed.length + " FAILED" : " - ALL PASS");
             document.title = summary;
             console.log(summary);
             failed.forEach(function (r) { console.error("FAIL: " + r.name + " " + r.info); });

@@ -6,7 +6,9 @@ RUN TESTS: the self-checking test pages from the terminal, one after the other.
     node test/run-tests.js                              components and behavior (the tests of a changed component)
     node test/run-tests.js behavior                     one test page: basic, samples, components or behavior
     node test/run-tests.js basic components behavior    several
-    node test/run-tests.js components --only tabs       ?only= of the page (components, samples): a part of the file name
+    node test/run-tests.js components --only tabs       ?only= of the page: a part of the file name (components, samples)
+                                                        or of the test name (behavior; in any case, "-" not counted)
+    node test/run-tests.js --only scroll-area           one component: its file in components, its tests in behavior (8 s)
     node test/run-tests.js behavior --commit HEAD       the page as it is in a commit, with the basic/ and comp/ of that commit
 
 It prints the title of every page ("... - ALL PASS" or "... - 2 FAILED") and the lines of what failed or warned.
