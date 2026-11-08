@@ -151,6 +151,6 @@ done
 
 for path in "${PATHS[@]}"; do
     case "$path" in
-        test/*-test.htm) echo "A test page is in it: run it as it is in the commit (node test/run-tests.js ... --commit HEAD)." ; break ;;
+        test/*-test.htm|test/behavior/*) echo "A test page is in it: run it as it is in the commit (node test/run-tests.js ... --commit HEAD)." ; break ;;
     esac
 done
