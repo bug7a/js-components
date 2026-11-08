@@ -16,79 +16,115 @@
 
         /* Bismillah */
 
-        // DRAFT DESIGN of comp/text-field.js (TextField): the "light" and "dark" packages, every state side by side.
-        // light: TextFieldDefaults (a light field with a line under it, the title in the field over the text, the
-        // warning as a colored ball at the top right with its hint). dark: TextField.styles.dark (the same shape, every
-        // color turned to its dark side), its missing keys filled from the defaults. Plain basic.js objects (no
-        // TextField here); the typing and the hints are still frames of those moments. The values are copies: keep
-        // them in step with text-field.js when it changes.
+        // DRAFT DESIGN of comp/text-field.js (TextField): the NEW "light" and "dark" looks of the kit, every state side by
+        // side. A new design, not a copy of a package: it will take the place of the "light" and "dark" packages. The
+        // title over the field (titlePosition "above", 13 px bold), a 44 px white field with one thin line and round 8
+        // corners, no line under it, a 15 px text; the edge gets stronger under the mouse and turns to the accent while
+        // typing; a required field shows a small gray mark, a wrong value the warning mark and the edge in its color,
+        // the hint in a white bubble. Plain basic.js objects (no TextField here); the typing and the hints are still
+        // frames of those moments. The tokens at the top are the same in every draft of the new look.
         // http://127.0.0.1:5505/_basic-designer/index.htm?page=_designs/text-field.htm
+
+        // THE TOKENS OF THE NEW LIGHT / DARK LOOK (the same in every draft of it)
+        const LIGHT_TOKENS = {
+            page: "#FFFFFF", // the page the component sits on
+            surface: "#FFFFFF", // a field, a list, the face of a button
+            soft: "#F2F3F0", // under the mouse, the ground of an icon, a quiet field
+            softer: "#E6E7E3", // pressed, a track
+            line: Black(0.12), // the edge of a surface
+            lineStrong: Black(0.3), // the edge under the mouse
+            text: Black(0.88),
+            textSoft: Black(0.55),
+            textFaint: Black(0.38), // a placeholder
+            accent: "#3D7A6B", // the one color: a selected row, a fill, the main button, the edge while typing
+            accentHover: "#356C5E",
+            accentPress: "#2E5F53",
+            accentSoft: "#E4EFEB", // a tint of the accent on the surface
+            onAccent: "#FFFFFF", // a text or a mark on the accent
+            danger: "#D9534F",
+            warning: "#E5885E",
+            focusRing: "rgba(61, 122, 107, 0.5)", // the ring of the keyboard focus
+        };
+        const DARK_TOKENS = {
+            page: "#1A1A19",
+            surface: "#232322",
+            soft: "#2C2C2B",
+            softer: "#363635",
+            line: White(0.12),
+            lineStrong: White(0.32),
+            text: White(0.9),
+            textSoft: White(0.55),
+            textFaint: White(0.38),
+            accent: "#65A293",
+            accentHover: "#74B0A2",
+            accentPress: "#5A9385",
+            accentSoft: "rgba(101, 162, 147, 0.2)",
+            onAccent: "#0F1F1B",
+            danger: "#E0605A",
+            warning: "#F0A07A",
+            focusRing: "rgba(101, 162, 147, 0.55)",
+        };
 
         const PAGE_COLOR = "#F4F5F2"; // the ground of the draft, not of the fields
         const PAGE_TEXT = { title: Black(0.8), note: Black(0.5), state: Black(0.45), stateTitle: Black(0.4) }; // the texts of the draft
         const STATE_COLUMN_WIDTH = 250;
-        const ROW_HEIGHT = 124;
+        const ROW_HEIGHT = 110;
         const HEADER_HEIGHT = 24;
         const CARD_PADDING = 24;
         const COLUMN_GAP = 24;
 
-        // THE SIZES (TextFieldDefaults; the same in both looks)
+        // THE SIZES (the same in both looks; the params of TextField)
         const SIZE = {
             width: 350,
-            leftPadding: 20,
-            rightPadding: 60, // the room of the ball and the unit
-            titleFontSize: 16,
-            titleLineHeight: 22, // px: the line of the title (titlePosition "above": 1.35 of its size)
-            inputFontSize: 20,
-            inputHeight: 40, // the row of the text
-            fieldPadding: 14, // over and under the title and the text
-            descriptionFontSize: 14,
-            titleGap: 4, // between the title and the field (titlePosition "above")
-            topRound: 2, // backBorderTopRound
-            bottomRound: 0, // backBorderBottomRound
-            lineHeight: 2, // the line under the field
-            ball: { size: 16, border: 2, right: 5, top: 5 }, // warningBallSize, warningBallBorder, its place
-            hint: { fontSize: 14, padding: [8, 3], round: 4, border: 1, gap: 12 }, // the Tooltip of the ball (tooltipStyle; lbl_spaceX / Y), its distance from the ball
-            unit: { padding: [12, 4], round: 40, fontSize: 14, right: 7, bottom: 5 }, // unitStyle; the right box: padding [5, 7]
-            caretHeight: 24,
+            leftPadding: 14,
+            rightPadding: 44, // the room of the mark
+            titleFontSize: 13,
+            titleLineHeight: 18, // px: the line of the title
+            titleGap: 6, // between the title and the field, and under the field (the description)
+            inputFontSize: 15,
+            inputHeight: 44, // the field: the row of the text
+            descriptionFontSize: 13,
+            round: 8, // backBorderTopRound and backBorderBottomRound
+            mark: { size: 20 }, // warningIconSize (warningBallType "icon"), in the middle of the right padding
+            hint: { fontSize: 13, padding: [10, 5], round: 6, border: 1, gap: 10 }, // the Tooltip of the mark (tooltipStyle), its distance from the mark
+            unit: { padding: [10, 3], round: 6, fontSize: 13, right: 7, bottom: 5 }, // unitStyle; the right box: padding [5, 7]
+            caretHeight: 18,
         };
 
-        // THE LIGHT LOOK (TextFieldDefaults)
+        // THE LIGHT LOOK: a white field with one thin line; stronger under the mouse, the accent while typing
         const LIGHT = {
-            page: { color: "white", textColor: Black(0.45) }, // the light page the fields sit on
-            field: { color: "#F6F6F6", focusColor: "#F3F4E0", borderColor: Black(0), focusBorderColor: Black(0) }, // backgroundColor, focusBackgroundColor, backBorderColor, focusBackBorderColor
-            line: { color: "#373836", focusColor: "#65A293" }, // lineColor, focusLineColor
-            title: { textColor: "#555555", bold: 0 }, // titleTextColor, titleBold
-            input: { textColor: "#373836", placeholderColor: "#757575" }, // inputTextColor; placeholderColor "": the gray of the browser
-            description: { textColor: "#999999" }, // descriptionTextColor (italic)
-            ball: { borderColor: "#373836", requiredColor: "white", warningColor: "#E5885E" }, // warningBallBorderColor, requiredColor, warningColor
-            hint: { textColor: "#141414", borderColor: "#141414" }, // tooltipStyle (its color: the color of the ball)
-            unit: { color: "#373836", textColor: "white" }, // unitStyle
+            page: { color: LIGHT_TOKENS.page, textColor: LIGHT_TOKENS.textSoft }, // the light page the fields sit on
+            field: { color: LIGHT_TOKENS.surface, focusColor: LIGHT_TOKENS.surface, borderColor: LIGHT_TOKENS.line, hoverBorderColor: LIGHT_TOKENS.lineStrong, focusBorderColor: LIGHT_TOKENS.accent, warningBorderColor: LIGHT_TOKENS.warning }, // backgroundColor, focusBackgroundColor, backBorderColor, hoverBackBorderColor, focusBackBorderColor, warningBorderColor
+            title: { textColor: Black(0.65), bold: 1 }, // titleTextColor, titleBold
+            input: { textColor: LIGHT_TOKENS.text, placeholderColor: LIGHT_TOKENS.textFaint }, // inputTextColor, placeholderColor
+            description: { textColor: LIGHT_TOKENS.textSoft }, // descriptionTextColor (italic)
+            mark: { requiredColor: Black(0.35), warningColor: LIGHT_TOKENS.warning }, // requiredIconColor, warningColor: the built-in icons
+            hint: { color: LIGHT_TOKENS.surface, textColor: LIGHT_TOKENS.text, borderColor: Black(0.15) }, // tooltipStyle
+            unit: { color: LIGHT_TOKENS.soft, textColor: Black(0.7) }, // unitStyle
         };
 
-        // THE DARK LOOK (TextField.styles.dark)
+        // THE DARK LOOK: the same shapes on the dark surface
         const DARK = {
-            page: { color: "#1A1A19", textColor: White(0.5) }, // the dark page of the text-field sample
-            field: { color: "#232322", focusColor: "#2A2C27", borderColor: Black(0), focusBorderColor: Black(0) },
-            line: { color: White(0.75), focusColor: "#65A293" },
-            title: { textColor: White(0.6), bold: 0 },
-            input: { textColor: White(0.9), placeholderColor: White(0.3) },
-            description: { textColor: White(0.4) },
-            ball: { borderColor: White(0.75), requiredColor: "#141414", warningColor: "indianred" }, // the required ball takes the color of the page under it
-            hint: { textColor: White(0.9), borderColor: White(0.75) },
-            unit: { color: White(0.85), textColor: "#1A1A19" },
+            page: { color: DARK_TOKENS.page, textColor: DARK_TOKENS.textSoft },
+            field: { color: DARK_TOKENS.surface, focusColor: DARK_TOKENS.surface, borderColor: DARK_TOKENS.line, hoverBorderColor: DARK_TOKENS.lineStrong, focusBorderColor: DARK_TOKENS.accent, warningBorderColor: DARK_TOKENS.warning },
+            title: { textColor: White(0.65), bold: 1 },
+            input: { textColor: DARK_TOKENS.text, placeholderColor: White(0.35) },
+            description: { textColor: White(0.5) },
+            mark: { requiredColor: White(0.35), warningColor: DARK_TOKENS.warning },
+            hint: { color: DARK_TOKENS.soft, textColor: DARK_TOKENS.text, borderColor: White(0.2) },
+            unit: { color: White(0.1), textColor: White(0.85) },
         };
 
         // THE STATES (one row each)
         const STATES = [
-            { name: "Empty: the title and the placeholder", title: "INPUT NAME", placeholder: "input value" },
-            { name: "With a value", title: "NAME", value: "Buğra Özden" },
-            { name: "Typing (focus): the field and the line change color", title: "NAME", value: "Buğra Özden", focus: 1 },
-            { name: "Required and empty: the ball and its hint", title: "E-MAIL", placeholder: "name@mail.com", required: 1, hint: "Required" },
-            { name: "Not valid: the warning ball and its hint", title: "E-MAIL", value: "bugra@", warning: 1, hint: "Invalid value format" },
-            { name: "With a description", title: "E-MAIL", value: "bugra.ozden@gmail.com", description: "We never share it." },
-            { name: "With a unit (unitText)", title: "WEIGHT", value: "72", unit: "kg" },
-            { name: "The title over the field (titlePosition \"above\")", title: "NAME", value: "Buğra Özden", above: 1 },
+            { name: "Empty: the title over the field, the placeholder", title: "Name", placeholder: "Your name" },
+            { name: "With a value", title: "Name", value: "Buğra Özden" },
+            { name: "Under the mouse (hover): a stronger edge", title: "Name", value: "Buğra Özden", hover: 1 },
+            { name: "Typing (focus): the edge in the accent", title: "Name", value: "Buğra Özden", focus: 1 },
+            { name: "Required and empty: the mark and its hint", title: "E-mail", placeholder: "name@mail.com", required: 1, hint: "Required" },
+            { name: "Not valid: the warning mark, the edge in its color, its hint", title: "E-mail", value: "bugra@", warning: 1, hint: "Invalid value format" },
+            { name: "With a description under the field", title: "E-mail", value: "bugra.ozden@gmail.com", description: "We never share it." },
+            { name: "With a unit (unitText)", title: "Weight", value: "72", unit: "kg" },
         ];
 
         const start = function () {
@@ -100,14 +136,14 @@
 
                 VGroup({ width: "max-content", height: "auto", align: "left top", gap: 22, padding: 40, clipContent: 0 });
 
-                    Label({ text: "TextField · light / dark · draft (comp/text-field.js)", fontSize: 20, bold: 1, textColor: PAGE_TEXT.title });
-                    Label({ text: "light is the default package, dark is TextField.styles.dark. Every row is a state; the hints of the balls are shown open.", fontSize: 13, textColor: PAGE_TEXT.note });
+                    Label({ text: "TextField · the new light / dark · draft (comp/text-field.js)", fontSize: 20, bold: 1, textColor: PAGE_TEXT.title });
+                    Label({ text: "A new design for the light and dark packages: the title over the field, one thin line, no line under it. Every row is a state; the hints of the marks are shown open.", fontSize: 13, textColor: PAGE_TEXT.note });
 
                     // GROUP: The names of the states, then a card for every look
                     HGroup({ width: "auto", height: "auto", align: "left top", gap: COLUMN_GAP, clipContent: 0 });
                         drawStateColumn();
-                        drawLookCard(LIGHT, "light (default)");
-                        drawLookCard(DARK, "dark");
+                        drawLookCard(LIGHT, "light (new)");
+                        drawLookCard(DARK, "dark (new)");
                     endGroup();
 
                 endGroup();
@@ -136,108 +172,69 @@
                 STATES.forEach(function (state) {
                     // GROUP: A row: the field in this state
                     HGroup({ width: SIZE.width, height: ROW_HEIGHT, align: "left center", clipContent: 0 });
-                        if (state.above) drawFieldWithTitleAbove(look, state);
-                        else drawField(look, state);
+                        drawField(look, state);
                     endGroup();
                 });
             endGroup();
             return card;
         };
 
-        // GROUP: The field (titlePosition "inside"): the title over the text, the description under it; the line, the ball with its hint and the unit over it
+        // GROUP: The title over the field, the field (the row of the text with its mark, its hint and its unit), the description under it
         const drawField = function (look, state) {
-            const field = VGroup({ width: SIZE.width, height: "auto", align: "left top", gap: 0, padding: [SIZE.leftPadding, SIZE.fieldPadding, SIZE.rightPadding, SIZE.fieldPadding], color: getFieldColor(look, state), border: 1, borderColor: getFieldBorderColor(look, state), clipContent: 0 });
-            field.shrink = 0;
-            field.position = "relative";
-            field.css = getFieldRounds();
-                drawTitle(look, state);
-                drawInputText(look, state);
-                if (state.description) Label({ text: state.description, fontSize: SIZE.descriptionFontSize, textColor: look.description.textColor, css: { fontStyle: "italic" } });
-                drawLine(look, state, null);
-                if (state.required || state.warning) drawBall(look, state, SIZE.ball.right, SIZE.ball.top);
-                if (state.unit) drawUnit(look, state);
-            endGroup();
-            return field;
-        };
-
-        // GROUP: The field with its title over it (titlePosition "above"): the field is only the row of the text, the ball in the middle of the right padding
-        const drawFieldWithTitleAbove = function (look, state) {
             const group = VGroup({ width: SIZE.width, height: "auto", align: "left top", gap: SIZE.titleGap, clipContent: 0 });
             group.shrink = 0;
                 Label({ text: state.title, fontSize: SIZE.titleFontSize, textColor: look.title.textColor, bold: look.title.bold, css: { lineHeight: SIZE.titleLineHeight + "px", whiteSpace: "nowrap" } });
-                // GROUP: The field: the row of the text
-                const field = HGroup({ width: "100%", height: SIZE.inputHeight, align: "left center", padding: [SIZE.leftPadding, 0, SIZE.rightPadding, 0], color: getFieldColor(look, state), border: 1, borderColor: getFieldBorderColor(look, state), clipContent: 0 });
+                // GROUP: The field: the row of the text (its edge changes with the state)
+                const field = HGroup({ width: "100%", height: SIZE.inputHeight, align: "left center", padding: [SIZE.leftPadding, 0, SIZE.rightPadding, 0], color: state.focus ? look.field.focusColor : look.field.color, border: 1, borderColor: getEdgeColor(look, state), round: SIZE.round, clipContent: 0 });
                 field.position = "relative";
-                field.css = getFieldRounds();
                     drawInputText(look, state);
-                    drawLine(look, state, null);
-                    const ballRight = Math.round((SIZE.rightPadding - SIZE.ball.size) / 2);
-                    const ballTop = Math.round((SIZE.inputHeight - SIZE.ball.size) / 2);
-                    if (state.required || state.warning) drawBall(look, state, ballRight, ballTop);
+                    if (state.required || state.warning) drawMark(look, state);
+                    if (state.unit) drawUnit(look, state);
                 endGroup();
+                if (state.description) Label({ text: state.description, fontSize: SIZE.descriptionFontSize, textColor: look.description.textColor, css: { fontStyle: "italic" } });
             endGroup();
             return group;
         };
 
-        // *** THE COLORS OF A STATE (as the component paints them)
-
-        const getFieldColor = function (look, state) {
-            return state.focus ? look.field.focusColor : look.field.color;
-        };
-
-        const getFieldBorderColor = function (look, state) {
-            return state.focus ? look.field.focusBorderColor : look.field.borderColor;
-        };
-
-        const getFieldRounds = function () {
-            return {
-                borderTopLeftRadius: SIZE.topRound + "px",
-                borderTopRightRadius: SIZE.topRound + "px",
-                borderBottomLeftRadius: SIZE.bottomRound + "px",
-                borderBottomRightRadius: SIZE.bottomRound + "px",
-            };
+        // The edge: while typing, with a wrong value, under the mouse, or its own (as the component paints it)
+        const getEdgeColor = function (look, state) {
+            if (state.focus) return look.field.focusBorderColor;
+            if (state.warning) return look.field.warningBorderColor;
+            if (state.hover) return look.field.hoverBorderColor;
+            return look.field.borderColor;
         };
 
         // *** THE PARTS
 
-        // LABEL: The title in the field (titleTextColor, titleBold)
-        const drawTitle = function (look, state) {
-            return Label({ text: state.title, fontSize: SIZE.titleFontSize, textColor: look.title.textColor, bold: look.title.bold, css: { whiteSpace: "nowrap" } });
-        };
-
         // GROUP: The row of the text: the value (or the placeholder) and the caret while typing
         const drawInputText = function (look, state) {
             const hasValue = !!state.value;
-            const row = HGroup({ width: "100%", height: SIZE.inputHeight, align: "left center", gap: 1, clipContent: 1 });
-            row.shrink = 0;
+            const row = HGroup({ width: "100%", height: "100%", align: "left center", gap: 1, clipContent: 1 });
                 Label({ text: hasValue ? state.value : state.placeholder, fontSize: SIZE.inputFontSize, textColor: hasValue ? look.input.textColor : look.input.placeholderColor, css: { whiteSpace: "nowrap" } });
                 if (state.focus) Box({ width: 1, height: SIZE.caretHeight, color: look.input.textColor, position: "relative" });
             endGroup();
             return row;
         };
 
-        // BOX: The line under the field (lineColor, focusLineColor)
-        const drawLine = function (look, state) {
-            const line = Box({ left: 0, bottom: 0, width: "100%", height: SIZE.lineHeight, color: state.focus ? look.line.focusColor : look.line.color });
-            line.css = { position: "absolute" };
-            return line;
+        // ICON: The mark in the middle of the right padding: a gray circle with a star when the field is required and
+        // empty, the warning circle with a "!" when the value is not valid (the built-in icons of TextField); its hint open at its left
+        const drawMark = function (look, state) {
+            const _m = SIZE.mark;
+            const right = Math.round((SIZE.rightPadding - _m.size) / 2);
+            const top = Math.round((SIZE.inputHeight - _m.size) / 2);
+            const kind = state.warning ? "warning" : "required";
+            const color = state.warning ? look.mark.warningColor : look.mark.requiredColor;
+            const mark = Icon({ right: right, top: top, width: _m.size, height: _m.size });
+            mark.css = { position: "absolute" };
+            mark.load(getBuiltInIcon(kind, color));
+            if (state.hint) drawHint(look, state, right, top);
+            return mark;
         };
 
-        // BOX: The ball at the top right: white with a dark edge when the field is required and empty, in the warning
-        // color when the value is not valid; its hint open at its left
-        const drawBall = function (look, state, right, top) {
-            const _b = SIZE.ball;
-            const color = state.warning ? look.ball.warningColor : look.ball.requiredColor;
-            const ball = Box({ right: right, top: top, width: _b.size, height: _b.size, round: 100, border: _b.border, borderColor: look.ball.borderColor, color: color });
-            ball.css = { position: "absolute" };
-            if (state.hint) drawHint(look, state, color, right, top);
-            return ball;
-        };
-
-        // LABEL: The hint of the ball (the Tooltip of the component): in the color of the ball, at its left
-        const drawHint = function (look, state, ballColor, ballRight, ballTop) {
+        // LABEL: The hint of the mark (the Tooltip of the component): a bubble at its left
+        const drawHint = function (look, state, markRight, markTop) {
             const _h = SIZE.hint;
-            const hint = Label({ right: ballRight + SIZE.ball.size + _h.gap, top: ballTop + SIZE.ball.size / 2, text: state.hint, fontSize: _h.fontSize, textColor: look.hint.textColor, color: ballColor, border: _h.border, borderColor: look.hint.borderColor, round: _h.round, padding: _h.padding });
+            const hint = Label({ right: markRight + SIZE.mark.size + _h.gap, top: markTop + SIZE.mark.size / 2, text: state.hint, fontSize: _h.fontSize, textColor: look.hint.textColor, color: look.hint.color, border: _h.border, borderColor: look.hint.borderColor, round: _h.round, padding: _h.padding });
             hint.css = { position: "absolute", transform: "translateY(-50%)", whiteSpace: "nowrap" };
             return hint;
         };
@@ -248,6 +245,15 @@
             const unit = Label({ right: _u.right, bottom: _u.bottom, text: state.unit, fontSize: _u.fontSize, textColor: look.unit.textColor, color: look.unit.color, round: _u.round, padding: _u.padding });
             unit.css = { position: "absolute", whiteSpace: "nowrap" };
             return unit;
+        };
+
+        // The built-in icons of TextField (createBuiltInIcon): a circle in its color, a white star ("required") or a white "!" ("warning")
+        const getBuiltInIcon = function (kind, color) {
+            const glyph = (kind == "required")
+                ? '<path d="M12 6.5v11M7.2 9.25l9.6 5.5M7.2 14.75l9.6-5.5" stroke="white" stroke-width="2.2" stroke-linecap="round"/>'
+                : '<path d="M12 6.5v7" stroke="white" stroke-width="2.6" stroke-linecap="round"/><circle cx="12" cy="17.4" r="1.5" fill="white"/>';
+            const svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="' + color + '"/>' + glyph + '<\/svg>';
+            return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
         };
 
     </script>
