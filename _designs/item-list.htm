@@ -16,16 +16,56 @@
 
         /* Bismillah */
 
-        // DRAFT DESIGN of comp/item-list.js (ItemList): the new "light" and "dark" packages, the general look of the kit.
-        // A whole list in each theme, on the page of that theme: five rows, one selected (Strawberry), one under the
-        // mouse (Apple), the others normal; the selected one and the one under the mouse are still frames of those
-        // moments. The two themes have their own drawing lines, so basic-designer changes one theme without the other
-        // ("All N from this line" stays inside a theme; "This object only" changes one row). No ItemList here: plain
-        // basic.js objects.
-        // The starting values are a proposal, taken from the light / dark lists of the kit (SelectBox and ContextMenu
-        // light / dark, SearchInput classic): ItemList has no light package yet, and its dark package today is the dark
-        // twin of modern (_designs/item-list-dark.htm). The other states (focus, disabled, section, empty) come later.
+        // DRAFT DESIGN of comp/item-list.js (ItemList): the NEW "light" and "dark" looks of the kit (ItemList has no light
+        // package yet; its dark package today is the dark twin of modern: _designs/item-list-dark.htm). A new design:
+        // a white box with one thin line and round 10 corners, flat rows of 56 px, the row under the mouse in the soft
+        // gray, the selected one in a tint of the accent with a full mark. A whole list in each look, on the page of
+        // that look: five rows, one selected (Strawberry), one under the mouse (Apple), the others normal (still frames).
+        // The two looks have their own drawing lines, so basic-designer changes one without the other ("All N from
+        // this line" stays inside a look; "This object only" changes one row). No ItemList here: plain basic.js objects.
+        // The tokens at the top are the same in every draft of the new look. The other states (focus, disabled,
+        // section, empty) come later.
         // http://127.0.0.1:5505/_basic-designer/index.htm?page=_designs/item-list.htm
+
+        // THE TOKENS OF THE NEW LIGHT / DARK LOOK (the same in every draft of it)
+        const LIGHT_TOKENS = {
+            page: "#FFFFFF", // the page the component sits on
+            surface: "#FFFFFF", // a field, a list, the face of a button
+            soft: "#F2F3F0", // under the mouse, the ground of an icon, a quiet field
+            softer: "#E6E7E3", // pressed, a track
+            line: Black(0.12), // the edge of a surface
+            lineStrong: Black(0.3), // the edge under the mouse
+            text: Black(0.88),
+            textSoft: Black(0.55),
+            textFaint: Black(0.38), // a placeholder
+            accent: "#3D7A6B", // the one color: a selected row, a fill, the main button, the edge while typing
+            accentHover: "#356C5E",
+            accentPress: "#2E5F53",
+            accentSoft: "#E4EFEB", // a tint of the accent on the surface
+            onAccent: "#FFFFFF", // a text or a mark on the accent
+            danger: "#D9534F",
+            warning: "#E5885E",
+            focusRing: "rgba(61, 122, 107, 0.5)", // the ring of the keyboard focus
+        };
+        const DARK_TOKENS = {
+            page: "#1A1A19",
+            surface: "#232322",
+            soft: "#2C2C2B",
+            softer: "#363635",
+            line: White(0.12),
+            lineStrong: White(0.32),
+            text: White(0.9),
+            textSoft: White(0.55),
+            textFaint: White(0.38),
+            accent: "#65A293",
+            accentHover: "#74B0A2",
+            accentPress: "#5A9385",
+            accentSoft: "rgba(101, 162, 147, 0.2)",
+            onAccent: "#0F1F1B",
+            danger: "#E0605A",
+            warning: "#F0A07A",
+            focusRing: "rgba(101, 162, 147, 0.55)",
+        };
 
         const PAGE_COLOR = "#F4F5F2"; // the ground of the draft, not of the list
         const PAGE_TEXT = { title: Black(0.8), note: Black(0.5) }; // the texts of the draft, not of the list
@@ -34,33 +74,33 @@
         const CARD_GAP = 40;
         const FRUITS_PATH = "../assets/fruids/";
 
-        // THE LIGHT THEME: a white box with a thin edge, flat rows that get gray under the mouse, the selected one a
-        // little gray with a full mark (the list of SelectBox light)
+        // THE LIGHT LOOK: a white box with one thin line, flat rows; the row under the mouse in the soft gray, the selected
+        // one in a tint of the accent with a full mark
         const LIGHT = {
-            page: { color: "white", textColor: Black(0.45) }, // the light page the list sits on
-            box: { color: "white", border: 1, borderColor: Black(0.2), round: 8, padding: 6 },
-            list: { gap: 2 }, // between the rows: the gray of two rows never meets
-            row: { height: 60, padding: [12, 10], gap: 12, color: "transparent", round: 6 },
-            hover: { color: Black(0.06) },
-            selected: { color: Black(0.04), titleColor: "#141414" },
-            icon: { size: 36, round: 8, color: Black(0.05) },
-            title: { fontSize: 15, textColor: Black(0.85), fontFamily: "opensans" },
-            desc: { fontSize: 13, textColor: Black(0.5) },
-            check: { size: 20, color: "#141414", iconColor: "white", borderColor: Black(0.3) }, // an empty circle; full on the selected row
+            page: { color: LIGHT_TOKENS.page, textColor: LIGHT_TOKENS.textSoft }, // the light page the list sits on
+            box: { color: LIGHT_TOKENS.surface, border: 1, borderColor: LIGHT_TOKENS.line, round: 10, padding: 6 },
+            list: { gap: 2 }, // between the rows: the colors of two rows never meet
+            row: { height: 56, padding: [12, 10], gap: 12, color: "transparent", round: 8 },
+            hover: { color: LIGHT_TOKENS.soft },
+            selected: { color: LIGHT_TOKENS.accentSoft, titleColor: LIGHT_TOKENS.text },
+            icon: { size: 36, round: 8, color: LIGHT_TOKENS.soft },
+            title: { fontSize: 15, textColor: LIGHT_TOKENS.text, fontFamily: "opensans" },
+            desc: { fontSize: 13, textColor: LIGHT_TOKENS.textSoft },
+            check: { size: 20, color: LIGHT_TOKENS.accent, iconColor: LIGHT_TOKENS.onAccent, borderColor: Black(0.25) }, // an empty circle; full on the selected row
         };
 
-        // THE DARK THEME: the same shapes in the dark colors of the kit (SelectBox dark: #232322, white lines, the green mark)
+        // THE DARK LOOK: the same shapes on the dark surface
         const DARK = {
-            page: { color: "#141414", textColor: White(0.5) }, // the dark page the list sits on
-            box: { color: "#232322", border: 1, borderColor: White(0.12), round: 8, padding: 6 },
+            page: { color: DARK_TOKENS.page, textColor: DARK_TOKENS.textSoft }, // the dark page the list sits on
+            box: { color: DARK_TOKENS.surface, border: 1, borderColor: DARK_TOKENS.line, round: 10, padding: 6 },
             list: { gap: 2 },
-            row: { height: 60, padding: [12, 10], gap: 12, color: "transparent", round: 6 },
-            hover: { color: White(0.08) },
-            selected: { color: White(0.05), titleColor: "white" },
-            icon: { size: 36, round: 8, color: White(0.06) },
-            title: { fontSize: 15, textColor: White(0.9), fontFamily: "opensans" },
-            desc: { fontSize: 13, textColor: White(0.45) },
-            check: { size: 20, color: "#3D7A6B", iconColor: "white", borderColor: White(0.3) },
+            row: { height: 56, padding: [12, 10], gap: 12, color: "transparent", round: 8 },
+            hover: { color: White(0.07) },
+            selected: { color: DARK_TOKENS.accentSoft, titleColor: DARK_TOKENS.text },
+            icon: { size: 36, round: 8, color: White(0.07) },
+            title: { fontSize: 15, textColor: DARK_TOKENS.text, fontFamily: "opensans" },
+            desc: { fontSize: 13, textColor: DARK_TOKENS.textSoft },
+            check: { size: 20, color: DARK_TOKENS.accent, iconColor: DARK_TOKENS.onAccent, borderColor: White(0.3) },
         };
 
         // THE ITEMS of both lists: selected and hover are the still frames
@@ -82,8 +122,8 @@
 
                 VGroup({ width: "max-content", height: "auto", align: "left top", gap: 22, padding: 40, clipContent: 0 });
 
-                    Label({ text: "ItemList · light / dark · draft (comp/item-list.js)", fontSize: 20, bold: 1, textColor: PAGE_TEXT.title });
-                    Label({ text: "The whole list in each theme. The other states (focus, disabled, section, empty list) come after this look is settled.", fontSize: 13, textColor: PAGE_TEXT.note });
+                    Label({ text: "ItemList · the new light / dark · draft (comp/item-list.js)", fontSize: 20, bold: 1, textColor: PAGE_TEXT.title });
+                    Label({ text: "A new design for the light and dark packages, the whole list in each. The other states (focus, disabled, section, empty list) come after this look is settled.", fontSize: 13, textColor: PAGE_TEXT.note });
 
                     // GROUP: The two themes side by side
                     HGroup({ width: "auto", height: "auto", align: "left top", gap: CARD_GAP, clipContent: 0 });
@@ -102,7 +142,7 @@
         // GROUP: The light page and the box of the list with its rows
         const drawLightList = function () {
             const card = VGroup({ width: "auto", height: "auto", align: "left top", gap: 14, padding: CARD_PADDING, color: LIGHT.page.color, round: 10, border: 1, borderColor: Black(0.08), clipContent: 0 });
-                Label({ text: "light (the default of new pages)", fontSize: 12, textColor: LIGHT.page.textColor });
+                Label({ text: "light (new)", fontSize: 12, textColor: LIGHT.page.textColor });
                 // GROUP: The box of the list (style.box, style.list)
                 VGroup({ width: LIST_WIDTH, height: "auto", align: "left top", gap: LIGHT.list.gap, padding: LIGHT.box.padding, color: LIGHT.box.color, border: LIGHT.box.border, borderColor: LIGHT.box.borderColor, round: LIGHT.box.round, clipContent: 0 });
                     ITEMS.forEach(drawLightRow);
@@ -139,7 +179,7 @@
         // GROUP: The dark page and the box of the list with its rows
         const drawDarkList = function () {
             const card = VGroup({ width: "auto", height: "auto", align: "left top", gap: 14, padding: CARD_PADDING, color: DARK.page.color, round: 10, border: 1, borderColor: Black(0.08), clipContent: 0 });
-                Label({ text: "dark (a dark page)", fontSize: 12, textColor: DARK.page.textColor });
+                Label({ text: "dark (new)", fontSize: 12, textColor: DARK.page.textColor });
                 // GROUP: The box of the list (style.box, style.list)
                 VGroup({ width: LIST_WIDTH, height: "auto", align: "left top", gap: DARK.list.gap, padding: DARK.box.padding, color: DARK.box.color, border: DARK.box.border, borderColor: DARK.box.borderColor, round: DARK.box.round, clipContent: 0 });
                     ITEMS.forEach(drawDarkRow);
