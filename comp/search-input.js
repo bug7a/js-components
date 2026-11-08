@@ -107,7 +107,6 @@ const SearchInput = function(params = {}) {
 
     // BOX: Component container
     const box = startObject(params);
-    basic.keepOldNames(box, SearchInput.OLD_NAMES, "SearchInput"); // the pages made with the old names, for a while
 
     // *** Private variables:
     const ICONS_SPACE = 80; // The width of the box that is not for the text, with the default icon place (16 + 8)
@@ -653,14 +652,3 @@ SearchInput.MINIMAL_COLORS = { invertIcons: 0, text: Black(0.85), placeholder: B
 SearchInput.styles.minimal = SearchInput.createMinimalStyle(SearchInput.MINIMAL_COLORS);
 SearchInput.MINIMAL_DARK_COLORS = { invertIcons: 1, text: White(0.88), placeholder: White(0.48), edge: White(0.42), ink: "#EDEDEB" };
 SearchInput.styles.minimalDark = SearchInput.createMinimalStyle(SearchInput.MINIMAL_DARK_COLORS);
-
-// THE OLD NAMES of the params, the properties and the methods (basic.keepOldNames): the pages made with them keep
-// working until they move to the new names. Delete a name when no page uses it any more.
-SearchInput.OLD_NAMES = {
-    isCancelEnabled: "showClearIcon",
-    placeholderText: "placeholder",
-    setPlaceholderText: "setPlaceholder",
-    // WHY wrap: onSearch and onSubmit got the text first, onChange and onEnter get self
-    onSearch: { name: "onChange", wrap: (onSearch) => (self) => { if (onSearch) onSearch(self.getSearchText(), self); } },
-    onSubmit: { name: "onEnter", wrap: (onSubmit) => (self) => { if (onSubmit) onSubmit(self.getSearchText(), self); } },
-};

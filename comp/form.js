@@ -53,7 +53,6 @@ const Form = function(params = {}) {
 
     // BOX: Component container
     let box = startObject(params);
-    basic.keepOldNames(box, Form.OLD_NAMES, "Form"); // the pages made with the old names, for a while
 
     // NOTE: Parent container is box.containerBox
 
@@ -591,11 +590,4 @@ const Form = function(params = {}) {
 
     return endObject(box);
 
-};
-
-// THE OLD NAMES (basic.keepOldNames): the pages made with them keep working until they move to the new names.
-// Delete a name when no page uses it any more.
-Form.OLD_NAMES = {
-    // WHY wrap: onEdit got the input, onChange gets the form first
-    onEdit: { name: "onChange", wrap: (onEdit) => (self, input) => { if (onEdit) onEdit(input); } },
 };

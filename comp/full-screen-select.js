@@ -94,7 +94,6 @@ const FullScreenSelect = function (params = {}) {
 
     // BOX: Component container (the field)
     let box = startObject(params);
-    basic.keepOldNames(box, FullScreenSelect.OLD_NAMES, "FullScreenSelect"); // the pages made with the old names, for a while
 
     // *** PRIVATE VARIABLES:
     const _s = box.style;
@@ -612,9 +611,3 @@ FullScreenSelect.styles = {
 
 };
 FullScreenSelect.styles.classic = FullScreenSelect.styles.light; // the old name of light: the pages made with it keep their look
-
-// THE OLD NAMES of the params, the properties and the methods (basic.keepOldNames): the pages made with them keep
-// working until they move to the new names. Delete a name when no page uses it any more.
-FullScreenSelect.OLD_NAMES = {
-    placeholderText: "placeholder",
-};

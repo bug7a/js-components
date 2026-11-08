@@ -115,7 +115,6 @@ const WebView = function (params = {}) {
 
     // BOX: Component container
     let box = startObject(params);
-    basic.keepOldNames(box, WebView.OLD_NAMES, "WebView"); // the pages made with the old names, for a while
 
     // *** PRIVATE VARIABLES:
     const _s = box.style;
@@ -584,10 +583,4 @@ WebView.getOpenSvg = function (color) {
 // The spinner animation can not be set with inline styles.
 WebView.injectCss = function () {
     basic.addCss("web-view-css", "@keyframes webViewSpin { to { transform: rotate(360deg); } }");
-};
-
-// THE OLD NAMES of the params, the properties and the methods (basic.keepOldNames): the pages made with them keep
-// working until they move to the new names. Delete a name when no page uses it any more.
-WebView.OLD_NAMES = {
-    title: "ariaLabel",
 };

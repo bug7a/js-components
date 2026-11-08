@@ -104,8 +104,6 @@ const ToastDefaults = {
 
 const Toast = function (params = {}) {
 
-    basic.renameOldParams(params, Toast.OLD_NAMES, "Toast"); // WHY first: the same key updates a visible toast with these params
-
     // Merge params: the shapes of its theme (Toast.THEMES[name].style: minimal), then the defaults
     // WHY before the defaults: the shapes of a theme win over the default shapes, a style of the page over both
     const themeOfParams = Toast.THEMES[params.theme || Toast.options.theme];
@@ -151,7 +149,6 @@ const Toast = function (params = {}) {
 
     // BOX: Component container (a slot in the stack; its height is animated on close)
     let box = startObject(params);
-    basic.keepOldNames(box, Toast.OLD_NAMES, "Toast"); // the pages made with the old names, for a while
 
     // *** PRIVATE VARIABLES:
     const _s = box.style;
@@ -330,7 +327,6 @@ const Toast = function (params = {}) {
     // Changes the toast and starts its timer again.
     box.update = function (values = {}) {
         if (!box || box.isClosing) return box;
-        basic.renameOldParams(values, Toast.OLD_NAMES, "Toast");
         ["type", "titleText", "messageText", "allowHtml", "duration", "closable", "showProgress", "pauseOnHover", "theme", "onClick", "action"].forEach(function (key) {
             if (key in values) box[key] = values[key];
         });
@@ -886,11 +882,4 @@ Toast.getIconSvg = function (type, color, size) {
 Toast.getCloseSvg = function (color, size = 16) {
     return '<svg xmlns="http://www.w3.org/2000/svg" width="' + size + '" height="' + size + '" viewBox="0 0 24 24" fill="none" stroke="' + color +
         '" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>';
-};
-
-// THE OLD NAMES of the params, the properties and the methods (basic.keepOldNames): the pages made with them keep
-// working until they move to the new names. Delete a name when no page uses it any more.
-Toast.OLD_NAMES = {
-    title: "titleText",
-    message: "messageText",
 };

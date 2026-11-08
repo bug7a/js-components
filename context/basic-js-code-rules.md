@@ -97,13 +97,12 @@ Bir bileşenin parametreleri kitin geri kalanındaki adları taşır: bir sayfay
 
 - Bir parametre bir basic.js setter'ının adını almaz (`text`, `color`, `html`, `title`, `visible`, `zoom`...: CLAUDE.md). Kutunun kendisi alan olan bir bileşen (SearchInput) `color`, `border`, `round`'u bilerek kutuya verir.
 
-**Eski adlar (geçici bir köprü):**
+**Bir ad değişince:**
 
-- Bir parametre yeni bir ad alınca eski adı bir süre çalışır: bileşen eski adlarını `Comp.OLD_NAMES` içinde (`{ eskiAd: "yeniAd" }`) tutar ve `startObject()`'ten hemen sonra `basic.keepOldNames(box, Comp.OLD_NAMES, "Comp")` çağırır (basic.js v26.11.08). Eski adı kullanan bir sayfada konsol yeni adı bir kez söyler.
-- Yeni kod eski adları kullanmaz. Bir şablona ya da bir projeye dokunulunca onun sayfaları yeni adlara geçer. Hiçbir sayfa kullanmayınca ad listeden silinir; liste boşalınca çağrı da silinir.
-- Değer de değiştiyse (argümanları başka bir olay: `onEdit(input)` → `onChange(self, input)`; tersine dönen bir değer: `disabled` → `enabled`) listedeki kayıt `{ name: "onChange", wrap: function (eski) { return yeni; } }` olur: eski adla verilen ya da sonradan atanan değer yolda sarılır, eski fonksiyon eski biçimde çağrılır (`comp/slider.js`, `comp/tiny-select.js`).
-- Bir verinin anahtarı (bir sunucuya giden JSON) parametre değildir: değişirse o veriyi okuyan bozulur; ayrı bir karar ister (Form'un `inputValue`'su).
-- Hangi bileşenin hangi adları değişti: `context/repo-map.md`, "Parameter names". Hangi sayfalar henüz geçmedi: `node test/old-names.js` (bir klasör de verilebilir).
+- Parametre, olay ya da bileşen yeni adını aynı işte her yerde alır: `comp/`, örnekler, şablonlar, sayfalar. Eski ad tutulmaz.
+- Bir olayın argümanları da değişirse (`onEdit(input)` → `onChange(self, input)`) onu kullanan her fonksiyon yeni biçime çevrilir.
+- Bir verinin anahtarı (bir sunucuya giden JSON) değişirse onu okuyan da aynı işte değişir (Form'un JSON'u ve PHP mail servisi).
+- Adı değişen bir sayfa: `node test/compare-pages.js eski.htm=yeni.htm`. 2026-11-08'deki geçici köprü (`basic.keepOldNames`) ve hikâyesi: `context/repo-map.md`, "Parameter names".
 
 ---
 

@@ -53,7 +53,7 @@
         const runTests = async function () {
 
             // *** LIBRARY INFO
-            check("basic.version", basic.version === "26.11.08", basic.version);
+            check("basic.version", basic.version === "26.11.07", basic.version);
             check("basic.library", basic.library === "basic.js", basic.library);
             check("basic.isReady", basic.isReady === 1);
 
@@ -478,59 +478,6 @@
             basic.addCss("basic-test-css", ".x { color: blue; }", 1);
             check("basic.addCss: replace", css1.textContent.indexOf("blue") > 0);
             css1.remove();
-
-            // *** v26.11.08: basic.keepOldNames, basic.renameOldParams
-            const OLD_TEST_NAMES = { oldValue: "value", getOldValue: "getValue", onEdit: "onChange" };
-            const oldNameWarnings = [];
-            const realWarn = console.warn;
-            console.warn = function (text) { oldNameWarnings.push(text); };
-            const namedBox = Box(0, 0, 10, 10);
-            namedBox.value = "default";
-            namedBox.oldValue = "given"; // as startObject() puts a param of the page
-            namedBox.getValue = function () { return namedBox.value; };
-            basic.keepOldNames(namedBox, OLD_TEST_NAMES, "TestComp");
-            check("basic.keepOldNames: a value given with an old name goes to the new name (over its default)", namedBox.value === "given", namedBox.value);
-            namedBox.oldValue = "set later";
-            check("basic.keepOldNames: the old name reads and writes the new one", namedBox.value === "set later" && namedBox.oldValue === "set later");
-            namedBox.getValue = function () { return "own " + namedBox.value; };
-            check("basic.keepOldNames: an old method name calls the method of the new name (also one set later)", namedBox.getOldValue() === "own set later");
-            namedBox.onEdit = function () { return "edited"; };
-            check("basic.keepOldNames: an event set later with its old name is the event of the new name", namedBox.onChange() === "edited");
-            check("basic.keepOldNames: the old names are not in a loop over the object", !Object.keys(namedBox).some((key) => key in OLD_TEST_NAMES));
-            const oldParams = { oldValue: "a", other: 1 };
-            basic.renameOldParams(oldParams, OLD_TEST_NAMES, "TestComp");
-            check("basic.renameOldParams: only the values given with an old name move, no old name is left",
-                oldParams.value === "a" && !("oldValue" in oldParams) && !("getValue" in oldParams) && oldParams.other === 1);
-            console.warn = realWarn;
-            check("basic.keepOldNames: the console names each old name once",
-                oldNameWarnings.length === 3 && oldNameWarnings[0] === 'TestComp: "oldValue" is an old name, use "value"', oldNameWarnings.length + ": " + oldNameWarnings[0]);
-            namedBox.remove();
-            check("basic.keepOldNames: an object with old names is removed as any other", namedBox.isRemoved === 1);
-            // An old name whose value changed too: { name, wrap }
-            const WRAPPED_NAMES = {
-                onOldMove: { name: "onMove", wrap: function (oldMove) { return function (self) { oldMove(self.value); }; } },
-                disabled: { name: "enabled", wrap: function (disabled) { return disabled ? 0 : 1; } },
-            };
-            const quietWarn = console.warn;
-            console.warn = function () { };
-            const wrapBox = Box(0, 0, 10, 10);
-            wrapBox.value = 7;
-            wrapBox.enabled = 1;
-            wrapBox.disabled = 1; // as startObject() puts a param of the page
-            let movedTo = null;
-            wrapBox.onOldMove = function (value) { movedTo = value; };
-            basic.keepOldNames(wrapBox, WRAPPED_NAMES, "TestWrap");
-            wrapBox.onMove(wrapBox);
-            check("basic.keepOldNames: a value given with a wrapped old name is wrapped (the old function gets the old arguments)", movedTo === 7 && wrapBox.enabled === 0, movedTo + ", " + wrapBox.enabled);
-            const laterMove = function (value) { movedTo = value * 2; };
-            wrapBox.onOldMove = laterMove;
-            wrapBox.onMove(wrapBox);
-            check("basic.keepOldNames: a wrapped old name set later is wrapped too, and reads back what was given", movedTo === 14 && wrapBox.onOldMove === laterMove);
-            const wrapParams = { disabled: 0 };
-            basic.renameOldParams(wrapParams, WRAPPED_NAMES, "TestWrap");
-            console.warn = quietWarn;
-            check("basic.renameOldParams: a wrapped value", wrapParams.enabled === 1 && !("disabled" in wrapParams));
-            wrapBox.remove();
 
             // *** v26.11.07: border and round take an array, like padding
             const sidesOf = function (style, prefix, suffix) {

@@ -51,9 +51,6 @@ WebSite: https://bug7a.github.io/js-components
 
 - onChange(self): the user changed the text (not at create time, not by setValue()). onFocus(self), onBlur(self).
 
-- THE OLD NAMES (inputValue, isRequired, maxChar, onEdit, getInputValue()... in TextField.OLD_NAMES) work for a while,
-  for the pages made with them; the console names the new name once. New code uses the new names.
-
 - warningBallType: "color" | "icon"
 -- "color": Top-right colored ball (requiredColor / warningColor).
 -- "icon": Top-right icon (requiredIconFile / warningIconFile). Empty path uses the built-in icon.
@@ -199,7 +196,6 @@ const TextField = function(params = {}) {
 
     // BOX: Component container
     const box = startObject(params);
-    basic.keepOldNames(box, TextField.OLD_NAMES, "TextField"); // the pages made with the old names, for a while
 
     // *** DATA CONTROL:
     if (box.descriptionText != "") {
@@ -722,29 +718,6 @@ TextField.setPlaceholderColor = function(inputElement, color) {
     inputElement.style.setProperty("--text-field-placeholder", color);
 };
 
-// THE OLD NAMES of the params, the properties and the methods (basic.keepOldNames): the pages made with them keep
-// working until they move to the new names. Delete a name when no page uses it any more.
-TextField.OLD_NAMES = {
-    inputValue: "value",
-    isRequired: "required",
-    maxChar: "maxLength",
-    createDescription: "showDescription",
-    createUnit: "showUnit",
-    createLeftBox: "showLeftBox",
-    createRightBox: "showRightBox",
-    requiredIcon: "requiredIconFile",
-    warningIcon: "warningIconFile",
-    selectedBackgroundColor: "focusBackgroundColor",
-    selectedLineColor: "focusLineColor",
-    selectedBackBorderColor: "focusBackBorderColor",
-    onEdit: "onChange",
-    getInputValue: "getValue",
-    setInputValue: "setValue",
-    setMaxChar: "setMaxLength",
-    setSelectedBackgroundColor: "setFocusBackgroundColor",
-    setSelectedLineColor: "setFocusLineColor",
-};
-
 // *** STYLE PACKAGES:
 // WHY style: {} in every package: TextField has no "style" object, its look is in flat params. A package with
 //      a "style" key is a package of params (basic.applyStylePackage, v26.10.27): its keys fill the params
@@ -930,8 +903,3 @@ TextField.MINIMAL_DARK_COLORS = {
     lineHover: White(0.42), edge: White(0.42), edgeHover: White(0.62), ink: "#EDEDEB", danger: "#FF9F93", colorScheme: "dark", invertIcons: 1, scrollBar: "#CFCFCD",
 };
 TextField.styles.minimalDark = TextField.createMinimalStyle(TextField.MINIMAL_DARK_COLORS);
-
-// THE OLD NAME of the component, for a while: the pages made with InputB keep working (the same object).
-// Delete it when no page uses it any more (context/repo-map.md, "Parameter names").
-const InputB = TextField;
-const InputBDefaults = TextFieldDefaults;

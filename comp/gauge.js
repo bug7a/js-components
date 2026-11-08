@@ -104,7 +104,6 @@ const Gauge = function (params = {}) {
 
     // BOX: Component container
     let box = startObject(params);
-    basic.keepOldNames(box, Gauge.OLD_NAMES, "Gauge"); // the pages made with the old names, for a while
 
     const _s = box.style;
 
@@ -435,9 +434,3 @@ Gauge.styles = {
 
 };
 Gauge.styles.classic = Gauge.styles.light; // the old name of light: the pages made with it keep their look
-
-// THE OLD NAMES of the params, the properties and the methods (basic.keepOldNames): the pages made with them keep
-// working until they move to the new names. Delete a name when no page uses it any more.
-Gauge.OLD_NAMES = {
-    onValueChange: "onChange",
-};

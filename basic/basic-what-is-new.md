@@ -10,39 +10,6 @@ Naming rule for the additions: no new globals (one exception, the user's choice 
 
 ---
 
-## v26.11.08 (2026-11-08)
-
-### `basic.keepOldNames(box, oldNames, componentName)`, `basic.renameOldParams(params, oldNames, componentName)`
-
-The user's choice (2026-11-08): the components whose param names were far from the standard of the kit
-(`context/basic-js-code-rules.md`, "Parametre adları") get new names while few pages use them. The pages of the
-templates and the projects move to the new names one by one, when they are touched; until then the old names must work.
-This is the bridge for that time, not a way to name things.
-
-```javascript
-TextField.OLD_NAMES = { inputValue: "value", isRequired: "required", onEdit: "onChange", getInputValue: "getValue" };
-
-const box = startObject(params);
-basic.keepOldNames(box, TextField.OLD_NAMES, "TextField"); // right after startObject()
-```
-
-- A value given with an old name goes to the new name. **The old name wins** over its new name: after `startObject()`
-  the new name may hold only its default (a component made from another one fills its own defaults first).
-- Later the old name reads and writes the new one: a property (`field.inputValue`), a method (`field.getInputValue()`
-  calls the `getValue` the box has then, also one a child component or a page set), an event set after create
-  (`field.onEdit = fn` is `onChange`). The old names are not enumerable: a loop over the object does not see them.
-- The console names each old name once in a page: `TextField: "inputValue" is an old name, use "value"`. So a page opened
-  in the browser lists what it still has to change (`compare-pages.js` sees it as a difference of the console).
-- `basic.renameOldParams(params, ...)`: only the values, for the params of a call that makes no object
-  (`toast.update(values)`). It returns the params.
-- **When the value changed too** (an event with other arguments, a flag that is the reverse), the entry is
-  `{ name: "newName", wrap: function (oldValue) { return newValue; } }`: a value given or set later with the old name
-  is wrapped on its way, so the old function is called in the old way; reading the old name gives back what was given
-  with it. `Slider.OLD_NAMES = { onDragMove: { name: "onChange", wrap: (onDragMove) => (self) => onDragMove(self.value) } }`.
-  A method whose arguments changed (`setDisabled(1)` is `setEnabled(0)`) stays a method of its component.
-- Temporary: when no page uses the old names of a component, its list and its call are deleted.
-- Fully compatible. `test/basic-test.htm`: 11 new checks, 205/205 (also with `basic.min.js`).
-
 ## v26.11.07 (2026-11-07)
 
 ### `border` and `round` take an array, like `padding`

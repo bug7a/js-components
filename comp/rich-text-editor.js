@@ -173,7 +173,6 @@ const RichTextEditor = function (params = {}) {
 
     // BOX: Component container
     let box = startObject(params);
-    basic.keepOldNames(box, RichTextEditor.OLD_NAMES, "RichTextEditor"); // the pages made with the old names, for a while
 
     // *** PRIVATE VARIABLES:
     const _s = box.style;
@@ -1061,10 +1060,3 @@ RichTextEditor.styles = {
 
 };
 RichTextEditor.styles.classic = RichTextEditor.styles.light; // the old name of light: the pages made with it keep their look
-
-// THE OLD NAMES of the params, the properties and the methods (basic.keepOldNames): the pages made with them keep
-// working until they move to the new names. Delete a name when no page uses it any more.
-RichTextEditor.OLD_NAMES = {
-    placeholderText: "placeholder",
-    setPlaceholderText: "setPlaceholder",
-};

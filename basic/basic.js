@@ -2,16 +2,12 @@
 
 /*
 
-basic.js (v26.11.08) A lightweight JavaScript library for building web-based applications with simple code. No need to write HTML or CSS — just use basic JavaScript.
+basic.js (v26.11.07) A lightweight JavaScript library for building web-based applications with simple code. No need to write HTML or CSS — just use basic JavaScript.
 - Project Site: https://bug7a.github.io/basic.js/
 
-v26.11.08 is v26.09.18 plus the additions below. Every page and component written for the
+v26.11.07 is v26.09.18 plus the additions below. Every page and component written for the
 previous versions works unchanged (same defaults, same DOM), except the global names moved under
 basic.* in v26.10.25 (see below).
-
-WHAT IS NEW IN v26.11.08 (see basic/basic-what-is-new.md):
-- basic:      keepOldNames(box, { oldName: "newName" }, "Comp"), renameOldParams(params, ...): the old names of
-              the renamed params of a component keep working for a while (the console names the new one once)
 
 WHAT IS NEW IN v26.11.07 (see basic/basic-what-is-new.md):
 - Props:      border and round take an array too, like padding: border [x, y] / [left, top, right, bottom],
@@ -82,7 +78,7 @@ Licensed under the Apache License, Version 2.0
 "use strict";
 const basic = {};
 
-basic.version = "26.11.08";
+basic.version = "26.11.07";
 basic.library = "basic.js";
 basic.isReady = 0; // 1 after the page object is created (before start() runs).
 
@@ -500,74 +496,6 @@ basic.applyStylePackage = function ($params, $packages, $defaults) {
             if (Array.isArray(packageParams[key])) packageParams[key] = packageParams[key].slice();
         }
         mergeIntoIfMissing($params, packageParams);
-    }
-    return $params;
-};
-
-// v26.11.08: THE OLD NAMES OF A COMPONENT, FOR A WHILE
-// WHY: a param of a component that gets a new name broke every page made with the old one. The component lists its
-//      old names ({ oldName: "newName" }) and calls basic.keepOldNames() right after startObject(): a value given
-//      with an old name goes to the new name, and later the old name reads and writes the new one (a property, a
-//      method, an event set after create). The console says once which name to use. A component drops its list when
-//      no page uses its old names any more.
-// An old name wins over its new name: after startObject() the new name may hold only its default.
-// When the value changed too (an event with other arguments, a flag that is the reverse), the entry is
-// { name: "newName", wrap: function (oldValue) { return newValue; } }: a value given or set with the old name is
-// wrapped on its way (the old function is called in the old way); reading the old name gives what was given with it.
-// USAGE: basic.keepOldNames(box, { inputValue: "value", getInputValue: "getValue" }, "TextField")
-// USAGE: Slider.OLD_NAMES = { onDragMove: { name: "onChange", wrap: (onDragMove) => (self) => onDragMove(self.value) } }
-const warnedOldNames = new Set();
-
-const warnOldName = function ($componentName, $oldName, $newName) {
-    const id = $componentName + "." + $oldName;
-    if (warnedOldNames.has(id)) return;
-    warnedOldNames.add(id);
-    console.warn($componentName + ': "' + $oldName + '" is an old name, use "' + $newName + '"');
-};
-
-// An entry of a list of old names: "newName", or { name: "newName", wrap: function (oldValue) { return newValue; } }
-const readOldNameEntry = function ($entry) {
-    if (typeof $entry === "string") return { name: $entry, wrap: null };
-    return { name: $entry.name, wrap: $entry.wrap || null };
-};
-
-basic.keepOldNames = function ($object, $oldNames, $componentName) {
-    for (const oldName in $oldNames) {
-        const entry = readOldNameEntry($oldNames[oldName]);
-        let oldValue; // WHY: a wrapped old name reads back what was given with it, not the wrapped value
-        const setByOldName = function ($value) {
-            warnOldName($componentName, oldName, entry.name);
-            oldValue = $value;
-            $object[entry.name] = entry.wrap ? entry.wrap($value) : $value;
-        };
-        if (Object.prototype.hasOwnProperty.call($object, oldName)) {
-            const givenValue = $object[oldName];
-            delete $object[oldName];
-            setByOldName(givenValue);
-        }
-        // WHY not enumerable: a loop over the object (remove(), the designer) does not read the old names
-        Object.defineProperty($object, oldName, {
-            get: function () {
-                warnOldName($componentName, oldName, entry.name);
-                return entry.wrap ? oldValue : $object[entry.name];
-            },
-            set: setByOldName,
-            enumerable: false,
-            configurable: true,
-        });
-    }
-    return $object;
-};
-
-// Only the values given with an old name: the params of a call that makes no object (Ex: toast.update(values)).
-// USAGE: basic.renameOldParams(values, Toast.OLD_NAMES, "Toast")
-basic.renameOldParams = function ($params, $oldNames, $componentName) {
-    for (const oldName in $oldNames) {
-        if (!Object.prototype.hasOwnProperty.call($params, oldName)) continue;
-        const entry = readOldNameEntry($oldNames[oldName]);
-        warnOldName($componentName, oldName, entry.name);
-        $params[entry.name] = entry.wrap ? entry.wrap($params[oldName]) : $params[oldName];
-        delete $params[oldName];
     }
     return $params;
 };

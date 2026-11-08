@@ -124,7 +124,3 @@ const NumberField = function(params = {}) {
     return endExtendedObject(box);
 
 };
-
-// THE OLD NAME of the component, for a while: the pages made with NumberInputB keep working (the same object).
-// Delete it when no page uses it any more (context/repo-map.md, "Parameter names").
-const NumberInputB = NumberField;

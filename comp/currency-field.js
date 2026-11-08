@@ -43,7 +43,6 @@ const CurrencyFieldDefaults = {
 const CurrencyField = function(params = {}) {
 
     const box = startExtendedObject(TextField, CurrencyFieldDefaults, params);
-    basic.keepOldNames(box, CurrencyField.OLD_NAMES, "CurrencyField"); // the pages made with the old names, for a while
 
     // *** PRIVATE VARIABLES:
     const inputElem = box.input.inputElement;
@@ -194,12 +193,3 @@ const CurrencyField = function(params = {}) {
 
     return endExtendedObject(box);
 };
-
-// THE OLD NAMES (basic.keepOldNames; the old names of TextField are in TextField.OLD_NAMES). Delete a name when no page uses it.
-CurrencyField.OLD_NAMES = {
-    getInputValueAsNumber: "getValueAsNumber",
-};
-
-// THE OLD NAME of the component, for a while: the pages made with CurrencyInputB keep working (the same object).
-// Delete it when no page uses it any more (context/repo-map.md, "Parameter names").
-const CurrencyInputB = CurrencyField;

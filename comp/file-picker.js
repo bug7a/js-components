@@ -878,7 +878,3 @@ FilePicker.MINIMAL_COLORS = { text: Black(0.85), softText: Black(0.55), line: Bl
 FilePicker.styles.minimal = FilePicker.createMinimalStyle(FilePicker.MINIMAL_COLORS);
 FilePicker.MINIMAL_DARK_COLORS = { text: White(0.88), softText: White(0.55), line: White(0.18), edge: White(0.42), edgeHover: White(0.62), ink: "#EDEDEB", hover: White(0.06), danger: "#FF9F93" };
 FilePicker.styles.minimalDark = FilePicker.createMinimalStyle(FilePicker.MINIMAL_DARK_COLORS);
-
-// THE OLD NAME of the component, for a while: the pages made with SelectFile keep working (the same object).
-// Delete it when no page uses it any more (context/repo-map.md, "Parameter names").
-const SelectFile = FilePicker;

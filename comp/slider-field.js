@@ -155,7 +155,6 @@ const SliderField = function (params = {}) {
 
     // BOX: Component container
     let box = startObject(params);
-    basic.keepOldNames(box, SliderField.OLD_NAMES, "SliderField"); // the pages made with the old names, for a while
 
     // *** PRIVATE VARIABLES:
     const _s = box.style;
@@ -929,12 +928,3 @@ SliderField.MINIMAL_COLORS = { ground: "#FFFFFF", text: Black(0.85), softText: B
 SliderField.styles.minimal = SliderField.createMinimalStyle(SliderField.MINIMAL_COLORS);
 SliderField.MINIMAL_DARK_COLORS = { ground: "#1A1A19", text: White(0.88), softText: White(0.55), line: White(0.18), edge: White(0.42), edgeHover: White(0.62), ink: "#EDEDEB", fill: White(0.08), fillHover: White(0.11), fillActive: White(0.14), focus: "#7FB6DE" };
 SliderField.styles.minimalDark = SliderField.createMinimalStyle(SliderField.MINIMAL_DARK_COLORS);
-
-// THE OLD NAMES of the params, the properties and the methods (basic.keepOldNames): the pages made with them keep
-// working until they move to the new names. Delete a name when no page uses it any more.
-SliderField.OLD_NAMES = {
-    min: "minValue",
-    max: "maxValue",
-    setMin: "setMinValue",
-    setMax: "setMaxValue",
-};

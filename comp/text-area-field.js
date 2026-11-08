@@ -65,8 +65,6 @@ const TextAreaField = function(params = {}) {
     //     defaults here, as over the defaults of TextField
     // WHY its own rightPadding: on the right of a TextAreaField is its scroll bar, not the room of the warning ball of a
     //     one-line field (the rightPadding of a package pushed the scroll bar to the middle)
-    // WHY the old names first: the params forced below (showDescription, showUnit) would lose to an old name of the page
-    basic.renameOldParams(params, TextField.OLD_NAMES, "TextField");
     const givenRightPadding = params.rightPadding;
     basic.applyStylePackage(params, TextField.styles, TextFieldDefaults);
     params.rightPadding = (givenRightPadding !== undefined) ? givenRightPadding : TextAreaFieldDefaults.rightPadding;
@@ -231,7 +229,3 @@ const TextAreaField = function(params = {}) {
     return endExtendedObject(box);
 
 };
-
-// THE OLD NAME of the component, for a while: the pages made with TextareaB keep working (the same object).
-// Delete it when no page uses it any more (context/repo-map.md, "Parameter names").
-const TextareaB = TextAreaField;

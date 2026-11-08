@@ -56,7 +56,6 @@ const TinySelect = function(params = {}) {
 
     // BOX: Component container
     const box = startObject(params);
-    basic.keepOldNames(box, TinySelect.OLD_NAMES, "TinySelect"); // the pages made with the old names, for a while
 
     // *** PRIVATE VARIABLES:
     const DISABLED_OPACITY = 0.6;
@@ -115,11 +114,6 @@ const TinySelect = function(params = {}) {
 
     };
     // USAGE: tinySelect.setEnabled(0)
-
-    // THE OLD NAME, for a while: setDisabled(1) is setEnabled(0)
-    box.setDisabled = function(value) {
-        box.setEnabled(basic.isOn(value) ? 0 : 1);
-    };
 
     // The chosen item ({ id, label }), or null
     box.getSelectedItem = function() {
@@ -206,25 +200,6 @@ const TinySelect = function(params = {}) {
 
     return endObject(box);
 
-};
-
-// THE OLD NAMES of the params, the properties and the methods (basic.keepOldNames): the pages made with them keep
-// working until they move to the new names. Delete a name when no page uses it any more.
-TinySelect.OLD_NAMES = {
-    title: "titleText",
-    arrowIcon: "arrowIconFile",
-    labelBoldFont: "labelBold",
-    // WHY wrap: disabled is the reverse of enabled
-    disabled: { name: "enabled", wrap: (disabled) => basic.isOn(disabled) ? 0 : 1 },
-    // WHY wrap: onSelect got the index, the id, the label and the title; onChange gets self
-    onSelect: { name: "onChange", wrap: (onSelect) => (self) => {
-        const item = self.getSelectedItem() || {};
-        if (onSelect) onSelect(self.selectedIndex, item.id, item.label, self.titleText);
-    } },
-};
-// The old method it keeps by itself (the reverse of setEnabled): for test/old-names.js and the reader
-TinySelect.OLD_NAMES_BY_HAND = {
-    setDisabled: "setEnabled",
 };
 
 TinySelect.Z_INDEX = 1000; // the list on page; over a Dialog or a SidePanel that holds the field (basic.zIndexAbove)

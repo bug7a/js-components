@@ -1582,27 +1582,16 @@
             password.remove();
         });
 
-        test("Form: onChange(self, input) on an edit; the old onEdit(input) is still called with the input", async function () {
+        test("Form: onChange(self, input) on an edit", async function () {
             let changed = [];
             const form = Form({ onChange: function (self, input) { changed = [self, input]; } });
             const input = TextField({ titleText: "Name" });
             form.addInput(input);
             input.input.inputElement.value = "A";
             input.input.inputElement.dispatchEvent(new Event("input", { bubbles: true }));
-            const isNewCalled = changed[0] === form && changed[1] === input;
+            const isCalled = changed[0] === form && changed[1] === input;
             form.remove();
-            const realWarn = console.warn;
-            console.warn = function () { };
-            let editedInput = null;
-            const oldForm = Form({ onEdit: function (input) { editedInput = input; } });
-            console.warn = realWarn;
-            const oldInput = TextField({ titleText: "Name" });
-            oldForm.addInput(oldInput);
-            oldInput.input.inputElement.value = "B";
-            oldInput.input.inputElement.dispatchEvent(new Event("input", { bubbles: true }));
-            check("Form: onChange(self, input) on an edit; the old onEdit(input) is still called with the input",
-                isNewCalled && editedInput === oldInput, "onChange: " + isNewCalled + ", onEdit: " + (editedInput === oldInput));
-            oldForm.remove();
+            check("Form: onChange(self, input) on an edit", isCalled, "the form: " + (changed[0] === form) + ", the input: " + (changed[1] === input));
         });
 
         // *** TEXT FIELD (comp/text-field.js)
@@ -1619,117 +1608,6 @@
             const opacity = Number(email.warningBall.opacity);
             check("EmailField: a fast typing that ends valid leaves no warning ball", email.status === 0 && opacity === 0, "status: " + email.status + ", opacity: " + opacity);
             email.remove();
-        });
-
-        test("TextField: the old names of the params, properties, methods and events still work (basic.keepOldNames)", async function () {
-            const realWarn = console.warn;
-            const warnings = [];
-            console.warn = function (text) { warnings.push(String(text)); };
-            let changeCount = 0;
-            const field = TextField({ titleText: "Name", inputValue: "Ali", isRequired: 1, maxChar: 12, selectedLineColor: "#3987E5" });
-            field.onEdit = function () { changeCount++; }; // an event set later with its old name
-            const inputElement = field.input.inputElement;
-            inputElement.value = "Veli";
-            inputElement.dispatchEvent(new Event("input", { bubbles: true }));
-            const isParamsMoved = field.value === "Veli" && field.required === 1 && field.maxLength === 12 && inputElement.maxLength === 12 && field.focusLineColor === "#3987E5";
-            field.setInputValue("Ayşe");
-            const isMethodsKept = field.getInputValue() === "Ayşe" && field.getValue() === "Ayşe" && field.inputValue === "Ayşe";
-            // WHY a child: an old name of the page must win over a default of the child (EmailField: required 1)
-            const email = EmailField({ isRequired: 0, maxChar: 50 });
-            const password = PasswordField({ minChar: 3, showTooltipMessage: "Show it" });
-            password.input.inputElement.value = "ab1";
-            const isChildKept = email.required === 0 && email.maxLength === 50 && password.minLength === 3 && password.isValid() === 1 && password.showPasswordHintText === "Show it";
-            // WHY: a page made with the old component names (InputB, EmailInputB, SelectDate...) gets the same objects
-            const isComponentKept = InputB === TextField && EmailInputB === EmailField && PasswordInputB === PasswordField && URLInputB === UrlField && TextareaB === TextAreaField
-                && SelectDate === DatePicker && SelectTime === TimePicker && SelectColor === ColorPicker && SelectFile === FilePicker;
-            console.warn = realWarn;
-            const isNamed = warnings.indexOf('TextField: "inputValue" is an old name, use "value"') > -1 && warnings.indexOf('PasswordField: "minChar" is an old name, use "minLength"') > -1;
-            check("TextField: the old names of the params, properties, methods and events still work (basic.keepOldNames)",
-                isParamsMoved && changeCount === 1 && isMethodsKept && isChildKept && isNamed && isComponentKept,
-                "params: " + isParamsMoved + ", onEdit: " + changeCount + ", methods: " + isMethodsKept + ", children: " + isChildKept + ", components: " + isComponentKept + ", console: " + warnings.length);
-            field.remove();
-            email.remove();
-            password.remove();
-        });
-
-        test("The old names of TinySelect, SearchInput, Slider, Gauge, Toast, the graph boxes and WebView still work", async function () {
-            const realWarn = console.warn;
-            console.warn = function () { };
-            const select = TinySelect({ title: "Theme", disabled: 1, labelBoldFont: 0, list: [{ id: "1", label: "Light" }] });
-            const isSelectKept = select.titleText === "Theme" && select.enabled === 0 && select.clickable === 0 && select.labelBold === 0;
-            select.setDisabled(0); // the old method: the reverse of setEnabled
-            const isSelectEnabled = select.enabled === 1 && select.clickable === 1;
-            const search = SearchInput({ placeholderText: "Find", isCancelEnabled: 0 });
-            const searchElement = search.txtSearch.inputElement;
-            const isSearchKept = search.placeholder === "Find" && search.showClearIcon === 0 && searchElement.getAttribute("placeholder") === "Find";
-            search.setPlaceholderText("Look");
-            const isSearchMethodKept = searchElement.getAttribute("placeholder") === "Look";
-            const slider = Slider({ width: 200, currentValue: 40 });
-            const isSliderKept = slider.value === 40 && slider.currentValue === 40 && slider.getValue() === 40;
-            let gaugeChanges = 0;
-            const gauge = Gauge({ value: 10, onValueChange: function () { gaugeChanges++; } });
-            gauge.setValue(20);
-            const toast = Toast.show({ title: "File", message: "Saved", duration: 0 });
-            toast.update({ message: "Saved again" });
-            const isToastKept = toast.titleText === "File" && toast.messageText === "Saved again" && toast.title === "File";
-            const spark = SparkLineBox({ title: "Orders", hover: 0, values: [1, 2] });
-            const mini = MiniGraphBox({ title: "Sales", values: [1, 2] });
-            const isGraphKept = spark.titleText === "Orders" && spark.showTooltip === 0 && mini.titleText === "Sales";
-            const view = WebView({ title: "Help page" });
-            console.warn = realWarn;
-            check("The old names of TinySelect, SearchInput, Slider, Gauge, Toast, the graph boxes and WebView still work",
-                isSelectKept && isSelectEnabled && isSearchKept && isSearchMethodKept && isSliderKept && gaugeChanges === 1 && isToastKept && isGraphKept && view.ariaLabel === "Help page",
-                "select: " + isSelectKept + "/" + isSelectEnabled + ", search: " + isSearchKept + "/" + isSearchMethodKept + ", slider: " + isSliderKept
-                + ", gauge: " + gaugeChanges + ", toast: " + isToastKept + ", graphs: " + isGraphKept + ", view: " + view.ariaLabel);
-            [select, search, slider, gauge, spark, mini, view].forEach(function (object) { object.remove(); });
-            Toast.closeAll();
-        });
-
-        test("The old names of SliderField, CodeEditor and FullScreenSelect still work", async function () {
-            const realWarn = console.warn;
-            console.warn = function () { };
-            const field = SliderField({ width: 300, min: 5, max: 50, value: 20 });
-            const isRangeKept = field.minValue === 5 && field.maxValue === 50;
-            field.setMin(10);
-            const isMethodKept = field.minValue === 10;
-            const editor = CodeEditor({ width: 300, height: 100, placeholderText: "Write" });
-            const isEditorKept = editor.placeholder === "Write" && editor.textareaElem.placeholder === "Write";
-            const select = FullScreenSelect({ placeholderText: "Find" });
-            console.warn = realWarn;
-            check("The old names of SliderField, CodeEditor and FullScreenSelect still work",
-                isRangeKept && isMethodKept && isEditorKept && select.placeholder === "Find",
-                "range: " + isRangeKept + ", setMin: " + isMethodKept + ", editor: " + isEditorKept + ", select: " + select.placeholder);
-            [field, editor, select].forEach(function (object) { object.remove(); });
-        });
-
-        test("The old events of Slider, TinySelect, SearchInput and Form are called in the old way, also when set later", async function () {
-            const realWarn = console.warn;
-            console.warn = function () { };
-            const moved = [];
-            const slider = Slider({ width: 250, maxValue: 10, onDragMove: function (value) { moved.push(value); } });
-            await wait(50);
-            slider.elem.dispatchEvent(new MouseEvent("mousedown", { bubbles: true, button: 0, clientX: getSliderPointOf(slider, 0.7) }));
-            document.dispatchEvent(new MouseEvent("mouseup", {}));
-            const chosen = [];
-            const select = TinySelect({ titleText: "Size", list: [{ id: "s", label: "Small" }, { id: "l", label: "Large" }] });
-            select.onSelect = function (index, id, label, title) { chosen.push([index, id, label, title].join(" ")); };
-            select.setSelectedIndex(1);
-            const searched = [];
-            const search = SearchInput({ onSearch: function (text, self) { searched.push(text + ((self === search) ? "" : "?")); } });
-            search.txtSearch.inputElement.focus();
-            document.execCommand("insertText", false, "ABC");
-            const edited = [];
-            const form = Form({});
-            form.onEdit = function (input) { edited.push(input); };
-            const field = TextField({ titleText: "Name" });
-            form.addInput(field);
-            field.input.inputElement.value = "A";
-            field.input.inputElement.dispatchEvent(new Event("input", { bubbles: true }));
-            console.warn = realWarn;
-            check("The old events of Slider, TinySelect, SearchInput and Form are called in the old way, also when set later",
-                moved[0] === 7 && chosen[0] === "1 l Large Size" && searched[searched.length - 1] === "abc" && edited[0] === field,
-                "slider: " + moved.join(",") + ", select: " + chosen.join("|") + ", search: " + searched.join(",") + ", form: " + (edited[0] === field));
-            [slider, select, search, form].forEach(function (object) { object.remove(); });
         });
 
         // *** PHONE FIELD (comp/phone-field.js)

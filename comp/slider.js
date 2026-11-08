@@ -18,15 +18,14 @@ UI COMPONENT TEMPLATE
   ten steps, Home / End the ends. role "slider" with aria-valuenow / valuemin / valuemax (ariaLabel: its name);
   a ring around the thumb only for the keyboard (style.focus).
 - A key, a tap and a click on the track are short drags for the page: onChangeStart(self), onChange(self),
-  onChangeEnd(self), so a page that saves in onChangeEnd saves them too. (The old onDragStart, onDragMove(value),
-  onDragEnd work for a while.)
+  onChangeEnd(self), so a page that saves in onChangeEnd saves them too.
 - Style packages: "classic" (the default: inspired by Google Material 3: a thick track in two parts,
   a thin line for the thumb, a dot at the end), "round" (a thin track and a round white knob: the look of most web
   and phone sliders; a ring in the track color while it is dragged) and "roundDark" (round for a dark page).
   Select with styleName. (Slider.styles)
   The colors and the height of the track stay params (trackColor, trackHeight...): a package fills the ones the
   page does not give, so Slider({ styleName: "round", trackColor: "tomato" }) is a tomato round slider.
-- Needs basic.js v26.11.08 (a package of params, the old names).
+- Needs basic.js v26.10.27 (a package of params).
 
 USAGE:
 const volume = Slider({ width: 280, value: 70, onChange: function (self) { println(self.value); } });
@@ -121,7 +120,6 @@ const Slider = function(params = {}) {
 
     // BOX: Component container
     const box = startObject(params);
-    basic.keepOldNames(box, Slider.OLD_NAMES, "Slider"); // the pages made with the old names, for a while
 
     const _s = box.style;
     // WHY: A value from a page can be a text ("12"): "12" + 1 * 0.5 would be "120.5".
@@ -821,13 +819,3 @@ Slider.MINIMAL_COLORS = { ground: "#FFFFFF", ink: "#1F1F1F", onInk: "#FFFFFF", t
 Slider.styles.minimal = Slider.createMinimalStyle(Slider.MINIMAL_COLORS);
 Slider.MINIMAL_DARK_COLORS = { ground: "#1A1A19", ink: "#EDEDEB", onInk: "#1A1A19", track: White(0.14), focus: "#7FB6DE" };
 Slider.styles.minimalDark = Slider.createMinimalStyle(Slider.MINIMAL_DARK_COLORS);
-
-// THE OLD NAMES of the params, the properties and the methods (basic.keepOldNames): the pages made with them keep
-// working until they move to the new names. Delete a name when no page uses it any more.
-Slider.OLD_NAMES = {
-    currentValue: "value",
-    onDragStart: "onChangeStart",
-    onDragEnd: "onChangeEnd",
-    // WHY wrap: onDragMove got the value, onChange gets self
-    onDragMove: { name: "onChange", wrap: (onDragMove) => (self) => { if (onDragMove) onDragMove(self.value); } },
-};

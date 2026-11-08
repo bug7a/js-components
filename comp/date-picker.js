@@ -1051,7 +1051,3 @@ DatePicker.MINIMAL_COLORS = { ground: "#FFFFFF", text: Black(0.85), softText: Bl
 DatePicker.styles.minimal = DatePicker.createMinimalStyle(DatePicker.MINIMAL_COLORS);
 DatePicker.MINIMAL_DARK_COLORS = { ground: "#1A1A19", text: White(0.88), softText: White(0.55), faintText: White(0.48), line: White(0.18), edge: White(0.42), edgeHover: White(0.62), ink: "#EDEDEB", onInk: "#1A1A19", hover: White(0.07), off: White(0.25) };
 DatePicker.styles.minimalDark = DatePicker.createMinimalStyle(DatePicker.MINIMAL_DARK_COLORS);
-
-// THE OLD NAME of the component, for a while: the pages made with SelectDate keep working (the same object).
-// Delete it when no page uses it any more (context/repo-map.md, "Parameter names").
-const SelectDate = DatePicker;

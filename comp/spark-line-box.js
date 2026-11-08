@@ -124,7 +124,6 @@ const SparkLineBox = function (params = {}) {
 
     // BOX: Component container
     let box = startObject(params);
-    basic.keepOldNames(box, SparkLineBox.OLD_NAMES, "SparkLineBox"); // the pages made with the old names, for a while
 
     // *** PRIVATE VARIABLES:
     const _s = box.style;
@@ -728,10 +727,3 @@ SparkLineBox.withAlpha = function (color, alpha) {
 
 // Chrome and Edge can animate the path with the CSS "d" property.
 SparkLineBox.supportsCssPath = (typeof CSS !== "undefined" && CSS.supports && CSS.supports("d", 'path("M 0 0 L 1 1")'));
-
-// THE OLD NAMES of the params, the properties and the methods (basic.keepOldNames): the pages made with them keep
-// working until they move to the new names. Delete a name when no page uses it any more.
-SparkLineBox.OLD_NAMES = {
-    title: "titleText",
-    hover: "showTooltip",
-};

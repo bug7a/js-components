@@ -117,7 +117,6 @@ const CodeEditor = function (params = {}) {
 
     // BOX: Component container
     const box = startObject(params);
-    basic.keepOldNames(box, CodeEditor.OLD_NAMES, "CodeEditor"); // the pages made with the old names, for a while
 
     // *** PRIVATE VARIABLES:
     let _s = box.style;
@@ -947,10 +946,4 @@ CodeEditor.styles = {
         },
     },
 
-};
-
-// THE OLD NAMES of the params, the properties and the methods (basic.keepOldNames): the pages made with them keep
-// working until they move to the new names. Delete a name when no page uses it any more.
-CodeEditor.OLD_NAMES = {
-    placeholderText: "placeholder",
 };

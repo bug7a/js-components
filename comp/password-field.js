@@ -58,13 +58,10 @@ const PasswordField = function(params = {}) {
     mergeIntoIfMissing(params, PasswordFieldDefaults);
 
     // Edit params:
-    // WHY the old names first: showLeftBox is forced, an old createLeftBox of the page would win over it
-    basic.renameOldParams(params, TextField.OLD_NAMES, "TextField");
     params.showLeftBox = 1; // WHY: to add show/hide password button
 
     // BOX: Component container
     let box = startExtendedObject(TextField, params);
-    basic.keepOldNames(box, PasswordField.OLD_NAMES, "PasswordField"); // the pages made with the old names, for a while
 
     // *** PRIVATE VARIABLES:
 
@@ -179,16 +176,3 @@ const PasswordField = function(params = {}) {
     return endExtendedObject(box);
 
 };
-
-// THE OLD NAMES (basic.keepOldNames; the old names of TextField are in TextField.OLD_NAMES). Delete a name when no page uses it.
-PasswordField.OLD_NAMES = {
-    minChar: "minLength",
-    minCharWarningText: "minLengthWarningText",
-    showTooltipMessage: "showPasswordHintText",
-    hideTooltipMessage: "hidePasswordHintText",
-    showPasswordIconInvert: "invertIconColor",
-};
-
-// THE OLD NAME of the component, for a while: the pages made with PasswordInputB keep working (the same object).
-// Delete it when no page uses it any more (context/repo-map.md, "Parameter names").
-const PasswordInputB = PasswordField;

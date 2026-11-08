@@ -105,7 +105,6 @@ const MiniGraphBox = function (params = {}) {
 
     // BOX: Component container
     let box = startObject(params);
-    basic.keepOldNames(box, MiniGraphBox.OLD_NAMES, "MiniGraphBox"); // the pages made with the old names, for a while
 
     // *** PRIVATE VARIABLES:
     const _s = box.style;
@@ -481,10 +480,4 @@ const MiniGraphBox = function (params = {}) {
 
     return endObject(box);
 
-};
-
-// THE OLD NAMES of the params, the properties and the methods (basic.keepOldNames): the pages made with them keep
-// working until they move to the new names. Delete a name when no page uses it any more.
-MiniGraphBox.OLD_NAMES = {
-    title: "titleText",
 };
