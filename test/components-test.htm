@@ -24,7 +24,7 @@
 
         Open it in a browser: green = passed, orange = passed with a warning, red = failed.
         The summary is also in the console and in the tab title ("ALL PASS").
-        One component: components-test.htm?only=tabs (a part of the file path)
+        One component: components-test.htm?only=tabs (a part of the file path, in any case, "-" not counted)
 
         WHY IFRAMES: Every component is loaded alone in its own iframe with only its dependencies.
         So two files that define the same global (comp-m2 and comp-m4 UIEffects) can be tested,
@@ -564,9 +564,16 @@
             return state;
         };
 
+        // A text as ?only= compares it: small letters, no "-"
+        const textForOnly = function (text) {
+            return text.toLowerCase().replaceAll("-", "");
+        };
+
         const runAll = async function () {
-            const only = new URLSearchParams(location.search).get("only");
-            const tests = COMPONENTS.filter(function (t) { return !only || t.file.indexOf(only) >= 0; });
+            // ?only=TEXT: the files whose path has TEXT, in any case, a "-" not counted (?only=ScrollArea: comp/scroll-area.js)
+            // WHY: so run-tests.js --only gives this page and behavior-test (the names of its tests) one text
+            const only = new URLSearchParams(location.search).get("only") || "";
+            const tests = COMPONENTS.filter(function (t) { return textForOnly(t.file).includes(textForOnly(only)); });
             const states = new Array(tests.length);
             const results = new Array(tests.length);
             let done = 0;
@@ -587,9 +594,15 @@
             for (let i = 0; i < Math.min(PARALLEL, tests.length); i++) workers.push(worker());
             await Promise.all(workers);
 
+            // WHY: a text that is in no file path (a typo) would test nothing and say ALL PASS
+            if (only && tests.length === 0) {
+                const noFile = { name: "a file has this text in its path", ok: false, level: "fail", info: "none of the " + COMPONENTS.length };
+                states.push(showRow({ file: "?only=" + only, name: "no file" }, { steps: [noFile] }));
+            }
+
             const failCount = states.filter(function (s) { return s === "FAIL"; }).length;
             const warnCount = states.filter(function (s) { return s === "WARN"; }).length;
-            const summary = "components test: " + (tests.length - failCount) + "/" + tests.length + " passed" +
+            const summary = "components test: " + (states.length - failCount) + "/" + states.length + " passed" +
                 (failCount ? " - " + failCount + " FAILED" : " - ALL PASS") + (warnCount ? " (" + warnCount + " with warnings)" : "");
 
             lblStatus.text = summary;

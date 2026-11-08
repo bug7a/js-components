@@ -25,7 +25,7 @@
         Open it in a browser with a web server (Live Server), not file:// (the pages are read with fetch).
         Green = passed, orange = passed with a warning, red = failed.
         The summary is also in the console and in the tab title ("ALL PASS").
-        One page: basic-samples-test.htm?only=counter (a part of the file name)
+        One page: basic-samples-test.htm?only=counter (a part of the file name, in any case, "-" not counted)
 
         HOW: Every page is read with fetch, a watcher script and <base href> are put at the top of its
         <head>, and it runs in its own iframe (a blob address of the same origin). So the watcher sees
@@ -315,6 +315,11 @@
             return state;
         };
 
+        // A text as ?only= compares it: small letters, no "-"
+        const textForOnly = function (text) {
+            return text.toLowerCase().replaceAll("-", "");
+        };
+
         const runAll = async function () {
             if (location.protocol === "file:") {
                 lblStatus.text = "Open this page with a web server (Live Server), not file://";
@@ -323,9 +328,10 @@
                 return;
             }
 
-            const only = new URLSearchParams(location.search).get("only");
+            // ?only=TEXT: the pages whose file name has TEXT, in any case, a "-" not counted, as in the other test pages
+            const only = new URLSearchParams(location.search).get("only") || "";
             const samples = SAMPLES.map(function (s) { return (typeof s === "string") ? { file: s } : s; })
-                .filter(function (s) { return !only || s.file.indexOf(only) >= 0; });
+                .filter(function (s) { return textForOnly(s.file).includes(textForOnly(only)); });
             const states = new Array(samples.length);
             const results = new Array(samples.length);
             let done = 0;
@@ -346,9 +352,15 @@
             for (let i = 0; i < Math.min(PARALLEL, samples.length); i++) workers.push(worker());
             await Promise.all(workers);
 
+            // WHY: a text that is in no file name (a typo) would test nothing and say ALL PASS
+            if (only && samples.length === 0) {
+                const noFile = { name: "a page has this text in its file name", ok: false, level: "fail", info: "none of the " + SAMPLES.length };
+                states.push(showRow("?only=" + only, { steps: [noFile] }));
+            }
+
             const failCount = states.filter(function (s) { return s === "FAIL"; }).length;
             const warnCount = states.filter(function (s) { return s === "WARN"; }).length;
-            const summary = "basic samples test: " + (samples.length - failCount) + "/" + samples.length + " passed" +
+            const summary = "basic samples test: " + (states.length - failCount) + "/" + states.length + " passed" +
                 (failCount ? " - " + failCount + " FAILED" : " - ALL PASS") + (warnCount ? " (" + warnCount + " with warnings)" : "");
 
             lblStatus.text = summary;
