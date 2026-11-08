@@ -2335,6 +2335,22 @@ BasicDesigner.removeCssRow = function (obj, name) {
     BasicDesigner.showProperties(obj);
 };
 
+// The CSS of the rows of an object ({ letterSpacing: "0.08em" }): a copy of it gets it too.
+BasicDesigner.cssOfObject = function (obj) {
+    const css = {};
+    BasicDesigner.cssRowNames(obj).forEach(function (name) {
+        const value = BasicDesigner.valueOf(obj, BasicDesigner.CSS_PREFIX + name);
+        if (value !== "") css[name] = value;
+    });
+    return css;
+};
+
+// The CSS and the motion of a copy (copyItemOf), so it looks and moves as its source.
+BasicDesigner.applyCopyLook = function (obj, item) {
+    if (item.css && Object.keys(item.css).length) obj.css = item.css;
+    if (item.motion) obj.setMotionNow(item.motion);
+};
+
 // The prompt lines of the CSS and the motion of an object, as code. isAdded: an object added in the designer.
 BasicDesigner.codePromptLines = function (obj, isAdded) {
     const s = BasicDesigner.state;
@@ -3582,12 +3598,13 @@ BasicDesigner.addObjectAt = function (item, place) {
         BasicDesigner.setStatus("Could not add " + item.type + ": " + error.message, "error");
         return;
     }
+    BasicDesigner.applyCopyLook(obj, item);
     // (before the object is on the page: it does not count its own name)
     const name = item.name || BasicDesigner.newNameFor(item.type);
-    BasicDesigner.logPlace("add", { type: item.type, place: place, props: item.props, copyOf: item.copyOf, script: item.script, name: name });
+    BasicDesigner.logPlace("add", { type: item.type, place: place, props: item.props, css: item.css, motion: item.motion, copyOf: item.copyOf, script: item.script, name: name });
     BasicDesigner.putInPlace(obj, { container: place.container, before: place.before, isManual: place.isManual });
 
-    obj.__bd.added = { type: item.type, props: props, copyOf: item.copyOf || "", script: missingScript, name: name };
+    obj.__bd.added = { type: item.type, props: props, css: item.css || null, motion: item.motion || "", copyOf: item.copyOf || "", script: missingScript, name: name };
     s.addedObjects.push(obj);
     s.changes.set("add:" + obj.__bd.id, { obj: obj, kind: "add", key: "added", targets: new Map(), count: 1 });
     BasicDesigner.afterPlaceChange(obj);
@@ -3649,6 +3666,8 @@ BasicDesigner.addedPromptLines = function (obj) {
     if (added.type === "VGroup" || added.type === "HGroup") code += " ... endGroup();";
     if (added.type === "Icon") code += "  then load the picture: that.load(\"...\");";
     lines.push(code);
+    if (added.css && Object.keys(added.css).length) lines.push("   - then that.css = " + BasicDesigner.propsCode(added.css) + ";");
+    if (added.motion) lines.push("   - then that.setMotion(" + BasicDesigner.fmt(added.motion) + ");");
     if (BasicDesigner.isAutoName(obj)) lines.push("   - name: " + name + " (automatic: give it a name that says what it is)");
     else lines.push("   - name: " + name);
     if (added.props.left !== undefined) lines.push("   (left / top: where it was dropped; choose the right place in the code)");
@@ -3840,6 +3859,8 @@ BasicDesigner.logPlace = function (kind, values) {
         point: place.point || null,
         isManual: place.isManual || false, // manual mode: in a group too, at the point
         props: values.props || null, // add: the props (a copy has its own)
+        css: values.css || null, // add: the CSS of a copy (cssOfObject)
+        motion: values.motion || "", // add: the motion of a copy
         copyOf: values.copyOf || null, // add: the description of the copied object
         script: values.script || null, // add: the file of a component that the page may not load (a copy of another page)
         name: values.name || null, // add: its automatic name (the same after a reload)
@@ -3886,7 +3907,7 @@ BasicDesigner.applySession = function (session) {
         const place = { container: container, before: before, point: op.point || undefined, isManual: !!op.isManual };
         if (op.kind === "add") {
             const toolboxItem = BasicDesigner.toolboxItems.find(function (i) { return i.type === op.type; });
-            const item = (op.props) ? { type: op.type, props: op.props, copyOf: op.copyOf, script: op.script } : Object.assign({}, toolboxItem);
+            const item = (op.props) ? { type: op.type, props: op.props, css: op.css, motion: op.motion, copyOf: op.copyOf, script: op.script } : Object.assign({}, toolboxItem);
             if (op.name) item.name = op.name;
             if (toolboxItem || op.props) {
                 if (container) BasicDesigner.addObjectAt(item, place);
@@ -7866,7 +7887,7 @@ BasicDesigner.copyItemOf = function (obj) {
         // WHY listValue: the panel reads a list as a text ("14, 10"), which the setter does not take: the copy lost it.
         props[key] = (BasicDesigner.LIST_PROPS[key]) ? BasicDesigner.listValue(value) : value;
     });
-    return { type: type, props: props, copyOf: BasicDesigner.describeObject(obj) };
+    return { type: type, props: props, css: BasicDesigner.cssOfObject(obj), motion: BasicDesigner.motionOf(obj), copyOf: BasicDesigner.describeObject(obj) };
 };
 
 // Can obj be copied (Cmd+D, Cmd+C)? WHY not copyItemOf: it makes a new object on the page for the defaults
@@ -8307,7 +8328,7 @@ BasicDesigner.componentCopyItem = function (obj) {
     const params = BasicDesigner.plainCopy(obj.__bd.params) || {};
     const base = BasicDesigner.componentBaseParams(type, params.styleName);
     const props = (base) ? BasicDesigner.diffValue(params, base) : params;
-    return { type: type, props: props || {}, copyOf: BasicDesigner.describeObject(obj), script: BasicDesigner.componentScriptOf(type) };
+    return { type: type, props: props || {}, css: BasicDesigner.cssOfObject(obj), motion: BasicDesigner.motionOf(obj), copyOf: BasicDesigner.describeObject(obj), script: BasicDesigner.componentScriptOf(type) };
 };
 
 // The file of a component in the scripts of the page (repo path): its name in kebab case (SmartButton ->

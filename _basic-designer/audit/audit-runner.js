@@ -763,6 +763,23 @@
         if ([inSelect, inInteract, backInSelect].join(",") === "dashed,none,dashed") R.passed.push("edges of empty boxes: not in Interact mode");
         else R.fails.push("edges of empty boxes: select " + inSelect + ", interact " + inInteract + ", select again " + backInSelect);
 
+        // A copy keeps the CSS and the motion of its source: on the page and in the code of the prompt
+        await check("copy keeps its css and motion", async function () {
+            BD.select(A.labelGiven); await sleep(30);
+            BD.onPropertyChange({ kind: "value", key: "css:letterSpacing", value: "2px" });
+            BD.onPropertyChange({ kind: "value", key: "motion", value: "opacity 0.2s" });
+            await sleep(30);
+            BD.duplicateObject(A.labelGiven);
+            await sleep(100);
+        }, function () {
+            const copy = BD.state.addedObjects[0];
+            if (!copy) return "no copy";
+            return same(copy.elem.style.letterSpacing + " | " + BD.motionOf(copy), "2px | opacity 0.2s");
+        }, /- then that\.css = \{ letterSpacing: "2px" \};[\s\S]*- then that\.setMotion\("opacity 0\.2s"\);/,
+        function () { return same(BD.state.addedObjects.length, 0); });
+        BD.revertAll(); // WHY: the CSS and the motion of the source stay after the undo of the copy
+        await sleep(100);
+
         R.done = true;
         return R;
     };
