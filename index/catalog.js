@@ -451,10 +451,10 @@ CATALOG.COMPONENTS = [
         source: "comp/smart-table.js", deps: ["comp/search-input.js", "comp/context-menu.js", "comp/tooltip.js"],
         samples: [
             { file: "02-comp-examples/smart-table.htm", title: "Styles" },
-            { file: "02-comp-examples/smart-table-1.htm", title: "2M rows" },
             { file: "02-comp-examples/smart-table-2.htm", title: "Actions" },
             { file: "02-comp-examples/smart-table-3.htm", title: "Edit & delete" },
             { file: "02-comp-examples/smart-table-4.htm", title: "Style" },
+            { file: "02-comp-examples/smart-table-5.htm", title: "2M rows" },
             { file: "02-comp-examples/minimal-theme.htm", title: "Minimal theme (minimal, minimalDark)" },
         ],
         en: "Virtual-scroll table for millions of rows, with filtering, sorting, custom cells and editing. Style packages: light (default; its old name classic) and dark, the looks of DataTable, and green (the old look). A cut text shows all of it in a bubble.",
@@ -464,7 +464,7 @@ CATALOG.COMPONENTS = [
         key: "check-box", name: "CheckBox", cat: "selection",
         source: "comp/check-box.js",
         samples: [
-            { file: "02-comp-examples/check-box-1.htm", title: "Example 1" },
+            { file: "02-comp-examples/check-box.htm", title: "Example 1" },
             { file: "02-comp-examples/check-box-2.htm", title: "Example 2" },
             { file: "02-comp-examples/check-box-3.htm", title: "Example 3 (dark)" },
             { file: "02-comp-examples/minimal-theme.htm", title: "Minimal theme (minimal, minimalDark)" },
@@ -476,7 +476,7 @@ CATALOG.COMPONENTS = [
         key: "radio-button", name: "RadioButton", cat: "selection",
         source: "comp/radio-button.js",
         samples: [
-            { file: "02-comp-examples/radio-button-1.htm", title: "Example 1" },
+            { file: "02-comp-examples/radio-button.htm", title: "Example 1" },
             { file: "02-comp-examples/radio-button-2.htm", title: "Example 2" },
             { file: "02-comp-examples/radio-button-3.htm", title: "Example 3 (dark)" },
             { file: "02-comp-examples/minimal-theme.htm", title: "Minimal theme (minimal, minimalDark)" },
@@ -507,11 +507,13 @@ CATALOG.COMPONENTS = [
         key: "text-field", name: "TextField", cat: "inputs",
         source: "comp/text-field.js", deps: ["comp/tooltip.js"],
         samples: [
-            { file: "02-comp-examples/text-field-ex1.htm", title: "Basic" },
-            { file: "02-comp-examples/text-field-ex2.htm", title: "Units & hints" },
-            { file: "02-comp-examples/text-field-ex3-style.htm", title: "Style" },
-            { file: "02-comp-examples/text-field-ex4-custom-unit.htm", title: "Custom unit" },
-            { file: "02-comp-examples/text-field-ex5-warning-icon.htm", title: "Warning icon" },
+            { file: "02-comp-examples/text-field.htm", title: "ozden (new pages)" },
+            { file: "02-comp-examples/text-field-2.htm", title: "Units & hints" },
+            { file: "02-comp-examples/text-field-3-style.htm", title: "Style" },
+            { file: "02-comp-examples/text-field-4-custom-unit.htm", title: "Custom unit" },
+            { file: "02-comp-examples/text-field-5-warning-icon.htm", title: "Warning icon" },
+            { file: "02-comp-examples/text-field-6-dark.htm", title: "Dark" },
+            { file: "02-comp-examples/text-field-7-light.htm", title: "Basic (light)" },
             { file: "02-comp-examples/minimal-theme.htm", title: "Minimal theme (minimal, minimalDark)" },
         ],
         en: "Labeled text field with an icon, a unit, hints and validation; the base of EmailField, PasswordField and the other fields.",
@@ -654,6 +656,12 @@ CATALOG.COMPONENTS = [
         ],
         en: "A ready login and sign up page with e-mail, password and social buttons.",
         tr: "E-posta, şifre ve sosyal giriş düğmeleriyle hazır giriş ve kayıt sayfası.",
+    },
+    {
+        key: "form", name: "Form", cat: "pages",
+        source: "comp/form.js", deps: ["comp/tooltip.js", "comp/text-field.js"], samples: ["02-comp-examples/form.htm"],
+        en: "A page-wide form that checks its fields: the send button waits until every required field is valid; a message over the form after sending.",
+        tr: "Alanlarını denetleyen, sayfa genişliğinde bir form: gönder düğmesi her zorunlu alan geçerli olana kadar bekler; gönderince formun üstünde bir mesaj.",
     },
 ];
 
