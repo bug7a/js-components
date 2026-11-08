@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>SliderField light / dark draft</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- LIBRARY FILES (a draft: no component, only basic.js objects) -->
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Bold.ttf" as="font" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="../basic/basic.css">
+    <script src="../basic/basic.js" type="text/javascript" charset="utf-8"></script>
+
+    <script>
+
+        /* Bismillah */
+
+        // DRAFT DESIGN of comp/slider-field.js (SliderField): the "light" and "dark" packages, every state side by side.
+        // light: SliderFieldDefaults.style (a light gray field, a gray fill that ends with a small handle, dots for the
+        // steps). dark: SliderField.styles.dark, its missing keys filled from the defaults. Plain basic.js objects (no
+        // SliderField here); under the mouse, dragging, the keyboard focus and the typing are still frames of those
+        // moments. The values are copies: keep them in step with slider-field.js when it changes.
+        // http://127.0.0.1:5505/_basic-designer/index.htm?page=_designs/slider-field.htm
+
+        const PAGE_COLOR = "#F4F5F2"; // the ground of the draft, not of the fields
+        const PAGE_TEXT = { title: Black(0.8), note: Black(0.5), state: Black(0.45), stateTitle: Black(0.4) }; // the texts of the draft
+        const STATE_COLUMN_WIDTH = 250;
+        const ROW_HEIGHT = 60;
+        const HEADER_HEIGHT = 24;
+        const CARD_PADDING = 24;
+        const COLUMN_GAP = 24;
+
+        // THE SIZES (SliderFieldDefaults; the same in both looks) and the spaces of the component
+        const SIZE = { width: 320, height: 44 };
+        const SPACE = { labelDot: 8, valueDot: 10, textOverlap: 4, fillDot: 4, handleDot: 8, inputMinWidth: 64, inputExtraWidth: 28, input: 6, caretHeight: 18 }; // LABEL_DOT_SPACE, VALUE_DOT_SPACE, TEXT_OVERLAP, FILL_DOT_SPACE, HANDLE_DOT_SPACE, INPUT_MIN_WIDTH, INPUT_EXTRA_WIDTH, INPUT_SPACE
+        const TEXT_WIDTH_PER_PX = 0.56; // the width of a letter of Open Sans, from its font size (the component measures the texts)
+
+        // THE LIGHT LOOK (SliderFieldDefaults.style)
+        const LIGHT = {
+            page: { color: "white", textColor: Black(0.45) }, // the light page the fields sit on
+            box: { color: "#F2F2F4", hoverColor: "", border: 1, borderColor: "#E8E8EB", round: 12, boxShadow: "none" }, // hoverColor "": the same color under the mouse
+            boxFocus: { borderColor: "#9A9AA0", ringColor: "", ringWidth: 2 }, // the keyboard focus: the edge; ringColor "": no ring inside it
+            fill: { color: "#E1E1E4", hoverColor: "#DCDCE0", activeColor: "#D5D5DA", minWidth: 26, round: 11 }, // activeColor: while dragging; minWidth: the fill at min
+            handle: { width: 3, height: 16, inset: 11, color: "#A9A9AE", hoverColor: "#86868C", activeColor: "#5E5E64", round: 2 }, // inset: from the right end of the fill
+            tick: { size: 3, color: "#BDBDC2", minSpace: 9 },
+            label: { fontSize: 15, textColor: "#8A8A8F", fontFamily: "", padding: 14 },
+            value: { fontSize: 15, textColor: "#2C2C2E", fontFamily: "", padding: 16 },
+            input: { color: White(1), textColor: "#2C2C2E", round: 6 }, // while typing the value
+            disabled: { opacity: 0.5, filter: "none" },
+        };
+
+        // THE DARK LOOK (SliderField.styles.dark, the same colors as SelectBox, TagInput, Tabs and Stepper "dark")
+        const DARK = {
+            page: { color: "#1A1A19", textColor: White(0.5) }, // the dark card of the kit
+            box: { color: "#232322", hoverColor: "", border: 1, borderColor: White(0.08), round: 12, boxShadow: "none" },
+            boxFocus: { borderColor: "#65A293", ringColor: "", ringWidth: 2 },
+            fill: { color: White(0.09), hoverColor: White(0.12), activeColor: White(0.16), minWidth: 26, round: 11 },
+            handle: { width: 3, height: 16, inset: 11, color: White(0.35), hoverColor: White(0.55), activeColor: "#65A293", round: 2 },
+            tick: { size: 3, color: White(0.22), minSpace: 9 },
+            label: { fontSize: 15, textColor: White(0.5), fontFamily: "", padding: 14 },
+            value: { fontSize: 15, textColor: White(0.9), fontFamily: "", padding: 16 },
+            input: { color: White(0.08), textColor: White(0.9), round: 6 },
+            disabled: { opacity: 0.4, filter: "none" },
+        };
+
+        // THE STATES (one row each): the field of each row, its value and its moment
+        const WIDTH_FIELD = { labelText: "Width", minValue: 0, maxValue: 10, step: 1 };
+        const STATES = [
+            Object.assign({ name: "Normal", value: 3 }, WIDTH_FIELD),
+            { name: "With a unit, step 5 (fewer dots)", labelText: "Opacity", value: 80, minValue: 0, maxValue: 100, step: 5, unitText: "%" },
+            { name: "Decimals (step 0.1: one decimal)", labelText: "Scale", value: 1.5, minValue: 0.5, maxValue: 3, step: 0.1 },
+            Object.assign({ name: "Under the mouse (hover)", value: 3, hover: 1 }, WIDTH_FIELD),
+            Object.assign({ name: "Dragging (active)", value: 6, dragging: 1 }, WIDTH_FIELD),
+            Object.assign({ name: "Keyboard focus", value: 3, focus: 1 }, WIDTH_FIELD),
+            Object.assign({ name: "Typing the value (editable: 1)", value: 3, editing: 1 }, WIDTH_FIELD),
+            Object.assign({ name: "At the minimum (the handle is under the label: hidden)", value: 0 }, WIDTH_FIELD),
+            Object.assign({ name: "At the maximum (the fill is the whole field)", value: 10 }, WIDTH_FIELD),
+            Object.assign({ name: "Disabled", value: 3, disabled: 1 }, WIDTH_FIELD),
+        ];
+
+        const start = function () {
+
+            page.color = PAGE_COLOR;
+
+            // BOX: Scrolling page
+            startBox(0, 0, "100%", "100%", { color: "transparent", scrollY: 1, scrollX: 1 });
+
+                VGroup({ width: "max-content", height: "auto", align: "left top", gap: 22, padding: 40, clipContent: 0 });
+
+                    Label({ text: "SliderField · light / dark · draft (comp/slider-field.js)", fontSize: 20, bold: 1, textColor: PAGE_TEXT.title });
+                    Label({ text: "light is the default package, dark is SliderField.styles.dark. Every row is a state.", fontSize: 13, textColor: PAGE_TEXT.note });
+
+                    // GROUP: The names of the states, then a card for every look
+                    HGroup({ width: "auto", height: "auto", align: "left top", gap: COLUMN_GAP, clipContent: 0 });
+                        drawStateColumn();
+                        drawLookCard(LIGHT, "light (default)");
+                        drawLookCard(DARK, "dark");
+                    endGroup();
+
+                endGroup();
+
+            endBox();
+
+        };
+
+        // GROUP: The names of the states, one per row (the rows of the cards have the same heights)
+        const drawStateColumn = function () {
+            const column = VGroup({ width: STATE_COLUMN_WIDTH, height: "auto", align: "left top", gap: 0, padding: [0, CARD_PADDING] });
+                Label({ height: HEADER_HEIGHT, text: "state", fontSize: 12, textColor: PAGE_TEXT.stateTitle });
+                STATES.forEach(function (state) {
+                    HGroup({ width: "100%", height: ROW_HEIGHT, align: "left center" });
+                        Label({ width: "100%", text: state.name, fontSize: 12, textColor: PAGE_TEXT.state, css: { lineHeight: "1.3" } });
+                    endGroup();
+                });
+            endGroup();
+            return column;
+        };
+
+        // GROUP: A card in the color of the page of a look: its name, then one row per state
+        const drawLookCard = function (look, name) {
+            const card = VGroup({ width: "auto", height: "auto", align: "left top", gap: 0, padding: CARD_PADDING, color: look.page.color, round: 10, border: 1, borderColor: Black(0.08), clipContent: 0 });
+                Label({ height: HEADER_HEIGHT, text: name, fontSize: 13, bold: 1, textColor: look.page.textColor, css: { whiteSpace: "nowrap" } });
+                STATES.forEach(function (state) {
+                    // GROUP: A row: the field in this state
+                    HGroup({ width: SIZE.width, height: ROW_HEIGHT, align: "left center", clipContent: 0 });
+                        drawSliderField(look, state);
+                    endGroup();
+                });
+            endGroup();
+            return card;
+        };
+
+        // BOX: A field in one state: the fill, the dots of the steps, the handle, the label, the value (or the input while typing)
+        const drawSliderField = function (look, state) {
+            const _b = look.box;
+            const isFocusLook = state.focus || state.editing;
+            const field = Box({ width: SIZE.width, height: SIZE.height, color: (state.hover && _b.hoverColor) ? _b.hoverColor : _b.color, round: _b.round, border: _b.border, borderColor: isFocusLook ? look.boxFocus.borderColor : _b.borderColor, boxShadow: _b.boxShadow, clipContent: 1, position: "relative" });
+            field.shrink = 0;
+            field.css = { boxSizing: "border-box" };
+            if (state.disabled) field.css = { opacity: String(look.disabled.opacity), filter: look.disabled.filter };
+            createIn(field, function () {
+                const layout = getLayout(look, state);
+                drawFill(look, state, layout);
+                drawTicks(look, state, layout);
+                drawHandle(look, state, layout);
+                drawLabel(look, state);
+                if (state.editing) drawInput(look, state, layout);
+                else drawValue(look, state, layout);
+                if (isFocusLook && look.boxFocus.ringColor) drawFocusRing(look);
+            });
+            return field;
+        };
+
+        // *** THE PLACES (as the component measures them)
+
+        // The fill from the ratio of the value, the handle at its end, where the label and the value are (the dots stay out of them)
+        const getLayout = function (look, state) {
+            const innerWidth = SIZE.width - 2 * look.box.border;
+            const innerHeight = SIZE.height - 2 * look.box.border;
+            const ratio = (state.value - state.minValue) / (state.maxValue - state.minValue);
+            const track = { start: look.fill.minWidth, end: innerWidth }; // light and dark: the fill moves from minWidth to the end of the field
+            const fillWidth = track.start + ratio * (track.end - track.start);
+            const handleLeft = fillWidth - look.handle.inset - look.handle.width;
+            const valueText = formatValue(state);
+            const valueWidth = estimateTextWidth(valueText, look.value.fontSize);
+            return {
+                innerWidth: innerWidth,
+                innerHeight: innerHeight,
+                track: track,
+                fillWidth: fillWidth,
+                handleLeft: handleLeft,
+                handleRight: handleLeft + look.handle.width,
+                labelRight: look.label.padding + estimateTextWidth(state.labelText, look.label.fontSize) + SPACE.labelDot,
+                valueLeft: innerWidth - look.value.padding - valueWidth - SPACE.valueDot,
+                valueText: valueText,
+                valueWidth: valueWidth,
+            };
+        };
+
+        const estimateTextWidth = function (text, fontSize) {
+            return String(text).length * fontSize * TEXT_WIDTH_PER_PX;
+        };
+
+        // The value with the decimals of the step, then the unit
+        const formatValue = function (state) {
+            const stepText = String(state.step);
+            const decimals = (stepText.indexOf(".") > -1) ? stepText.split(".")[1].length : 0;
+            return Number(state.value).toFixed(decimals) + (state.unitText || "");
+        };
+
+        // *** THE PARTS
+
+        // BOX: The filled part (style.fill): its color under the mouse and while dragging
+        const drawFill = function (look, state, layout) {
+            const _f = look.fill;
+            return Box({ left: 0, top: 0, width: layout.fillWidth, height: "100%", color: getStateColor(_f, state), round: _f.round });
+        };
+
+        // partStyle: fill or handle (color, hoverColor, activeColor)
+        const getStateColor = function (partStyle, state) {
+            if (state.dragging) return partStyle.activeColor;
+            if (state.hover && !state.disabled) return partStyle.hoverColor;
+            return partStyle.color;
+        };
+
+        // BOXES: The dots of the steps (style.tick): one per step, not under the fill, the handle, the label or the value
+        const drawTicks = function (look, state, layout) {
+            const _t = look.tick;
+            const steps = Math.round((state.maxValue - state.minValue) / state.step);
+            const count = getTickCount(steps, layout.track.end - layout.track.start, _t.minSpace);
+            if (count === 0) return;
+            const dotsLeft = Math.max(layout.fillWidth + SPACE.fillDot, layout.handleRight + SPACE.handleDot);
+            const top = (layout.innerHeight - _t.size) / 2;
+            for (let i = 0; i <= count; i++) {
+                const x = layout.track.start + (i / count) * (layout.track.end - layout.track.start) - look.handle.inset - look.handle.width / 2;
+                const isVisible = x > dotsLeft && x > layout.labelRight && x < layout.valueLeft;
+                if (!isVisible) continue;
+                Box({ left: x - _t.size / 2, top: top, width: _t.size, height: _t.size, color: _t.color, round: _t.size });
+            }
+        };
+
+        // Every step, or a divisor of the steps, as many as there is room for (the component: getTickCount, maxTicks 30)
+        const getTickCount = function (steps, trackLength, minSpace) {
+            if (steps < 1) return 0;
+            const maxCount = Math.min(30, Math.floor(trackLength / minSpace));
+            if (steps <= maxCount) return steps;
+            for (let count = maxCount; count >= 2; count--) {
+                if (steps % count === 0) return count;
+            }
+            return 0;
+        };
+
+        // BOX: The handle at the end of the fill (style.handle); hidden where it would be on the label or the value
+        const drawHandle = function (look, state, layout) {
+            const _h = look.handle;
+            const isOnLabel = (layout.handleRight > look.label.padding - SPACE.textOverlap && layout.handleLeft < layout.labelRight - SPACE.textOverlap);
+            const isOnValue = (layout.handleRight > layout.valueLeft + SPACE.textOverlap);
+            if (isOnLabel || isOnValue) return null;
+            return Box({ left: layout.handleLeft, top: (layout.innerHeight - _h.height) / 2, width: _h.width, height: _h.height, color: getStateColor(_h, state), round: _h.round });
+        };
+
+        // LABEL: The name at the left (style.label)
+        const drawLabel = function (look, state) {
+            const _l = look.label;
+            const label = Label({ left: _l.padding, top: 0, height: "100%", text: state.labelText, fontSize: _l.fontSize, textColor: _l.textColor });
+            styleTextLabel(label, _l);
+            return label;
+        };
+
+        // LABEL: The value at the right (style.value)
+        const drawValue = function (look, state, layout) {
+            const _v = look.value;
+            const label = Label({ top: 0, height: "100%", text: layout.valueText, fontSize: _v.fontSize, textColor: _v.textColor });
+            label.css = { left: "auto", right: _v.padding + "px" };
+            styleTextLabel(label, _v);
+            return label;
+        };
+
+        // One line in the middle of the field (fontFamily with css: the setter of basic.js also sets the weight)
+        const styleTextLabel = function (label, textStyle) {
+            label.css = { display: "flex", alignItems: "center", whiteSpace: "nowrap" };
+            if (textStyle.fontFamily) label.css = { fontFamily: textStyle.fontFamily };
+        };
+
+        // GROUP: The input while the value is typed (style.input): at the right, as wide as the value and a little more
+        const drawInput = function (look, state, layout) {
+            const _i = look.input;
+            const width = Math.max(SPACE.inputMinWidth, layout.valueWidth + SPACE.inputExtraWidth);
+            const input = HGroup({ left: layout.innerWidth - width - SPACE.input, top: SPACE.input, width: width, height: layout.innerHeight - 2 * SPACE.input, align: "right center", gap: 1, padding: [10, 0], color: _i.color, round: _i.round });
+                Label({ text: formatValue(Object.assign({}, state, { unitText: "" })), fontSize: look.value.fontSize, textColor: _i.textColor, css: { whiteSpace: "nowrap" } });
+                Box({ width: 1, height: SPACE.caretHeight, color: _i.textColor, position: "relative" });
+            endGroup();
+            return input;
+        };
+
+        // BOX: A ring inside the edge for the keyboard focus (boxFocus.ringColor; light and dark have none)
+        const drawFocusRing = function (look) {
+            const _f = look.boxFocus;
+            return Box({ left: 0, top: 0, width: "100%", height: "100%", color: "transparent", border: _f.ringWidth, borderColor: _f.ringColor, round: Math.max(0, look.box.round - look.box.border) });
+        };
+
+    </script>
+
+</head>
+
+<body>
+</body>
+
+</html>
