@@ -50,7 +50,7 @@ CATALOG.CATEGORIES = [
 CATALOG.COMPONENTS = [
     {
         key: "tabs", name: "Tabs", cat: "navigation",
-        source: "comp/tabs.js", samples: ["02-comp-examples/tabs.htm", "02-comp-examples/minimal-theme.htm"],
+        source: "comp/tabs.js", samples: ["02-comp-examples/tabs.htm", { file: "02-comp-examples/tabs-2.htm", title: "Big icon tabs" }, "02-comp-examples/minimal-theme.htm"],
         en: "Tab bar with underline and pill variants, counts, badges, closable tabs, a vertical mode and optional panels.",
         tr: "Alt çizgili ve hap görünümlü sekme çubuğu: sayı, rozet, kapatılabilir sekme, dikey düzen ve isteğe bağlı paneller.",
     },
