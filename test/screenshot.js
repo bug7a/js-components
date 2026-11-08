@@ -9,6 +9,7 @@ SCREENSHOT: one picture of a page (or of a part of it) for a report, in one comm
     node test/screenshot.js _basic-designer/index.htm --run "BasicDesigner.openFolderDialog()" --clip "[role=dialog]"
     node test/screenshot.js tabs.htm --before                the page of the last commit left, the page now right
     node test/screenshot.js tabs.htm --before HEAD~2 --name tabs-fix
+    node test/screenshot.js stepper.htm --print "document.title" --print "page.width" --no-picture
 
 Options:
     --run "code"      runs in the page after it is loaded (await works): open a menu, a dialog, a state
@@ -20,6 +21,9 @@ Options:
     --width, --height the window (1280 x 800; a width under 500 is 844 high)
     --scale n         pixels per px (2 for a part, 1 for the whole window)
     --wait ms         after the load and after --run (600)
+    --print "expr"    writes the value of a JavaScript expression of the page in the terminal, after --run (await
+                      works; more than one --print: each one): a check without reading a picture
+    --no-picture      only the --print values and the errors: no picture is saved
 
 It prints the file, and the errors of the page (exit code 1 when the page throws or --clip finds nothing).
 The pictures older than 48 hours in _screenshots/ are deleted first (never readme.md).
@@ -127,6 +131,33 @@ const runCode = function (code) {
     return new AsyncFunction(code)();
 };
 
+// Runs in the page: the value of an expression as a text (JSON when it can be).
+const readValue = async function (expression) {
+    const AsyncFunction = Object.getPrototypeOf(async function () {}).constructor;
+    const value = await new AsyncFunction("return (" + expression + ");")();
+    if (value === undefined) return "undefined";
+    if (value instanceof Element) return "<" + value.tagName.toLowerCase() + "> " + value.textContent.trim().slice(0, 120);
+    try {
+        const text = JSON.stringify(value);
+        return (text === undefined) ? String(value) : text;
+    } catch (error) {
+        return String(value); // WHY: a basic.js object refers to itself (its elem, its parent)
+    }
+};
+
+// The --print values: "expression = value" (an expression that throws is an error of the log).
+const readPrints = async function (page, expressions, log) {
+    const prints = [];
+    for (const expression of expressions) {
+        try {
+            prints.push(expression + " = " + await page.evaluate(readValue, expression));
+        } catch (error) {
+            log.push({ isError: true, text: "PRINT ERROR " + expression + ": " + error.message.split("\n")[0] });
+        }
+    }
+    return prints;
+};
+
 // The clipped part with its margin, inside the window.
 const clipWithMargin = function (rect, margin, size) {
     const left = Math.max(0, Math.floor(rect.x - margin));
@@ -155,15 +186,17 @@ const takePicture = async function (browser, url, options) {
             await sleep(options.wait);
         }
 
-        if (!options.clips.length) return { picture: await page.screenshot(), log };
+        const prints = await readPrints(page, options.prints, log);
+        if (options.isNoPicture) return { picture: null, log, prints };
+        if (!options.clips.length) return { picture: await page.screenshot(), log, prints };
 
         const rect = await page.evaluate(findClipRect, options.clips);
         if (!rect || rect.width === 0 || rect.height === 0) {
             log.push({ isError: true, text: "CLIP: nothing is found for " + options.clips.join(" + ") });
-            return { picture: await page.screenshot(), log };
+            return { picture: await page.screenshot(), log, prints };
         }
         const clip = clipWithMargin(rect, options.margin, options);
-        return { picture: await page.screenshot({ clip }), log };
+        return { picture: await page.screenshot({ clip }), log, prints };
     } finally {
         await context.close();
     }
@@ -206,8 +239,8 @@ const todayText = function () {
 };
 
 const readOptions = function (args) {
-    const options = { page: "", run: "", clips: [], name: "", before: "", width: DEFAULT_WIDTH, height: 0,
-        scale: 0, wait: DEFAULT_WAIT, margin: DEFAULT_MARGIN, isHelp: false };
+    const options = { page: "", run: "", clips: [], prints: [], name: "", before: "", width: DEFAULT_WIDTH, height: 0,
+        scale: 0, wait: DEFAULT_WAIT, margin: DEFAULT_MARGIN, isNoPicture: false, isHelp: false };
     for (let i = 0; i < args.length; i++) {
         const arg = args[i];
         const hasValue = (args[i + 1] !== undefined && !args[i + 1].startsWith("--"));
@@ -215,6 +248,8 @@ const readOptions = function (args) {
         else if (arg === "--before") options.before = (hasValue) ? args[++i] : "HEAD";
         else if (arg === "--run") options.run = args[++i];
         else if (arg === "--clip") options.clips.push(args[++i]);
+        else if (arg === "--print") options.prints.push(args[++i]);
+        else if (arg === "--no-picture") options.isNoPicture = true;
         else if (arg === "--name") options.name = args[++i];
         else if (arg === "--width") options.width = Number(args[++i]);
         else if (arg === "--height") options.height = Number(args[++i]);
@@ -231,6 +266,10 @@ const readOptions = function (args) {
 
 const printLog = function (title, log) {
     log.forEach(function (line) { console.log("  " + title + line.text); });
+};
+
+const printValues = function (title, prints) {
+    prints.forEach(function (line) { console.log(title + line); });
 };
 
 const main = async function () {
@@ -259,18 +298,22 @@ const main = async function () {
         let picture = after.picture;
         if (options.before) {
             const before = await takePicture(browser, origin + OLD_PATH + "/" + options.page, options);
-            picture = await sideBySide(browser, before.picture, after.picture, "before (" + options.before + ")", options.scale);
+            if (!options.isNoPicture) {
+                picture = await sideBySide(browser, before.picture, after.picture, "before (" + options.before + ")", options.scale);
+            }
             printLog("before: ", before.log);
+            printValues("before: ", before.prints);
         }
         printLog((options.before) ? "after: " : "", after.log);
+        printValues((options.before) ? "after: " : "", after.prints);
         hasError = after.log.some(function (line) { return line.isError; });
-        fs.writeFileSync(file, picture);
+        if (!options.isNoPicture) fs.writeFileSync(file, picture);
     } finally {
         await browser.close();
         server.close();
     }
 
-    console.log(path.relative(ROOT, file));
+    if (!options.isNoPicture) console.log(path.relative(ROOT, file));
     return (hasError) ? 1 : 0;
 };
 
