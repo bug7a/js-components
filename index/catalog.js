@@ -140,19 +140,19 @@ CATALOG.COMPONENTS = [
         tr: "Listesi tüm ekranda açılan, arama kutulu seçim alanı: telefonlar ve uzun listeler için. UISelectText'in yeni sürümü.",
     },
     {
-        key: "select-date", name: "SelectDate", cat: "selection",
+        key: "select-date", name: "DatePicker", cat: "selection",
         source: "comp/select-date.js", samples: ["02-comp-examples/select-date.htm", "02-comp-examples/minimal-theme.htm"],
         en: "Date picker as a popup or an always visible calendar, with a month and year view.",
         tr: "Açılır veya sayfada sabit takvim olarak tarih seçici; ay ve yıl görünümü.",
     },
     {
-        key: "select-time", name: "SelectTime", cat: "selection",
+        key: "select-time", name: "TimePicker", cat: "selection",
         source: "comp/select-time.js", samples: ["02-comp-examples/select-time.htm", "02-comp-examples/minimal-theme.htm"],
         en: "Time picker with scrollable hour and minute columns, as a popup or inline.",
         tr: "Kaydırılabilir saat ve dakika sütunlarıyla saat seçici; açılır veya sayfada sabit.",
     },
     {
-        key: "select-color", name: "SelectColor", cat: "selection",
+        key: "select-color", name: "ColorPicker", cat: "selection",
         source: "comp/select-color.js", samples: ["02-comp-examples/select-color.htm", "02-comp-examples/minimal-theme.htm"],
         en: "Color picker: a field that opens a palette, or an always visible palette.",
         tr: "Renk seçici: palet açan bir alan veya sayfada sabit bir palet.",
@@ -164,7 +164,7 @@ CATALOG.COMPONENTS = [
         tr: "Ay seçici: bu ay ve önceki aylar beyaz bir kapsülde, yuvarlak düğmeler ve kayan aylarla. 600 px tasarımlı mobil uygulama içindir (page.fit(600, 800)): normal bir sayfada boyutları fazla büyük kalır.",
     },
     {
-        key: "select-file", name: "SelectFile", cat: "inputs",
+        key: "select-file", name: "FilePicker", cat: "inputs",
         source: "comp/select-file.js", samples: ["02-comp-examples/select-file.htm", "02-comp-examples/minimal-theme.htm"],
         en: "Drop zone and file dialog that lists the chosen files with image previews and sizes.",
         tr: "Dosya bırakma alanı ve dosya penceresi; seçilen dosyaları önizleme ve boyutlarıyla listeler.",

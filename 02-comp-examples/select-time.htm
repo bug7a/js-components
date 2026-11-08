@@ -54,7 +54,7 @@
                     // SAMPLE 1: Default (popup)
                     startCard("1. Default (minuteStep: 5)");
 
-                        SelectTime({
+                        TimePicker({
                             width: 180,
                             time: "19:30",
                             onChange: function (self) {
@@ -72,7 +72,7 @@
                         // GROUP: Start, end
                         HGroup({ width: "auto", height: "auto", gap: 12, align: "left center" });
 
-                            timeStart = SelectTime({
+                            timeStart = TimePicker({
                                 width: 150,
                                 language: "tr",
                                 placeholder: "Başlangıç",
@@ -81,7 +81,7 @@
                                 maxTime: "17:45",
                                 onChange: function (self) {
                                     // End must be after start.
-                                    timeEnd.setMinTime((self.minutesOfDay !== null) ? SelectTime.format(self.minutesOfDay + 15) : "09:15");
+                                    timeEnd.setMinTime((self.minutesOfDay !== null) ? TimePicker.format(self.minutesOfDay + 15) : "09:15");
                                     if (timeEnd.minutesOfDay !== null && self.minutesOfDay !== null && timeEnd.minutesOfDay <= self.minutesOfDay) {
                                         timeEnd.setTime(null, 1);
                                     }
@@ -91,7 +91,7 @@
 
                             Label({ text: "–", fontSize: 18, textColor: Black(0.4) });
 
-                            timeEnd = SelectTime({
+                            timeEnd = TimePicker({
                                 width: 150,
                                 language: "tr",
                                 placeholder: "Bitiş",
@@ -110,7 +110,7 @@
                     // SAMPLE 3: Over midnight, 12h text
                     startCard("3. Over midnight (22:00 - 02:00), format: \"h:mm A\"");
 
-                        SelectTime({
+                        TimePicker({
                             width: 180,
                             minTime: "22:00",
                             maxTime: "02:00",
@@ -124,7 +124,7 @@
                     // SAMPLE 4: Inline with custom style
                     startCard("4. Inline (Custom Style, minuteStep: 1, closeOnSelect is not used)");
 
-                        timeInline = SelectTime({
+                        timeInline = TimePicker({
                             inline: 1,
                             time: new Date(),
                             minuteStep: 1,
@@ -148,7 +148,7 @@
                     // SAMPLE 5: Public functions
                     startCard("5. Functions");
 
-                        timeFunctions = SelectTime({
+                        timeFunctions = TimePicker({
                             width: 180,
                             onChange: function (self) {
                                 lblFunctions.text = "onChange: \"" + self.value + "\"";

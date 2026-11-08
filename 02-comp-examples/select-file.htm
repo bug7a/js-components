@@ -75,7 +75,7 @@
                     // SAMPLE 1: Single file, read content
                     startCard("1. Single File");
 
-                        fileSingle = SelectFile({
+                        fileSingle = FilePicker({
                             onChange: function (self) {
                                 const info = self.files[0];
                                 if (!info) {
@@ -84,8 +84,8 @@
                                     return;
                                 }
                                 println(info);
-                                lblSingle.text = "<b>name:</b> " + SelectFile.escapeHtml(info.name)
-                                    + "<br><b>path:</b> " + SelectFile.escapeHtml(info.path)
+                                lblSingle.text = "<b>name:</b> " + FilePicker.escapeHtml(info.name)
+                                    + "<br><b>path:</b> " + FilePicker.escapeHtml(info.path)
                                     + "<br><b>size:</b> " + info.sizeText + " (" + info.size + " bytes)"
                                     + "<br><b>type:</b> " + (info.type || "-")
                                     + "<br><b>lastModified:</b> " + new Date(info.lastModified).toLocaleString();
@@ -113,7 +113,7 @@
                     // SAMPLE 2: Multiple images with limits
                     startCard("2. Images: an own icon, animated: 1");
 
-                        fileImages = SelectFile({
+                        fileImages = FilePicker({
                             multiple: 1,
                             accept: "image/*",
                             maxSize: 2 * 1024 * 1024,
@@ -124,11 +124,11 @@
                             animated: 1,
                             onChange: function (self) {
                                 const total = self.files.reduce(function (sum, f) { return sum + f.size; }, 0);
-                                lblImages.text = self.files.length + " image(s), total " + SelectFile.formatSize(total);
+                                lblImages.text = self.files.length + " image(s), total " + FilePicker.formatSize(total);
                                 lblErrors.text = "";
                             },
                             onError: function (self, errors) {
-                                lblErrors.text = errors.map(function (e) { return SelectFile.escapeHtml(e.message); }).join("<br>");
+                                lblErrors.text = errors.map(function (e) { return FilePicker.escapeHtml(e.message); }).join("<br>");
                             },
                         });
 
@@ -149,7 +149,7 @@
                     // SAMPLE 3: Folder
                     startCard("3. Folder (relative paths)");
 
-                        fileFolder = SelectFile({
+                        fileFolder = FilePicker({
                             directory: 1,
                             showPreview: 0,
                             zoneHeight: 130,
@@ -171,7 +171,7 @@
                     // SAMPLE 4: Functions and custom style
                     startCard("4. Functions & Custom Style");
 
-                        fileCompact = SelectFile({
+                        fileCompact = FilePicker({
                             multiple: 1,
                             accept: ".pdf,.doc,.docx,.txt",
                             zoneHeight: 110,
@@ -222,7 +222,7 @@
                     // SAMPLE 5: On a dark page; a file of a program (a plain object with a real path)
                     startCard("5. On a Dark Page: styleName \"dark\"", DARK_CARD);
 
-                        fileDark = SelectFile({
+                        fileDark = FilePicker({
                             styleName: "dark",
                             multiple: 1,
                             zoneHeight: 130,
@@ -277,7 +277,7 @@
 
             info.file.text().then(function (content) {
                 const preview = content.slice(0, 300) + ((content.length > 300) ? "\n..." : "");
-                lblContent.text = SelectFile.escapeHtml(preview);
+                lblContent.text = FilePicker.escapeHtml(preview);
             });
 
         };

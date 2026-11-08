@@ -30,7 +30,7 @@
     // - Dialog({ buttons: [{ text, type: "primary" | "secondary" | "danger" | "warning" | "success" | "info" | "icon" }] })
     // - Dialog.confirm({ ..., danger: 1 }) / Dialog.confirm({ ..., confirmType: "warning" })
     // - Dialog.alert({ ..., buttonType: "success" })
-    // Dialogs with content: a file to upload (SelectFile), choices (CheckBox), a text to edit (a TextField field: Save is
+    // Dialogs with content: a file to upload (FilePicker), choices (CheckBox), a text to edit (a TextField field: Save is
     // on only when it is changed, it waits, then the dialog says that it is saved) and an order to change (SortableList).
     // TRY: open each dialog; on Delete click twice (the first click asks); in Publish leave the title empty.
 
@@ -108,7 +108,7 @@
             titleText: "Upload the files",
             messageText: "Add the files of the report. You can drop more than one file.",
             content: function (dialog) {
-                selectFile = SelectFile({
+                selectFile = FilePicker({
                     width: "100%",
                     zoneHeight: 150,
                     multiple: 1,

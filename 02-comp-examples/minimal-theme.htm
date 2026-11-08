@@ -67,8 +67,8 @@
     // TextField (EmailField, PasswordField, TextAreaField...), SearchInput, SelectBox, ItemList, Slider, RangeSlider,
     // ProgressBar, Tabs, Stepper, MenuBar (its menus: ContextMenu), ToolBar, StatusBar, TreeView, SmartTable,
     // DataTable, JsonEditor, Tooltip, Dialog, Toast.
-    // The pickers, the fields and the panels too: SelectDate, SelectTime, SelectColor, SliderField, TagInput,
-    // SelectFile, StepBar, TimeLine, Accordion, Splitter, SidePanel, LoadingScreen; GraphBox with theme: \"minimal\".
+    // The pickers, the fields and the panels too: DatePicker, TimePicker, ColorPicker, SliderField, TagInput,
+    // FilePicker, StepBar, TimeLine, Accordion, Splitter, SidePanel, LoadingScreen; GraphBox with theme: \"minimal\".
     // The same theme in a color of the page: MinimalAccent (comp/minimal-accent.js; the sample minimal-accent.htm).
 
     // *** THE COLORS AND SIZES OF THE PAGE
@@ -233,13 +233,13 @@
 
                     Label({ text: "PICKERS, FIELDS", fontSize: 11, bold: 1, textColor: LIGHT_CAPTION_COLOR });
                     HGroup({ width: "100%", height: "auto", align: "left center", gap: 8, wrap: 1, clipContent: 0 }); // WHY wrap: a phone
-                        SelectDate({ styleName: "minimal", width: 140, placeholder: "Date" });
-                        SelectTime({ styleName: "minimal", width: 100, time: "14:30" });
-                        SelectColor({ styleName: "minimal", width: 130, selectedColor: "#3871E0" });
+                        DatePicker({ styleName: "minimal", width: 140, placeholder: "Date" });
+                        TimePicker({ styleName: "minimal", width: 100, time: "14:30" });
+                        ColorPicker({ styleName: "minimal", width: 130, selectedColor: "#3871E0" });
                     endGroup();
                     SliderField({ styleName: "minimal", width: 260, labelText: "Size", value: 40, minValue: 0, maxValue: 100, unitText: " px" });
                     TagInput({ styleName: "minimal", width: "100%", tags: ["audio", "guide"], suggestions: TAGS });
-                    SelectFile({ styleName: "minimal", width: "100%", multiple: 1 });
+                    FilePicker({ styleName: "minimal", width: "100%", multiple: 1 });
 
                     Label({ text: "STEPS, SECTIONS, AREAS", fontSize: 11, bold: 1, textColor: LIGHT_CAPTION_COLOR });
                     StepBar({ styleName: "minimal", width: "100%", steps: ["Cart", "Address", "Payment", "Done"], currentStep: 2 });
@@ -353,13 +353,13 @@
 
                     Label({ text: "PICKERS, FIELDS", fontSize: 11, bold: 1, textColor: DARK_CAPTION_COLOR });
                     HGroup({ width: "100%", height: "auto", align: "left center", gap: 8, wrap: 1, clipContent: 0 }); // WHY wrap: a phone
-                        SelectDate({ styleName: "minimalDark", width: 140, placeholder: "Date" });
-                        SelectTime({ styleName: "minimalDark", width: 100, time: "14:30" });
-                        SelectColor({ styleName: "minimalDark", width: 130, selectedColor: "#3871E0" });
+                        DatePicker({ styleName: "minimalDark", width: 140, placeholder: "Date" });
+                        TimePicker({ styleName: "minimalDark", width: 100, time: "14:30" });
+                        ColorPicker({ styleName: "minimalDark", width: 130, selectedColor: "#3871E0" });
                     endGroup();
                     SliderField({ styleName: "minimalDark", width: 260, labelText: "Size", value: 40, minValue: 0, maxValue: 100, unitText: " px" });
                     TagInput({ styleName: "minimalDark", width: "100%", tags: ["audio", "guide"], suggestions: TAGS });
-                    SelectFile({ styleName: "minimalDark", width: "100%", multiple: 1 });
+                    FilePicker({ styleName: "minimalDark", width: "100%", multiple: 1 });
 
                     Label({ text: "STEPS, SECTIONS, AREAS", fontSize: 11, bold: 1, textColor: DARK_CAPTION_COLOR });
                     StepBar({ styleName: "minimalDark", width: "100%", steps: ["Cart", "Address", "Payment", "Done"], currentStep: 2 });

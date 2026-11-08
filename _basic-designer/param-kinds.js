@@ -253,7 +253,7 @@ BasicDesigner.isFlagParam = function (key, value, note) {
 // The style packages of the component the name of a parameter points to: searchStyleName -> SearchInput.styles.
 BasicDesigner.STYLE_NAME_COMPONENTS = {
     search: "SearchInput", searchInput: "SearchInput", menu: "ContextMenu", field: "TextField", input: "TextField", button: "SmartButton",
-    code: "CodeEditor", tabs: "Tabs", checkBox: "CheckBox", itemList: "ItemList", sidePanel: "SidePanel", stepper: "Stepper", selectColor: "SelectColor",
+    code: "CodeEditor", tabs: "Tabs", checkBox: "CheckBox", itemList: "ItemList", sidePanel: "SidePanel", stepper: "Stepper", selectColor: "ColorPicker",
 };
 
 BasicDesigner.stylePackagesOf = function (key, componentName) {

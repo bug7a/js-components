@@ -49,7 +49,7 @@ Nearly 70 components. Every one has a live example with its code in the [compone
 | Group | Some of the components |
 | :--- | :--- |
 | **Forms and inputs** | `TextField` and its email, password, phone, number, currency and URL versions, `TextAreaField`, `TagInput`, `Stepper`, `SliderField`, `RichTextEditor`, `Form` |
-| **Selection** | `SelectBox`, `Filters`, `SelectDate`, `SelectTime`, `SelectColor`, `SelectFile`, `CheckBox`, `RadioButton`, `Toggle` |
+| **Selection** | `SelectBox`, `Filters`, `DatePicker`, `TimePicker`, `ColorPicker`, `FilePicker`, `CheckBox`, `RadioButton`, `Toggle` |
 | **Buttons and menus** | `SmartButton`, `HoldToConfirmButton`, `ContextMenu` |
 | **Navigation** | `Tabs`, `Breadcrumbs`, `LeftMenu`, `BottomBar`, `PageControl` |
 | **Data and charts** | `SmartTable`, `GraphBox`, `Gauge`, `SparkLineBox`, `ProgressBar`, `TimeLine`, `SortableList` |

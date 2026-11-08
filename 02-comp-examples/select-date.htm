@@ -53,7 +53,7 @@
                     // SAMPLE 1: Default (popup)
                     startCard("1. Default");
 
-                        SelectDate({
+                        DatePicker({
                             width: 260,
                             placeholder: "Birth date",
                             maxDate: new Date(), // No future dates
@@ -81,7 +81,7 @@
                             gap: 12,
                         });
 
-                            dateCheckIn = SelectDate({
+                            dateCheckIn = DatePicker({
                                 width: 170,
                                 language: "tr",
                                 placeholder: "Giriş",
@@ -97,7 +97,7 @@
                                 },
                             });
 
-                            dateCheckOut = SelectDate({
+                            dateCheckOut = DatePicker({
                                 width: 170,
                                 language: "tr",
                                 placeholder: "Çıkış",
@@ -118,7 +118,7 @@
                     // SAMPLE 3: Inline calendar with custom style
                     startCard("3. Inline (Custom Style)");
 
-                        dateInline = SelectDate({
+                        dateInline = DatePicker({
                             inline: 1,
                             date: new Date(),
                             firstDayOfWeek: 0, // Sunday
@@ -147,7 +147,7 @@
                     // SAMPLE 4: Public functions
                     startCard("4. Functions");
 
-                        dateDisabled = SelectDate({
+                        dateDisabled = DatePicker({
                             width: 260,
                             format: "D MMM YYYY",
                             date: "2026-01-15",
@@ -180,8 +180,8 @@
                         endGroup();
 
                         Label({
-                            text: "SelectDate.format(new Date(), \"D MMMM YYYY, dddd\", \"tr\"):<br><b>"
-                                + SelectDate.format(new Date(), "D MMMM YYYY, dddd", "tr") + "</b>",
+                            text: "DatePicker.format(new Date(), \"D MMMM YYYY, dddd\", \"tr\"):<br><b>"
+                                + DatePicker.format(new Date(), "D MMMM YYYY, dddd", "tr") + "</b>",
                             fontSize: 14,
                             textColor: Black(0.5),
                         });

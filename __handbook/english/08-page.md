@@ -56,7 +56,7 @@ A dynamic sizing function that allows the interface (content) to fit perfectly w
 - `maxWidth`: The maximum distance limit the content can expand to (Not mandatory to enter, if not entered it is assumed to be the same value as `originalWidth`). 
 
 **`basic.uiScale`** (Number, v26.11.01)
-A page fitted with `page.fit()` is zoomed, so the components made for screen pixels (`Tabs`, `Dialog`, `Toast`, `Tooltip`, `SelectBox`, `SelectDate`) get smaller with it. Set `basic.uiScale = 1 / page.zoom` once, and again after a resize that changes the zoom, and they keep their size on the screen. The default is `1`. The `scale` param of such a component can choose another value.
+A page fitted with `page.fit()` is zoomed, so the components made for screen pixels (`Tabs`, `Dialog`, `Toast`, `Tooltip`, `SelectBox`, `DatePicker`) get smaller with it. Set `basic.uiScale = 1 / page.zoom` once, and again after a resize that changes the zoom, and they keep their size on the screen. The default is `1`. The `scale` param of such a component can choose another value.
 
 ```javascript
 page.fit(600, 800);

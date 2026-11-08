@@ -11,7 +11,7 @@ UI COMPONENT TEMPLATE
   Text, font size, bold, italic, alignment, width (auto / full), text color, background, padding,
   corner radius and border are changed there. The panel has no backdrop: another label can be
   clicked while it is open.
-- The panel is made of components: SidePanel, Stepper, SelectColor, Tabs (pill), CheckBox and the
+- The panel is made of components: SidePanel, Stepper, ColorPicker, Tabs (pill), CheckBox and the
   Input / Button of basic.js.
 - Saved styles: give the properties of a label a name and save them. Click a saved style to apply it
   to the selected label. The chips show a preview of each style.
@@ -152,7 +152,7 @@ const LabelEditor = function (params = {}) {
 
     // WHY: The panel is made of these components. Without them it can not be drawn.
     const _missing = [
-        ["SidePanel", typeof SidePanel], ["Stepper", typeof Stepper], ["SelectColor", typeof SelectColor],
+        ["SidePanel", typeof SidePanel], ["Stepper", typeof Stepper], ["ColorPicker", typeof ColorPicker],
         ["Tabs", typeof Tabs], ["CheckBox", typeof CheckBox],
     ].filter(function (pair) { return pair[1] === "undefined"; }).map(function (pair) { return pair[0]; });
     if (_missing.length) console.error("LabelEditor: Load these components before label-editor.js: " + _missing.join(", "));
@@ -600,7 +600,7 @@ const LabelEditor = function (params = {}) {
 
     // SELECT COLOR: A color from the palette
     const createColor = function (key, onPick) {
-        const picker = SelectColor({
+        const picker = ColorPicker({
             width: "100%", height: _s.input.height, colors: box.colorPalette.slice(),
             styleName: _s.selectColorStyleName, style: copyStyle(_s.selectColorStyle),
             onChange: function (self) {

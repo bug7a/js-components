@@ -2,7 +2,7 @@
 
 /*
 
-Select Date - v26.09
+Date Picker - v26.11
 
 UI COMPONENT TEMPLATE
 - A date picker: a field that opens a calendar panel (popup), or an always visible calendar (inline: 1).
@@ -11,7 +11,7 @@ UI COMPONENT TEMPLATE
   Today/Clear buttons, enabled, keyboard navigation.
 - Everything is drawn with code (no image files needed).
 - Style packages: "light" (default; the old name "classic" works too), "dark", "minimal", "minimalDark" (a package of
-  params: its height too). Select with styleName. (SelectDate.styles)
+  params: its height too). Select with styleName. (DatePicker.styles)
 - scale: multiplies every size (the style, width / height, the field, the calendar and its cells). Its default is
   basic.uiScale: on a page fitted with page.fit() (basic.uiScale = 1 / page.zoom) the field and the calendar keep
   their size on the screen. (Needs basic.js v26.11.01 for a scale other than 1.)
@@ -29,7 +29,7 @@ Webpage: https://bug7a.github.io/js-components/
 "use strict";
 
 // Default values:
-const SelectDateDefaults = {
+const DatePickerDefaults = {
     key: "0",
     width: 220, // Field width (not used if inline: 1)
     height: 44, // Field height (not used if inline: 1)
@@ -49,7 +49,7 @@ const SelectDateDefaults = {
     onChange: function (self) { }, // self.date (Date or null), self.value ("YYYY-MM-DD"), self.dateText
     onOpen: function (self) { },
     onClose: function (self) { },
-    styleName: "light", // "light" ("classic": its old name), "dark", "minimal", "minimalDark" or a name added to SelectDate.styles
+    styleName: "light", // "light" ("classic": its old name), "dark", "minimal", "minimalDark" or a name added to DatePicker.styles
     style: { // Light style package (default)
         field: {
             color: White(1),
@@ -127,16 +127,16 @@ const SelectDateDefaults = {
     }
 };
 
-const SelectDate = function (params = {}) {
+const DatePicker = function (params = {}) {
 
-    // Merge style package: params.style > SelectDate.styles[styleName] > SelectDateDefaults.style (light)
-    basic.applyStylePackage(params, SelectDate.styles, SelectDateDefaults);
+    // Merge style package: params.style > DatePicker.styles[styleName] > DatePickerDefaults.style (light)
+    basic.applyStylePackage(params, DatePicker.styles, DatePickerDefaults);
 
     // Merge params:
-    mergeIntoIfMissing(params, SelectDateDefaults);
+    mergeIntoIfMissing(params, DatePickerDefaults);
 
     // Scale: the sizes of the style and of the params are multiplied. (A page fitted with page.fit() sets basic.uiScale.)
-    SelectDate.applyScale(params);
+    DatePicker.applyScale(params);
 
     // Edit params, if needed:
     params.color = "transparent";
@@ -149,7 +149,7 @@ const SelectDate = function (params = {}) {
     let box = startObject(params);
 
     // *** PRIVATE VARIABLES:
-    const texts = SelectDate.languages[box.language] || SelectDate.languages.en;
+    const texts = DatePicker.languages[box.language] || DatePicker.languages.en;
     const _s = box.style;
     const daySize = _s.day.size;
     const innerWidth = daySize * 7;
@@ -188,9 +188,9 @@ const SelectDate = function (params = {}) {
 
     // *** PUBLIC VARIABLES:
     // [var] Selected date (Date or null)
-    box.date = SelectDate.parse(box.date);
-    box.minDate = SelectDate.parse(box.minDate);
-    box.maxDate = SelectDate.parse(box.maxDate);
+    box.date = DatePicker.parse(box.date);
+    box.minDate = DatePicker.parse(box.minDate);
+    box.maxDate = DatePicker.parse(box.maxDate);
     // [var] "YYYY-MM-DD" or ""
     box.value = "";
     // [var] Formatted text or "" (WHY: not "text", Box.text changes innerHTML)
@@ -219,8 +219,8 @@ const SelectDate = function (params = {}) {
     };
 
     const updateValue = function () {
-        box.value = (box.date) ? SelectDate.format(box.date, "YYYY-MM-DD") : "";
-        box.dateText = (box.date) ? SelectDate.format(box.date, box.format, box.language) : "";
+        box.value = (box.date) ? DatePicker.format(box.date, "YYYY-MM-DD") : "";
+        box.dateText = (box.date) ? DatePicker.format(box.date, box.format, box.language) : "";
     };
 
     const updateField = function () {
@@ -550,7 +550,7 @@ const SelectDate = function (params = {}) {
 
     box.setDate = function (date, silent = 0) {
 
-        const newDate = SelectDate.parse(date);
+        const newDate = DatePicker.parse(date);
         if (newDate && !isInRange(newDate)) return false;
         if (dayNumber(newDate) == dayNumber(box.date)) return true;
 
@@ -630,12 +630,12 @@ const SelectDate = function (params = {}) {
     // USAGE: get: picker.enabled, set: picker.setEnabled(0)
 
     box.setMinDate = function (date) {
-        box.minDate = SelectDate.parse(date);
+        box.minDate = DatePicker.parse(date);
         renderPanel();
     };
 
     box.setMaxDate = function (date) {
-        box.maxDate = SelectDate.parse(date);
+        box.maxDate = DatePicker.parse(date);
         renderPanel();
     };
 
@@ -899,7 +899,7 @@ const SelectDate = function (params = {}) {
 // scale: every size of the style and of the size params is multiplied (params is changed). Scale 1 changes nothing.
 // WHY: The default (null) is read when a date picker is made, not when this file is loaded: the page sets
 //      basic.uiScale later (page.fit(600, 800); basic.uiScale = 1 / page.zoom).
-SelectDate.applyScale = function (params) {
+DatePicker.applyScale = function (params) {
     const givenScale = Number(params.scale);
     params.scale = (givenScale > 0) ? givenScale : (basic.uiScale || 1);
     if (params.scale === 1) return;
@@ -913,7 +913,7 @@ SelectDate.applyScale = function (params) {
     });
 };
 
-SelectDate.languages = {
+DatePicker.languages = {
     en: {
         months: ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"],
         monthsShort: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
@@ -933,10 +933,10 @@ SelectDate.languages = {
         clear: "Temizle",
     },
 };
-// NOTE: Add a new language: SelectDate.languages.de = { ... }
+// NOTE: Add a new language: DatePicker.languages.de = { ... }
 
 // Converts Date or "YYYY-MM-DD" to a Date (time: 00:00). Returns null if not valid.
-SelectDate.parse = function (value) {
+DatePicker.parse = function (value) {
 
     if (!value) return null;
 
@@ -954,13 +954,13 @@ SelectDate.parse = function (value) {
     return date;
 
 };
-// USAGE: SelectDate.parse("2026-09-14")
+// USAGE: DatePicker.parse("2026-09-14")
 
 // Formats a date. Tokens: YYYY, MMMM, MMM, MM, M, DD, D, dddd, ddd
-SelectDate.format = function (date, format = "DD.MM.YYYY", language = "en") {
+DatePicker.format = function (date, format = "DD.MM.YYYY", language = "en") {
 
     if (!date) return "";
-    const texts = SelectDate.languages[language] || SelectDate.languages.en;
+    const texts = DatePicker.languages[language] || DatePicker.languages.en;
 
     const tokens = {
         YYYY: String(date.getFullYear()),
@@ -979,18 +979,18 @@ SelectDate.format = function (date, format = "DD.MM.YYYY", language = "en") {
     });
 
 };
-// USAGE: SelectDate.format(new Date(), "D MMMM YYYY, dddd", "tr")
+// USAGE: DatePicker.format(new Date(), "D MMMM YYYY, dddd", "tr")
 
 // *** STYLE PACKAGES:
-// USAGE: SelectDate({ styleName: "dark" })
-// USAGE: SelectDate({ styleName: "dark", style: { field: { round: 4 } } }) // Change only some keys.
-// USAGE: SelectDate({ style: SelectDate.styles.dark }) // The same as styleName: "dark". (The package is copied, never changed.)
+// USAGE: DatePicker({ styleName: "dark" })
+// USAGE: DatePicker({ styleName: "dark", style: { field: { round: 4 } } }) // Change only some keys.
+// USAGE: DatePicker({ style: DatePicker.styles.dark }) // The same as styleName: "dark". (The package is copied, never changed.)
 // NOTE: A new package needs only the keys that differ from the default (classic) style.
-// USAGE: SelectDate.styles.myStyle = { field: { round: 4 } };
-SelectDate.styles = {
+// USAGE: DatePicker.styles.myStyle = { field: { round: 4 } };
+DatePicker.styles = {
 
     // White, dark text, a soft line.
-    light: SelectDateDefaults.style,
+    light: DatePickerDefaults.style,
 
     // Dark theme, same colors as SelectBox "dark".
     dark: {
@@ -1013,17 +1013,17 @@ SelectDate.styles = {
     },
 
 };
-SelectDate.styles.classic = SelectDate.styles.light; // the old name of light: the pages made with it keep their look
+DatePicker.styles.classic = DatePicker.styles.light; // the old name of light: the pages made with it keep their look
 
 // The line calendar of the minimal field (24 x 24 drawing, as the icons of the minimal SearchInput)
-SelectDate.MINIMAL_ICON = '<svg viewBox="0 0 24 24" width="100%" height="100%" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display: block">' +
+DatePicker.MINIMAL_ICON = '<svg viewBox="0 0 24 24" width="100%" height="100%" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display: block">' +
     '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>';
 
 // The minimal theme (_designs/minimal-theme.htm): a 28 px field as the other minimal fields (a line of 3:1 at least,
 // a 13 px text, a 14 px line icon); the calendar on the ground of the window with a line and no shadow, 28 px days:
 // a line around today, the chosen day in ink (the one fill), a faint fill under the mouse. minimalDark: the same on a
 // dark window.
-SelectDate.createMinimalStyle = function (colors) {
+DatePicker.createMinimalStyle = function (colors) {
     return {
         height: 28,
         style: {
@@ -1032,7 +1032,7 @@ SelectDate.createMinimalStyle = function (colors) {
             fieldFocus: { borderColor: colors.ink },
             fieldText: { fontSize: 13, textColor: colors.text },
             placeholder: { textColor: colors.faintText },
-            icon: { color: colors.softText, svg: SelectDate.MINIMAL_ICON, size: 14 },
+            icon: { color: colors.softText, svg: DatePicker.MINIMAL_ICON, size: 14 },
             panel: { color: colors.ground, border: 1, borderColor: colors.line, round: 4, padding: 8, shadow: "none" },
             title: { fontSize: 13, textColor: colors.text, fontFamily: "opensans-bold" },
             arrow: { color: colors.softText, hoverColor: colors.hover },
@@ -1047,7 +1047,11 @@ SelectDate.createMinimalStyle = function (colors) {
         },
     };
 };
-SelectDate.MINIMAL_COLORS = { ground: "#FFFFFF", text: Black(0.85), softText: Black(0.55), faintText: Black(0.54), line: Black(0.2), edge: Black(0.45), edgeHover: Black(0.65), ink: "#1F1F1F", onInk: "#FFFFFF", hover: Black(0.05), off: Black(0.25) };
-SelectDate.styles.minimal = SelectDate.createMinimalStyle(SelectDate.MINIMAL_COLORS);
-SelectDate.MINIMAL_DARK_COLORS = { ground: "#1A1A19", text: White(0.88), softText: White(0.55), faintText: White(0.48), line: White(0.18), edge: White(0.42), edgeHover: White(0.62), ink: "#EDEDEB", onInk: "#1A1A19", hover: White(0.07), off: White(0.25) };
-SelectDate.styles.minimalDark = SelectDate.createMinimalStyle(SelectDate.MINIMAL_DARK_COLORS);
+DatePicker.MINIMAL_COLORS = { ground: "#FFFFFF", text: Black(0.85), softText: Black(0.55), faintText: Black(0.54), line: Black(0.2), edge: Black(0.45), edgeHover: Black(0.65), ink: "#1F1F1F", onInk: "#FFFFFF", hover: Black(0.05), off: Black(0.25) };
+DatePicker.styles.minimal = DatePicker.createMinimalStyle(DatePicker.MINIMAL_COLORS);
+DatePicker.MINIMAL_DARK_COLORS = { ground: "#1A1A19", text: White(0.88), softText: White(0.55), faintText: White(0.48), line: White(0.18), edge: White(0.42), edgeHover: White(0.62), ink: "#EDEDEB", onInk: "#1A1A19", hover: White(0.07), off: White(0.25) };
+DatePicker.styles.minimalDark = DatePicker.createMinimalStyle(DatePicker.MINIMAL_DARK_COLORS);
+
+// THE OLD NAME of the component, for a while: the pages made with SelectDate keep working (the same object).
+// Delete it when no page uses it any more (context/repo-map.md, "Parameter names").
+const SelectDate = DatePicker;

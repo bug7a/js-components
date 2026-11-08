@@ -2,7 +2,7 @@
 
 /*
 
-Select File - v26.09
+File Picker - v26.11
 
 UI COMPONENT TEMPLATE
 - A drop zone: drag and drop files, or click (Enter/Space) to open the file dialog.
@@ -12,7 +12,7 @@ UI COMPONENT TEMPLATE
 - Everything is drawn with code (no image files needed). iconSvg: an icon of your own in the place of the upload icon.
 - animated: 1 (off by default): the icon lifts a little under the mouse, and lifts and grows while a file is dragged
   over the zone. Only transform changes. Off when the system asks for reduced motion.
-- Style packages: "light" (default; the old name "classic" works too), "dark", "minimal", "minimalDark". Select with styleName. (SelectFile.styles)
+- Style packages: "light" (default; the old name "classic" works too), "dark", "minimal", "minimalDark". Select with styleName. (FilePicker.styles)
 
 IMPORTANT: About the file path
 - Browsers do NOT give the real disk path of a file (security rule).
@@ -36,7 +36,7 @@ Webpage: https://bug7a.github.io/js-components/
 "use strict";
 
 // Default values:
-const SelectFileDefaults = {
+const FilePickerDefaults = {
     key: "0",
     width: 360,
     height: "auto",
@@ -48,7 +48,7 @@ const SelectFileDefaults = {
     maxFiles: 0, // 0: No limit (only for multiple: 1)
     enabled: 1,
     showIcon: 1, // 0: Hide the upload icon. (A zone too low for it hides it by itself.)
-    iconSvg: "", // An "<svg" text of your own, drawn with currentColor. Empty: SelectFile.UPLOAD_ICON (box.setIconSvg())
+    iconSvg: "", // An "<svg" text of your own, drawn with currentColor. Empty: FilePicker.UPLOAD_ICON (box.setIconSvg())
     animated: 0, // 1: the icon lifts under the mouse, and more while a file is dragged over. (box.setAnimated(0/1))
     showList: 1,
     showPreview: 1, // Image thumbnails in the list.
@@ -60,7 +60,7 @@ const SelectFileDefaults = {
     onChange: function (self) { }, // self.files: [{ file, name, displayName, path, size, sizeText, type, extension, lastModified }]
     onError: function (self, errors) { }, // errors: [{ type: "accept" | "maxSize" | "maxFiles", name, message }]
     onOpenDialog: null, // function (self): the dialog of a program, in the place of the dialog of the page (see above)
-    styleName: "light", // "light" ("classic": its old name), "dark", "minimal", "minimalDark" or a name added to SelectFile.styles
+    styleName: "light", // "light" ("classic": its old name), "dark", "minimal", "minimalDark" or a name added to FilePicker.styles
     style: {
         zone: {
             color: White(1),
@@ -123,13 +123,13 @@ const SelectFileDefaults = {
     }
 };
 
-const SelectFile = function (params = {}) {
+const FilePicker = function (params = {}) {
 
-    // Merge style package: params.style > SelectFile.styles[styleName] > SelectFileDefaults.style (light)
-    basic.applyStylePackage(params, SelectFile.styles, SelectFileDefaults);
+    // Merge style package: params.style > FilePicker.styles[styleName] > FilePickerDefaults.style (light)
+    basic.applyStylePackage(params, FilePicker.styles, FilePickerDefaults);
 
     // Merge params:
-    mergeIntoIfMissing(params, SelectFileDefaults);
+    mergeIntoIfMissing(params, FilePickerDefaults);
 
     // Edit params, if needed:
     params.color = "transparent";
@@ -206,7 +206,7 @@ const SelectFile = function (params = {}) {
             // WHY: Browsers do not give the real path. Electron may give it with file.path.
             path: file.path || file.webkitRelativePath || file.name,
             size: file.size,
-            sizeText: SelectFile.formatSize(file.size),
+            sizeText: FilePicker.formatSize(file.size),
             type: file.type || "",
             extension: getExtension(file.name),
             lastModified: file.lastModified,
@@ -242,7 +242,7 @@ const SelectFile = function (params = {}) {
             const rules = box.accept.split(",").map(function (rule) { return rule.trim(); });
             parts.push(rules.join(", "));
         }
-        if (box.maxSize) parts.push("max " + SelectFile.formatSize(box.maxSize));
+        if (box.maxSize) parts.push("max " + FilePicker.formatSize(box.maxSize));
         if (box.multiple == 1 && box.maxFiles) parts.push(box.maxFiles + " files");
         return parts.join(" • ");
     };
@@ -473,7 +473,7 @@ const SelectFile = function (params = {}) {
                 return;
             }
             if (box.maxSize && file.size > box.maxSize) {
-                const message = file.name + ": larger than " + SelectFile.formatSize(box.maxSize) + ".";
+                const message = file.name + ": larger than " + FilePicker.formatSize(box.maxSize) + ".";
                 errors.push(createError("maxSize", file.name, message));
                 return;
             }
@@ -597,7 +597,7 @@ const SelectFile = function (params = {}) {
     // An "<svg" text drawn with currentColor. Empty: the upload icon.
     box.setIconSvg = function (svgText) {
         box.iconSvg = svgText || "";
-        box.icon.elem.innerHTML = box.iconSvg || SelectFile.UPLOAD_ICON;
+        box.icon.elem.innerHTML = box.iconSvg || FilePicker.UPLOAD_ICON;
     };
 
     box.setEnabled = function (enabled) {
@@ -803,13 +803,13 @@ const SelectFile = function (params = {}) {
 
 // *** STYLE PACKAGES:
 
-// USAGE: SelectFile.styles.myStyle = { zone: { round: 14 } };
-SelectFile.styles = {
+// USAGE: FilePicker.styles.myStyle = { zone: { round: 14 } };
+FilePicker.styles = {
 
     // White, dark text, a dashed line.
-    light: SelectFileDefaults.style,
+    light: FilePickerDefaults.style,
 
-    // Dark theme, same colors as SelectColor "dark".
+    // Dark theme, same colors as ColorPicker "dark".
     dark: {
         zone: { color: "#232322", borderColor: "rgba(255, 255, 255, 0.22)" },
         zoneHover: { color: "#2A2A29", borderColor: "rgba(255, 255, 255, 0.40)" },
@@ -826,18 +826,18 @@ SelectFile.styles = {
     },
 
 };
-SelectFile.styles.classic = SelectFile.styles.light; // the old name of light: the pages made with it keep their look
+FilePicker.styles.classic = FilePicker.styles.light; // the old name of light: the pages made with it keep their look
 
 // *** STATIC FUNCTIONS:
 
 // The upload icon: a cloud open at the bottom, an arrow going up through it.
-SelectFile.UPLOAD_ICON = '<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="2.5 2.5 19 19" fill="none"'
+FilePicker.UPLOAD_ICON = '<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="2.5 2.5 19 19" fill="none"'
     + ' stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="display:block">'
     + '<path d="M8.5 18H7a4 4 0 0 1-.5-7.97A6 6 0 0 1 17.6 9a4.6 4.6 0 0 1-.6 9h-1.5"/>'
     + '<path d="M12 20.5V12M9 15l3-3 3 3"/></svg>';
 
 // 1536 -> "1.5 KB"
-SelectFile.formatSize = function (bytes) {
+FilePicker.formatSize = function (bytes) {
     if (!bytes) return "0 B";
     const units = ["B", "KB", "MB", "GB", "TB"];
     const index = Math.min(units.length - 1, Math.floor(Math.log(bytes) / Math.log(1024)));
@@ -846,15 +846,15 @@ SelectFile.formatSize = function (bytes) {
     const decimals = (value < 10) ? 1 : 0;
     return value.toFixed(decimals) + " " + units[index];
 };
-// USAGE: SelectFile.formatSize(5 * 1024 * 1024) -> "5.0 MB"
+// USAGE: FilePicker.formatSize(5 * 1024 * 1024) -> "5.0 MB"
 
 // WHY: Label.text uses innerHTML. File names must not be read as HTML.
-SelectFile.escapeHtml = basic.escapeHtml; // (the name is kept: other code may use it)
+FilePicker.escapeHtml = basic.escapeHtml; // (the name is kept: other code may use it)
 
 // The minimal theme (_designs/minimal-theme.htm): a lower zone (120 px) with no fill and a dashed line of 3:1 at least
 // (it is a control: a click chooses a file), darker under the mouse and ink while a file is dragged over it; 13 px
 // texts; the rows of the files with a soft line. minimalDark: the same on a dark window.
-SelectFile.createMinimalStyle = function (colors) {
+FilePicker.createMinimalStyle = function (colors) {
     return {
         zoneHeight: 120,
         style: {
@@ -874,7 +874,11 @@ SelectFile.createMinimalStyle = function (colors) {
         },
     };
 };
-SelectFile.MINIMAL_COLORS = { text: Black(0.85), softText: Black(0.55), line: Black(0.2), edge: Black(0.45), edgeHover: Black(0.65), ink: "#1F1F1F", hover: Black(0.04), danger: "#C24A36" };
-SelectFile.styles.minimal = SelectFile.createMinimalStyle(SelectFile.MINIMAL_COLORS);
-SelectFile.MINIMAL_DARK_COLORS = { text: White(0.88), softText: White(0.55), line: White(0.18), edge: White(0.42), edgeHover: White(0.62), ink: "#EDEDEB", hover: White(0.06), danger: "#FF9F93" };
-SelectFile.styles.minimalDark = SelectFile.createMinimalStyle(SelectFile.MINIMAL_DARK_COLORS);
+FilePicker.MINIMAL_COLORS = { text: Black(0.85), softText: Black(0.55), line: Black(0.2), edge: Black(0.45), edgeHover: Black(0.65), ink: "#1F1F1F", hover: Black(0.04), danger: "#C24A36" };
+FilePicker.styles.minimal = FilePicker.createMinimalStyle(FilePicker.MINIMAL_COLORS);
+FilePicker.MINIMAL_DARK_COLORS = { text: White(0.88), softText: White(0.55), line: White(0.18), edge: White(0.42), edgeHover: White(0.62), ink: "#EDEDEB", hover: White(0.06), danger: "#FF9F93" };
+FilePicker.styles.minimalDark = FilePicker.createMinimalStyle(FilePicker.MINIMAL_DARK_COLORS);
+
+// THE OLD NAME of the component, for a while: the pages made with SelectFile keep working (the same object).
+// Delete it when no page uses it any more (context/repo-map.md, "Parameter names").
+const SelectFile = FilePicker;

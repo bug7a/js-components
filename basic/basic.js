@@ -1458,7 +1458,7 @@ class Basic_UIComponent {
 
         // 0. Remove the basic.js objects inside this object too.
         // WHY: Only this object was cleaned before. Its children kept their global registrations
-        //      (resizeDetection list and ResizeObserver, page.onResize of ScrollBar, SelectDate, SelectTime,
+        //      (resizeDetection list and ResizeObserver, page.onResize of ScrollBar, DatePicker, TimePicker,
         //      static lists like RadioButton groups...), so a removed page stayed in the memory with all
         //      of its objects (about 400 DOM nodes and 250 event listeners for every page change).
         // v26.11.05 WHY containment, not a global counter: a component removed by the cascade of its parent removes

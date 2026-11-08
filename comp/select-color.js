@@ -2,7 +2,7 @@
 
 /*
 
-Select Color - v26.09
+Color Picker - v26.11
 
 UI COMPONENT TEMPLATE
 - A color picker: a field that opens a palette (popup), or an always visible palette (inline: 1).
@@ -11,14 +11,14 @@ UI COMPONENT TEMPLATE
 - Everything is drawn with code (no image files needed).
 - Value: the color text. (Ex: "#3871E0")
 - Style packages: "light" (default; the old name "classic" works too), "dark", "minimal", "minimalDark" (a package of
-  params: its height too). Select with styleName. (SelectColor.styles)
+  params: its height too). Select with styleName. (ColorPicker.styles)
 
 Keyboard:
 - Field: Enter, Space or ArrowDown opens the panel.
 - Panel: Arrow keys select the color next to the selected one, Enter or Escape closes.
 
 USAGE:
-const picker = SelectColor({
+const picker = ColorPicker({
     width: 170,
     selectedColor: "#3871E0",
     onChange: function (self) { page.color = self.value; },
@@ -36,7 +36,7 @@ Webpage: https://bug7a.github.io/js-components/
 "use strict";
 
 // Default values:
-const SelectColorDefaults = {
+const ColorPickerDefaults = {
     key: "0",
     width: 170, // Field width (not used if inline: 1)
     height: 44, // Field height (not used if inline: 1)
@@ -56,7 +56,7 @@ const SelectColorDefaults = {
     onChange: function (self) { }, // self.value ("#3871E0" or "")
     onOpen: function (self) { },
     onClose: function (self) { },
-    styleName: "light", // "light" ("classic": its old name), "dark", "minimal", "minimalDark" or a name added to SelectColor.styles
+    styleName: "light", // "light" ("classic": its old name), "dark", "minimal", "minimalDark" or a name added to ColorPicker.styles
     style: { // Light style package (default)
         field: {
             color: White(1),
@@ -110,13 +110,13 @@ const SelectColorDefaults = {
     }
 };
 
-const SelectColor = function (params = {}) {
+const ColorPicker = function (params = {}) {
 
-    // Merge style package: params.style > SelectColor.styles[styleName] > SelectColorDefaults.style (light)
-    basic.applyStylePackage(params, SelectColor.styles, SelectColorDefaults);
+    // Merge style package: params.style > ColorPicker.styles[styleName] > ColorPickerDefaults.style (light)
+    basic.applyStylePackage(params, ColorPicker.styles, ColorPickerDefaults);
 
     // Merge params:
-    mergeIntoIfMissing(params, SelectColorDefaults);
+    mergeIntoIfMissing(params, ColorPickerDefaults);
 
     // Edit params, if needed:
     params.color = "transparent";
@@ -144,7 +144,7 @@ const SelectColor = function (params = {}) {
 
     // *** PUBLIC VARIABLES:
     // [var] Selected color: "#3871E0" or ""
-    box.value = SelectColor.normalize(box.selectedColor);
+    box.value = ColorPicker.normalize(box.selectedColor);
 
     // *** PRIVATE FUNCTIONS:
 
@@ -212,7 +212,7 @@ const SelectColor = function (params = {}) {
                 width: _s.mark.size,
                 height: _s.mark.size,
                 round: 100,
-                color: (SelectColor.isLight(colorText)) ? _s.mark.darkColor : _s.mark.lightColor,
+                color: (ColorPicker.isLight(colorText)) ? _s.mark.darkColor : _s.mark.lightColor,
                 visible: 0,
             });
             swatch.mark.center();
@@ -239,7 +239,7 @@ const SelectColor = function (params = {}) {
 
         // WHY: One createIn() for each swatch: the mark inside a swatch changes the default container.
         swatches = box.colors.map(function (colorText) {
-            return createIn(box.grid, function () { return createSwatch(SelectColor.normalize(colorText)); });
+            return createIn(box.grid, function () { return createSwatch(ColorPicker.normalize(colorText)); });
         });
 
         renderPanel();
@@ -314,7 +314,7 @@ const SelectColor = function (params = {}) {
 
     box.setColor = function (colorText, silent = 0) {
 
-        const newColor = SelectColor.normalize(colorText);
+        const newColor = ColorPicker.normalize(colorText);
         if (newColor === box.value) return;
 
         box.value = newColor;
@@ -541,7 +541,7 @@ const SelectColor = function (params = {}) {
 // *** STATIC FUNCTIONS:
 
 // "#abc" -> "#AABBCC", "#aabbcc" -> "#AABBCC". Another color text ("red") is not changed.
-SelectColor.normalize = function (colorText) {
+ColorPicker.normalize = function (colorText) {
 
     const text = String(colorText || "").trim();
     if (text === "") return "";
@@ -555,17 +555,17 @@ SelectColor.normalize = function (colorText) {
     return (long) ? "#" + long[1].toUpperCase() : text;
 
 };
-// USAGE: SelectColor.normalize("#abc") -> "#AABBCC"
+// USAGE: ColorPicker.normalize("#abc") -> "#AABBCC"
 
 // Is a dark text readable on this color? (Any CSS color text is accepted.)
-SelectColor.isLight = function (colorText) {
-    const rgb = SelectColor.toRgb(colorText);
+ColorPicker.isLight = function (colorText) {
+    const rgb = ColorPicker.toRgb(colorText);
     return (rgb.r * 0.299 + rgb.g * 0.587 + rgb.b * 0.114) > 160;
 };
-// USAGE: SelectColor.isLight("#FFFFFF") -> true
+// USAGE: ColorPicker.isLight("#FFFFFF") -> true
 
 // Any CSS color text -> { r, g, b }. (The browser does the work.)
-SelectColor.toRgb = function (colorText) {
+ColorPicker.toRgb = function (colorText) {
 
     const elem = document.createElement("div");
     elem.style.display = "none";
@@ -581,18 +581,18 @@ SelectColor.toRgb = function (colorText) {
     return { r: basic.num(parts[1]), g: basic.num(parts[2]), b: basic.num(parts[3]) };
 
 };
-// USAGE: SelectColor.toRgb("gold") -> { r: 255, g: 215, b: 0 }
+// USAGE: ColorPicker.toRgb("gold") -> { r: 255, g: 215, b: 0 }
 
 // *** STYLE PACKAGES:
-// USAGE: SelectColor({ styleName: "dark" })
-// USAGE: SelectColor({ styleName: "dark", style: { swatch: { round: 14 } } }) // Change only some keys.
-// USAGE: SelectColor({ style: SelectColor.styles.dark }) // The same as styleName: "dark". (The package is copied, never changed.)
+// USAGE: ColorPicker({ styleName: "dark" })
+// USAGE: ColorPicker({ styleName: "dark", style: { swatch: { round: 14 } } }) // Change only some keys.
+// USAGE: ColorPicker({ style: ColorPicker.styles.dark }) // The same as styleName: "dark". (The package is copied, never changed.)
 // NOTE: A new package needs only the keys that differ from the default (classic) style.
-// USAGE: SelectColor.styles.myStyle = { swatch: { round: 14 } };
-SelectColor.styles = {
+// USAGE: ColorPicker.styles.myStyle = { swatch: { round: 14 } };
+ColorPicker.styles = {
 
     // White, dark text, a soft line.
-    light: SelectColorDefaults.style,
+    light: ColorPickerDefaults.style,
 
     // Dark theme, same colors as SelectBox "dark".
     dark: {
@@ -606,12 +606,12 @@ SelectColor.styles = {
     },
 
 };
-SelectColor.styles.classic = SelectColor.styles.light; // the old name of light: the pages made with it keep their look
+ColorPicker.styles.classic = ColorPicker.styles.light; // the old name of light: the pages made with it keep their look
 
 // The minimal theme (_designs/minimal-theme.htm): a 28 px field as the other minimal fields with a 16 px swatch; the
 // palette on the ground of the window with a line and no shadow, 22 px swatches with a soft line (a light color
 // shows on a light window too). minimalDark: the same on a dark window.
-SelectColor.createMinimalStyle = function (colors) {
+ColorPicker.createMinimalStyle = function (colors) {
     return {
         height: 28,
         style: {
@@ -628,7 +628,11 @@ SelectColor.createMinimalStyle = function (colors) {
         },
     };
 };
-SelectColor.MINIMAL_COLORS = { ground: "#FFFFFF", text: Black(0.85), softText: Black(0.55), faintText: Black(0.54), line: Black(0.2), edge: Black(0.45), edgeHover: Black(0.65), ink: "#1F1F1F", hover: Black(0.05), off: Black(0.25) };
-SelectColor.styles.minimal = SelectColor.createMinimalStyle(SelectColor.MINIMAL_COLORS);
-SelectColor.MINIMAL_DARK_COLORS = { ground: "#1A1A19", text: White(0.88), softText: White(0.55), faintText: White(0.48), line: White(0.18), edge: White(0.42), edgeHover: White(0.62), ink: "#EDEDEB", hover: White(0.07), off: White(0.25) };
-SelectColor.styles.minimalDark = SelectColor.createMinimalStyle(SelectColor.MINIMAL_DARK_COLORS);
+ColorPicker.MINIMAL_COLORS = { ground: "#FFFFFF", text: Black(0.85), softText: Black(0.55), faintText: Black(0.54), line: Black(0.2), edge: Black(0.45), edgeHover: Black(0.65), ink: "#1F1F1F", hover: Black(0.05), off: Black(0.25) };
+ColorPicker.styles.minimal = ColorPicker.createMinimalStyle(ColorPicker.MINIMAL_COLORS);
+ColorPicker.MINIMAL_DARK_COLORS = { ground: "#1A1A19", text: White(0.88), softText: White(0.55), faintText: White(0.48), line: White(0.18), edge: White(0.42), edgeHover: White(0.62), ink: "#EDEDEB", hover: White(0.07), off: White(0.25) };
+ColorPicker.styles.minimalDark = ColorPicker.createMinimalStyle(ColorPicker.MINIMAL_DARK_COLORS);
+
+// THE OLD NAME of the component, for a while: the pages made with SelectColor keep working (the same object).
+// Delete it when no page uses it any more (context/repo-map.md, "Parameter names").
+const SelectColor = ColorPicker;

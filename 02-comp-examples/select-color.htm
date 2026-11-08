@@ -54,7 +54,7 @@
                     // SAMPLE 1: Default (popup)
                     startCard("1. Default (20 colors, 5 columns)");
 
-                        SelectColor({
+                        ColorPicker({
                             selectedColor: "#3871E0",
                             onChange: function (self) {
                                 lblDefault.text = "value: \"" + self.value + "\"";
@@ -83,7 +83,7 @@
                     // SAMPLE 2: Own palette, no text
                     startCard("2. Own palette (setColors), showText: 0");
 
-                        SelectColor({
+                        ColorPicker({
                             width: 70,
                             columns: 4,
                             showText: 0,
@@ -101,7 +101,7 @@
                     // SAMPLE 3: Inline with a custom style
                     startCard("3. Inline (custom style, 10 columns)");
 
-                        SelectColor({
+                        ColorPicker({
                             inline: 1,
                             columns: 10,
                             selectedColor: "#E8D44D",
@@ -126,7 +126,7 @@
                     // SAMPLE 4: Public functions
                     startCard("4. Functions");
 
-                        colorFunctions = SelectColor({
+                        colorFunctions = ColorPicker({
                             onChange: function (self) {
                                 lblFunctions.text = "onChange: \"" + self.value + "\"";
                             },

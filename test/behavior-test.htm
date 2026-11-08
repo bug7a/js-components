@@ -381,32 +381,32 @@
 
         // *** SELECT FILE (comp/select-file.js)
 
-        test("SelectFile: a low zone hides what does not fit, first the icon, and no text is squeezed", async function () {
+        test("FilePicker: a low zone hides what does not fit, first the icon, and no text is squeezed", async function () {
             const isShown = (object) => object.elem.offsetHeight > 0;
             const getShown = function (select) {
                 return [select.icon, select.title, select.desc, select.hint].map((object) => (isShown(object) ? 1 : 0)).join("");
             };
             const params = { accept: "image/*" };
-            const tall = SelectFile({ ...params, zoneHeight: 170 });
-            const noIcon = SelectFile({ ...params, zoneHeight: 110 });
-            const noHint = SelectFile({ ...params, zoneHeight: 70 });
-            const onlyTitle = SelectFile({ ...params, zoneHeight: 40 });
+            const tall = FilePicker({ ...params, zoneHeight: 170 });
+            const noIcon = FilePicker({ ...params, zoneHeight: 110 });
+            const noHint = FilePicker({ ...params, zoneHeight: 70 });
+            const onlyTitle = FilePicker({ ...params, zoneHeight: 40 });
             await wait(50);
             const results = [tall, noIcon, noHint, onlyTitle].map(getShown);
             const titleHeights = [tall, onlyTitle].map((select) => select.title.elem.offsetHeight);
             const titleRect = onlyTitle.title.elem.getBoundingClientRect();
             const zoneRect = onlyTitle.zone.elem.getBoundingClientRect();
-            check("SelectFile: a low zone hides what does not fit, first the icon, and no text is squeezed",
+            check("FilePicker: a low zone hides what does not fit, first the icon, and no text is squeezed",
                 results.join() === "1111,0111,0110,0100" && titleHeights[0] === titleHeights[1]
                     && titleRect.top >= zoneRect.top && titleRect.bottom <= zoneRect.bottom,
                 results.join() + " | " + titleHeights.join());
             [tall, noIcon, noHint, onlyTitle].forEach((select) => select.remove());
         });
 
-        test("SelectFile: iconSvg puts an icon of the page; animated: 1 lifts it while a file is dragged over, animated: 0 writes nothing", async function () {
+        test("FilePicker: iconSvg puts an icon of the page; animated: 1 lifts it while a file is dragged over, animated: 0 writes nothing", async function () {
             const ownIcon = '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" stroke="currentColor"/></svg>';
-            const own = SelectFile({ iconSvg: ownIcon, animated: 1 });
-            const still = SelectFile({});
+            const own = FilePicker({ iconSvg: ownIcon, animated: 1 });
+            const still = FilePicker({});
             const hasOwnIcon = own.icon.elem.querySelector("circle") != null;
             own.zone.elem.dispatchEvent(new DragEvent("dragenter", { bubbles: true, dataTransfer: new DataTransfer() }));
             still.zone.elem.dispatchEvent(new DragEvent("dragenter", { bubbles: true, dataTransfer: new DataTransfer() }));
@@ -415,15 +415,15 @@
             const stillLook = still.icon.elem.style.transform + still.icon.elem.style.transition;
             own.setIconSvg("");
             const isUploadIconBack = own.icon.elem.querySelector("circle") == null && own.icon.elem.querySelectorAll("path").length === 2;
-            check("SelectFile: iconSvg puts an icon of the page; animated: 1 lifts it while a file is dragged over, animated: 0 writes nothing",
+            check("FilePicker: iconSvg puts an icon of the page; animated: 1 lifts it while a file is dragged over, animated: 0 writes nothing",
                 hasOwnIcon && ownTransform.indexOf("translateY(-") === 0 && stillLook === "" && isUploadIconBack,
                 hasOwnIcon + " | " + ownTransform + " | " + stillLook + " | " + isUploadIconBack);
             [own, still].forEach((select) => select.remove());
         });
 
-        test("SelectFile: the same file again does not call onChange", async function () {
+        test("FilePicker: the same file again does not call onChange", async function () {
             let changes = 0;
-            const select = SelectFile({ multiple: 1, onChange: function () { changes++; } });
+            const select = FilePicker({ multiple: 1, onChange: function () { changes++; } });
             const drop = function (names) {
                 const transfer = new DataTransfer();
                 names.forEach(function (name) { transfer.items.add(new File(["x"], name, { type: "text/plain", lastModified: 1 })); });
@@ -431,14 +431,14 @@
             };
             drop(["a.txt"]);
             drop(["a.txt"]);
-            check("SelectFile: the same file again does not call onChange", changes === 1, "onChange: " + changes);
+            check("FilePicker: the same file again does not call onChange", changes === 1, "onChange: " + changes);
             select.remove();
         });
 
-        test("SelectFile: a file of a program is a plain object with its path; the row shows its name", async function () {
+        test("FilePicker: a file of a program is a plain object with its path; the row shows its name", async function () {
             const path = "/Users/ada/photos/sea.png";
             const dot = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
-            const select = SelectFile({ multiple: 1 });
+            const select = FilePicker({ multiple: 1 });
             select.addFiles([
                 { name: "sea.png", path: path, size: 2048, type: "image/png", lastModified: 5 },
                 { name: "dot.gif", path: "/Users/ada/dot.gif", size: 40, type: "image/gif", lastModified: 5, previewAddress: dot },
@@ -449,45 +449,45 @@
             const isRight = details.length === 2 && details[0].path === path && !("file" in details[0])
                 && rows.includes("sea.png") && !rows.includes("/Users/ada")
                 && pictures.length === 1 && pictures[0].src === dot;
-            check("SelectFile: a file of a program is a plain object with its path; the row shows its name", isRight,
+            check("FilePicker: a file of a program is a plain object with its path; the row shows its name", isRight,
                 JSON.stringify(details[0]) + " | " + rows + " | pictures: " + pictures.length);
             select.remove();
         });
 
-        test("SelectFile: onOpenDialog opens the dialog of a program in the place of the dialog of the page", async function () {
+        test("FilePicker: onOpenDialog opens the dialog of a program in the place of the dialog of the page", async function () {
             let asked = 0;
             let pageDialogs = 0;
-            const select = SelectFile({ onOpenDialog: function () { asked++; } });
+            const select = FilePicker({ onOpenDialog: function () { asked++; } });
             select.input.addEventListener("click", function (event) {
                 pageDialogs++;
                 event.preventDefault();
             });
             select.zone.elem.click();
             select.open();
-            check("SelectFile: onOpenDialog opens the dialog of a program in the place of the dialog of the page",
+            check("FilePicker: onOpenDialog opens the dialog of a program in the place of the dialog of the page",
                 asked === 2 && pageDialogs === 0, "asked: " + asked + ", dialogs of the page: " + pageDialogs);
             select.remove();
         });
 
-        test("SelectFile: removeFile(index, 1) does not call onChange", async function () {
+        test("FilePicker: removeFile(index, 1) does not call onChange", async function () {
             let changes = 0;
-            const select = SelectFile({ multiple: 1, onChange: function () { changes++; } });
+            const select = FilePicker({ multiple: 1, onChange: function () { changes++; } });
             select.addFiles([{ name: "a.txt", size: 1 }, { name: "b.txt", size: 2 }, { name: "c.txt", size: 3 }]);
             select.removeFile(0, 1);
             const afterSilent = changes;
             select.removeFile(0);
-            check("SelectFile: removeFile(index, 1) does not call onChange",
+            check("FilePicker: removeFile(index, 1) does not call onChange",
                 afterSilent === 1 && changes === 2 && select.files.length === 1, "onChange: " + afterSilent + ", " + changes);
             select.remove();
         });
 
-        test("SelectFile: the dark package, and a style of the page over it", async function () {
+        test("FilePicker: the dark package, and a style of the page over it", async function () {
             const groundOf = (select) => getComputedStyle(select.zone.elem).backgroundColor;
-            const dark = SelectFile({ styleName: "dark" });
-            const own = SelectFile({ styleName: "dark", style: { zone: { color: "rgb(1, 2, 3)" } } });
-            const light = SelectFile();
+            const dark = FilePicker({ styleName: "dark" });
+            const own = FilePicker({ styleName: "dark", style: { zone: { color: "rgb(1, 2, 3)" } } });
+            const light = FilePicker();
             const grounds = [dark, own, light].map(groundOf);
-            check("SelectFile: the dark package, and a style of the page over it",
+            check("FilePicker: the dark package, and a style of the page over it",
                 grounds.join() === "rgb(35, 35, 34),rgb(1, 2, 3),rgb(255, 255, 255)", grounds.join());
             [dark, own, light].forEach((select) => select.remove());
         });
@@ -1130,22 +1130,22 @@
             field.remove();
         });
 
-        test("Minimal: the pickers, SelectFile, Accordion, SliderField, StepBar, TagInput, Splitter, SidePanel and LoadingScreen have both packages; the fields are 28 high", async function () {
-            const components = { SelectDate, SelectTime, SelectColor, SelectFile, Accordion, SliderField, StepBar, TagInput, Splitter, SidePanel, LoadingScreen };
+        test("Minimal: the pickers, FilePicker, Accordion, SliderField, StepBar, TagInput, Splitter, SidePanel and LoadingScreen have both packages; the fields are 28 high", async function () {
+            const components = { DatePicker, TimePicker, ColorPicker, FilePicker, Accordion, SliderField, StepBar, TagInput, Splitter, SidePanel, LoadingScreen };
             const missing = Object.keys(components).filter(function (name) {
                 const styles = components[name].styles;
                 return !(styles.minimal && styles.minimalDark);
             });
             check("Minimal: minimal and minimalDark in every one of them", missing.length === 0, missing.join(", "));
             const fields = [
-                SelectDate({ styleName: "minimal" }),
-                SelectTime({ styleName: "minimalDark" }),
-                SelectColor({ styleName: "minimal" }),
+                DatePicker({ styleName: "minimal" }),
+                TimePicker({ styleName: "minimalDark" }),
+                ColorPicker({ styleName: "minimal" }),
                 SliderField({ styleName: "minimalDark", labelText: "Size", value: 4 }),
             ];
             await basic.nextFrame();
             const heights = fields.map(function (field) { return field.elem.offsetHeight; });
-            check("Minimal: SelectDate, SelectTime, SelectColor, SliderField are 28 high", heights.every(function (height) { return height === 28; }), heights.join(", "));
+            check("Minimal: DatePicker, TimePicker, ColorPicker, SliderField are 28 high", heights.every(function (height) { return height === 28; }), heights.join(", "));
             fields.forEach(function (field) { field.remove(); });
         });
 
@@ -1173,13 +1173,13 @@
             [untitled, titled].forEach(function (field) { field.remove(); });
         });
 
-        test("SelectTime minimal: the columns have room for their scroll bar (it does not cross the chosen hour); the light package as before", async function () {
-            const minimal = SelectTime({ styleName: "minimal", inline: 1, time: "14:30" });
-            const plain = SelectTime({ inline: 1, time: "14:30" });
+        test("TimePicker minimal: the columns have room for their scroll bar (it does not cross the chosen hour); the light package as before", async function () {
+            const minimal = TimePicker({ styleName: "minimal", inline: 1, time: "14:30" });
+            const plain = TimePicker({ inline: 1, time: "14:30" });
             await basic.nextFrame();
             const roomOf = function (picker) { return picker.hoursColumn.scrollArea.elem.offsetWidth - picker.style.cell.width; };
-            check("SelectTime minimal: 14 px of room in a column", roomOf(minimal) === 14, roomOf(minimal));
-            check("SelectTime light: a column as wide as its cells", roomOf(plain) === 0, roomOf(plain));
+            check("TimePicker minimal: 14 px of room in a column", roomOf(minimal) === 14, roomOf(minimal));
+            check("TimePicker light: a column as wide as its cells", roomOf(plain) === 0, roomOf(plain));
             [minimal, plain].forEach(function (picker) { picker.remove(); });
         });
 
@@ -1224,15 +1224,15 @@
             check("StepBar minimal: a 4 px ring", minimalRing.indexOf("4px") >= 0, minimalRing);
         });
 
-        test("SelectDate, SelectTime minimal: a 14 px line icon (an SVG); the light package keeps its drawn icon", async function () {
-            const date = SelectDate({ styleName: "minimal" });
-            const time = SelectTime({ styleName: "minimalDark" });
-            const plain = SelectDate({});
+        test("DatePicker, TimePicker minimal: a 14 px line icon (an SVG); the light package keeps its drawn icon", async function () {
+            const date = DatePicker({ styleName: "minimal" });
+            const time = TimePicker({ styleName: "minimalDark" });
+            const plain = DatePicker({});
             await basic.nextFrame();
             const isLineIcon = function (picker) { return !!picker.icon.elem.querySelector("svg") && picker.icon.elem.offsetWidth === 14; };
-            check("SelectDate minimal: a 14 px SVG calendar", isLineIcon(date), date.icon.elem.offsetWidth);
-            check("SelectTime minimalDark: a 14 px SVG clock", isLineIcon(time), time.icon.elem.offsetWidth);
-            check("SelectDate light: the drawn calendar of 18 px", !plain.icon.elem.querySelector("svg") && plain.icon.elem.offsetWidth === 18, plain.icon.elem.offsetWidth);
+            check("DatePicker minimal: a 14 px SVG calendar", isLineIcon(date), date.icon.elem.offsetWidth);
+            check("TimePicker minimalDark: a 14 px SVG clock", isLineIcon(time), time.icon.elem.offsetWidth);
+            check("DatePicker light: the drawn calendar of 18 px", !plain.icon.elem.querySelector("svg") && plain.icon.elem.offsetWidth === 18, plain.icon.elem.offsetWidth);
             [date, time, plain].forEach(function (picker) { picker.remove(); });
         });
 
@@ -1294,8 +1294,8 @@
             const darkInk = Toggle.styles.minimalTestBlueDark.buttonStyle.selectedColor;
             const darkContrast = MinimalAccent.contrast(MinimalAccent.toRgb(darkInk), MinimalAccent.toRgb("#1A1A19"));
             check("MinimalAccent: the color of a dark window reads on the dark ground (4.5:1)", darkContrast >= 4.5 && darkInk !== BLUE, darkInk + " " + darkContrast.toFixed(2));
-            const textOnBlue = SelectDate.styles.minimalTestBlue.style.selectedDay.textColor;
-            const textOnYellow = SelectDate.styles.minimalTestYellow.style.selectedDay.textColor;
+            const textOnBlue = DatePicker.styles.minimalTestBlue.style.selectedDay.textColor;
+            const textOnYellow = DatePicker.styles.minimalTestYellow.style.selectedDay.textColor;
             check("MinimalAccent: the text on the color is white or dark, the one that reads", textOnBlue === "#FFFFFF" && textOnYellow === "#1A1A19", textOnBlue + " / " + textOnYellow);
             const dialogLook = Dialog.styles.minimalTestBlue;
             const darkDialogLook = Dialog.styles.minimalTestBlueDark;
@@ -1639,8 +1639,9 @@
             const password = PasswordField({ minChar: 3, showTooltipMessage: "Show it" });
             password.input.inputElement.value = "ab1";
             const isChildKept = email.required === 0 && email.maxLength === 50 && password.minLength === 3 && password.isValid() === 1 && password.showPasswordHintText === "Show it";
-            // WHY: a page made with the old component names (InputB, EmailInputB...) gets the same objects
-            const isComponentKept = InputB === TextField && EmailInputB === EmailField && PasswordInputB === PasswordField && URLInputB === UrlField && TextareaB === TextAreaField;
+            // WHY: a page made with the old component names (InputB, EmailInputB, SelectDate...) gets the same objects
+            const isComponentKept = InputB === TextField && EmailInputB === EmailField && PasswordInputB === PasswordField && URLInputB === UrlField && TextareaB === TextAreaField
+                && SelectDate === DatePicker && SelectTime === TimePicker && SelectColor === ColorPicker && SelectFile === FilePicker;
             console.warn = realWarn;
             const isNamed = warnings.indexOf('TextField: "inputValue" is an old name, use "value"') > -1 && warnings.indexOf('PasswordField: "minChar" is an old name, use "minLength"') > -1;
             check("TextField: the old names of the params, properties, methods and events still work (basic.keepOldNames)",
@@ -2891,7 +2892,7 @@
             modernToggle.remove();
         });
 
-        // *** SCALE ON A ZOOMED PAGE (basic.uiScale and the scale param of Tabs, SelectBox, SelectDate, Dialog, Toast, Tooltip)
+        // *** SCALE ON A ZOOMED PAGE (basic.uiScale and the scale param of Tabs, SelectBox, DatePicker, Dialog, Toast, Tooltip)
 
         // The size of an element on the screen. Two sizes are the same within 1 px.
         const screenSize = function (elem) {
@@ -2962,10 +2963,10 @@
                 "field " + sizeText(normal.field) + " / " + sizeText(zoomed.field) + ", list " + sizeText(normal.list) + " / " + sizeText(zoomed.list));
         });
 
-        test("SelectDate: on a zoomed page (zoom 0.5, basic.uiScale 2) the calendar keeps its size on the screen", async function () {
+        test("DatePicker: on a zoomed page (zoom 0.5, basic.uiScale 2) the calendar keeps its size on the screen", async function () {
             await document.fonts.ready;
             const measureDate = function () {
-                const picker = SelectDate({ width: 220, date: "2026-11-12" });
+                const picker = DatePicker({ width: 220, date: "2026-11-12" });
                 picker.open();
                 const sizes = { field: screenSize(picker.elem), calendar: screenSize(picker.panel.elem) };
                 picker.close();
@@ -2975,19 +2976,19 @@
             const normal = measureDate();
             const zoomed = measureOnZoomedPage(0.5, measureDate);
             const isSame = isSameScreenSize(normal.field, zoomed.field) && isSameScreenSize(normal.calendar, zoomed.calendar);
-            check("SelectDate: on a zoomed page (zoom 0.5, basic.uiScale 2) the calendar keeps its size on the screen", isSame,
+            check("DatePicker: on a zoomed page (zoom 0.5, basic.uiScale 2) the calendar keeps its size on the screen", isSame,
                 "field " + sizeText(normal.field) + " / " + sizeText(zoomed.field) + ", calendar " + sizeText(normal.calendar) + " / " + sizeText(zoomed.calendar));
         });
 
-        test("SelectDate: on a zoomed page the cover of the calendar covers the screen (a click outside closes it)", async function () {
+        test("DatePicker: on a zoomed page the cover of the calendar covers the screen (a click outside closes it)", async function () {
             page.zoom = 0.5;
-            const picker = SelectDate({ width: 220 });
+            const picker = DatePicker({ width: 220 });
             picker.open();
             const coverHeight = picker.overlay.elem.getBoundingClientRect().height;
             picker.close();
             picker.remove();
             page.zoom = 1;
-            check("SelectDate: on a zoomed page the cover of the calendar covers the screen (a click outside closes it)", coverHeight >= window.innerHeight, "cover height: " + coverHeight);
+            check("DatePicker: on a zoomed page the cover of the calendar covers the screen (a click outside closes it)", coverHeight >= window.innerHeight, "cover height: " + coverHeight);
         });
 
         test("Dialog: on a zoomed page (zoom 0.5, basic.uiScale 2) the card keeps its size on the screen", async function () {
@@ -3374,16 +3375,16 @@
             [moving, still].forEach(function (bar) { bar.remove(); });
         });
 
-        test("SelectTime in a removed container: its lists leave no window listener (basic.js v26.11.05)", async function () {
+        test("TimePicker in a removed container: its lists leave no window listener (basic.js v26.11.05)", async function () {
             const countResize = function () { return page._box._eventFuncList.filter(function (e) { return e.eventName === "resize"; }).length; };
             const before = countResize();
             for (let i = 0; i < 3; i++) {
                 const view = startBox(0, 0, 300, 300);
-                    SelectTime({ left: 10, top: 10 });
+                    TimePicker({ left: 10, top: 10 });
                 endBox();
                 view.remove(); // a page change
             }
-            check("SelectTime in a removed container: its lists leave no window listener (basic.js v26.11.05)", countResize() === before, "window resize listeners: " + before + " -> " + countResize());
+            check("TimePicker in a removed container: its lists leave no window listener (basic.js v26.11.05)", countResize() === before, "window resize listeners: " + before + " -> " + countResize());
         });
 
         test("A SelectBox and a ContextMenu in a Dialog open over it; a Toast is over the Dialog", async function () {
@@ -3637,14 +3638,14 @@
             table.remove();
         });
 
-        test("SelectFile: directory: 1 keeps every file of the chosen folder", async function () {
+        test("FilePicker: directory: 1 keeps every file of the chosen folder", async function () {
             let errors = null;
-            const folder = SelectFile({ directory: 1, showPreview: 0, onError: function (self, list) { errors = list; } });
+            const folder = FilePicker({ directory: 1, showPreview: 0, onError: function (self, list) { errors = list; } });
             const files = new DataTransfer();
             ["a.txt", "b.txt", "c.txt"].forEach(function (name) { files.items.add(new File(["x"], name, { type: "text/plain" })); });
             folder.input.files = files.files;
             folder.input.dispatchEvent(new Event("change"));
-            check("SelectFile: directory: 1 keeps every file of the chosen folder", folder.files.length === 3 && errors === null, "files: " + folder.files.length + ", errors: " + JSON.stringify(errors));
+            check("FilePicker: directory: 1 keeps every file of the chosen folder", folder.files.length === 3 && errors === null, "files: " + folder.files.length + ", errors: " + JSON.stringify(errors));
             folder.remove();
         });
 

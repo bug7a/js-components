@@ -2,7 +2,7 @@
 
 /*
 
-Select Time - v26.09
+Time Picker - v26.11
 
 UI COMPONENT TEMPLATE
 - A time picker: a field that opens a panel (popup), or an always visible panel (inline: 1).
@@ -14,7 +14,7 @@ UI COMPONENT TEMPLATE
 - Everything is drawn with code (no image files needed).
 - Value: "HH:mm" text. (Ex: "19:30")
 - Style packages: "light" (default; the old name "classic" works too), "dark", "minimal", "minimalDark" (a package of
-  params: its height too). Select with styleName. (SelectTime.styles)
+  params: its height too). Select with styleName. (TimePicker.styles)
 
 Keyboard (when the panel is focused):
 - ArrowUp/ArrowDown: change the value of the active column, ArrowLeft/ArrowRight: change the column,
@@ -30,7 +30,7 @@ Webpage: https://bug7a.github.io/js-components/
 "use strict";
 
 // Default values:
-const SelectTimeDefaults = {
+const TimePickerDefaults = {
     key: "0",
     width: 160, // Field width (not used if inline: 1)
     height: 44, // Field height (not used if inline: 1)
@@ -50,7 +50,7 @@ const SelectTimeDefaults = {
     onChange: function (self) { }, // self.value ("19:30" or ""), self.hours, self.minutes (number or null), self.timeText
     onOpen: function (self) { },
     onClose: function (self) { },
-    styleName: "light", // "light" ("classic": its old name), "dark", "minimal", "minimalDark" or a name added to SelectTime.styles
+    styleName: "light", // "light" ("classic": its old name), "dark", "minimal", "minimalDark" or a name added to TimePicker.styles
     style: { // Light style package (default)
         field: {
             color: White(1),
@@ -134,13 +134,13 @@ const SelectTimeDefaults = {
     }
 };
 
-const SelectTime = function (params = {}) {
+const TimePicker = function (params = {}) {
 
-    // Merge style package: params.style > SelectTime.styles[styleName] > SelectTimeDefaults.style (light)
-    basic.applyStylePackage(params, SelectTime.styles, SelectTimeDefaults);
+    // Merge style package: params.style > TimePicker.styles[styleName] > TimePickerDefaults.style (light)
+    basic.applyStylePackage(params, TimePicker.styles, TimePickerDefaults);
 
     // Merge params:
-    mergeIntoIfMissing(params, SelectTimeDefaults);
+    mergeIntoIfMissing(params, TimePickerDefaults);
 
     // Edit params, if needed:
     params.color = "transparent";
@@ -153,7 +153,7 @@ const SelectTime = function (params = {}) {
     let box = startObject(params);
 
     // *** PRIVATE VARIABLES:
-    const texts = SelectTime.languages[box.language] || SelectTime.languages.en;
+    const texts = TimePicker.languages[box.language] || TimePicker.languages.en;
     const _s = box.style;
     const cellWidth = _s.cell.width;
     const cellHeight = _s.cell.height;
@@ -176,7 +176,7 @@ const SelectTime = function (params = {}) {
 
     // *** PUBLIC VARIABLES:
     // [var] Selected time: minutes from 00:00 (0 - 1439) or null
-    box.minutesOfDay = SelectTime.parse(box.time);
+    box.minutesOfDay = TimePicker.parse(box.time);
     // [var] number or null
     box.hours = null;
     box.minutes = null;
@@ -185,8 +185,8 @@ const SelectTime = function (params = {}) {
     // [var] Formatted text or "" (WHY: not "text", Box.text changes innerHTML)
     box.timeText = "";
 
-    box.minTime = SelectTime.parse(box.minTime);
-    box.maxTime = SelectTime.parse(box.maxTime);
+    box.minTime = TimePicker.parse(box.minTime);
+    box.maxTime = TimePicker.parse(box.maxTime);
     box.minuteStep = Math.max(1, Math.min(60, Math.floor(basic.num(box.minuteStep) || 1)));
 
     // *** PRIVATE FUNCTIONS:
@@ -215,8 +215,8 @@ const SelectTime = function (params = {}) {
         const time = box.minutesOfDay;
         box.hours = (time === null) ? null : Math.floor(time / 60);
         box.minutes = (time === null) ? null : time % 60;
-        box.value = (time === null) ? "" : SelectTime.format(time, "HH:mm");
-        box.timeText = (time === null) ? "" : SelectTime.format(time, box.format);
+        box.value = (time === null) ? "" : TimePicker.format(time, "HH:mm");
+        box.timeText = (time === null) ? "" : TimePicker.format(time, box.format);
     };
 
     const updateField = function () {
@@ -580,7 +580,7 @@ const SelectTime = function (params = {}) {
     // time: "HH:mm", Date, minutes from 00:00 (1170) or null
     box.setTime = function (time, silent = 0) {
 
-        const newTime = SelectTime.parse(time);
+        const newTime = TimePicker.parse(time);
         if (newTime !== null && !isInRange(newTime)) return false;
         if (newTime === box.minutesOfDay) return true;
 
@@ -655,12 +655,12 @@ const SelectTime = function (params = {}) {
     // USAGE: get: picker.enabled, set: picker.setEnabled(0)
 
     box.setMinTime = function (time) {
-        box.minTime = SelectTime.parse(time);
+        box.minTime = TimePicker.parse(time);
         renderPanel();
     };
 
     box.setMaxTime = function (time) {
-        box.maxTime = SelectTime.parse(time);
+        box.maxTime = TimePicker.parse(time);
         renderPanel();
     };
 
@@ -892,7 +892,7 @@ const SelectTime = function (params = {}) {
 
 // *** STATIC FUNCTIONS AND DATA:
 
-SelectTime.languages = {
+TimePicker.languages = {
     en: {
         placeholder: "Select time",
         hour: "Hour",
@@ -908,10 +908,10 @@ SelectTime.languages = {
         clear: "Temizle",
     },
 };
-// NOTE: Add a new language: SelectTime.languages.de = { ... }
+// NOTE: Add a new language: TimePicker.languages.de = { ... }
 
 // Converts "HH:mm" (or "H:mm", "HH:mm:ss"), a Date or minutes from 00:00 to minutes from 00:00 (0 - 1439). Returns null if not valid.
-SelectTime.parse = function (value) {
+TimePicker.parse = function (value) {
 
     if (value === null || value === undefined || value === "") return null;
 
@@ -933,10 +933,10 @@ SelectTime.parse = function (value) {
     return hours * 60 + minutes;
 
 };
-// USAGE: SelectTime.parse("19:30") -> 1170, SelectTime.parse(1170) -> 1170
+// USAGE: TimePicker.parse("19:30") -> 1170, TimePicker.parse(1170) -> 1170
 
 // Formats minutes from 00:00. Tokens: HH, H, hh, h, mm, A (AM/PM), a (am/pm)
-SelectTime.format = function (minutesOfDay, format = "HH:mm") {
+TimePicker.format = function (minutesOfDay, format = "HH:mm") {
 
     if (minutesOfDay === null || minutesOfDay === undefined) return "";
 
@@ -959,18 +959,18 @@ SelectTime.format = function (minutesOfDay, format = "HH:mm") {
     });
 
 };
-// USAGE: SelectTime.format(1170, "h:mm A") -> "7:30 PM"
+// USAGE: TimePicker.format(1170, "h:mm A") -> "7:30 PM"
 
 // *** STYLE PACKAGES:
-// USAGE: SelectTime({ styleName: "dark" })
-// USAGE: SelectTime({ styleName: "dark", style: { field: { round: 4 } } }) // Change only some keys.
-// USAGE: SelectTime({ style: SelectTime.styles.dark }) // The same as styleName: "dark". (The package is copied, never changed.)
+// USAGE: TimePicker({ styleName: "dark" })
+// USAGE: TimePicker({ styleName: "dark", style: { field: { round: 4 } } }) // Change only some keys.
+// USAGE: TimePicker({ style: TimePicker.styles.dark }) // The same as styleName: "dark". (The package is copied, never changed.)
 // NOTE: A new package needs only the keys that differ from the default (classic) style.
-// USAGE: SelectTime.styles.myStyle = { field: { round: 4 } };
-SelectTime.styles = {
+// USAGE: TimePicker.styles.myStyle = { field: { round: 4 } };
+TimePicker.styles = {
 
     // White, dark text, a soft line.
-    light: SelectTimeDefaults.style,
+    light: TimePickerDefaults.style,
 
     // Dark theme, same colors as SelectBox "dark".
     dark: {
@@ -991,17 +991,17 @@ SelectTime.styles = {
     },
 
 };
-SelectTime.styles.classic = SelectTime.styles.light; // the old name of light: the pages made with it keep their look
+TimePicker.styles.classic = TimePicker.styles.light; // the old name of light: the pages made with it keep their look
 
 // The line clock of the minimal field (24 x 24 drawing, as the icons of the minimal SearchInput)
-SelectTime.MINIMAL_ICON = '<svg viewBox="0 0 24 24" width="100%" height="100%" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display: block">' +
+TimePicker.MINIMAL_ICON = '<svg viewBox="0 0 24 24" width="100%" height="100%" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display: block">' +
     '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>';
 
 // The minimal theme (_designs/minimal-theme.htm): a 28 px field as the other minimal fields (a 14 px line icon); the
 // columns of the hours
 // and the minutes on the ground of the window with a line and no shadow, 28 px cells: the chosen one in ink (the one fill),
 // a faint fill under the mouse, a thin scroll bar. minimalDark: the same on a dark window.
-SelectTime.createMinimalStyle = function (colors) {
+TimePicker.createMinimalStyle = function (colors) {
     return {
         height: 28,
         style: {
@@ -1010,7 +1010,7 @@ SelectTime.createMinimalStyle = function (colors) {
             fieldFocus: { borderColor: colors.ink },
             fieldText: { fontSize: 13, textColor: colors.text },
             placeholder: { textColor: colors.faintText },
-            icon: { color: colors.softText, svg: SelectTime.MINIMAL_ICON, size: 14 },
+            icon: { color: colors.softText, svg: TimePicker.MINIMAL_ICON, size: 14 },
             panel: { color: colors.ground, border: 1, borderColor: colors.line, round: 4, padding: 8, shadow: "none" },
             column: { gap: 4, barSpace: 14 }, // WHY barSpace: the bar must not cross the ink of the chosen hour
             columnTitle: { fontSize: 11, textColor: colors.softText, activeTextColor: colors.text },
@@ -1024,7 +1024,11 @@ SelectTime.createMinimalStyle = function (colors) {
         },
     };
 };
-SelectTime.MINIMAL_COLORS = { ground: "#FFFFFF", text: Black(0.85), softText: Black(0.55), faintText: Black(0.54), line: Black(0.2), edge: Black(0.45), edgeHover: Black(0.65), ink: "#1F1F1F", onInk: "#FFFFFF", hover: Black(0.05), off: Black(0.25), scrollBar: "#141414" };
-SelectTime.styles.minimal = SelectTime.createMinimalStyle(SelectTime.MINIMAL_COLORS);
-SelectTime.MINIMAL_DARK_COLORS = { ground: "#1A1A19", text: White(0.88), softText: White(0.55), faintText: White(0.48), line: White(0.18), edge: White(0.42), edgeHover: White(0.62), ink: "#EDEDEB", onInk: "#1A1A19", hover: White(0.07), off: White(0.25), scrollBar: "#FFFFFF" };
-SelectTime.styles.minimalDark = SelectTime.createMinimalStyle(SelectTime.MINIMAL_DARK_COLORS);
+TimePicker.MINIMAL_COLORS = { ground: "#FFFFFF", text: Black(0.85), softText: Black(0.55), faintText: Black(0.54), line: Black(0.2), edge: Black(0.45), edgeHover: Black(0.65), ink: "#1F1F1F", onInk: "#FFFFFF", hover: Black(0.05), off: Black(0.25), scrollBar: "#141414" };
+TimePicker.styles.minimal = TimePicker.createMinimalStyle(TimePicker.MINIMAL_COLORS);
+TimePicker.MINIMAL_DARK_COLORS = { ground: "#1A1A19", text: White(0.88), softText: White(0.55), faintText: White(0.48), line: White(0.18), edge: White(0.42), edgeHover: White(0.62), ink: "#EDEDEB", onInk: "#1A1A19", hover: White(0.07), off: White(0.25), scrollBar: "#FFFFFF" };
+TimePicker.styles.minimalDark = TimePicker.createMinimalStyle(TimePicker.MINIMAL_DARK_COLORS);
+
+// THE OLD NAME of the component, for a while: the pages made with SelectTime keep working (the same object).
+// Delete it when no page uses it any more (context/repo-map.md, "Parameter names").
+const SelectTime = TimePicker;

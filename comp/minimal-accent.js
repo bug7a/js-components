@@ -44,8 +44,8 @@ const MinimalAccent = {};
 // The components that have minimal packages, by name: one that is not loaded is skipped.
 MinimalAccent.COMPONENTS = [
     "Accordion", "CheckBox", "ContextMenu", "DataTable", "Dialog", "TextField", "ItemList", "JsonEditor", "LoadingScreen",
-    "MenuBar", "ProgressBar", "RadioButton", "RangeSlider", "SearchInput", "SelectBox", "SelectColor", "SelectDate",
-    "SelectFile", "SelectTime", "SidePanel", "Slider", "SliderField", "SmartTable", "Splitter", "StatusBar", "StepBar",
+    "MenuBar", "ProgressBar", "RadioButton", "RangeSlider", "SearchInput", "SelectBox", "ColorPicker", "DatePicker",
+    "FilePicker", "TimePicker", "SidePanel", "Slider", "SliderField", "SmartTable", "Splitter", "StatusBar", "StepBar",
     "Stepper", "Tabs", "TagInput", "TimeLine", "Toggle", "ToolBar", "TreeView",
 ];
 MinimalAccent.WHITE = "#FFFFFF";
