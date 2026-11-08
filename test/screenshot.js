@@ -11,11 +11,15 @@ SCREENSHOT: one picture of a page (or of a part of it) for a report, in one comm
     node test/screenshot.js tabs.htm --before HEAD~2 --name tabs-fix
     node test/screenshot.js stepper.htm --print "document.title" --print "page.width" --no-picture
     node test/screenshot.js "03-webpages/webpage-handbook/index.htm#/box" --click "Run" --click "Copy"
+    node test/screenshot.js "03-webpages/webpage-handbook/index.htm#/using-components" --click "Run" \
+        --click "Your name" --type "Ada" --click "Save"     (the example runs in an iframe: it is searched too)
 
 Options:
     --run "code"      runs in the page after it is loaded (await works): open a menu, a dialog, a state
-    --click "text"    after --run, a click of the mouse on the element that shows this text (or has it as its
-                      aria-label or title), brought into the window first; more than one --click: one after the other
+    --click "text"    a click of the mouse on the element that shows this text (or has it as its aria-label, title or
+                      placeholder), in the page or in one of its iframes of the same origin, brought into the window
+    --type "text"     types the text with the keyboard into the field that has the focus (a --click on it before)
+                      --click and --type run after --run, one after the other in the order they are given
     --clip "x"        only this part: a basic.js expression (BasicDesigner.ui.pageMenu, a box or its elem, or a list
                       of them) or a CSS selector ([role=dialog], #id: its first element that is seen); --margin px
                       around it (12). More than one --clip: the part that holds all of them
@@ -23,7 +27,7 @@ Options:
     --name what       the file: _screenshots/YYYY-MM-DD-what.png (the name of the page by default)
     --width, --height the window (1280 x 800; a width under 500 is 844 high)
     --scale n         pixels per px (2 for a part, 1 for the whole window)
-    --wait ms         after the load, after --run and after each --click (600)
+    --wait ms         after the load, after --run and after each --click and --type (600)
     --print "expr"    writes the value of a JavaScript expression of the page in the terminal, after --run (await
                       works; more than one --print: each one): a check without reading a picture
     --no-picture      only the --print values and the errors: no picture is saved
@@ -129,29 +133,57 @@ const findClipRect = function (clips) {
     return { x: left, y: top, width: right - left, height: bottom - top };
 };
 
-// Runs in the page: the middle of the element that shows this text (or has it as its aria-label or title), brought
-// into the window. null when there is none.
+// Runs in the page: the middle of the element that shows this text (or has it as its aria-label, title or
+// placeholder), in the page or in an iframe of the same origin (an example in a WebView), brought into the window.
+// null when there is none.
 // WHY the deepest element with the text: it is the one under the mouse (a label in a button).
 const findClickPoint = function (text) {
     const wanted = text.trim();
+    const LABELS = ["aria-label", "title", "placeholder"];
     const textOf = function (elem) { return elem.textContent.replace(/\s+/g, " ").trim(); };
     const isShown = function (elem) {
         const rect = elem.getBoundingClientRect();
-        return rect.width > 0 && rect.height > 0 && getComputedStyle(elem).visibility !== "hidden";
+        const style = elem.ownerDocument.defaultView.getComputedStyle(elem);
+        return rect.width > 0 && rect.height > 0 && style.visibility !== "hidden";
     };
-    const shown = [...document.querySelectorAll("body *")].filter(isShown);
-    const byText = shown.find(function (elem) {
-        if (textOf(elem) !== wanted) return false;
-        return ![...elem.children].some(function (child) { return textOf(child) === wanted; });
+    const findIn = function (doc) {
+        const shown = [...doc.querySelectorAll("body *")].filter(isShown);
+        const byText = shown.find(function (elem) {
+            if (textOf(elem) !== wanted) return false;
+            return ![...elem.children].some(function (child) { return textOf(child) === wanted; });
+        });
+        const byLabel = shown.find(function (elem) {
+            return LABELS.some(function (name) { return elem.getAttribute(name) === wanted; });
+        });
+        return byText || byLabel || null;
+    };
+    // The page first, then its iframes: the element and the iframes around it, the outer one first.
+    const search = function (doc) {
+        const target = findIn(doc);
+        if (target) return { target: target, frames: [] };
+        for (const frame of doc.querySelectorAll("iframe")) {
+            let inner = null;
+            try { inner = frame.contentDocument; } catch (error) { inner = null; } // WHY: another origin can not be read
+            if (!inner || !inner.body) continue;
+            const found = search(inner);
+            if (found) return { target: found.target, frames: [frame].concat(found.frames) };
+        }
+        return null;
+    };
+    const found = search(document);
+    if (!found) return null;
+    found.frames.forEach(function (frame) { frame.scrollIntoView({ block: "center", inline: "center" }); });
+    found.target.scrollIntoView({ block: "center", inline: "center" });
+    // WHY the frames are added: the place of an element in an iframe is from the corner of that iframe.
+    const rect = found.target.getBoundingClientRect();
+    let x = rect.left + rect.width / 2;
+    let y = rect.top + rect.height / 2;
+    found.frames.forEach(function (frame) {
+        const frameRect = frame.getBoundingClientRect();
+        x += frameRect.left + frame.clientLeft;
+        y += frameRect.top + frame.clientTop;
     });
-    const byLabel = shown.find(function (elem) {
-        return elem.getAttribute("aria-label") === wanted || elem.getAttribute("title") === wanted;
-    });
-    const target = byText || byLabel;
-    if (!target) return null;
-    target.scrollIntoView({ block: "center", inline: "center" });
-    const rect = target.getBoundingClientRect();
-    return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+    return { x: x, y: y };
 };
 
 const runCode = function (code) {
@@ -214,10 +246,15 @@ const takePicture = async function (browser, url, options) {
             await sleep(options.wait);
         }
 
-        for (const text of options.clicks) {
-            const point = await page.evaluate(findClickPoint, text);
+        for (const action of options.actions) {
+            if (action.kind === "type") {
+                await page.keyboard.type(action.text);
+                await sleep(options.wait);
+                continue;
+            }
+            const point = await page.evaluate(findClickPoint, action.text);
             if (!point) {
-                log.push({ isError: true, text: "CLICK: nothing shows the text or the label \"" + text + "\"" });
+                log.push({ isError: true, text: "CLICK: nothing shows the text or the label \"" + action.text + "\"" });
                 continue;
             }
             await page.mouse.click(point.x, point.y);
@@ -277,7 +314,7 @@ const todayText = function () {
 };
 
 const readOptions = function (args) {
-    const options = { page: "", run: "", clicks: [], clips: [], prints: [], name: "", before: "", width: DEFAULT_WIDTH, height: 0,
+    const options = { page: "", run: "", actions: [], clips: [], prints: [], name: "", before: "", width: DEFAULT_WIDTH, height: 0,
         scale: 0, wait: DEFAULT_WAIT, margin: DEFAULT_MARGIN, isNoPicture: false, isHelp: false };
     for (let i = 0; i < args.length; i++) {
         const arg = args[i];
@@ -285,7 +322,8 @@ const readOptions = function (args) {
         if (arg === "--help") options.isHelp = true;
         else if (arg === "--before") options.before = (hasValue) ? args[++i] : "HEAD";
         else if (arg === "--run") options.run = args[++i];
-        else if (arg === "--click") options.clicks.push(args[++i]);
+        else if (arg === "--click") options.actions.push({ kind: "click", text: args[++i] });
+        else if (arg === "--type") options.actions.push({ kind: "type", text: args[++i] });
         else if (arg === "--clip") options.clips.push(args[++i]);
         else if (arg === "--print") options.prints.push(args[++i]);
         else if (arg === "--no-picture") options.isNoPicture = true;
