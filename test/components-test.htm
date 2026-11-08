@@ -33,6 +33,9 @@
         CHECKS (for every component):
         - The house header: the file starts with the Bismillah line and has the license block of
           _component-template.js (the Copyright line and "SPDX-License-Identifier: Apache-2.0").
+        - The names of its params (context/basic-js-code-rules.md, 9): no name the kit does not use (title, desc,
+          placeholderText, isX, disabled, min / max, iconPath, a picture in an ...Icon, a createX flag), and every
+          event of its defaults gives self first (onChange: function (self, ...)).
         - The file loads without errors and defines its global.
         - It is created with its default values: returns a basic.js object, "that" is that object,
           every start call is ended (the default container is the same as before).
@@ -270,6 +273,9 @@
             try { Comp = (0, eval)(test.name); } catch (e) { Comp = undefined; }
             if (!check("defines " + test.name, Comp !== undefined && Comp !== null)) return { steps: steps };
 
+            const nameProblems = __findNameProblems(test.name);
+            check("the names of its params (code rules, 9)", nameProblems.length === 0, nameProblems.join("; "));
+
             if (test.kind === "object") {
                 check("no console warnings", probe.warnings.length === 0, probe.warnings.join(" | "), "warn");
                 return { steps: steps };
@@ -361,6 +367,47 @@
             return { steps: steps, keys: keys };
         };
 
+        // The names of the params that the kit does not use (context/basic-js-code-rules.md, 9). Runs in the frame.
+        // WHY: about 15 of them were renamed on 2026-11-08; a new component or param must not bring them back.
+        const findNameProblems = function (componentName) {
+            let defaults = null;
+            try { defaults = (0, eval)(componentName + "Defaults"); } catch (e) { return []; }
+            if (!defaults || typeof defaults !== "object") return [];
+            const NOT_THESE = {
+                title: "titleText", message: "messageText", text: "a ...Text name", label: "labelText",
+                description: "descriptionText", desc: "descriptionText", descText: "descriptionText",
+                placeholderText: "placeholder (emptyText: a text shown when there is nothing)",
+                inputValue: "value", currentValue: "value", disabled: "enabled",
+                min: "minValue", max: "maxValue", maxChar: "maxLength", minChar: "minLength",
+                onEdit: "onChange", onValueChange: "onChange",
+            };
+            // WHY kept: onCellCreate is a hook that makes a cell (the cell first, as create...View: item, row, self);
+            //     createInput: a field made from TextField (PhoneField...) makes its own input, it is not a part shown.
+            const KEPT = { TinyTable: ["onCellCreate"], TextField: ["createInput"] };
+            const firstParam = function (fn) {
+                const text = fn.toString();
+                const arrowWithOne = text.match(/^(?:async\s+)?([A-Za-z_$][\w$]*)\s*=>/);
+                if (arrowWithOne) return arrowWithOne[1];
+                const params = text.match(/^[^(]*\(\s*([A-Za-z_$][\w$]*)/);
+                return (params) ? params[1] : "";
+            };
+            const problemOf = function (key, value) {
+                if (NOT_THESE[key]) return key + " -> " + NOT_THESE[key];
+                if (/^is[A-Z]/.test(key)) return key + " -> a plain word (" + key[2].toLowerCase() + key.slice(3) + ")";
+                if (/(^|[a-z])(icon|image|picture|Icon|Image|Picture)Path$/.test(key)) return key + " -> ...IconFile";
+                if (/Icon$/.test(key) && typeof value === "string" && /[./]|^data:/.test(value)) return key + " -> " + key + "File";
+                if (/^create[A-Z]/.test(key) && typeof value !== "function" && value !== null) return key + " -> show... (a part is there)";
+                if (!/^on[A-Z]/.test(key) || typeof value !== "function") return "";
+                const first = firstParam(value);
+                return (first && first !== "self") ? key + "(" + first + ", ...) -> " + key + "(self, ...)" : "";
+            };
+            const kept = KEPT[componentName] || [];
+            return Object.keys(defaults)
+                .filter(function (key) { return !kept.includes(key); })
+                .map(function (key) { return problemOf(key, defaults[key]); })
+                .filter(function (problem) { return problem !== ""; });
+        };
+
         // *** PARENT PAGE:
 
         // The iframe page: watchers, basic.js, dependencies, the file, then the probe in start().
@@ -372,6 +419,7 @@
                 "<link rel=\"stylesheet\" href=\"../basic/basic.min.css\">" +
                 scripts.map(function (src) { return "<script src=\"../" + src + "\" onerror=\"__probe.missingFiles.push('" + src + "')\"><\/script>"; }).join("") +
                 "<script>const __runProbe = " + runProbe.toString() + ";" +
+                "const __findNameProblems = " + findNameProblems.toString() + ";" +
                 "const __setup = " + (test.setup ? test.setup.toString() : "null") + ";" +
                 "function start() { __runProbe(" + JSON.stringify(probeTest) + ", __setup)" +
                 ".then(function (r) { parent.__frameDone(" + id + ", r); })" +

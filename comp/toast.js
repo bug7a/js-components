@@ -63,7 +63,7 @@ const ToastDefaults = {
     theme: null, // null: Toast.options.theme
     scale: null, // every size multiplied (Ex: 1.5). null: Toast.options.scale
     onClick: null, // function (toast) {} Click on the toast (not on the buttons)
-    onClose: function (toast, reason) { }, // reason: "timeout", "close", "action", "limit", "api"
+    onClose: function (self, reason) { }, // reason: "timeout", "close", "action", "limit", "api"
     style: { // (its sizes are px, multiplied by scale)
         card: {
             round: 10,

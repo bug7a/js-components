@@ -21,7 +21,7 @@ NOTE: still in development: more style packages come; their buttons may be anima
   them first: an error is written under the message and the field gets the focus. getValues() -> { key: value }.
 - content(dialog): any objects in the body (under the message).
 - setStatus(text, type): a line under the content: "error" (red), "success" (green) or "info" (gray).
-- Closes with a button, Escape, a click on the cover (closeOnCover) or close(). onClose(dialog, reason, buttonKey).
+- Closes with a button, Escape, a click on the cover (closeOnCover) or close(). onClose(self, reason, buttonKey).
 - Keyboard: Tab stays in the dialog; the first field (else the primary button) gets the focus; the focus goes back to
   the opener when it closes. More than one dialog: Escape closes the top one.
 - Dialog.confirm(), Dialog.alert(), Dialog.prompt(): Promises.
@@ -54,7 +54,7 @@ Dialog({
         { key: "cancel", text: "Cancel", type: "secondary" },
         { key: "publish", text: "Publish", type: "primary", iconFile: PEN_ICON, onClick: function (dialog) { return publish(dialog.getValues()); } },
     ],
-    onClose: function (dialog, reason, buttonKey) { },
+    onClose: function (self, reason, buttonKey) { },
 });
 if (await Dialog.confirm({ titleText: "Delete the file?", messageText: "It can not be undone.", confirmText: "Delete", danger: 1 })) { }
 const name = await Dialog.prompt({ titleText: "Rename", value: "report.pdf", validate: (text) => (text.trim()) ? "" : "A name is needed." });
@@ -90,8 +90,8 @@ const DialogDefaults = {
     topIconFile: "", // "centered": the icon at the top (a file, or an "<svg" text drawn with currentColor or LIGHT / STRONG)
     topIconTone: "", // "centered": "cyan", "orange", "yellow", "green", "blue": the circle and the icon in its tones; "": gray
     scale: null, // every size multiplied (Ex: 1.5). null: basic.uiScale (1 / page.zoom on a page fitted with page.fit())
-    onOpen: function (dialog) { },
-    onClose: function (dialog, reason, buttonKey) { }, // reason: "button", "escape", "cover", "api"
+    onOpen: function (self) { },
+    onClose: function (self, reason, buttonKey) { }, // reason: "button", "escape", "cover", "api"
     styleName: "ozden", // "ozden", "ozdenDark", "minimal", "minimalDark" or a name added to Dialog.styles
     style: { // The ozden style package (default): the first dialog of smart-button-3-ozden.htm
         cover: { color: Black(0.8), zIndex: 4000 },

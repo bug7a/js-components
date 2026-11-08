@@ -77,7 +77,7 @@ const ToggleDefaults = {
         color: Black(0.5), // off
         selectedColor: White(0.95), // on
     },
-    onChange: function(ui) {},
+    onChange: function(self) {},
     backgroundStyle: { // The track
         color: "whitesmoke", // off
         selectedColor: "#689BD2", // on
