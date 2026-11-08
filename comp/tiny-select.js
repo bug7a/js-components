@@ -217,6 +217,11 @@ TinySelect.OLD_NAMES = {
     arrowIcon: "arrowIconFile",
     labelBoldFont: "labelBold",
 };
+// The old names it bridges by itself (the value is the reverse): for test/old-names.js and the reader
+TinySelect.OLD_NAMES_BY_HAND = {
+    disabled: "enabled",
+    setDisabled: "setEnabled",
+};
 
 TinySelect.Z_INDEX = 1000; // the list on page; over a Dialog or a SidePanel that holds the field (basic.zIndexAbove)
 TinySelect.PAGE_MARGIN = 8; // px: the list stays this far from the top and the bottom of the page

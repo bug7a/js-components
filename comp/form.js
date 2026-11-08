@@ -600,3 +600,9 @@ const Form = function(params = {}) {
     return endObject(box);
 
 };
+
+// The old names it bridges by itself (the arguments changed: onEdit(input) is onChange(self, input)): for
+// test/old-names.js and the reader
+Form.OLD_NAMES_BY_HAND = {
+    onEdit: "onChange",
+};
