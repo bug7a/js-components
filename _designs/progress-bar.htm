@@ -17,13 +17,53 @@
         /* Bismillah */
 
         // DRAFT DESIGN of comp/progress-bar.js (ProgressBar): every state of the packages side by side, each package on a
-        // card in the color of its page: "light" (the default; its old name "classic"), "dark" (a proposal: the component
-        // has ozdenDark, but no dark twin of light), "modern" and "ozden" (the look of SmartButton). Plain basic.js
-        // objects (no ProgressBar here); the moving bar and the stripes are still frames. Change a color, a size, an
-        // edge in basic-designer; then the change is carried to the component by hand (ProgressBarDefaults.style /
-        // ProgressBar.styles). The values below are copies of the packages: keep them in step with progress-bar.js
-        // when the component changes.
+        // card in the color of its page. "light" and "dark" are the NEW looks of the kit (a new design, not copies: they
+        // will take the place of the "light" package, its old name "classic", and be the "dark" the component does not
+        // have; ozdenDark is the dark of ozden): a thin round track of 10 px with no edge, the bar in the accent, the
+        // second part a lighter accent, a 14 px title and a 13 px value. "modern" and "ozden" (the look of SmartButton)
+        // are copies of their packages. Plain basic.js objects (no ProgressBar here); the moving bar and the stripes
+        // are still frames. The tokens at the top are the same in every draft of the new look.
         // http://127.0.0.1:5505/_basic-designer/index.htm?page=_designs/progress-bar.htm
+
+        // THE TOKENS OF THE NEW LIGHT / DARK LOOK (the same in every draft of it)
+        const LIGHT_TOKENS = {
+            page: "#FFFFFF", // the page the component sits on
+            surface: "#FFFFFF", // a field, a list, the face of a button
+            soft: "#F2F3F0", // under the mouse, the ground of an icon, a quiet field
+            softer: "#E6E7E3", // pressed, a track
+            line: Black(0.12), // the edge of a surface
+            lineStrong: Black(0.3), // the edge under the mouse
+            text: Black(0.88),
+            textSoft: Black(0.55),
+            textFaint: Black(0.38), // a placeholder
+            accent: "#3D7A6B", // the one color: a selected row, a fill, the main button, the edge while typing
+            accentHover: "#356C5E",
+            accentPress: "#2E5F53",
+            accentSoft: "#E4EFEB", // a tint of the accent on the surface
+            onAccent: "#FFFFFF", // a text or a mark on the accent
+            danger: "#D9534F",
+            warning: "#E5885E",
+            focusRing: "rgba(61, 122, 107, 0.5)", // the ring of the keyboard focus
+        };
+        const DARK_TOKENS = {
+            page: "#1A1A19",
+            surface: "#232322",
+            soft: "#2C2C2B",
+            softer: "#363635",
+            line: White(0.12),
+            lineStrong: White(0.32),
+            text: White(0.9),
+            textSoft: White(0.55),
+            textFaint: White(0.38),
+            accent: "#65A293",
+            accentHover: "#74B0A2",
+            accentPress: "#5A9385",
+            accentSoft: "rgba(101, 162, 147, 0.2)",
+            onAccent: "#0F1F1B",
+            danger: "#E0605A",
+            warning: "#F0A07A",
+            focusRing: "rgba(101, 162, 147, 0.55)",
+        };
 
         const PAGE_COLOR = "#F4F5F2"; // the ground of the draft, not of the bars
         const PAGE_TEXT = { title: Black(0.8), note: Black(0.5), state: Black(0.45), stateTitle: Black(0.4) }; // the texts of the draft
@@ -35,42 +75,43 @@
         const CARD_PADDING = 24;
         const COLUMN_GAP = 24;
         const SOFT_BLUE = "#7BA7D9"; // a limit with its own color (the ozden sample)
-        const LIGHT_PAGE = { color: "white", textColor: Black(0.45) }; // the page of a light package
-        const DARK_PAGE = { color: "#1A1A19", textColor: White(0.5) }; // the dark card of the kit
+        const LIGHT_PAGE = { color: LIGHT_TOKENS.page, textColor: LIGHT_TOKENS.textSoft }; // the page of a light package
+        const DARK_PAGE = { color: DARK_TOKENS.page, textColor: DARK_TOKENS.textSoft }; // the dark card of the kit
 
-        // THE STYLE PACKAGES (copies of ProgressBar.styles; dark is a proposal)
+        // THE STYLE PACKAGES: light and dark are the new design; modern and ozden are copies of ProgressBar.styles
         const LOOKS = {
+            // A thin round track with no edge, the bar in the accent; the second part the accent at 35 %; a limit is a
+            // 2 px line in a soft gray with its text under it
             light: {
-                name: "light (default)",
+                name: "light (new)",
                 page: LIGHT_PAGE,
                 gap: 6,
-                track: { height: 16, color: "#F2F2F2", round: 4, border: 2, borderColor: "rgba(0, 0, 0, 0.1)" },
-                darkTrack: { color: "#242424", borderColor: White(0.4), limitColor: White(0.7) },
-                bar: { color: "#141414", fillOpacity: 1, border: 0, borderColor: "", boxShadow: "none", innerRound: "", joinEdge: 1 },
-                secondBar: { color: Black(0.35), fillOpacity: 0.2, lighten: 0, borderOpacity: 0.45 },
+                track: { height: 10, color: LIGHT_TOKENS.softer, round: 100, border: 0, borderColor: "transparent" },
+                darkTrack: { color: "#2E2E2D", borderColor: "transparent", limitColor: White(0.7) },
+                bar: { color: LIGHT_TOKENS.accent, fillOpacity: 1, border: 0, borderColor: "", boxShadow: "none", innerRound: "", joinEdge: 1 },
+                secondBar: { color: "", fillOpacity: 0.35, lighten: 0, borderOpacity: 0.45 },
                 stripes: { color: "rgba(255, 255, 255, 0.35)", size: 14 },
-                limit: { shape: "line", color: "indianred", width: 1, round: 0, overhang: 6, dotSize: 6, dotOpacity: 1, barColor: "white", secondBarColor: "", textSize: 13, textColor: Black(0.7), textSpace: 6 },
-                successColor: "#2E9E5B",
-                errorColor: "#D64545",
-                title: { fontSize: 14, textColor: Black(0.8) },
-                valueText: { fontSize: 14, textColor: Black(0.55) },
+                limit: { shape: "line", color: Black(0.45), width: 2, round: 1, overhang: 4, dotSize: 6, dotOpacity: 1, barColor: "white", secondBarColor: "", textSize: 12, textColor: LIGHT_TOKENS.textSoft, textSpace: 6 },
+                successColor: "#5DB36B",
+                errorColor: LIGHT_TOKENS.danger,
+                title: { fontSize: 14, textColor: LIGHT_TOKENS.text },
+                valueText: { fontSize: 13, textColor: LIGHT_TOKENS.textSoft },
             },
-            // A proposal: the dark twin of light. The track of ozdenDark, a light bar (the ink of the dark kit), dark
-            // stripes on it, the texts in white.
+            // The same shapes on the dark page
             dark: {
-                name: "dark (a proposal)",
+                name: "dark (new)",
                 page: DARK_PAGE,
                 gap: 6,
-                track: { height: 16, color: "#2A2A29", round: 4, border: 2, borderColor: White(0.18) },
-                darkTrack: { color: "#242424", borderColor: White(0.4), limitColor: White(0.7) },
-                bar: { color: "#E6E6E4", fillOpacity: 1, border: 0, borderColor: "", boxShadow: "none", innerRound: "", joinEdge: 1 },
-                secondBar: { color: White(0.35), fillOpacity: 0.2, lighten: 0, borderOpacity: 0.45 },
-                stripes: { color: "rgba(0, 0, 0, 0.15)", size: 14 },
-                limit: { shape: "line", color: "#FF8A7A", width: 1, round: 0, overhang: 6, dotSize: 6, dotOpacity: 1, barColor: "#141414", secondBarColor: "", textSize: 13, textColor: White(0.7), textSpace: 6 },
-                successColor: "#5DBE86",
-                errorColor: "#FF6B6B",
-                title: { fontSize: 14, textColor: White(0.88) },
-                valueText: { fontSize: 14, textColor: White(0.6) },
+                track: { height: 10, color: DARK_TOKENS.softer, round: 100, border: 0, borderColor: "transparent" },
+                darkTrack: { color: "#111110", borderColor: White(0.2), limitColor: White(0.7) },
+                bar: { color: DARK_TOKENS.accent, fillOpacity: 1, border: 0, borderColor: "", boxShadow: "none", innerRound: "", joinEdge: 1 },
+                secondBar: { color: "", fillOpacity: 0.35, lighten: 0, borderOpacity: 0.45 },
+                stripes: { color: "rgba(255, 255, 255, 0.25)", size: 14 },
+                limit: { shape: "line", color: White(0.5), width: 2, round: 1, overhang: 4, dotSize: 6, dotOpacity: 1, barColor: "#141414", secondBarColor: "", textSize: 12, textColor: DARK_TOKENS.textSoft, textSpace: 6 },
+                successColor: "#7FCB8F",
+                errorColor: "#FF7B72",
+                title: { fontSize: 14, textColor: DARK_TOKENS.text },
+                valueText: { fontSize: 13, textColor: DARK_TOKENS.textSoft },
             },
             modern: {
                 name: "modern",
@@ -135,7 +176,7 @@
                 VGroup({ width: "max-content", height: "auto", align: "left top", gap: 22, padding: 40, clipContent: 0 });
 
                     Label({ text: "ProgressBar · draft (comp/progress-bar.js)", fontSize: 20, bold: 1, textColor: PAGE_TEXT.title });
-                    Label({ text: "light is the default package (its old name classic); dark is a proposal (the component has ozdenDark, no dark). Every row is a state.", fontSize: 13, textColor: PAGE_TEXT.note });
+                    Label({ text: "light and dark are a new design (in place of the light package, its old name classic, and for the dark the component does not have); modern and ozden are copies. Every row is a state.", fontSize: 13, textColor: PAGE_TEXT.note });
 
                     // GROUP: The names of the states, then a card for every package
                     HGroup({ width: "auto", height: "auto", align: "left top", gap: COLUMN_GAP, clipContent: 0 });
