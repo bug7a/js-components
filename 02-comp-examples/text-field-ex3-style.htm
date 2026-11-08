@@ -15,8 +15,7 @@
         <!--<script src="basic/scroll-bar.min.js" type="text/javascript" charset="utf-8"></script>-->
 
         <script src="../comp/tooltip.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../comp/input-b.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../comp/number-input-b.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/text-field.js" type="text/javascript" charset="utf-8"></script>
 
         <!-- ALL COMPONENTS IN ONE FILE -->
         <!-- <script src="components.js" type="text/javascript" charset="utf-8"></script> -->
@@ -39,20 +38,27 @@
                     required: 1,
                     placeholder: "Jack",
                     leftPadding: 20,
+                    backgroundColor: "transparent",
+                    focusBackgroundColor: "whitesmoke",
+                    lineColor: "transparent",
+                    focusLineColor: "transparent",
                 });
                 myInput1.setTitle("FIRST NAME");
+                myInput1.background.border = 1;
+                myInput1.background.borderColor = "lightgray";
 
                 // INPUT: #2
-                const myInput2 = NumberField({
+                const myInput2 = TextField({
                     key: "2",
                     titleText: "HEIGHT",
                     placeholder: "175",
                     descriptionText: "The vertical size...",
                     unitText: "cm",
-                    maxLength: 3,
                     required: 0,
-                    allowNegative: 0,
-                    allowDecimal: 0,
+                    backgroundColor: "whitesmoke",
+                    focusBackgroundColor: "whitesmoke",
+                    lineColor: "transparent",
+                    focusLineColor: "lightgray",
                 });
                 myInput2.onChange = function () {
                     console.log(myInput2.getValue());
@@ -61,51 +67,30 @@
                 // INPUT: #3
                 const myInput3 = TextField({
                     key: "3",
-                    placeholder: "",
-                    titleText: "COUNT",
-                    descriptionText: "As you type something, it will write the number of characters.",
-                    required: 1,
+                    placeholder: "Sample",
+                    titleText: "INPUT TITLE",
+                    descriptionText: "Its a style example for input fields.",
+                    required: 0,
                     maxLength: 20,
-                    unitText: "0/20",
-                    unitStyle: {
-                        fontSize: 16,
-                    },
+                    leftPadding: 20,
+                    rightPadding: 20,
+                    unitText: "",
+                    backgroundColor: "transparent",
+                    focusBackgroundColor: "transparent",
+                    lineColor: "transparent",
+                    focusLineColor: "transparent",
                 });
+                myInput3.inputGroup.gap = 4;
+                myInput3.input.color = "whitesmoke";
+                myInput3.input.border = 1;
+                myInput3.input.borderColor = "lightgray";
+                myInput3.input.inputElement.style.padding = "0px 12px";
                 myInput3.onChange = function () {
-                    const currentLength = myInput3.input.text.length;
-                    myInput3.setUnitText(`${currentLength}/${myInput3.maxLength}`);
+                    console.log(myInput3.getValue());
                 };
 
             endAutoLayout(); // END GROUP
 
-            // GROUP: Setting buttons
-            AutoLayout({
-                flow: "horizontal",
-                align: "left top",
-                gap: 8,
-                padding: [20, 20],
-            });
-
-                createSettingButton("Button A");
-                createSettingButton("Button B");
-
-            endAutoLayout();
-
-        };
-
-        const createSettingButton = function (text) {
-            const btn = Button({
-                text: text,
-                width: "auto",
-                height: "auto",
-                color: "lightgray",
-                fontSize: 16,
-                padding: [8, 4],
-                minimal: 1,
-            });
-            btn.on("click", function () {
-                console.log(text);
-            });
         };
 
         </script>

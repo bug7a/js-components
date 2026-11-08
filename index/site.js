@@ -6,7 +6,7 @@ JS Components Website - Site Controller - v26.09
 
 - Sayfayı kurar, adres çubuğuna göre ana sayfayı veya bir bileşeni açar, dili değiştirir,
   ekran boyutu değişince ölçüleri günceller.
-- Adresler: index.htm (ana sayfa), index.htm#/tabs (bileşen), index.htm#/input-b/3 (bileşenin 3. örneği)
+- Adresler: index.htm (ana sayfa), index.htm#/tabs (bileşen), index.htm#/text-field/3 (bileşenin 3. örneği)
 - Builds the page, opens the home page or a component by the address, switches the language
   and updates the metrics when the window is resized.
 
@@ -52,7 +52,7 @@ const start = function () {
 
 // *** ROUTING:
 
-// "#/tabs" -> { key: "tabs", index: 0 }, "#/input-b/3" -> { key: "input-b", index: 2 }
+// "#/tabs" -> { key: "tabs", index: 0 }, "#/text-field/3" -> { key: "text-field", index: 2 }
 SiteApp.parseHash = function () {
 
     const match = /^#\/([\w-]+)(?:\/(\d+))?/.exec(location.hash);

@@ -2,7 +2,7 @@
 <html lang="en">
     <head>
 
-        <title>PhoneField JS Component</title>
+        <title>TextareaInputB JS Component</title>
 
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0"><!-- , user-scalable=no -->
@@ -12,11 +12,11 @@
         <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
         <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
         <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
-        <!--<script src="basic/scroll-bar.min.js" type="text/javascript" charset="utf-8"></script>-->
+        <script src="../basic/scroll-bar.min.js" type="text/javascript" charset="utf-8"></script>
 
         <script src="../comp/tooltip.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../comp/input-b.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../comp/phone-input-b.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/text-field.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/text-area-field.js" type="text/javascript" charset="utf-8"></script>
 
         <!-- ALL COMPONENTS IN ONE FILE -->
         <!-- <script src="components.js" type="text/javascript" charset="utf-8"></script> -->
@@ -27,28 +27,31 @@
 
             page.color = "white";
 
-            // GROUP: Container Centered
+            // GROUP: Centered container
             AutoLayout();
 
                 // INPUT: #1
-                const myInput = PhoneField({
+                TextAreaField({
                     key: "1",
+                    height: 170, // 4 lines
                     required: 1,
-                    titleText: "PHONE NUMBER",
-                    placeholder: "(auto)",
-                    warningText: "Invalid phone number format",
+                    titleText: "MESSAGE",
+                    placeholder: "How can we help you?",
+                    minCharCount: 80,
+                    showCount: 1,
+                    lengthText: "length: ",
+                    warningText: "The entered text must be longer than 80",
                     warningColor: "#E5885E",
-                    countryCode: "+90",
-                    phoneMask: " (___) ___-____",
-                    unitText: "TR",
+                    maxLength: 255,
+                    rightPadding: 5,
+                    unitStyle: {
+                        padding: [12, 4],
+                        color: "#373836EE",
+                        textColor: "white",
+                    },
                 });
 
-            endAutoLayout(); // END GROUP
-
-            // Get value
-            myInput.onChange = function () {
-                console.log(myInput.getValue());
-            };
+            endAutoLayout(); // GROUP: Centered container
 
         };
 

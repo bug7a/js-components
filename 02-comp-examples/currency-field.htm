@@ -2,7 +2,7 @@
 <html lang="en">
     <head>
 
-        <title>UrlField JS Component</title>
+        <title>CurrencyField JS Component</title>
 
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0"><!-- , user-scalable=no -->
@@ -15,9 +15,8 @@
         <!--<script src="basic/scroll-bar.min.js" type="text/javascript" charset="utf-8"></script>-->
 
         <script src="../comp/tooltip.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../comp/input-b.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../comp/url-input-b.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../comp/tiny-select.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/text-field.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/currency-field.js" type="text/javascript" charset="utf-8"></script>
 
         <!-- ALL COMPONENTS IN ONE FILE -->
         <!-- <script src="components.js" type="text/javascript" charset="utf-8"></script> -->
@@ -32,32 +31,19 @@
             AutoLayout();
 
                 // INPUT: #1
-                const myInput = UrlField({
+                const myInput = CurrencyField({
                     key: "1",
-                    width: 400,
-                    required: 1,
-                    titleText: "URL",
-                    placeholder: "example.com",
-                    warningText: "Invalid URL format",
-                    warningColor: "#E5885E",
-                    maxLength: 255,
-                    rightPadding: 20,
-                    tinySelectParams: {
-                        titleText: "",
-                        list: [
-                            { id: "1", label: "http://" },
-                            { id: "2", label: "https://" },
-                            { id: "3", label: "http://www." },
-                            { id: "4", label: "https://www." },
-                        ],
-                        selectedIndex: 3,
-                        paddingX: 0,
-                        arrowSize: 20,
-                        fontSize: 20,
-                        color: "rgba(0,0,0,0.05)",
-                        round: 3,
-                        listOverTextColor: "#65A293",
-                    },
+                    width: 350,
+                    required: 0,
+                    titleText: "CURRENCY",
+                    placeholder: "(auto)",
+                    maxLength: 35,
+                    allowNegative: 1,
+                    allowDecimal: 1,
+                    decimalSeparator: ".", // or ","
+                    maxDecimalDigits: 2,
+                    groupSeparator: ",", // for thousands grouping
+                    unitText: "TL",
                 });
 
             endAutoLayout(); // END GROUP

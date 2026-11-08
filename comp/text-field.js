@@ -7,7 +7,7 @@ TextField - v26.11
 UI COMPONENT TEMPLATE
 - You can customize, this template code as you need:
 - NEW PROJECTS: use styleName "ozden" on a light page and "ozdenDark" on a dark page (the
-  look of 02-comp-examples/input-b-ex7-ozden.htm), unless the user asks for another one. The fields made from TextField
+  look of 02-comp-examples/text-field-ex7-ozden.htm), unless the user asks for another one. The fields made from TextField
   (EmailField, PhoneField, PasswordField, UrlField, NumberField, CurrencyField, TextAreaField) take the same
   packages: give them the same styleName. The default (classic) stays for the pages made before.
 
@@ -717,9 +717,9 @@ const TextField = function(params = {}) {
 
 // The color of the placeholder text: a CSS variable on the <input>, read by one CSS rule.
 TextField.setPlaceholderColor = function(inputElement, color) {
-    basic.addCss("input-b-placeholder", ".input-b-placeholder::placeholder { color: var(--input-b-placeholder); opacity: 1; }");
-    inputElement.classList.add("input-b-placeholder");
-    inputElement.style.setProperty("--input-b-placeholder", color);
+    basic.addCss("text-field-placeholder", ".text-field-placeholder::placeholder { color: var(--text-field-placeholder); opacity: 1; }");
+    inputElement.classList.add("text-field-placeholder");
+    inputElement.style.setProperty("--text-field-placeholder", color);
 };
 
 // THE OLD NAMES of the params, the properties and the methods (basic.keepOldNames): the pages made with them keep

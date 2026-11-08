@@ -23,8 +23,8 @@ UI COMPONENT
   ground: give it the text color of its button, loginPage.style.customLoginButton.textColor).
 
 LOAD FIRST (in this order):
-    basic.js, comp/ui-effects.js, comp/tooltip.js, comp/input-b.js, comp/email-input-b.js,
-    comp/password-input-b.js, comp/tabs.js, comp/smart-button.js, comp/loading-screen.js
+    basic.js, comp/ui-effects.js, comp/tooltip.js, comp/text-field.js, comp/email-field.js,
+    comp/password-field.js, comp/tabs.js, comp/smart-button.js, comp/loading-screen.js
     (LoadingScreen needs smart-button.js: the clock drawing)
 
 
@@ -71,8 +71,8 @@ const LoginPageDefaults = {
     onLoginClick: function() {},
     onSignupClick: function() {},
     showPasswordIconInvert: 1,
-    showPasswordIconFile: "../../comp/password-input-b/show-btn.png",
-    hidePasswordIconFile: "../../comp/password-input-b/hide-btn.png",
+    showPasswordIconFile: "../../comp/password-field/show-btn.png",
+    hidePasswordIconFile: "../../comp/password-field/hide-btn.png",
     waitingCoverColor: "rgba(0, 0, 0, 0.6)", // The cover of box.waiting (LoadingScreen)
     waitingClock: "ozden", // The clock of box.waiting: "ozden" (a white face) or "ozdenDark" (LoadingScreen.clocks)
     signupPasswordParams: {

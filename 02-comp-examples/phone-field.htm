@@ -2,7 +2,7 @@
 <html lang="en">
     <head>
 
-        <title>CurrencyField JS Component</title>
+        <title>PhoneField JS Component</title>
 
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0"><!-- , user-scalable=no -->
@@ -15,8 +15,8 @@
         <!--<script src="basic/scroll-bar.min.js" type="text/javascript" charset="utf-8"></script>-->
 
         <script src="../comp/tooltip.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../comp/input-b.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../comp/currency-input-b.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/text-field.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/phone-field.js" type="text/javascript" charset="utf-8"></script>
 
         <!-- ALL COMPONENTS IN ONE FILE -->
         <!-- <script src="components.js" type="text/javascript" charset="utf-8"></script> -->
@@ -27,23 +27,20 @@
 
             page.color = "white";
 
-            // GROUP: Autolayout
+            // GROUP: Container Centered
             AutoLayout();
 
                 // INPUT: #1
-                const myInput = CurrencyField({
+                const myInput = PhoneField({
                     key: "1",
-                    width: 350,
-                    required: 0,
-                    titleText: "CURRENCY",
+                    required: 1,
+                    titleText: "PHONE NUMBER",
                     placeholder: "(auto)",
-                    maxLength: 35,
-                    allowNegative: 1,
-                    allowDecimal: 1,
-                    decimalSeparator: ".", // or ","
-                    maxDecimalDigits: 2,
-                    groupSeparator: ",", // for thousands grouping
-                    unitText: "TL",
+                    warningText: "Invalid phone number format",
+                    warningColor: "#E5885E",
+                    countryCode: "+90",
+                    phoneMask: " (___) ___-____",
+                    unitText: "TR",
                 });
 
             endAutoLayout(); // END GROUP

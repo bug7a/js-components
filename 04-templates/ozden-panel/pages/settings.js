@@ -699,8 +699,8 @@ const SettingsPage = function(params = {}) {
                     isRequired: 0, // WHY: Required balls are shown on empty fields at start. Checked on the button click.
                     minChar: 8,
                     minCharWarningText: "At least 8 characters",
-                    showPasswordIconFile: LIB_PATH + "comp/password-input-b/show-btn.png",
-                    hidePasswordIconFile: LIB_PATH + "comp/password-input-b/hide-btn.png",
+                    showPasswordIconFile: LIB_PATH + "comp/password-field/show-btn.png",
+                    hidePasswordIconFile: LIB_PATH + "comp/password-field/hide-btn.png",
                     showPasswordIconInvert: 1,
                     rightPadding: 50,
                 };

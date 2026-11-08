@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+
+        <title>UrlField JS Component</title>
+
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"><!-- , user-scalable=no -->
+
+        <!-- LIBRARY FILES -->
+        <!-- <link rel="preload" href="image.png" as="image"> -->
+        <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+        <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
+        <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
+        <!--<script src="basic/scroll-bar.min.js" type="text/javascript" charset="utf-8"></script>-->
+
+        <script src="../comp/tooltip.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/text-field.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/url-field.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/tiny-select.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- ALL COMPONENTS IN ONE FILE -->
+        <!-- <script src="components.js" type="text/javascript" charset="utf-8"></script> -->
+
+        <script>
+
+        const start = function () {
+
+            page.color = "white";
+
+            // GROUP: Autolayout
+            AutoLayout();
+
+                // INPUT: #1
+                const myInput = UrlField({
+                    key: "1",
+                    width: 400,
+                    required: 1,
+                    titleText: "URL",
+                    placeholder: "example.com",
+                    warningText: "Invalid URL format",
+                    warningColor: "#E5885E",
+                    maxLength: 255,
+                    rightPadding: 20,
+                    tinySelectParams: {
+                        titleText: "",
+                        list: [
+                            { id: "1", label: "http://" },
+                            { id: "2", label: "https://" },
+                            { id: "3", label: "http://www." },
+                            { id: "4", label: "https://www." },
+                        ],
+                        selectedIndex: 3,
+                        paddingX: 0,
+                        arrowSize: 20,
+                        fontSize: 20,
+                        color: "rgba(0,0,0,0.05)",
+                        round: 3,
+                        listOverTextColor: "#65A293",
+                    },
+                });
+
+            endAutoLayout(); // END GROUP
+
+            // Get value
+            myInput.onChange = function () {
+                console.log(myInput.getValue());
+            };
+
+        };
+
+        </script>
+
+    </head>
+    <body>
+
+        <!-- HTML content -->
+
+    </body>
+</html>

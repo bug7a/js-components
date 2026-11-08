@@ -14,18 +14,18 @@
 
         <!-- COMPONENTS (comp/dialog.js: not with comp/dialog.js, both define Dialog) -->
         <script src="../comp/tooltip.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../comp/input-b.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../comp/textarea-b.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/text-field.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/text-area-field.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/slider-field.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/search-input.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/full-screen-select.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/item-list.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/side-panel.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../comp/email-input-b.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../comp/password-input-b.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../comp/phone-input-b.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/email-field.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/password-field.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/phone-field.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/tiny-select.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../comp/url-input-b.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/url-field.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/form.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/tabs.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/select-box.js" type="text/javascript" charset="utf-8"></script>
@@ -71,8 +71,8 @@
         <script src="../comp/page-control.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/tree-view.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/web-view.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../comp/number-input-b.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../comp/currency-input-b.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/number-field.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/currency-field.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/data-table.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/graph-box.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/log-view.js" type="text/javascript" charset="utf-8"></script>
@@ -1605,7 +1605,7 @@
             oldForm.remove();
         });
 
-        // *** INPUT B (comp/input-b.js)
+        // *** TEXT FIELD (comp/text-field.js)
 
         test("EmailField: a fast typing that ends valid leaves no warning ball", async function () {
             const email = EmailField({ titleText: "Email", animatedWarningBall: 1 });
@@ -1684,7 +1684,7 @@
             Toast.closeAll();
         });
 
-        // *** PHONE INPUT (comp/phone-input-b.js)
+        // *** PHONE FIELD (comp/phone-field.js)
 
         test("PhoneField: a pasted number keeps all its digits", async function () {
             const phone = PhoneField({ titleText: "Phone" });
@@ -1703,7 +1703,7 @@
             phone.remove();
         });
 
-        // *** URL INPUT (comp/url-input-b.js)
+        // *** URL FIELD (comp/url-field.js)
 
         test("UrlField: a path with an 's' is valid, an empty required field is not sent", async function () {
             const url = UrlField({ titleText: "Site", required: 1 });
@@ -1718,7 +1718,7 @@
             url.remove();
         });
 
-        // *** TEXTAREA B (comp/textarea-b.js)
+        // *** TEXT AREA FIELD (comp/text-area-field.js)
 
         test("TextAreaField: setPlaceholder and setMaxLength change its textarea", async function () {
             const area = TextAreaField({ titleText: "Note" });

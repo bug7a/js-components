@@ -7,7 +7,7 @@ CurrencyField - v26.11
 UI COMPONENT TEMPLATE
 - You can customize, this template code as you need:
 - NEW PROJECTS: styleName "ozden" on a light page, "ozdenDark" on a dark page (the packages
-  of TextField, comp/input-b.js; the look of 02-comp-examples/input-b-ex7-ozden.htm), unless the user asks for another one.
+  of TextField, comp/text-field.js; the look of 02-comp-examples/text-field-ex7-ozden.htm), unless the user asks for another one.
 
 Started Date: June 2024
 Developer: Bugra Ozden

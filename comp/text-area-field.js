@@ -7,7 +7,7 @@ TextAreaField - v26.11
 UI COMPONENT TEMPLATE
 - You can customize, this template code as you need:
 - NEW PROJECTS: styleName "ozden" on a light page, "ozdenDark" on a dark page (the packages
-  of TextField, comp/input-b.js; the look of 02-comp-examples/input-b-ex7-ozden.htm), unless the user asks for another one.
+  of TextField, comp/text-field.js; the look of 02-comp-examples/text-field-ex7-ozden.htm), unless the user asks for another one.
 - scrollBarStyle: the scroll bar of the text (the params of ScrollBar; a style package can give it: minimal).
 - rightPadding is its own (5): a style package does not change it (on the right is the scroll bar). Under its title
   (titlePosition "above", minimal), from the right edge: the scroll bar right inside the edge, the warning ball left

@@ -2,7 +2,7 @@
 <html lang="en">
     <head>
 
-        <title>EmailField JS Component</title>
+        <title>NumberField JS Component</title>
 
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0"><!-- , user-scalable=no -->
@@ -11,12 +11,12 @@
         <!-- <link rel="preload" href="image.png" as="image"> -->
         <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
         <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
-        <script src="../basic/basic.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
         <!--<script src="basic/scroll-bar.min.js" type="text/javascript" charset="utf-8"></script>-->
 
         <script src="../comp/tooltip.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../comp/input-b.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../comp/email-input-b.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/text-field.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/number-field.js" type="text/javascript" charset="utf-8"></script>
 
         <!-- ALL COMPONENTS IN ONE FILE -->
         <!-- <script src="components.js" type="text/javascript" charset="utf-8"></script> -->
@@ -27,19 +27,20 @@
 
             page.color = "white";
 
-            // GROUP: Centered content
+            // GROUP: Autolayout
             AutoLayout();
 
                 // INPUT: #1
-                const myInput = EmailField({
+                const myInput = NumberField({
                     key: "1",
                     width: 350,
-                    required: 1,
-                    titleText: "EMAIL",
-                    placeholder: "example@site.com",
-                    warningText: "Invalid email format",
-                    warningColor: "#E5885E",
-                    maxLength: 40,
+                    titleText: "NUMERIC",
+                    placeholder: "(auto)",
+                    maxLength: 35,
+                    allowNegative: 1,
+                    allowDecimal: 1,
+                    decimalSeparator: ".", // or ","
+                    maxDecimalDigits: 2,
                 });
 
             endAutoLayout(); // END GROUP

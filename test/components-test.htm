@@ -58,7 +58,7 @@
         const TIME_LIMIT = 10000;       // ms: an iframe that does not answer fails
         const PARALLEL = 4;             // iframes at the same time
 
-        const INPUT_B = ["comp/tooltip.js", "comp/input-b.js"];
+        const INPUT_B = ["comp/tooltip.js", "comp/text-field.js"];
 
         // kind "object": a namespace, not a constructor. Only loading is checked.
         // kind "group": started like HGroup: endGroup() closes it.
@@ -73,22 +73,22 @@
             { file: "comp/json-editor.js", name: "JsonEditor", deps: ["comp/context-menu.js", "comp/search-input.js"], params: { height: 300, value: [{ name: "A", price: 1, tags: ["x"] }] } },
             { file: "comp/markdown-view.js", name: "MarkdownView", deps: ["comp/code-editor.js"], params: { height: 200, markdownText: "# Hi\n\n```python\nx = 1\n```" } },
             { file: "comp/tool-bar.js", name: "ToolBar", deps: ["comp/tooltip.js", "comp/context-menu.js", "comp/menu-bar.js"], params: { items: [{ key: "save", icon: "save", hint: "Save", shortcut: "Ctrl+S" }, "-", { key: "menu", text: "Menu", items: ["One"] }] } },
-            { file: "comp/currency-input-b.js", name: "CurrencyField", deps: INPUT_B },
-            { file: "comp/email-input-b.js", name: "EmailField", deps: INPUT_B },
+            { file: "comp/currency-field.js", name: "CurrencyField", deps: INPUT_B },
+            { file: "comp/email-field.js", name: "EmailField", deps: INPUT_B },
             { file: "comp/form.js", name: "Form", deps: ["comp/tooltip.js"] },
-            { file: "comp/input-b.js", name: "TextField", deps: ["comp/tooltip.js"] },
+            { file: "comp/text-field.js", name: "TextField", deps: ["comp/tooltip.js"] },
             { file: "comp/left-menu.js", name: "LeftMenu" },
-            { file: "comp/login-page.js", name: "LoginPage", deps: ["comp/ui-effects.js", ...INPUT_B, "comp/email-input-b.js", "comp/password-input-b.js", "comp/tabs.js", "comp/smart-button.js", "comp/loading-screen.js"] },
-            { file: "comp/number-input-b.js", name: "NumberField", deps: INPUT_B },
-            { file: "comp/password-input-b.js", name: "PasswordField", deps: INPUT_B },
-            { file: "comp/phone-input-b.js", name: "PhoneField", deps: INPUT_B },
+            { file: "comp/login-page.js", name: "LoginPage", deps: ["comp/ui-effects.js", ...INPUT_B, "comp/email-field.js", "comp/password-field.js", "comp/tabs.js", "comp/smart-button.js", "comp/loading-screen.js"] },
+            { file: "comp/number-field.js", name: "NumberField", deps: INPUT_B },
+            { file: "comp/password-field.js", name: "PasswordField", deps: INPUT_B },
+            { file: "comp/phone-field.js", name: "PhoneField", deps: INPUT_B },
             { file: "comp/search-input.js", name: "SearchInput" },
             { file: "comp/slider.js", name: "Slider" },
-            { file: "comp/textarea-b.js", name: "TextAreaField", deps: INPUT_B },
+            { file: "comp/text-area-field.js", name: "TextAreaField", deps: INPUT_B },
             { file: "comp/tiny-select.js", name: "TinySelect" },
             { file: "comp/toggle.js", name: "Toggle" },
             { file: "comp/tooltip.js", name: "Tooltip", setup: function () { return { target: Button({ text: "Target" }), hintText: "Hint" }; } },
-            { file: "comp/url-input-b.js", name: "UrlField", deps: [...INPUT_B, "comp/tiny-select.js"] },
+            { file: "comp/url-field.js", name: "UrlField", deps: [...INPUT_B, "comp/tiny-select.js"] },
 
             { file: "comp/bottom-bar.js", name: "BottomBar", deps: ["comp/badge.js"] },
             { file: "comp/smart-button.js", name: "SmartButton" },
@@ -109,7 +109,7 @@
             { file: "comp/code-editor.js", name: "CodeEditor", params: { language: "python", value: "def f():\n    return 1\n" } },
             { file: "comp/image-view.js", name: "ImageView", params: { imageFile: "data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20'/%3E" } },
             { file: "comp/data-table.js", name: "DataTable", deps: ["comp/search-input.js"] },
-            { file: "comp/dialog.js", name: "Dialog", deps: ["comp/tooltip.js", "comp/input-b.js", "comp/smart-button.js"] },
+            { file: "comp/dialog.js", name: "Dialog", deps: ["comp/tooltip.js", "comp/text-field.js", "comp/smart-button.js"] },
             { file: "comp/filters.js", name: "Filters" },
             { file: "comp/full-screen-select.js", name: "FullScreenSelect", deps: ["comp/search-input.js"] },
             { file: "comp/gauge.js", name: "Gauge" },

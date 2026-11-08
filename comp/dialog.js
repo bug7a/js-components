@@ -17,7 +17,7 @@ NOTE: still in development: more style packages come; their buttons may be anima
   - onClick(dialog, button) returns false: the dialog stays open. A Promise: the button waits (its clock), the
     others are disabled, and the dialog closes when it ends (a rejected one keeps it open).
 - Fields: fields: [{ key, titleText, placeholder, value, required, validate(value) -> error text }] make TextField
-  fields (comp/input-b.js, load it with comp/tooltip.js; without it a plain Input). A "primary" button checks
+  fields (comp/text-field.js, load it with comp/tooltip.js; without it a plain Input). A "primary" button checks
   them first: an error is written under the message and the field gets the focus. getValues() -> { key: value }.
 - content(dialog): any objects in the body (under the message).
 - setStatus(text, type): a line under the content: "error" (red), "success" (green) or "info" (gray).

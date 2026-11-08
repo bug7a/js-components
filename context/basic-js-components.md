@@ -126,7 +126,7 @@ box.remove = function () {
 };
 ```
 
-Never write a `destroy()` for a component: everything is removed with `remove()`. To extend a component: `startExtendedObject(ParentComp, params)` ... `endExtendedObject(box)` (see `comp/email-input-b.js`).
+Never write a `destroy()` for a component: everything is removed with `remove()`. To extend a component: `startExtendedObject(ParentComp, params)` ... `endExtendedObject(box)` (see `comp/email-field.js`).
 
 ## When the component is ready (only in the kit repository)
 A project made from the starter has none of the things below: there a component goes to `app/` and gets a `<script>` line in `index.htm`.
