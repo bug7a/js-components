@@ -323,7 +323,7 @@ const LiveCode = function (params = {}) {
             box.view = WebView({
                 width: "100%",
                 height: 100,
-                ariaLabel: T.result,
+                title: T.result,
                 placeholderText: "",
                 style: {
                     box: { color: "#FFFFFF", border: 0, round: 0 },

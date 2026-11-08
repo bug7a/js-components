@@ -637,11 +637,11 @@ SITE.copy = function (text) {
     const T = SITE.T;
 
     const done = function () {
-        if (typeof Toast === "function") Toast.show({ key: "copy", type: "success", messageText: T.copied });
+        if (typeof Toast === "function") Toast.show({ key: "copy", type: "success", message: T.copied });
     };
 
     const fail = function () {
-        if (typeof Toast === "function") Toast.show({ key: "copy", type: "error", messageText: T.copyFailed });
+        if (typeof Toast === "function") Toast.show({ key: "copy", type: "error", message: T.copyFailed });
     };
 
     if (navigator.clipboard && window.isSecureContext) {

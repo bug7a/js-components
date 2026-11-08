@@ -100,6 +100,7 @@ Bir bileşenin parametreleri kitin geri kalanındaki adları taşır: bir sayfay
 **Bir ad değişince:**
 
 - Parametre, olay ya da bileşen yeni adını aynı işte her yerde alır: `comp/`, örnekler, şablonlar, sayfalar. Eski ad tutulmaz.
+- Bileşenin kendi kopyasını yükleyen bir sayfa (`03-webpages` sitelerinin `comp/*.min.js`'i, `_sources.txt`) o kopyanın adlarıyla kalır; kopya yenilenince (kullanıcı isteyince) yeni adları alır.
 - Bir olayın argümanları da değişirse (`onEdit(input)` → `onChange(self, input)`) onu kullanan her fonksiyon yeni biçime çevrilir.
 - Bir verinin anahtarı (bir sunucuya giden JSON) değişirse onu okuyan da aynı işte değişir (Form'un JSON'u ve PHP mail servisi).
 - Adı değişen bir sayfa: `node test/compare-pages.js eski.htm=yeni.htm`. 2026-11-08'deki geçici köprü (`basic.keepOldNames`) ve hikâyesi: `context/repo-map.md`, "Parameter names".
