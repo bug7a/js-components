@@ -23,7 +23,8 @@ The results:
     DIFF    a real difference. The exit code is 1, the pictures and the texts are in the folder it prints
 A difference of the picture prints where the pixels changed: the box (x, y), how many pixels, and how many of them
 changed strongly (more than 40 of 255 in a color: more than the smoothing of an edge). The old | new picture of that
-part is saved as -diff.png, enlarged when it is small.
+part is saved as -diff.png, enlarged when it is small. A change of 3 of 255 or less is not counted: it is not seen,
+and Chrome draws the same page in more than one way.
 Under a difference of a text (dom, endDom, presses, log): its first line, old and new, around the first letter that
 differs, then the changes of all its lines, word by word, the most common first:
     the changes of all 80 lines: - "cursor: pointer;" x64, + "cursor: pointer;" x16
@@ -432,9 +433,17 @@ const describeChanges = function (pairs) {
     return (otherCount > 0) ? shown + " and " + otherCount + " other changes" : shown;
 };
 
-const compareRuns = function (oldRun, newRun) {
+// WHY not only the bytes: Chrome draws the same page in more than one way (seen: 36 px that changed by 3 of 255).
+const isSamePicture = async function (browser, oldPicture, newPicture) {
+    if (Buffer.compare(oldPicture, newPicture) === 0) return true;
+    const change = await measurePictureChange(browser, oldPicture, newPicture, { ...PICTURE_LIMITS, isCountOnly: true });
+    return (change === null);
+};
+
+const compareRuns = async function (browser, oldRun, newRun) {
     const differences = [];
-    if (Buffer.compare(oldRun.picture, newRun.picture) !== 0) differences.push({ part: "picture" });
+    const isPictureSame = await isSamePicture(browser, oldRun.picture, newRun.picture);
+    if (!isPictureSame) differences.push({ part: "picture" });
     TEXT_PARTS.forEach(function (part) {
         const difference = compareTexts(part, oldRun[part], newRun[part]);
         if (difference) differences.push(difference);
@@ -444,10 +453,13 @@ const compareRuns = function (oldRun, newRun) {
 
 // The parts in which the runs of one page are not all the same.
 // WHY each one against the first: a run that is the same as the first one is the same as the others too.
-const findLiveParts = function (runs) {
-    return runs.slice(1).flatMap(function (run) {
-        return compareRuns(runs[0], run).map(function (difference) { return difference.part; });
-    });
+const findLiveParts = async function (browser, runs) {
+    const parts = [];
+    for (const run of runs.slice(1)) {
+        const differences = await compareRuns(browser, runs[0], run);
+        differences.forEach(function (difference) { parts.push(difference.part); });
+    }
+    return parts;
 };
 
 const saveRun = function (fileStart, run) {
@@ -482,7 +494,7 @@ const compareAtSize = async function (browser, port, pair, size) {
         newRun = await runPage(browser, newUrl, size);
         oldRuns.push(oldRun);
         newRuns.push(newRun);
-        differences = compareRuns(oldRun, newRun);
+        differences = await compareRuns(browser, oldRun, newRun);
         if (differences.length === 0) return { status: "SAME", counts: newRun.counts };
     }
 
@@ -497,21 +509,33 @@ const compareAtSize = async function (browser, port, pair, size) {
     // Does the page differ from itself in the same parts? Every run of the old page and of the new one counts.
     newRuns.push(await runPage(browser, newUrl, size));
     newRuns.push(await runPage(browser, newUrl, size));
-    const liveParts = findLiveParts(oldRuns).concat(findLiveParts(newRuns));
+    const oldLiveParts = await findLiveParts(browser, oldRuns);
+    const newLiveParts = await findLiveParts(browser, newRuns);
+    const liveParts = oldLiveParts.concat(newLiveParts);
     const isLive = differences.every(function (difference) { return liveParts.includes(difference.part); });
     return { status: isLive ? "LIVE" : "DIFF", counts: newRun.counts, differences, fileStart };
 };
 
 // *** THE CHANGED PART OF A PICTURE:
 
+const INVISIBLE_CHANGE = 3; // of 255 in a color: a change this small is not seen, and it is not counted
 const STRONG_CHANGE = 40; // of 255 in a color: a change that is seen (the smoothing of an edge changes less)
 const DIFF_MARGIN = 24; // px around the changed part
 const DIFF_GAP = 16; // px between the old and the new part
 const DIFF_MAX_WIDTH = 1800; // px of the saved picture (a small part is enlarged up to 4 times)
 const DIFF_LABEL_HEIGHT = 22; // px
 
+const PICTURE_LIMITS = {
+    invisibleChange: INVISIBLE_CHANGE,
+    strongChange: STRONG_CHANGE,
+    margin: DIFF_MARGIN,
+    gap: DIFF_GAP,
+    maxWidth: DIFF_MAX_WIDTH,
+    labelHeight: DIFF_LABEL_HEIGHT,
+};
+
 // Runs in the browser: the box of the changed pixels (of the strong ones when there are any) and the picture of that
-// part, old | new. null when the pixels are the same.
+// part, old | new (with isCountOnly: only how many). null when no pixel changed more than invisibleChange.
 const findPictureChange = async function (oldSource, newSource, limits) {
     const loadImage = function (source) {
         return new Promise(function (resolve, reject) {
@@ -556,12 +580,13 @@ const findPictureChange = async function (oldSource, newSource, limits) {
             for (let channel = 0; channel < 4; channel++) {
                 change = Math.max(change, Math.abs(oldPixels[oldAt + channel] - newPixels[newAt + channel]));
             }
-            if (change === 0) continue;
+            if (change <= limits.invisibleChange) continue;
             addToBox(changed, x, y);
             if (change > limits.strongChange) addToBox(strong, x, y);
         }
     }
     if (changed.count === 0) return null;
+    if (limits.isCountOnly) return { changedCount: changed.count };
 
     const box = (strong.count > 0) ? strong : changed;
     const left = Math.max(0, box.left - limits.margin);
@@ -593,29 +618,26 @@ const findPictureChange = async function (oldSource, newSource, limits) {
     };
 };
 
-// The changed part of the two pictures as a line of the report; its picture goes to the file.
-const describePictureChange = async function (browser, oldPicture, newPicture, file) {
+const measurePictureChange = async function (browser, oldPicture, newPicture, limits) {
     const context = await browser.createBrowserContext();
     try {
         const page = await context.newPage();
         const toSource = function (picture) { return "data:image/png;base64," + Buffer.from(picture).toString("base64"); };
-        const limits = {
-            strongChange: STRONG_CHANGE,
-            margin: DIFF_MARGIN,
-            gap: DIFF_GAP,
-            maxWidth: DIFF_MAX_WIDTH,
-            labelHeight: DIFF_LABEL_HEIGHT,
-        };
-        const change = await page.evaluate(findPictureChange, toSource(oldPicture), toSource(newPicture), limits);
-        if (!change) return "the pixels are the same (only the files differ)";
-        fs.writeFileSync(file, Buffer.from(change.picture.split(",")[1], "base64"));
-        const box = change.box;
-        const sizeNote = (change.isSizeChanged) ? ", the size of the picture changed" : "";
-        return "x " + box.left + "-" + box.right + ", y " + box.top + "-" + box.bottom + " (" + change.changedCount
-            + " px changed, " + change.strongCount + " strongly" + sizeNote + "): " + file;
+        return await page.evaluate(findPictureChange, toSource(oldPicture), toSource(newPicture), limits);
     } finally {
         await context.close();
     }
+};
+
+// The changed part of the two pictures as a line of the report; its picture goes to the file.
+const describePictureChange = async function (browser, oldPicture, newPicture, file) {
+    const change = await measurePictureChange(browser, oldPicture, newPicture, PICTURE_LIMITS);
+    if (!change) return "no change that is seen (only the files differ)";
+    fs.writeFileSync(file, Buffer.from(change.picture.split(",")[1], "base64"));
+    const box = change.box;
+    const sizeNote = (change.isSizeChanged) ? ", the size of the picture changed" : "";
+    return "x " + box.left + "-" + box.right + ", y " + box.top + "-" + box.bottom + " (" + change.changedCount
+        + " px changed, " + change.strongCount + " strongly" + sizeNote + "): " + file;
 };
 
 // *** THE REPORT:
