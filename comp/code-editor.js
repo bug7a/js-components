@@ -459,7 +459,9 @@ const CodeEditor = function (params = {}) {
 
     // silent: 1 -> onChange is not called. NOTE: The undo of the browser starts again with a new text.
     box.setValue = function (value, silent = 0) {
-        textarea().value = (value === null || value === undefined) ? "" : String(value);
+        const text = (value === null || value === undefined) ? "" : String(value);
+        if (text === textarea().value) return; // the same text: nothing to draw, no onChange
+        textarea().value = text;
         showValue();
         if (!silent) tellChange();
     };

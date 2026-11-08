@@ -1263,7 +1263,10 @@ const SelectBox = function (params = {}) {
 
     // silent: 1 -> onChange is not called.
     box.setValue = function (value, silent = 0) {
-        box.value = normalizeValue(value);
+        const next = normalizeValue(value);
+        // WHY JSON: a multiple selection is a list (setOptions compares the same way)
+        if (JSON.stringify(next) === JSON.stringify(box.value)) return;
+        box.value = next;
         updateField();
         if (isOpen) renderList();
         if (!silent) box.onChange(box);

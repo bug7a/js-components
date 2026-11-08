@@ -325,6 +325,7 @@ const Gauge = function (params = {}) {
     // *** PUBLIC FUNCTIONS:
 
     box.setValue = function (value, silent = 0) {
+        if (value === box.value) return; // the same value: nothing to draw, no onChange
         box.value = value;
         paint();
         if (!silent) box.onChange(box);

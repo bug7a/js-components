@@ -264,6 +264,7 @@ const Toggle = function(params = {}) {
     // silent: 1 -> onChange is not called.
     box.setValue = function(value, silent = 0) {
 
+        if (value === box.value) return; // the same value: nothing to draw, no onChange
         box.value = value;
 
         box.setState((value === 1) ? "selected" : "normal");
