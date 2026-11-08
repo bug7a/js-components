@@ -32,7 +32,7 @@ const CONFIG = {
     githubURL: "https://github.com/bug7a/js-components",
     handbookURL: "https://bug7a.github.io/basic.js-handbook/",
     componentsURL: "https://bug7a.github.io/js-components/",
-    authorURL: "https://bug7a.github.io/", // Alt bilgideki "Bugra Ozden"
+    authorURL: "https://bug7a.github.io/", // the "Buğra Özden" link of the footer
     templatesURL: "https://github.com/bug7a/js-components/tree/main/04-templates",
     toolkitURL: "https://github.com/bug7a/js-components/tree/main/__developer-toolkit",
     // "basic.js'i görün" düğmesi (kaynak kod GitHub'da; bu klasörde sadece .min dosyası var)

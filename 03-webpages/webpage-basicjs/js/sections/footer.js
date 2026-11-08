@@ -96,7 +96,7 @@ const FooterSection = function (params = {}) {
 
             SITE.label("© 2020–" + new Date().getFullYear(), { fontSize: 12, textColor: SITE.ON_DARK_FAINT });
 
-            const lblAuthor = SITE.label("Bugra Ozden", { fontSize: 12, textColor: SITE.ON_DARK_SOFT });
+            const lblAuthor = SITE.label("Buğra Özden", { fontSize: 12, textColor: SITE.ON_DARK_SOFT });
             lblAuthor.elem.style.cursor = "pointer";
             lblAuthor.elem.style.textDecoration = "underline";
             lblAuthor.on("mouseenter", function () { lblAuthor.textColor = "#FFFFFF"; });
