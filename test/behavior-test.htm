@@ -2119,7 +2119,7 @@
             const lookOf = function (params) {
                 const select = SelectBox(Object.assign({ width: 240, options: ["Apple", "Banana"], searchable: 1 }, params));
                 const search = select.searchGroup;
-                const look = [search.fontSize, search.searchIconSize, search.searchIconOpacity, search.searchIconFile.startsWith("data:") ? "ozden icon" : "classic icon"].join(" / ");
+                const look = [search.fontSize, search.searchIconSize, search.searchIconOpacity, (search.clearIconFile === SearchInput.styles.ozden.clearIconFile) ? "ozden icon" : "classic icon"].join(" / ");
                 select.remove();
                 return look;
             };

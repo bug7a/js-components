@@ -170,7 +170,7 @@ const SelectBoxDefaults = {
             startScale: 0.9,
         },
         // The search box when it is a SearchInput: its params (a styleName of SearchInput.styles and its look params).
-        // An icon file without a folder ("search.svg") is taken from the folder of comp/search-input.js.
+        // Its icons are the ones of SearchInput (searchIconFile, clearIconFile: your own pictures).
         searchInput: {
             styleName: "original", // the first look of SearchInput
             height: 38,
@@ -183,8 +183,6 @@ const SelectBoxDefaults = {
             fontSize: 14,
             textColor: Black(0.85),
             placeholderColor: "",
-            searchIconFile: "search.svg",
-            clearIconFile: "clear.svg",
             searchIconSize: 16,
             searchIconGap: 8, // Between the icon and the text (the default of SearchInput: here, so that scale changes it)
             searchIconOpacity: 0.55,
@@ -1154,8 +1152,6 @@ const SelectBox = function (params = {}) {
     // A SearchInput of comp/search-input.js (style.searchInput), with its clear button.
     const createSearchInput = function () {
         const params = Object.assign({}, _s.searchInput);
-        params.searchIconFile = SelectBox.getSearchIconFile(params.searchIconFile);
-        params.clearIconFile = SelectBox.getSearchIconFile(params.clearIconFile);
         params.width = "100%";
         params.scale = 1; // WHY: style.searchInput is scaled already (with the style of SelectBox).
         params.placeholder = box.searchPlaceholder;
@@ -1582,16 +1578,6 @@ SelectBox.fillSearchInputPackage = function (style) {
     const packageParams = Object.assign({}, searchPackage);
     delete packageParams.style;
     mergeIntoIfMissing(searchInput, packageParams);
-};
-
-// An icon file of style.searchInput: a name without a folder ("search.svg") is taken from the folder of the
-// loaded comp/search-input.js. WHY: SearchInput gives paths from a page in a samples folder ("../comp/");
-// a page of another folder did not find them. A path ("../my/search.svg") or a data: URL is used as it is.
-SelectBox.getSearchIconFile = function (file) {
-    if (!file || file.includes("/")) return file;
-    const script = document.querySelector('script[src*="search-input"]');
-    if (!script) return file;
-    return script.getAttribute("src").replace(/search-input(\.min)?\.js.*$/, "search-input/") + file;
 };
 
 // "Apple" -> { value: "Apple", label: "Apple", description: "", iconFile: "", group: "", disabled: 0 }

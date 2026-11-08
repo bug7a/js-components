@@ -75,7 +75,7 @@ MyComp.styles = {
 - `startObject(params)` makes the container box and puts the objects created until `endObject(box)` into it. `endObject` makes `that` the component. (`startObject(defaults, params)`, the two argument form, merges too.)
 - **Every default becomes a public property on the box** (`box.labelText`). Change it later with a `setX()` function, never with a JS getter / setter.
 - **A default must not be named like a basic.js setter**: `text`, `color` (only the background of the box), `title`, `html` (it wipes the children), `visible`, `zoom`... Use `labelText`, `htmlText`, `scale`.
-- PascalCase name, an `XxxDefaults` object, assets in a sibling folder with the same name (`comp/tabs/`).
+- PascalCase name, an `XxxDefaults` object. A default icon is an SVG inside the file (a `data:image/svg+xml` text, `comp/password-field.js`), so a copy of the file works alone; other assets in a sibling folder with the same name.
 - The house header (`/* Bismillah */`, name - version, what it does, `USAGE:`, developer) and the section markers (`// *** PRIVATE VARIABLES:`, `// *** OBJECT VIEW:`, `// BOX:`, `// LABEL:`...).
 
 ## Style packages

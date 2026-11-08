@@ -573,7 +573,6 @@ const DataTable = function (params = {}) {
 
         const searchParams = Object.assign(
             { styleName: _s.searchStyleName, clearOnEscape: 1 }, // (Escape clears the search, as in SmartTable)
-            DataTable.getSearchIconFiles(),
             _s.search,
             box.searchParams,
         );
@@ -841,16 +840,6 @@ DataTable.toAlign = function (align) {
 
 DataTable.toAriaSort = function (direction) {
     return (direction == "desc") ? "descending" : "ascending";
-};
-
-// The icons of the search box next to comp/search-input.js, wherever the page is.
-// WHY: SearchInput gives paths from a page in a samples folder ("../comp/..."); a page of another folder did not
-//      find them. The folder of the loaded script is the same from every page.
-DataTable.getSearchIconFiles = function () {
-    const script = document.querySelector('script[src*="search-input"]');
-    if (!script) return {};
-    const folder = script.getAttribute("src").replace(/search-input(\.min)?\.js.*$/, "search-input/");
-    return { searchIconFile: folder + "search.svg", clearIconFile: folder + "clear-round.svg" };
 };
 
 // *** STYLE PACKAGES:

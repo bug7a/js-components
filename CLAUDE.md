@@ -109,7 +109,7 @@ const MyComp = function (params = {}) {
 - Every default becomes a public property on `box`; after creation, values change through `setX()` methods, not getters / setters. A default must not be named like a basic.js setter (`html` sets `innerHTML`, `zoom`, `text`, `color`, `title`, `visible`...): use names like `htmlText`, `scale`.
 - Inherit with `startExtendedObject(ParentComp, params)` … `endExtendedObject(box)` (`comp/email-field.js`). The child loads after its parent.
 - **Param names** follow the table of `context/basic-js-code-rules.md` (9: `value`, `required`, `...Text`, `show...`, `...IconFile`, `onChange(self)`...). A param, an event or a component that gets a new name changes in the same job everywhere in the repository (`comp/`, the samples, the templates, the pages); no old name is kept (the bridge of 2026-11-08 that did it for a day: `context/repo-map.md`, "Parameter names").
-- PascalCase names with a matching `XxxDefaults`. Assets in a sibling folder with the same name (`comp/smart-table/*.png`).
+- PascalCase names with a matching `XxxDefaults`. A default icon is an SVG inside the file (`"data:image/svg+xml;utf8," + encodeURIComponent('<svg ...>')`, `comp/password-field.js`): a copy of the file needs no picture. Other assets in a sibling folder with the same name.
 - Files keep the house header (`/* Bismillah */`, name/version, started date, developer): the one comment with a date and a person. New comments are in English; an old Turkish comment changes when the code around it is touched. Keep the section markers (`// *** PUBLIC FUNCTIONS:`, `// BOX:`, `// LABEL:`, …).
 
 ## Components for new pages
