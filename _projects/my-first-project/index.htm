@@ -13,7 +13,7 @@
         <script src="../../basic/basic.js" type="text/javascript" charset="utf-8"></script>
 
         <!-- COMPONENTS: from the comp/ folder of the repository. Load a component after the ones it needs. -->
-        <script src="../../comp/tooltip.js" type="text/javascript" charset="utf-8"></script>       <!-- InputB needs it -->
+        <script src="../../comp/tooltip.js" type="text/javascript" charset="utf-8"></script>       <!-- TextField needs it -->
         <script src="../../comp/text-field.js" type="text/javascript" charset="utf-8"></script>
         <script src="../../comp/smart-button.js" type="text/javascript" charset="utf-8"></script>
         <script src="../../comp/notice.js" type="text/javascript" charset="utf-8"></script>
@@ -27,7 +27,7 @@
         A name field and a button: the button says hello with a message in the middle of the screen.
         Copy this folder to start your own project (see ../readme.md).
 
-        - InputB({ styleName: "ozden" })        -> a text field with a title (02-comp-examples/text-field*.htm)
+        - TextField({ styleName: "ozden" })        -> a text field with a title (02-comp-examples/text-field*.htm)
         - SmartButton({ labelText, onClick })   -> the default button of the components (02-comp-examples/smart-button*.htm)
         - Notice.show({ messageText, type })    -> a short message in the middle of the screen (02-comp-examples/notice.htm)
 
@@ -68,7 +68,7 @@
                     Label({ text: "My First Project", fontSize: 24, bold: 1 });
 
                     // INPUTB: The name field
-                    txtName = InputB({
+                    txtName = TextField({
                         styleName: "ozden",
                         width: "100%",
                         titleText: "YOUR NAME",
@@ -93,7 +93,7 @@
 
         // Shows a message with the name in the field.
         const sayHello = function () {
-            const name = txtName.getInputValue().trim();
+            const name = txtName.getValue().trim();
             if (name === "") {
                 Notice.show({ messageText: "Write your name first.", type: "warning" });
                 return;
