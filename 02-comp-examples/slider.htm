@@ -1,145 +1,261 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
+<head>
 
-        <title>Slider JS Component</title>
+    <title>Slider - round</title>
 
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-        <!-- LIBRARY FILES -->
-        <!-- <link rel="preload" href="image.png" as="image"> -->
-        <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
-        <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
-        <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
-        <!--<script src="../basic/scroll-bar.min.js" type="text/javascript" charset="utf-8"></script>-->
+    <!-- LIBRARY FILES -->
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Bold.ttf" as="font" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="../basic/basic.css">
+    <script src="../basic/basic.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../basic/scroll-bar.js" type="text/javascript" charset="utf-8"></script>
 
-        <script src="../comp/slider.js" type="text/javascript" charset="utf-8"></script>
+    <!-- COMPONENT FILES -->
+    <script src="../comp/slider.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/smart-button.js" type="text/javascript" charset="utf-8"></script>
 
-        <script>
+    <script>
 
-        const start = function () {
+    /* Bismillah */
 
-            page.color = "lightgray";
+    // Slider with styleName "round": a thin round track and a round white knob, the look of most web and
+    // phone sliders. While the knob is dragged: a ring in the track color around it and the value over it.
+    // The model page of the slider of new pages and projects; "roundDark" on a dark page (card 7).
 
-            // PAGE:
-            VGroup({
-                align: "center",
-                gap: 6,
-            });
+    // *** THE COLORS AND SIZES OF THE PAGE
+    const PAGE_COLOR = "#F0F1EE";
+    const INK = "#232323";
+    const SOFT_INK = Black(0.5);
+    const CARD_WIDTH = 560;
+    const RED = "#E8796D";
+    const YELLOW = "#F1C74A";
+    const GREEN = "#2E9E74";
+    const BUBBLE_ROOM = "24px"; // over a slider that shows its value bubble
+    const DARK_CARD_COLOR = "#1A1A19";
 
-                // SLIDER A TITLE:
-                createSliderTitle("Carrots", "../assets/fruids/havuc.png");
+    const start = function () {
 
-                // SLIDER: A
-                const sliderA = Slider({
-                    value: random(0,100),
-                });
+        page.color = PAGE_COLOR;
 
-                // SPACING
-                Box({
-                    height: 20,
-                    color: "transparent",
-                });
+        const scrollBox = startBox(0, 0, "100%", "100%", { color: "transparent", scrollY: 1 });
 
-                // SLIDER B TITLE
-                createSliderTitle("Blueberries", "../assets/fruids/yabanmersini.png");
+            VGroup({ width: "100%", height: "auto", align: "center top", gap: 24, padding: [16, 30] });
 
-                // SLIDER: B
-                const sliderB = Slider({
-                    trackHeight: 44,
-                    trackColor: "indianred",
-                    value: random(0,100),
-                });
+                Label({ plainText: "Slider: round", fontSize: 26, bold: 1, textColor: INK });
+
+                // 1. The look
+                startCard(
+                    "1. The round look",
+                    "styleName: \"round\". Drag the knob (a ring in the track color around it, the value over it) or press the track. The keyboard: Tab, the arrows, PageUp / PageDown, Home / End."
+                );
+                    Slider({
+                        width: "100%",
+                        styleName: "round",
+                        value: 60,
+                        css: { marginTop: BUBBLE_ROOM },
+                    });
+                endCard();
+
+                // 2. A settings list
+                startCard(
+                    "2. A settings list",
+                    "The value is written next to the title (onDragMove; a key and a tap call it too), so the bubble is off: showValueOnDrag: 0 and showValueOnSet: 0. ariaLabel: the name a screen reader says."
+                );
+                    createSettingRow("Volume", "%", { value: 70 });
+                    createSettingRow("Brightness", "%", { value: 45 });
+                    createSettingRow("Text size", " px", { minValue: 12, maxValue: 24, value: 18 });
+                endCard();
+
+                // 3. Other colors
+                startCard("3. Other colors", "trackColor is a param: the page gives its own, the ring of the drag follows it.");
+                    Slider({
+                        width: "100%",
+                        styleName: "round",
+                        trackColor: RED,
+                        value: 80,
+                        css: { marginTop: BUBBLE_ROOM },
+                    });
+                    Slider({
+                        width: "100%",
+                        styleName: "round",
+                        trackColor: YELLOW,
+                        value: 50,
+                    });
+                    Slider({
+                        width: "100%",
+                        styleName: "round",
+                        trackColor: GREEN,
+                        value: 25,
+                    });
+                endCard();
+
+                // 4. A bigger knob
+                startCard("4. A bigger knob", "Change only some keys of the package (style.thumb): a 32 px knob is easier for a finger.");
+                    Slider({
+                        width: "100%",
+                        styleName: "round",
+                        value: 40,
+                        style: { thumb: { areaWidth: 32, width: 32, height: 32, round: 16 } },
+                        css: { marginTop: BUBBLE_ROOM },
+                    });
+                endCard();
+
+                // 5. setValue() and showValue()
+                startCard(
+                    "5. setValue() and showValue()",
+                    "setValue() moves the knob and shows the value for a while (showValueOnSet: 1, the default); showValue() only shows it."
+                );
+                    const apiSlider = Slider({
+                        width: "100%",
+                        styleName: "round",
+                        value: 30,
+                        css: { marginTop: BUBBLE_ROOM },
+                    });
+
+                    // GROUP: Buttons. WHY clipContent 0: the focus ring of a SmartButton is not cut
+                    HGroup({ hug: 1, align: "left center", gap: 8, wrap: 1, clipContent: 0 });
+
+                        SmartButton({
+                            labelText: "setValue(25)",
+                            onClick: function () { apiSlider.setValue(25); },
+                        });
+
+                        SmartButton({
+                            tone: "cyan",
+                            labelText: "Random",
+                            onClick: function () { apiSlider.setValue(random(0, 100)); },
+                        });
+
+                        SmartButton({
+                            tone: "white",
+                            labelText: "showValue()",
+                            onClick: function () { apiSlider.showValue(); },
+                        });
+
+                    endGroup();
+                endCard();
+
+                // 6. A range and a step
+                startCard(
+                    "6. A range and a step",
+                    "minValue: 0, maxValue: 10, step: 0.5: the value goes 0, 0.5, 1 ... 10. setMinValue(), setMaxValue() and setStep() change them later."
+                );
+                    Slider({
+                        width: "100%",
+                        styleName: "round",
+                        minValue: 0,
+                        maxValue: 10,
+                        step: 0.5,
+                        value: 6.5,
+                        css: { marginTop: BUBBLE_ROOM },
+                    });
+                endCard();
+
+                // 7. A dark page
+                startDarkCard(
+                    "7. For a dark page",
+                    "styleName: \"roundDark\": a light empty track, the main cyan of the kit and a light value bubble."
+                );
+                    Slider({
+                        width: "100%",
+                        styleName: "roundDark",
+                        value: 40,
+                        css: { marginTop: BUBBLE_ROOM },
+                    });
+                endCard();
 
             endGroup();
 
-            // GROUP: Top left buttons
-            HGroup({
-                align: "top left",
-                gap: 8,
-                padding: [20, 20],
-            });
+        endBox();
 
-                createPageButton("Set Random Values", function () {
-                    sliderA.setValue(random(0,100));
-                    sliderB.setValue(random(0,100));
-                });
+        ScrollBar({ scrollableBox: scrollBox });
 
-                createPageButton("Show Values", function () {
-                    sliderA.showValue();
-                    sliderB.showValue();
-                });
+    };
 
+    // *** OTHER FUNCTIONS
+
+    // GROUP: A white card with a title and a description.
+    const startCard = function (title, description) {
+        VGroup({
+            width: CARD_WIDTH,
+            height: "auto",
+            align: "left top",
+            gap: 16,
+            padding: [20, 22],
+            color: "white",
+            round: 8,
+            border: 1,
+            borderColor: Black(0.1),
+            css: { maxWidth: "100%" },
+        });
+        Label({ plainText: title, fontSize: 15, bold: 1, textColor: INK });
+        Label({
+            plainText: description,
+            fontSize: 13,
+            textColor: SOFT_INK,
+            width: "100%",
+            css: { whiteSpace: "normal", marginTop: "-8px" },
+        });
+    };
+
+    // GROUP: The same card on a dark page.
+    const startDarkCard = function (title, description) {
+        VGroup({
+            width: CARD_WIDTH,
+            height: "auto",
+            align: "left top",
+            gap: 16,
+            padding: [20, 22],
+            color: DARK_CARD_COLOR,
+            round: 8,
+            css: { maxWidth: "100%" },
+        });
+        Label({ plainText: title, fontSize: 15, bold: 1, textColor: White(0.9) });
+        Label({
+            plainText: description,
+            fontSize: 13,
+            textColor: White(0.55),
+            width: "100%",
+            css: { whiteSpace: "normal", marginTop: "-8px" },
+        });
+    };
+
+    const endCard = function () {
+        endGroup();
+    };
+
+    // ROW: A title, its value next to it and a slider.
+    const createSettingRow = function (title, unit, sliderParams) {
+
+        // WHY clipContent 0: the ring of the knob is wider than the slider at its ends
+        VGroup({ width: "100%", height: "auto", gap: 2, clipContent: 0 });
+
+            HGroup({ width: "100%", height: "auto", align: "left center", justify: "space-between" });
+                Label({ plainText: title, fontSize: 15, textColor: INK });
+                const lblValue = Label({ plainText: sliderParams.value + unit, fontSize: 15, textColor: SOFT_INK });
             endGroup();
 
-            // GROUP: Bottom info
-            VGroup({
-                align: "left bottom",
-                padding: [20 ,20],
+            Slider({
+                width: "100%",
+                styleName: "round",
+                ariaLabel: title,
+                showValueOnDrag: 0,
+                showValueOnSet: 0,
+                onChange: function (self) { lblValue.plainText = self.value + unit; },
+                ...sliderParams,
             });
 
-                Label({
-                    text: "Inspired by Google Material 3",
-                    fontSize: 16,
-                });
+        endGroup();
 
-                Label({
-                    text: "(Not affiliated with Google)",
-                    opacity: 0.7,
-                    fontSize: 14,
-                });
+    };
 
-            endGroup();
+    </script>
 
-        };
-
-        // A label that works as a button
-        const createPageButton = function (text, onClick) {
-            const button = Label({
-                text: text,
-                padding: [12, 4],
-                color: "white",
-                border: 0,
-                borderColor: "rgba(0,0,0,0.1)",
-                round: 8,
-                fontSize: 14,
-                cursor: "pointer",
-            });
-            button.on("click", onClick);
-        };
-
-        const createSliderTitle = function (titleText, iconPath) {
-
-            // GROUP: An icon and a title
-            HGroup({
-                align: "left center",
-                height: "auto",
-                width: 250,
-                gap: 8,
-                padding: [12, 0, 0, 0],
-            });
-
-                Icon({
-                    width: 32,
-                    height: 32,
-                });
-                that.load(iconPath);
-
-                Label({
-                    text: titleText,
-                });
-
-            endGroup();
-
-        };
-
-        </script>
-
-    </head>
-    <body>
-
-        <!-- HTML content -->
-
-    </body>
+</head>
+<body>
+</body>
 </html>

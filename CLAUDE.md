@@ -119,14 +119,14 @@ Existing pages are switched only when asked. Each choice is also noted in the he
 | Need | Component | Light page | Dark page | Model page / note |
 |---|---|---|---|---|
 | A button | `comp/smart-button.js` (`SmartButton`) | `styleName` template (`ozden` default ... `ozden4`, `pill`, `outlined`), `tone` (`cyan` main action, `orange` delete, `yellow`, `green`, `blue`, `white`), `style` the page's own keys | `ozdenDark`..., `cyanDark`... | `02-comp-examples/smart-button.htm`; 44 px high; `labelText: ""` is an icon button; an ordinary button takes a line icon (`lineIcon()`); the circle mark / two-tone icons of `smart-button-alternatif.htm` only for `pill` / `outlined` status buttons, that page only when asked; `ripple` 0 |
-| A search box | `comp/search-input.js` (`SearchInput`) | `ozden` | `ozdenDark` | a result list under it: `comp/search-results.js` |
+| A search box | `comp/search-input.js` (`SearchInput`) | `ozden` | `ozdenDark` | `02-comp-examples/search-input.htm`; a result list under it: `comp/search-results.js` |
 | A check box, a radio button | `comp/check-box.js`, `comp/radio-button.js` | `light` | `dark` | `modern` only when asked |
 | A text field | `comp/text-field.js` (`TextField`, `EmailField`, `PhoneField`, `PasswordField`, `UrlField`, `NumberField`, `CurrencyField`, `TextAreaField`) | `ozden` | `ozdenDark` | `02-comp-examples/text-field.htm` (the default `light` stays for older pages) |
 | A list | `comp/item-list.js` (`ItemList`) | `ozden` (its default) | `ozdenDark` | `02-comp-examples/item-list.htm` |
 | A dropdown | `comp/select-box.js` (`SelectBox`) | `light` | `dark` | `02-comp-examples/select-box.htm`; `ozden` only when asked |
 | A big table | `comp/smart-table.js` (`SmartTable`) | `light` | `dark` | `02-comp-examples/smart-table.htm`; `green` only for pages made over it (`ozden-panel`) |
 | A chart | `comp/graph-box.js` (`GraphBox`) | default | `theme: "dark"` | `02-comp-examples/graph-box.htm`; a number with a small graph: `MiniGraphBox` / `SparkLineBox`; `Alpha()` replaces `ChartBox.alpha()` |
-| A slider | `comp/slider.js` (`Slider`) | `round` | `roundDark` | `02-comp-examples/slider-round.htm`; its own range `minValue` / `maxValue` / `step`; `SliderField` only when a page asks for that shape |
+| A slider | `comp/slider.js` (`Slider`) | `round` | `roundDark` | `02-comp-examples/slider.htm`; its own range `minValue` / `maxValue` / `step`; `SliderField` only when a page asks for that shape |
 | A bubble, a popover | `comp/tooltip.js` (`Tooltip`, `Tooltip.show()`, `Tooltip.openPopover()`) | | | `tooltip-2.htm`, `tooltip-3.htm`; never a hand-made one |
 | A dialog | `comp/dialog.js` (`Dialog`, `Dialog.confirm` / `alert` / `prompt`) | | | |
 | A loading screen | `comp/loading-screen.js` | | | |

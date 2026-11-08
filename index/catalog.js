@@ -567,7 +567,7 @@ CATALOG.COMPONENTS = [
     },
     {
         key: "search-input", name: "SearchInput", cat: "inputs",
-        source: "comp/search-input.js", samples: [{ file: "02-comp-examples/search-input.htm", title: "light: a standard search box" }, { file: "02-comp-examples/search-input-place.htm", title: "Place: right / bottom" }, "02-comp-examples/minimal-theme.htm"],
+        source: "comp/search-input.js", samples: [{ file: "02-comp-examples/search-input.htm", title: "ozden, ozdenDark (new pages)" }, { file: "02-comp-examples/search-input-2-light.htm", title: "light: a standard search box" }, { file: "02-comp-examples/search-input-place.htm", title: "Place: right / bottom" }, "02-comp-examples/minimal-theme.htm"],
         en: "Search field with a search icon and a clear button.",
         tr: "Arama ikonu ve temizleme düğmeli arama kutusu.",
     },
@@ -575,8 +575,8 @@ CATALOG.COMPONENTS = [
         key: "slider", name: "Slider", cat: "inputs",
         source: "comp/slider.js",
         samples: [
-            { file: "02-comp-examples/slider-round.htm", title: "round (the model page)" },
-            { file: "02-comp-examples/slider.htm", title: "classic (Material 3)" },
+            { file: "02-comp-examples/slider.htm", title: "round (the model page)" },
+            { file: "02-comp-examples/slider-2-classic.htm", title: "classic (Material 3)" },
             { file: "02-comp-examples/minimal-theme.htm", title: "Minimal theme (minimal, minimalDark)" },
         ],
         en: "Slider for choosing a value in a range, on a step. Looks: round (a thin track and a round white knob: the look of new pages), roundDark for a dark page, and classic (inspired by Material 3).",

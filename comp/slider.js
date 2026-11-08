@@ -6,7 +6,7 @@ Slider - v26.11
 
 UI COMPONENT TEMPLATE
 - NEW PROJECTS: a page or a project that needs a slider uses this component with styleName
-  "round" (02-comp-examples/slider-round.htm), unless the user asks for another look. "classic" stays the default
+  "round" (02-comp-examples/slider.htm), unless the user asks for another look. "classic" stays the default
   of the file, for the pages made before. On a dark page: "roundDark". SliderField (comp/slider-field.js, a
   slider in the shape of a field) is a parallel design: only when a page asks for that shape.
 - A value from minValue to maxValue (0 - 100 by default) on a step (1), chosen by dragging the thumb. The value

@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Search Input: light</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- LIBRARY FILES -->
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="../basic/basic.css">
+    <script src="../basic/basic.js" type="text/javascript" charset="utf-8"></script>
+
+    <!-- COMPONENT FILES -->
+    <script src="../comp/search-input.js" type="text/javascript" charset="utf-8"></script>
+
+    <script>
+
+        /* Bismillah */
+
+        // DESIGN PAGE: SearchInput with styleName "light": a standard search box: white, a thin
+        // gray edge, round corners, a line search icon on the left, a gray round clear button; while typing the edge is
+        // dark and 2 px (focusBorderColor). The look comes only from the package (SearchInput.styles.light): the
+        // samples give no look params. Without a styleName a SearchInput has the "original" look (the default).
+
+        // *** THE COLORS AND SIZES OF THE PAGE
+        const PAGE_COLOR = "#F4F5F2";
+        const CARD_WIDTH = 520;
+
+        // *** VARIABLES:
+        let lblSearched;
+
+        const start = function () {
+
+            page.color = PAGE_COLOR;
+
+            // BOX: Scrolling page
+            // WHY: page does not scroll. Scrollable content must be inside a Box with scrollY: 1.
+            startBox(0, 0, "100%", "100%", { color: "transparent", scrollY: 1 });
+
+                // WHY 16 at the sides: the white card fills a phone (390 px)
+                VGroup({ width: "100%", height: "auto", align: "left top", gap: 24, padding: [16, 40] });
+
+                    Label({ text: "SearchInput: light", fontSize: 24, bold: 1, textColor: Black(0.8) });
+
+                    caption("light · empty (click it: the edge while typing)");
+                    SearchInput({
+                        styleName: "light",
+                        onChange: showSearched,
+                    });
+
+                    caption("light · with text (setText shows the clear icon)");
+                    const searchWithText = SearchInput({
+                        styleName: "light",
+                        placeholder: "Search products",
+                        onChange: showSearched,
+                    });
+                    searchWithText.setText("running shoes");
+
+                    // GROUP: A white card with a search box as wide as the card
+                    VGroup({
+                        width: "100%",
+                        height: "auto",
+                        align: "left top",
+                        gap: 12,
+                        padding: 20,
+                        color: "white",
+                        round: 10,
+                        border: 1,
+                        borderColor: Black(0.1),
+                        css: { maxWidth: CARD_WIDTH + "px" },
+                    });
+                        caption("light · on a white card, as wide as the card (width: \"100%\")");
+                        SearchInput({
+                            styleName: "light",
+                            width: "100%",
+                            placeholder: "Search in all pages",
+                            onChange: showSearched,
+                        });
+                    endGroup();
+
+                    lblSearched = Label({ text: "Searched: -", fontSize: 13, textColor: Black(0.5) });
+
+                    caption("original · the default (no styleName), to compare");
+                    SearchInput({
+                        onChange: showSearched,
+                    });
+
+                endGroup();
+
+            endBox();
+
+        };
+
+        // *** OTHER FUNCTIONS:
+
+        const showSearched = function (self) {
+            lblSearched.plainText = "Searched: " + (self.getSearchText() || "-");
+        };
+
+        const caption = function (text) {
+            return Label({ text: text, fontSize: 12, textColor: Black(0.4) });
+        };
+
+    </script>
+
+</head>
+
+<body>
+</body>
+
+</html>
