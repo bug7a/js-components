@@ -19,7 +19,7 @@ COMPONENTS:
 - Tabs (comp-m4): Status tabs
 - SearchInput, TinySelect (comp-m2): Filters, role select
 - SmartTable (comp-m3): User list
-- InputB (comp-m2): Name, e-mail
+- TextField (comp-m2): Name, e-mail
 - SmartButton (comp-m4): Actions
 - Dialog, LoadingScreen (comp-m4; Theme.confirm, waiting): Confirm, saving
 
@@ -276,11 +276,12 @@ const UserListPage = function(params = {}) {
                     textColor: Ink(0.9),
                     fontSize: 14,
                     searchIconSize: 16,
-                    placeholderText: "Search by name or e-mail",
+                    placeholder: "Search by name or e-mail",
                     invertIconColor: T.invertIcon,
                     searchIconFile: LIB_PATH + "comp/search-input/search.svg",
                     clearIconFile: LIB_PATH + "comp/search-input/clear.svg",
-                    onSearch: function(text) {
+                    onChange: function(self) {
+                        const text = self.getSearchText();
                         filter.search = text;
                         searchTimer = waitAndRun(searchTimer, render, 200); // WHY: Do not filter on every key.
                     },
@@ -479,23 +480,23 @@ const UserListDetails = function(params = {}) {
     };
 
     const createDarkInput = function(params) {
-        const input = InputB({
+        const input = TextField({
             width: "100%",
             leftPadding: 14,
             rightPadding: 36,
             backgroundColor: S.FIELD_COLOR,
-            selectedBackgroundColor: T.surface3,
+            focusBackgroundColor: T.surface3,
             lineColor: "transparent",
-            selectedLineColor: "transparent",
+            focusLineColor: "transparent",
             backBorderColor: S.CARD_BORDER_COLOR,
-            selectedBackBorderColor: S.ACCENT_COLOR,
+            focusBackBorderColor: S.ACCENT_COLOR,
             backBorderTopRound: 8,
             backBorderBottomRound: 8,
             requiredColor: S.ERROR_COLOR,
             warningColor: S.ERROR_COLOR,
             ...params,
         });
-        // WHY: InputB has fixed text colors for light backgrounds.
+        // WHY: TextField has fixed text colors for light backgrounds.
         input.title.textColor = Ink(0.45);
         input.title.fontSize = 11;
         input.title.elem.style.letterSpacing = "1px";
@@ -605,22 +606,22 @@ const UserListDetails = function(params = {}) {
             // ACCOUNT (name, e-mail)
             startSection((isInvite) ? "New user" : "Account");
 
-                // WHY: Inputs can call onEdit while they are created. The function is set after the button is created.
+                // WHY: Inputs can call onChange while they are created. The function is set after the button is created.
                 let updateAccountButton = function() {};
 
                 const inputName = createDarkInput({
                     titleText: "NAME",
                     placeholder: "Name and surname",
-                    maxChar: 60,
-                    onEdit: function() { updateAccountButton(); },
+                    maxLength: 60,
+                    onChange: function() { updateAccountButton(); },
                 });
 
                 const inputEmail = createDarkInput({
                     titleText: "E-MAIL",
                     placeholder: "name@company.com",
-                    maxChar: 120,
+                    maxLength: 120,
                     warningText: "E-mail is not valid",
-                    onEdit: function() { updateAccountButton(); },
+                    onChange: function() { updateAccountButton(); },
                 });
 
                 let roleId = (isInvite) ? RolesPage.DEFAULT_ROLE_ID : user.roleId;
@@ -641,8 +642,8 @@ const UserListDetails = function(params = {}) {
 
                 const btnAccount = UserListPage.createButton((isInvite) ? "Send Invite" : "Save Changes", "", function() {
 
-                    const name = inputName.getInputValue().trim();
-                    const email = inputEmail.getInputValue().trim();
+                    const name = inputName.getValue().trim();
+                    const email = inputEmail.getValue().trim();
                     const error = validateAccount(name, email, (user) ? user.id : null);
                     if (error) { showNotice(error, true); return; }
 
@@ -664,16 +665,16 @@ const UserListDetails = function(params = {}) {
                 }, { primary: 1 });
 
                 updateAccountButton = function() {
-                    const name = inputName.getInputValue().trim();
-                    const email = inputEmail.getInputValue().trim();
+                    const name = inputName.getValue().trim();
+                    const email = inputEmail.getValue().trim();
                     const isChanged = isInvite || name != user.name || email != user.email;
                     inputEmail.showWarningIfNotValid(UserListPage.isEmail(email));
                     setInteractive(btnAccount, isChanged && name.length >= 2 && UserListPage.isEmail(email));
                 };
 
                 if (!isInvite) {
-                    inputName.setInputValue(user.name);
-                    inputEmail.setInputValue(user.email);
+                    inputName.setValue(user.name);
+                    inputEmail.setValue(user.email);
                 }
                 updateAccountButton();
 
@@ -703,7 +704,7 @@ const UserListDetails = function(params = {}) {
                             },
                             Math.max(0, data.roles.findIndex(function(r) { return r.id == user.roleId; }))
                         );
-                        if (lastAdmin) selRole.setDisabled(1);
+                        if (lastAdmin) selRole.setEnabled(0);
 
                         Label({ text: (role) ? escape(role.description) : "", fontSize: 13, textColor: Ink(0.5) });
                         that.elem.style.flex = "1 1 auto";
@@ -969,9 +970,9 @@ UserListPage.createTinySelect = function(list, onSelect, selectedIndex = 0) {
         border: 1,
         borderColor: S.CARD_BORDER_COLOR,
         round: 8,
-        labelBoldFont: 0,
+        labelBold: 0,
         labelTextColor: Ink(0.9),
-        arrowIcon: "../../comp/tiny-select/arrow.svg",
+        arrowIconFile: "../../comp/tiny-select/arrow.svg",
         arrowSize: 18,
         invertIconColor: T.invertIcon,
         listFontSize: 14,
@@ -979,7 +980,8 @@ UserListPage.createTinySelect = function(list, onSelect, selectedIndex = 0) {
         listOverTextColor: S.ACCENT_COLOR,
         listBackgroundColor: S.FIELD_COLOR,
         listBorderColor: Ink(0.15),
-        onSelect: function(index, id) {
+        onChange: function(self) {
+            const id = self.getSelectedItem().id;
             if (isReady) onSelect(id);
         },
     });
@@ -1000,7 +1002,7 @@ UserListPage.getSmartTableStyle = function(libPath) {
             width: "50%", height: 34, border: 1, round: 8, color: S.FIELD_COLOR, borderColor: S.CARD_BORDER_COLOR,
             borderBottomStyle: "1px solid " + S.CARD_BORDER_COLOR,
             textColor: Ink(0.9), placeholderColor: Ink(0.4), fontSize: 14,
-            placeholderText: "Filter the table",
+            placeholder: "Filter the table",
             searchIconSize: 15, searchIconOpacity: 0.55, invertIconColor: T.invertIcon,
             searchIconFile: libPath + "comp/search-input/filter.png",
             clearIconFile: libPath + "comp/search-input/clear.svg",

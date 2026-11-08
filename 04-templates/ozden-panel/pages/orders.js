@@ -18,7 +18,7 @@ COMPONENTS:
 - SearchInput, TinySelect (comp-m2): Filters
 - SmartTable (comp-m3): Order list
 - TinyTable (comp-m4): Order items
-- InputB (comp-m2): Tracking number, note
+- TextField (comp-m2): Tracking number, note
 - SmartButton (comp-m4), HoldToConfirmButton (comp-m3): Actions
 - Dialog, LoadingScreen (comp-m4; Theme.confirm, waiting): Cancel confirm, saving
 
@@ -258,7 +258,7 @@ const OrdersPage = function(params = {}) {
 
                 const kpiBox = SparkLineBox({
                     height: 96,
-                    title: kpi.title,
+                    titleText: kpi.title,
                     valueText: "",
                     iconFile: "",
                     lineColor: kpi.lineColor,
@@ -318,11 +318,12 @@ const OrdersPage = function(params = {}) {
                     textColor: Ink(0.9),
                     fontSize: 14,
                     searchIconSize: 16,
-                    placeholderText: "Search orders",
+                    placeholder: "Search orders",
                     invertIconColor: T.invertIcon,
                     searchIconFile: LIB_PATH + "comp/search-input/search.svg",
                     clearIconFile: LIB_PATH + "comp/search-input/clear.svg",
-                    onSearch: function(text) {
+                    onChange: function(self) {
+                        const text = self.getSearchText();
                         filter.search = text;
                         searchTimer = waitAndRun(searchTimer, render, 200); // WHY: Do not filter on every key.
                     },
@@ -502,23 +503,23 @@ const OrderDetails = function(params = {}) {
     };
 
     const createDarkInput = function(params) {
-        const input = InputB({
+        const input = TextField({
             width: "100%",
             leftPadding: 14,
             rightPadding: 36,
             backgroundColor: S.FIELD_COLOR,
-            selectedBackgroundColor: T.surface3,
+            focusBackgroundColor: T.surface3,
             lineColor: "transparent",
-            selectedLineColor: "transparent",
+            focusLineColor: "transparent",
             backBorderColor: S.CARD_BORDER_COLOR,
-            selectedBackBorderColor: S.ACCENT_COLOR,
+            focusBackBorderColor: S.ACCENT_COLOR,
             backBorderTopRound: 8,
             backBorderBottomRound: 8,
             requiredColor: S.ERROR_COLOR,
             warningColor: S.ERROR_COLOR,
             ...params,
         });
-        // WHY: InputB has fixed text colors for light backgrounds.
+        // WHY: TextField has fixed text colors for light backgrounds.
         input.title.textColor = Ink(0.45);
         input.title.fontSize = 11;
         input.title.elem.style.letterSpacing = "1px";
@@ -611,21 +612,21 @@ const OrderDetails = function(params = {}) {
                             const trackingInput = createDarkInput({
                                 titleText: "TRACKING NUMBER",
                                 placeholder: "At least 8 letters or numbers",
-                                maxChar: 30,
+                                maxLength: 30,
                                 warningText: "At least 8 letters or numbers",
-                                onEdit: function() {
+                                onChange: function() {
                                     setInteractive(btnShip, trackingInput.isValid() == 1);
                                 },
                             });
                             trackingInput.isValid = function() {
-                                return /^[A-Za-z0-9-]{8,}$/.test(trackingInput.getInputValue().trim()) ? 1 : 0;
+                                return /^[A-Za-z0-9-]{8,}$/.test(trackingInput.getValue().trim()) ? 1 : 0;
                             };
                             trackingInput.elem.style.flex = "1 1 auto";
 
                         endGroup();
 
                         const btnShip = OrdersPage.createButton("Mark as Shipped", "", function() {
-                            const tracking = trackingInput.getInputValue().trim().toUpperCase();
+                            const tracking = trackingInput.getValue().trim().toUpperCase();
                             updateOrder({ status: "shipped", carrier: carrierId, tracking: tracking }, "Shipped with " + carrierId + " (" + tracking + ")", "shipped");
                         }, { primary: 1 });
                         setInteractive(btnShip, false);
@@ -740,12 +741,12 @@ const OrderDetails = function(params = {}) {
                     const noteInput = createDarkInput({
                         titleText: "INTERNAL NOTE",
                         placeholder: "Only the team can see it",
-                        maxChar: 200,
+                        maxLength: 200,
                     });
                     noteInput.elem.style.flex = "1 1 auto";
 
                     OrdersPage.createButton("Add", "", function() {
-                        const text = noteInput.getInputValue().trim();
+                        const text = noteInput.getValue().trim();
                         if (!text) return;
                         updateOrder({}, "Note: " + text, "note");
                     });
@@ -912,9 +913,9 @@ OrdersPage.createTinySelect = function(list, onSelect, selectedIndex = 0) {
         border: 1,
         borderColor: S.CARD_BORDER_COLOR,
         round: 8,
-        labelBoldFont: 0,
+        labelBold: 0,
         labelTextColor: Ink(0.9),
-        arrowIcon: "../../comp/tiny-select/arrow.svg",
+        arrowIconFile: "../../comp/tiny-select/arrow.svg",
         arrowSize: 18,
         invertIconColor: T.invertIcon,
         listFontSize: 14,
@@ -922,7 +923,8 @@ OrdersPage.createTinySelect = function(list, onSelect, selectedIndex = 0) {
         listOverTextColor: S.ACCENT_COLOR,
         listBackgroundColor: S.FIELD_COLOR,
         listBorderColor: Ink(0.15),
-        onSelect: function(index, id) {
+        onChange: function(self) {
+            const id = self.getSelectedItem().id;
             if (isReady) onSelect(id);
         },
     });
@@ -943,7 +945,7 @@ OrdersPage.getSmartTableStyle = function(libPath) {
             width: "50%", height: 34, border: 1, round: 8, color: S.FIELD_COLOR, borderColor: S.CARD_BORDER_COLOR,
             borderBottomStyle: "1px solid " + S.CARD_BORDER_COLOR,
             textColor: Ink(0.9), placeholderColor: Ink(0.4), fontSize: 14,
-            placeholderText: "Filter the table",
+            placeholder: "Filter the table",
             searchIconSize: 15, searchIconOpacity: 0.55, invertIconColor: T.invertIcon,
             searchIconFile: libPath + "comp/search-input/filter.png",
             clearIconFile: libPath + "comp/search-input/clear.svg",

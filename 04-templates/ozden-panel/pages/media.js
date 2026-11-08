@@ -15,13 +15,13 @@ COMPONENTS:
 - SearchInput (comp-m2): Search by name
 - TinySelect (comp-m2): Type filter, sort, move to folder
 - Tabs (comp-m4): Grid / list view
-- SelectFile (comp-m4): Upload
+- FilePicker (comp-m4): Upload
 - CheckBox (comp-m3): Select files
 - ContextMenu (comp-m4): File actions (right click or "•••")
 - SmartTable (comp-m3): List view
 - SmartButton (comp-m4), HoldToConfirmButton (comp-m3): Actions
 - LineProgressBar (comp-m3): Storage usage
-- InputB (comp-m2), Dialog, LoadingScreen (comp-m4; Theme.confirm, waiting): Details panel, delete confirm, upload
+- TextField (comp-m2), Dialog, LoadingScreen (comp-m4; Theme.confirm, waiting): Details panel, delete confirm, upload
 
 */
 
@@ -583,7 +583,7 @@ const MediaPage = function(params = {}) {
 
             endGroup();
 
-            uploadFile = SelectFile({
+            uploadFile = FilePicker({
                 width: "100%",
                 zoneHeight: 140,
                 multiple: 1,
@@ -723,11 +723,12 @@ const MediaPage = function(params = {}) {
                     textColor: Ink(0.9),
                     fontSize: 14,
                     searchIconSize: 16,
-                    placeholderText: "Search files",
+                    placeholder: "Search files",
                     invertIconColor: T.invertIcon,
                     searchIconFile: LIB_PATH + "comp/search-input/search.svg",
                     clearIconFile: LIB_PATH + "comp/search-input/clear.svg",
-                    onSearch: function(text) {
+                    onChange: function(self) {
+                        const text = self.getSearchText();
                         view.search = text;
                         view.shownCount = PAGE_SIZE;
                         render();
@@ -1006,18 +1007,18 @@ const MediaDetails = function(params = {}) {
         leftPadding: 14,
         rightPadding: 36,
         backgroundColor: S.FIELD_COLOR,
-        selectedBackgroundColor: T.surface3,
+        focusBackgroundColor: T.surface3,
         lineColor: "transparent",
-        selectedLineColor: "transparent",
+        focusLineColor: "transparent",
         backBorderColor: S.CARD_BORDER_COLOR,
-        selectedBackBorderColor: S.ACCENT_COLOR,
+        focusBackBorderColor: S.ACCENT_COLOR,
         backBorderTopRound: 8,
         backBorderBottomRound: 8,
         requiredColor: S.ERROR_COLOR,
         warningColor: S.ERROR_COLOR,
     };
 
-    // WHY: InputB has fixed text colors for light backgrounds.
+    // WHY: TextField has fixed text colors for light backgrounds.
     const styleInput = function(input) {
         input.title.textColor = Ink(0.45);
         input.title.fontSize = 11;
@@ -1072,22 +1073,22 @@ const MediaDetails = function(params = {}) {
             endGroup();
 
             // Fields
-            inputName = styleInput(InputB({
+            inputName = styleInput(TextField({
                 ...INPUT_PARAMS,
                 titleText: "FILE NAME",
-                inputValue: item.name, // WHY: Created with the value, so the required warning ball is not shown.
-                isRequired: 1,
+                value: item.name, // WHY: Created with the value, so the required warning ball is not shown.
+                required: 1,
                 requiredText: "File name is required",
-                maxChar: 80,
+                maxLength: 80,
             }));
 
             if (item.type == "image") {
-                inputAlt = styleInput(InputB({
+                inputAlt = styleInput(TextField({
                     ...INPUT_PARAMS,
                     titleText: "ALT TEXT",
-                    inputValue: item.alt,
+                    value: item.alt,
                     placeholder: "Describe the image (for accessibility and SEO)",
-                    maxChar: 140,
+                    maxLength: 140,
                 }));
             }
 
@@ -1171,7 +1172,7 @@ const MediaDetails = function(params = {}) {
         });
 
         MediaPage.createButton("Save", "", function() {
-            const name = inputName.getInputValue().trim();
+            const name = inputName.getValue().trim();
             if (!name) {
                 inputName.checkIfInputIsRequiredAndEmpty();
                 return;
@@ -1179,7 +1180,7 @@ const MediaDetails = function(params = {}) {
             box.onSave(item, {
                 name: name,
                 extension: MediaPage.getExtension(name) || item.extension,
-                alt: (inputAlt) ? inputAlt.getInputValue().trim() : item.alt,
+                alt: (inputAlt) ? inputAlt.getValue().trim() : item.alt,
                 folder: folderSelect.list[folderSelect.selectedIndex].id,
             });
         }, { primary: 1 });
@@ -1275,9 +1276,9 @@ MediaPage.createTinySelect = function(list, onSelect) {
         border: 1,
         borderColor: S.CARD_BORDER_COLOR,
         round: 8,
-        labelBoldFont: 0,
+        labelBold: 0,
         labelTextColor: Ink(0.9),
-        arrowIcon: "../../comp/tiny-select/arrow.svg",
+        arrowIconFile: "../../comp/tiny-select/arrow.svg",
         arrowSize: 18,
         invertIconColor: T.invertIcon,
         listFontSize: 14,
@@ -1285,7 +1286,7 @@ MediaPage.createTinySelect = function(list, onSelect) {
         listOverTextColor: S.ACCENT_COLOR,
         listBackgroundColor: S.FIELD_COLOR,
         listBorderColor: Ink(0.15),
-        onSelect: onSelect,
+        onChange: function (self) { onSelect(self.selectedIndex, self.getSelectedItem().id); },
     });
 };
 
@@ -1315,7 +1316,7 @@ MediaPage.createHoldToDelete = function(onConfirm) {
     return btn;
 };
 
-MediaPage.getSmartTableStyle = function(libPath, placeholderText) {
+MediaPage.getSmartTableStyle = function(libPath, placeholder) {
     const S = MediaPage.STYLE;
     return {
         scrollBarParams: {
@@ -1328,7 +1329,7 @@ MediaPage.getSmartTableStyle = function(libPath, placeholderText) {
             width: "50%", height: 34, border: 1, round: 8, color: S.FIELD_COLOR, borderColor: S.CARD_BORDER_COLOR,
             borderBottomStyle: "1px solid " + S.CARD_BORDER_COLOR,
             textColor: Ink(0.9), placeholderColor: Ink(0.4), fontSize: 14,
-            placeholderText: placeholderText,
+            placeholder: placeholder,
             searchIconSize: 15, searchIconOpacity: 0.55, invertIconColor: T.invertIcon,
             searchIconFile: libPath + "comp/search-input/filter.png",
             clearIconFile: libPath + "comp/search-input/clear.svg",

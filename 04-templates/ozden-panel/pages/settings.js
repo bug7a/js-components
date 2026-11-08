@@ -12,14 +12,14 @@ Settings Page (Template) - v26.09
 
 COMPONENTS:
 - Tabs (comp-m4): Sections
-- InputB, EmailInputB, PasswordInputB (comp-m2): Text fields
+- TextField, EmailField, PasswordField (comp-m2): Text fields
 - TinySelect (comp-m2): Language, time zone, start page, report day
 - RadioButton (comp-m3): Date format, panel color
 - CheckBox (comp-m3): Notification channels
 - Toggle (comp-m2): Two-factor, quiet hours, maintenance mode
-- SelectTime (comp-m4): Quiet hours
+- TimePicker (comp-m4): Quiet hours
 - Slider (comp-m2): Session timeout
-- SelectFile (comp-m4): Logo, settings import
+- FilePicker (comp-m4): Logo, settings import
 - TinyTable (comp-m4): Active sessions
 - SmartButton (comp-m4), HoldToConfirmButton (comp-m3): Actions
 - Dialog, LoadingScreen (comp-m4; Theme.confirm, waiting): Confirm, save
@@ -112,7 +112,7 @@ const SettingsPage = function(params = {}) {
     // Components
     let sectionTabs;
     let sectionList = [];
-    let fields = {}; // InputB family
+    let fields = {}; // TextField family
     let selects = {}; // TinySelect
     let toggles = {};
     let notifyCheckBoxes = {}; // [event][channel]
@@ -176,10 +176,10 @@ const SettingsPage = function(params = {}) {
 
         isRendering = 1;
 
-        fields.panelName.setInputValue(values.panelName);
-        fields.supportEmail.setInputValue(values.supportEmail);
-        fields.fullName.setInputValue(values.fullName);
-        fields.email.setInputValue(values.email);
+        fields.panelName.setValue(values.panelName);
+        fields.supportEmail.setValue(values.supportEmail);
+        fields.fullName.setValue(values.fullName);
+        fields.email.setValue(values.email);
 
         selectById(selects.language, values.language);
         selectById(selects.timeZone, values.timeZone);
@@ -418,24 +418,24 @@ const SettingsPage = function(params = {}) {
         Box({ width: "100%", height: 1, color: Ink(0.06) });
     };
 
-    // Dark style for the InputB family
+    // Dark style for the TextField family
     const INPUT_PARAMS = {
         width: "100%",
         leftPadding: 14,
         rightPadding: 36,
         backgroundColor: FIELD_COLOR,
-        selectedBackgroundColor: T.surface3,
+        focusBackgroundColor: T.surface3,
         lineColor: "transparent",
-        selectedLineColor: "transparent",
+        focusLineColor: "transparent",
         backBorderColor: CARD_BORDER_COLOR,
-        selectedBackBorderColor: ACCENT_COLOR,
+        focusBackBorderColor: ACCENT_COLOR,
         backBorderTopRound: 8,
         backBorderBottomRound: 8,
         requiredColor: ERROR_COLOR,
         warningColor: ERROR_COLOR,
     };
 
-    // WHY: InputB has fixed text colors for light backgrounds.
+    // WHY: TextField has fixed text colors for light backgrounds.
     const styleInput = function(input) {
         input.title.textColor = Ink(0.45);
         input.title.fontSize = 11;
@@ -456,9 +456,9 @@ const SettingsPage = function(params = {}) {
             border: 1,
             borderColor: CARD_BORDER_COLOR,
             round: 8,
-            labelBoldFont: 0,
+            labelBold: 0,
             labelTextColor: Ink(0.9),
-            arrowIcon: LIB_PATH + "comp/tiny-select/arrow.svg",
+            arrowIconFile: LIB_PATH + "comp/tiny-select/arrow.svg",
             arrowSize: 18,
             invertIconColor: T.invertIcon,
             listFontSize: 14,
@@ -466,7 +466,7 @@ const SettingsPage = function(params = {}) {
             listOverTextColor: ACCENT_COLOR,
             listBackgroundColor: FIELD_COLOR,
             listBorderColor: Ink(0.15),
-            onSelect: onSelect,
+            onChange: function (self) { onSelect(self.selectedIndex, self.getSelectedItem().id); },
         });
     };
 
@@ -567,27 +567,27 @@ const SettingsPage = function(params = {}) {
 
                 startFieldRow();
 
-                    fields.panelName = styleInput(InputB({
+                    fields.panelName = styleInput(TextField({
                         ...INPUT_PARAMS,
                         titleText: "PANEL NAME",
-                        inputValue: draft.panelName, // WHY: An empty required field shows a warning ball with a delayed motion; filling it later does not hide it.
+                        value: draft.panelName, // WHY: An empty required field shows a warning ball with a delayed motion; filling it later does not hide it.
                         placeholder: "My Panel",
-                        isRequired: 1,
+                        required: 1,
                         requiredText: "Panel name is required",
-                        maxChar: 24,
-                        onEdit: function() {
-                            setDraft("panelName", fields.panelName.getInputValue());
+                        maxLength: 24,
+                        onChange: function() {
+                            setDraft("panelName", fields.panelName.getValue());
                             topBar.setPanelName(draft.panelName); // Preview
                         },
                     }));
                     setFlex(fields.panelName, "1 1 260px");
 
-                    fields.supportEmail = styleInput(EmailInputB({
+                    fields.supportEmail = styleInput(EmailField({
                         ...INPUT_PARAMS,
                         titleText: "SUPPORT E-MAIL",
-                        inputValue: draft.supportEmail,
-                        onEdit: function() {
-                            setDraft("supportEmail", fields.supportEmail.getInputValue());
+                        value: draft.supportEmail,
+                        onChange: function() {
+                            setDraft("supportEmail", fields.supportEmail.getValue());
                         },
                     }));
                     setFlex(fields.supportEmail, "1 1 260px");
@@ -596,7 +596,7 @@ const SettingsPage = function(params = {}) {
 
                 startField("Logo", null);
 
-                    const logoFile = SelectFile({
+                    const logoFile = FilePicker({
                         width: "100%",
                         zoneHeight: 150,
                         accept: "image/png,image/svg+xml",
@@ -663,26 +663,26 @@ const SettingsPage = function(params = {}) {
 
                 startFieldRow();
 
-                    fields.fullName = styleInput(InputB({
+                    fields.fullName = styleInput(TextField({
                         ...INPUT_PARAMS,
                         titleText: "FULL NAME",
-                        inputValue: draft.fullName,
+                        value: draft.fullName,
                         placeholder: "Your name",
-                        isRequired: 1,
+                        required: 1,
                         requiredText: "Full name is required",
-                        maxChar: 40,
-                        onEdit: function() {
-                            setDraft("fullName", fields.fullName.getInputValue());
+                        maxLength: 40,
+                        onChange: function() {
+                            setDraft("fullName", fields.fullName.getValue());
                         },
                     }));
                     setFlex(fields.fullName, "1 1 260px");
 
-                    fields.email = styleInput(EmailInputB({
+                    fields.email = styleInput(EmailField({
                         ...INPUT_PARAMS,
                         titleText: "E-MAIL",
-                        inputValue: draft.email,
-                        onEdit: function() {
-                            setDraft("email", fields.email.getInputValue());
+                        value: draft.email,
+                        onChange: function() {
+                            setDraft("email", fields.email.getValue());
                         },
                     }));
                     setFlex(fields.email, "1 1 260px");
@@ -696,24 +696,24 @@ const SettingsPage = function(params = {}) {
 
                 const passwordParams = {
                     ...INPUT_PARAMS,
-                    isRequired: 0, // WHY: Required balls are shown on empty fields at start. Checked on the button click.
-                    minChar: 8,
-                    minCharWarningText: "At least 8 characters",
+                    required: 0, // WHY: Required balls are shown on empty fields at start. Checked on the button click.
+                    minLength: 8,
+                    minLengthWarningText: "At least 8 characters",
                     showPasswordIconFile: LIB_PATH + "comp/password-field/show-btn.png",
                     hidePasswordIconFile: LIB_PATH + "comp/password-field/hide-btn.png",
-                    showPasswordIconInvert: 1,
+                    invertIconColor: 1,
                     rightPadding: 50,
                 };
 
                 startFieldRow();
 
-                    const inputCurrent = styleInput(PasswordInputB({ ...passwordParams, titleText: "CURRENT PASSWORD", placeholder: "" }));
+                    const inputCurrent = styleInput(PasswordField({ ...passwordParams, titleText: "CURRENT PASSWORD", placeholder: "" }));
                     setFlex(inputCurrent, "1 1 200px");
 
-                    const inputNew = styleInput(PasswordInputB({ ...passwordParams, titleText: "NEW PASSWORD", placeholder: "" }));
+                    const inputNew = styleInput(PasswordField({ ...passwordParams, titleText: "NEW PASSWORD", placeholder: "" }));
                     setFlex(inputNew, "1 1 200px");
 
-                    const inputConfirm = styleInput(PasswordInputB({ ...passwordParams, titleText: "CONFIRM PASSWORD", placeholder: "" }));
+                    const inputConfirm = styleInput(PasswordField({ ...passwordParams, titleText: "CONFIRM PASSWORD", placeholder: "" }));
                     setFlex(inputConfirm, "1 1 200px");
 
                 endGroup();
@@ -727,12 +727,12 @@ const SettingsPage = function(params = {}) {
                             lblAccountMessage.textColor = color;
                         };
 
-                        if (!inputCurrent.getInputValue()) return showMessage("Enter your current password.", ERROR_COLOR);
+                        if (!inputCurrent.getValue()) return showMessage("Enter your current password.", ERROR_COLOR);
                         if (!inputNew.isValid()) return showMessage("New password: " + inputNew.warningText, ERROR_COLOR);
-                        if (inputNew.getInputValue() != inputConfirm.getInputValue()) return showMessage("New passwords do not match.", ERROR_COLOR);
+                        if (inputNew.getValue() != inputConfirm.getValue()) return showMessage("New passwords do not match.", ERROR_COLOR);
 
                         // TODO: Change the password with your service.
-                        [inputCurrent, inputNew, inputConfirm].forEach(function(input) { input.setInputValue(""); });
+                        [inputCurrent, inputNew, inputConfirm].forEach(function(input) { input.setValue(""); });
                         showMessage("Password is updated.", ACCENT_COLOR);
 
                     });
@@ -766,10 +766,11 @@ const SettingsPage = function(params = {}) {
                             ariaLabel: "Session timeout",
                             showValueOnSet: 0,
                             showValueOnDrag: 0, // WHY: the minutes are shown in lblTimeout.
-                            onDragMove: function(value) {
+                            onChange: function(self) {
+                                const value = self.value;
                                 lblTimeout.text = value + " min";
                             },
-                            onDragEnd: function() {
+                            onChangeEnd: function() {
                                 setDraft("sessionTimeout", sliderTimeout.getValue());
                             },
                         });
@@ -896,7 +897,7 @@ const SettingsPage = function(params = {}) {
 
                     [["From", "quietFrom"], ["To", "quietTo"]].forEach(function(item) {
                         startField(item[0], "0 0 auto");
-                            const selectTime = SelectTime({
+                            const selectTime = TimePicker({
                                 width: 130,
                                 height: 44,
                                 minuteStep: 30,
@@ -1156,7 +1157,7 @@ const SettingsPage = function(params = {}) {
 
                     endGroup();
 
-                    const importFile = SelectFile({
+                    const importFile = FilePicker({
                         width: "auto",
                         zoneHeight: 100,
                         accept: ".json,application/json",

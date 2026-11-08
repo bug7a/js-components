@@ -17,7 +17,7 @@ Customers Page (Template) - v26.09
 COMPONENTS:
 - Tabs (comp-m4), SearchInput, TinySelect (comp-m2): Filters
 - SmartTable (comp-m3): Customer list
-- InputB (comp-m2): Contact details, tag and note inputs
+- TextField (comp-m2): Contact details, tag and note inputs
 - Toggle (comp-m2): Marketing consent
 - TinyTable (comp-m4): Order history
 - SmartButton (comp-m4), HoldToConfirmButton (comp-m3): Actions
@@ -297,11 +297,12 @@ const CustomersPage = function(params = {}) {
                     textColor: Ink(0.9),
                     fontSize: 14,
                     searchIconSize: 16,
-                    placeholderText: "Name, e-mail, city or tag",
+                    placeholder: "Name, e-mail, city or tag",
                     invertIconColor: T.invertIcon,
                     searchIconFile: LIB_PATH + "comp/search-input/search.svg",
                     clearIconFile: LIB_PATH + "comp/search-input/clear.svg",
-                    onSearch: function(text) {
+                    onChange: function(self) {
+                        const text = self.getSearchText();
                         filter.search = text;
                         searchTimer = waitAndRun(searchTimer, render, 200);
                     },
@@ -502,24 +503,24 @@ const CustomerDetails = function(params = {}) {
     };
 
     const createDarkInput = function(params) {
-        const input = InputB({
+        const input = TextField({
             width: "100%",
             leftPadding: 14,
             rightPadding: 36,
             backgroundColor: S.FIELD_COLOR,
-            selectedBackgroundColor: T.surface3,
+            focusBackgroundColor: T.surface3,
             lineColor: "transparent",
-            selectedLineColor: "transparent",
+            focusLineColor: "transparent",
             backBorderColor: S.CARD_BORDER_COLOR,
-            selectedBackBorderColor: S.ACCENT_COLOR,
+            focusBackBorderColor: S.ACCENT_COLOR,
             backBorderTopRound: 8,
             backBorderBottomRound: 8,
             requiredColor: S.ERROR_COLOR,
             warningColor: S.ERROR_COLOR,
-            isRequired: 0,
+            required: 0,
             ...params,
         });
-        // WHY: InputB has fixed text colors for light backgrounds.
+        // WHY: TextField has fixed text colors for light backgrounds.
         input.title.textColor = Ink(0.45);
         input.title.fontSize = 11;
         input.title.elem.style.letterSpacing = "1px";
@@ -628,30 +629,30 @@ const CustomerDetails = function(params = {}) {
 
                 let updateContactButton = function() {};
 
-                const inputName = createDarkInput({ titleText: "NAME", inputValue: customer.name, maxChar: 60, onEdit: function() { updateContactButton(); } });
-                const inputEmail = createDarkInput({ titleText: "E-MAIL", inputValue: customer.email, maxChar: 120, warningText: "E-mail is not valid", onEdit: function() { updateContactButton(); } });
+                const inputName = createDarkInput({ titleText: "NAME", value: customer.name, maxLength: 60, onChange: function() { updateContactButton(); } });
+                const inputEmail = createDarkInput({ titleText: "E-MAIL", value: customer.email, maxLength: 120, warningText: "E-mail is not valid", onChange: function() { updateContactButton(); } });
 
                 HGroup({ width: "100%", height: "auto", align: "left top", gap: 10 });
-                    const inputPhone = createDarkInput({ titleText: "PHONE", inputValue: customer.phone, maxChar: 30, onEdit: function() { updateContactButton(); } });
+                    const inputPhone = createDarkInput({ titleText: "PHONE", value: customer.phone, maxLength: 30, onChange: function() { updateContactButton(); } });
                     inputPhone.elem.style.flex = "1 1 0";
-                    const inputCity = createDarkInput({ titleText: "CITY", inputValue: customer.city, maxChar: 40, onEdit: function() { updateContactButton(); } });
+                    const inputCity = createDarkInput({ titleText: "CITY", value: customer.city, maxLength: 40, onChange: function() { updateContactButton(); } });
                     inputCity.elem.style.flex = "1 1 0";
                 endGroup();
 
-                const inputAddress = createDarkInput({ titleText: "ADDRESS", inputValue: customer.address, maxChar: 160, onEdit: function() { updateContactButton(); } });
+                const inputAddress = createDarkInput({ titleText: "ADDRESS", value: customer.address, maxLength: 160, onChange: function() { updateContactButton(); } });
 
                 HGroup({ width: "100%", height: "auto", align: "left center", gap: 8 });
                 that.elem.style.flexWrap = "wrap";
 
                     const btnSave = CustomersPage.createButton("Save Changes", "", function() {
-                        const name = inputName.getInputValue().trim(), email = inputEmail.getInputValue().trim();
+                        const name = inputName.getValue().trim(), email = inputEmail.getValue().trim();
                         if (name.length < 2) { showNotice("Name must be at least 2 letters.", true); return; }
                         if (!CustomersPage.isEmail(email)) { showNotice("E-mail is not valid.", true); return; }
                         const used = CustomersPage.getCustomers().some(function(c) { return c.id != customer.id && c.email.toLowerCase() == email.toLowerCase(); });
                         if (used) { showNotice("This e-mail belongs to another customer.", true); return; }
                         saveChange(function(c) {
-                            c.name = name; c.email = email; c.phone = inputPhone.getInputValue().trim();
-                            c.city = inputCity.getInputValue().trim(); c.address = inputAddress.getInputValue().trim();
+                            c.name = name; c.email = email; c.phone = inputPhone.getValue().trim();
+                            c.city = inputCity.getValue().trim(); c.address = inputAddress.getValue().trim();
                             return "";
                         }, "Contact details are saved.");
                     }, { primary: 1 });
@@ -663,9 +664,9 @@ const CustomerDetails = function(params = {}) {
                 endGroup();
 
                 updateContactButton = function() {
-                    const changed = inputName.getInputValue().trim() != customer.name || inputEmail.getInputValue().trim() != customer.email ||
-                        inputPhone.getInputValue().trim() != customer.phone || inputCity.getInputValue().trim() != customer.city || inputAddress.getInputValue().trim() != customer.address;
-                    inputEmail.showWarningIfNotValid(CustomersPage.isEmail(inputEmail.getInputValue().trim()));
+                    const changed = inputName.getValue().trim() != customer.name || inputEmail.getValue().trim() != customer.email ||
+                        inputPhone.getValue().trim() != customer.phone || inputCity.getValue().trim() != customer.city || inputAddress.getValue().trim() != customer.address;
+                    inputEmail.showWarningIfNotValid(CustomersPage.isEmail(inputEmail.getValue().trim()));
                     setInteractive(btnSave, changed);
                 };
                 updateContactButton();
@@ -695,11 +696,11 @@ const CustomerDetails = function(params = {}) {
                 endGroup();
 
                 HGroup({ width: "100%", height: "auto", align: "left bottom", gap: 8 });
-                    const inputTag = createDarkInput({ titleText: "ADD A TAG", placeholder: "wholesale, newsletter, complaint...", maxChar: 24 });
+                    const inputTag = createDarkInput({ titleText: "ADD A TAG", placeholder: "wholesale, newsletter, complaint...", maxLength: 24 });
                     inputTag.elem.style.flex = "1 1 0";
                     inputTag.elem.style.minWidth = "0";
                     CustomersPage.createButton("Add", "", function() {
-                        const tag = inputTag.getInputValue().trim().toLowerCase();
+                        const tag = inputTag.getValue().trim().toLowerCase();
                         if (!tag) return;
                         if (customer.tags.includes(tag)) { showNotice("This tag is already on the customer.", true); return; }
                         saveChange(function(c) { c.tags.push(tag); return ""; }, "Tag \"" + tag + "\" added.");
@@ -788,11 +789,11 @@ const CustomerDetails = function(params = {}) {
                 if (!customer.notes.length) Label({ text: "No notes yet.", fontSize: 13, textColor: Ink(0.45) });
 
                 HGroup({ width: "100%", height: "auto", align: "left bottom", gap: 8 });
-                    const inputNote = createDarkInput({ titleText: "ADD A NOTE", placeholder: "Only the team can see it", maxChar: 200 });
+                    const inputNote = createDarkInput({ titleText: "ADD A NOTE", placeholder: "Only the team can see it", maxLength: 200 });
                     inputNote.elem.style.flex = "1 1 0";
                     inputNote.elem.style.minWidth = "0";
                     CustomersPage.createButton("Add", "", function() {
-                        const text = inputNote.getInputValue().trim();
+                        const text = inputNote.getValue().trim();
                         if (!text) return;
                         saveChange(function(c) { c.notes.push({ time: Date.now(), text: text, by: CustomersPage.getCurrentUserName() }); return ""; }, "Note added.");
                     });
@@ -976,9 +977,9 @@ CustomersPage.createTinySelect = function(list, onSelect, selectedIndex = 0) {
         border: 1,
         borderColor: S.CARD_BORDER_COLOR,
         round: 8,
-        labelBoldFont: 0,
+        labelBold: 0,
         labelTextColor: Ink(0.9),
-        arrowIcon: "../../comp/tiny-select/arrow.svg",
+        arrowIconFile: "../../comp/tiny-select/arrow.svg",
         arrowSize: 18,
         invertIconColor: T.invertIcon,
         listFontSize: 14,
@@ -986,7 +987,8 @@ CustomersPage.createTinySelect = function(list, onSelect, selectedIndex = 0) {
         listOverTextColor: S.ACCENT_COLOR,
         listBackgroundColor: S.FIELD_COLOR,
         listBorderColor: Ink(0.15),
-        onSelect: function(index, id) {
+        onChange: function(self) {
+            const id = self.getSelectedItem().id;
             if (isReady) onSelect(id);
         },
     });
@@ -1007,7 +1009,7 @@ CustomersPage.getSmartTableStyle = function(libPath) {
             width: "50%", height: 34, border: 1, round: 8, color: S.FIELD_COLOR, borderColor: S.CARD_BORDER_COLOR,
             borderBottomStyle: "1px solid " + S.CARD_BORDER_COLOR,
             textColor: Ink(0.9), placeholderColor: Ink(0.4), fontSize: 14,
-            placeholderText: "Filter the table",
+            placeholder: "Filter the table",
             searchIconSize: 15, searchIconOpacity: 0.55, invertIconColor: T.invertIcon,
             searchIconFile: libPath + "comp/search-input/filter.png",
             clearIconFile: libPath + "comp/search-input/clear.svg",

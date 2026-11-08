@@ -388,14 +388,14 @@
                     endGroup();
 
                     boardSelect = TinySelect({
-                        title: "Board",
+                        titleText: "Board",
                         list: BOARDS.map(function (b) { return { id: b.id, label: b.name }; }),
                         height: 40, fontSize: 15, color: CARD_COLOR, border: 1, borderColor: CARD_BORDER_COLOR, round: 8,
                         labelTextColor: Ink(0.95),
-                        arrowIcon: LIB_PATH + "comp/tiny-select/arrow.svg", arrowSize: 20, invertIconColor: T.invertIcon,
+                        arrowIconFile: LIB_PATH + "comp/tiny-select/arrow.svg", arrowSize: 20, invertIconColor: T.invertIcon,
                         listFontSize: 15, listTextColor: Ink(0.85), listOverTextColor: ACCENT_COLOR,
                         listBackgroundColor: FIELD_COLOR, listBorderColor: Ink(0.15),
-                        onSelect: function (index) { if (isReady) selectBoard(index); },
+                        onChange: function (self) { if (isReady) selectBoard(self.selectedIndex); },
                     });
                     boardSelect.lblTitle.textColor = Ink(0.5);
 
@@ -568,7 +568,7 @@
 
                 KPI_LIST.forEach(function (kpi) {
                     const kpiBox = SparkLineBox({
-                        height: 100, title: kpi.title, valueText: "", iconFile: ASSETS + kpi.iconFile, lineColor: kpi.lineColor,
+                        height: 100, titleText: kpi.title, valueText: "", iconFile: ASSETS + kpi.iconFile, lineColor: kpi.lineColor,
                         style: {
                             box: { color: CARD_COLOR, border: 1, borderColor: CARD_BORDER_COLOR, round: 12 },
                             text: { padding: 14 },
@@ -719,7 +719,7 @@
                             createSmallTitle("D5 · Fan speed (PWM)");
                             lblPwm = Label({ text: "", fontSize: 14, textColor: Ink(0.9) });
                         endGroup();
-                        // NOTE: Slider sends the value to onDragMove, not the object.
+                        // NOTE: createSlider gives the value to onMove (Slider gives itself to onChange).
                         pwmSlider = createSlider(ACCENT_COLOR, { minValue: 0, maxValue: 255, step: 1 }, function (value) {
                             board.pwm = value;
                             lblPwm.text = board.pwm + " / 255";
@@ -1012,7 +1012,7 @@
         };
 
         // range: { minValue, maxValue, step }: the real values of the setting (no converter)
-        const createSlider = function (color, range, onDragMove, onDragEnd) {
+        const createSlider = function (color, range, onMove, onMoveEnd) {
             return Slider({
                 width: "100%",
                 styleName: T.sliderStyle,
@@ -1023,8 +1023,8 @@
                 step: range.step,
                 showValueOnSet: 0,
                 showValueOnDrag: 0, // WHY: the value is shown in a label.
-                onDragMove: onDragMove,
-                onDragEnd: onDragEnd,
+                onChange: function (self) { onMove(self.value); },
+                onChangeEnd: onMoveEnd,
             });
         };
 

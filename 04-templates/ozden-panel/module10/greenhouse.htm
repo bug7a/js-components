@@ -521,7 +521,7 @@
         };
 
         // range: { minValue, maxValue, step }: the real values of the setting (no converter)
-        const createSlider = function (color, range, onDragMove, onDragEnd) {
+        const createSlider = function (color, range, onMove, onMoveEnd) {
             return Slider({
                 width: 250,
                 styleName: T.sliderStyle,
@@ -532,8 +532,8 @@
                 step: range.step,
                 showValueOnSet: 0,
                 showValueOnDrag: 0, // WHY: the value is shown in a label.
-                onDragMove: onDragMove,
-                onDragEnd: onDragEnd,
+                onChange: function (self) { onMove(self.value); },
+                onChangeEnd: onMoveEnd,
             });
         };
 
@@ -610,13 +610,13 @@
                     endGroup();
 
                     zoneSelect = TinySelect({
-                        title: "Zone",
+                        titleText: "Zone",
                         list: ZONES.map(function (z) { return { id: z.id, label: z.name }; }),
                         height: 40, fontSize: 15, color: CARD_COLOR, border: 1, borderColor: CARD_BORDER_COLOR, round: 8,
                         labelTextColor: Ink(0.95),
-                        arrowIcon: LIB_PATH + "comp/tiny-select/arrow.svg", arrowSize: 20, invertIconColor: T.invertIcon,
+                        arrowIconFile: LIB_PATH + "comp/tiny-select/arrow.svg", arrowSize: 20, invertIconColor: T.invertIcon,
                         listFontSize: 15, listTextColor: Ink(0.85), listOverTextColor: ACCENT_COLOR, listBackgroundColor: FIELD_COLOR, listBorderColor: Ink(0.15),
-                        onSelect: function (index) { if (isReady) selectZone(index); },
+                        onChange: function (self) { if (isReady) selectZone(self.selectedIndex); },
                     });
                     zoneSelect.lblTitle.textColor = Ink(0.5);
 
@@ -731,7 +731,7 @@
             startRow();
                 KPI_LIST.forEach(function (kpi) {
                     const kpiBox = SparkLineBox({
-                        height: 100, title: kpi.title, valueText: "", iconFile: ASSETS + kpi.iconFile, lineColor: kpi.lineColor, maxValue: kpi.maxValue,
+                        height: 100, titleText: kpi.title, valueText: "", iconFile: ASSETS + kpi.iconFile, lineColor: kpi.lineColor, maxValue: kpi.maxValue,
                         style: {
                             box: { color: CARD_COLOR, border: 1, borderColor: CARD_BORDER_COLOR, round: 12 },
                             text: { padding: 14 },
@@ -911,12 +911,12 @@
                     createSmallTitle("Grow light schedule");
                     HGroup({ width: "100%", height: "auto", align: "left center", gap: 10 });
                     that.elem.style.flexWrap = "wrap";
-                        selectLightFrom = SelectTime({
+                        selectLightFrom = TimePicker({
                             width: 116, height: 38, minuteStep: 30, showClearButton: 0, style: TIME_STYLE,
                             onChange: function (self) { if (isRendering || !self.value) return; zone.lightFrom = self.value; addEvent(zone, "Info", "Lights schedule from " + self.value); },
                         });
                         Label({ text: "to", fontSize: 13, textColor: Ink(0.5) });
-                        selectLightTo = SelectTime({
+                        selectLightTo = TimePicker({
                             width: 116, height: 38, minuteStep: 30, showClearButton: 0, style: TIME_STYLE,
                             onChange: function (self) { if (isRendering || !self.value) return; zone.lightTo = self.value; addEvent(zone, "Info", "Lights schedule to " + self.value); },
                         });
@@ -1315,7 +1315,7 @@
                 that.elem.style.borderTop = "1px solid " + Ink(0.06);
                 that.elem.style.justifyContent = "space-between";
                     Label({ text: "Planted", fontSize: 14, textColor: Ink(0.5) });
-                    selectPlanted = SelectDate({
+                    selectPlanted = DatePicker({
                         width: 150, height: 36, format: "DD MMM YYYY", date: z.planted, maxDate: new Date(),
                         showClearButton: 0, style: DATE_STYLE,
                         onChange: function (self) {

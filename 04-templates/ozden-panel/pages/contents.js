@@ -20,9 +20,9 @@ Contents Page (Template) - v26.09
 COMPONENTS:
 - Tabs (comp-m4), SearchInput, TinySelect (comp-m2): Filters
 - SmartTable (comp-m3): Content list
-- InputB (comp-m2): Editor fields
+- TextField (comp-m2): Editor fields
 - RadioButton, CheckBox (comp-m3): Status, options
-- SelectDate, SelectTime (comp-m4): Schedule
+- DatePicker, TimePicker (comp-m4): Schedule
 - SmartButton (comp-m4), HoldToConfirmButton (comp-m3): Actions
 - Dialog, LoadingScreen (comp-m4; Theme.confirm, waiting): Confirm, saving
 
@@ -286,11 +286,12 @@ const ContentsPage = function(params = {}) {
                     textColor: Ink(0.9),
                     fontSize: 14,
                     searchIconSize: 16,
-                    placeholderText: "Title, URL or tag",
+                    placeholder: "Title, URL or tag",
                     invertIconColor: T.invertIcon,
                     searchIconFile: LIB_PATH + "comp/search-input/search.svg",
                     clearIconFile: LIB_PATH + "comp/search-input/clear.svg",
-                    onSearch: function(text) {
+                    onChange: function(self) {
+                        const text = self.getSearchText();
                         filter.search = text;
                         searchTimer = waitAndRun(searchTimer, render, 150);
                     },
@@ -671,26 +672,26 @@ const ContentEditor = function(params = {}) {
         return that;
     };
 
-    // Dark style for InputB
+    // Dark style for TextField
     const createInput = function(params) {
-        const input = InputB({
+        const input = TextField({
             width: "100%",
             leftPadding: 14,
             rightPadding: 36,
             backgroundColor: S.FIELD_COLOR,
-            selectedBackgroundColor: T.surface3,
+            focusBackgroundColor: T.surface3,
             lineColor: "transparent",
-            selectedLineColor: "transparent",
+            focusLineColor: "transparent",
             backBorderColor: S.CARD_BORDER_COLOR,
-            selectedBackBorderColor: S.ACCENT_COLOR,
+            focusBackBorderColor: S.ACCENT_COLOR,
             backBorderTopRound: 8,
             backBorderBottomRound: 8,
             requiredColor: S.ERROR_COLOR,
             warningColor: S.ERROR_COLOR,
-            isRequired: 0,
+            required: 0,
             ...params,
         });
-        // WHY: InputB has fixed text colors for light backgrounds.
+        // WHY: TextField has fixed text colors for light backgrounds.
         input.title.textColor = Ink(0.45);
         input.title.fontSize = 11;
         input.title.elem.style.letterSpacing = "1px";
@@ -772,14 +773,14 @@ const ContentEditor = function(params = {}) {
 
                 inputTitle = createInput({
                     titleText: "TITLE",
-                    inputValue: draft.title, // WHY: Created with the value, so a required warning ball is not left on the screen.
+                    value: draft.title, // WHY: Created with the value, so a required warning ball is not left on the screen.
                     placeholder: "Ex: How to choose headphones",
-                    maxChar: 100,
-                    onEdit: function() {
-                        draft.title = inputTitle.getInputValue();
+                    maxLength: 100,
+                    onChange: function() {
+                        draft.title = inputTitle.getValue();
                         if (!isSlugEdited) {
                             draft.slug = ContentsPage.slugify(draft.title);
-                            inputSlug.setInputValue(draft.slug);
+                            inputSlug.setValue(draft.slug);
                             updateUrl();
                         }
                         updateSeo();
@@ -788,12 +789,12 @@ const ContentEditor = function(params = {}) {
 
                 inputSlug = createInput({
                     titleText: "URL",
-                    inputValue: draft.slug,
+                    value: draft.slug,
                     placeholder: "how-to-choose-headphones",
-                    maxChar: 80,
-                    onEdit: function() {
-                        const value = inputSlug.getInputValue().toLowerCase().replace(/[^a-z0-9-]/g, "-").replace(/-{2,}/g, "-");
-                        if (value != inputSlug.getInputValue()) inputSlug.setInputValue(value);
+                    maxLength: 80,
+                    onChange: function() {
+                        const value = inputSlug.getValue().toLowerCase().replace(/[^a-z0-9-]/g, "-").replace(/-{2,}/g, "-");
+                        if (value != inputSlug.getValue()) inputSlug.setValue(value);
                         draft.slug = value;
                         isSlugEdited = true;
                         updateUrl();
@@ -807,10 +808,10 @@ const ContentEditor = function(params = {}) {
 
                 inputExcerpt = createInput({
                     titleText: "EXCERPT",
-                    inputValue: draft.excerpt,
+                    value: draft.excerpt,
                     placeholder: "A short summary for lists (optional)",
-                    maxChar: 200,
-                    onEdit: function() { draft.excerpt = inputExcerpt.getInputValue(); updateSeo(); },
+                    maxLength: 200,
+                    onChange: function() { draft.excerpt = inputExcerpt.getValue(); updateSeo(); },
                 });
 
                 HGroup({ width: "100%", height: "auto", align: "left center", gap: 10 });
@@ -867,11 +868,11 @@ const ContentEditor = function(params = {}) {
 
                         inputTags = createInput({
                             titleText: "TAGS",
-                            inputValue: draft.tags.join(", "),
+                            value: draft.tags.join(", "),
                             placeholder: "audio, guide (comma between tags)",
-                            maxChar: 120,
-                            onEdit: function() {
-                                draft.tags = inputTags.getInputValue().split(",").map(function(tag) { return tag.trim().toLowerCase(); }).filter(Boolean);
+                            maxLength: 120,
+                            onChange: function() {
+                                draft.tags = inputTags.getValue().split(",").map(function(tag) { return tag.trim().toLowerCase(); }).filter(Boolean);
                             },
                         });
                         flex(inputTags);
@@ -887,10 +888,10 @@ const ContentEditor = function(params = {}) {
 
                         inputLink = createInput({
                             titleText: "LINK",
-                            inputValue: draft.link,
+                            value: draft.link,
                             placeholder: "/summer-sale or https://...",
-                            maxChar: 200,
-                            onEdit: function() { draft.link = inputLink.getInputValue().trim(); },
+                            maxLength: 200,
+                            onChange: function() { draft.link = inputLink.getValue().trim(); },
                         });
                         flex(inputLink);
 
@@ -947,7 +948,7 @@ const ContentEditor = function(params = {}) {
 
                     VGroup({ width: "auto", height: "auto", align: "left top", gap: 6 });
                         createFieldTitle("PUBLISH DATE");
-                        dateSchedule = SelectDate({
+                        dateSchedule = DatePicker({
                             width: 170,
                             height: 40,
                             date: scheduleStart,
@@ -961,7 +962,7 @@ const ContentEditor = function(params = {}) {
 
                     VGroup({ width: "auto", height: "auto", align: "left top", gap: 6 });
                         createFieldTitle("TIME");
-                        timeSchedule = SelectTime({
+                        timeSchedule = TimePicker({
                             width: 120,
                             height: 40,
                             time: (draft.publishAt > Date.now()) ? scheduleStart : "09:00",
@@ -1005,18 +1006,18 @@ const ContentEditor = function(params = {}) {
 
                 inputMetaTitle = createInput({
                     titleText: "META TITLE",
-                    inputValue: draft.metaTitle,
+                    value: draft.metaTitle,
                     placeholder: "Empty: the title is used",
-                    maxChar: 70,
-                    onEdit: function() { draft.metaTitle = inputMetaTitle.getInputValue(); updateSeo(); },
+                    maxLength: 70,
+                    onChange: function() { draft.metaTitle = inputMetaTitle.getValue(); updateSeo(); },
                 });
 
                 inputMetaDescription = createInput({
                     titleText: "META DESCRIPTION",
-                    inputValue: draft.metaDescription,
+                    value: draft.metaDescription,
                     placeholder: "70-160 letters. Shown in the search results.",
-                    maxChar: 170,
-                    onEdit: function() { draft.metaDescription = inputMetaDescription.getInputValue(); updateSeo(); },
+                    maxLength: 170,
+                    onChange: function() { draft.metaDescription = inputMetaDescription.getValue(); updateSeo(); },
                 });
 
                 // Search result preview
@@ -1286,9 +1287,9 @@ ContentsPage.createTinySelect = function(list, onSelect, selectedIndex = 0) {
         border: 1,
         borderColor: S.CARD_BORDER_COLOR,
         round: 8,
-        labelBoldFont: 0,
+        labelBold: 0,
         labelTextColor: Ink(0.9),
-        arrowIcon: "../../comp/tiny-select/arrow.svg",
+        arrowIconFile: "../../comp/tiny-select/arrow.svg",
         arrowSize: 18,
         invertIconColor: T.invertIcon,
         listFontSize: 14,
@@ -1296,7 +1297,8 @@ ContentsPage.createTinySelect = function(list, onSelect, selectedIndex = 0) {
         listOverTextColor: S.ACCENT_COLOR,
         listBackgroundColor: S.FIELD_COLOR,
         listBorderColor: Ink(0.15),
-        onSelect: function(index, id) {
+        onChange: function(self) {
+            const id = self.getSelectedItem().id;
             if (isReady) onSelect(id);
         },
     });
@@ -1317,7 +1319,7 @@ ContentsPage.getSmartTableStyle = function(libPath) {
             width: "50%", height: 34, border: 1, round: 8, color: S.FIELD_COLOR, borderColor: S.CARD_BORDER_COLOR,
             borderBottomStyle: "1px solid " + S.CARD_BORDER_COLOR,
             textColor: Ink(0.9), placeholderColor: Ink(0.4), fontSize: 14,
-            placeholderText: "Filter the table",
+            placeholder: "Filter the table",
             searchIconSize: 15, searchIconOpacity: 0.55, invertIconColor: T.invertIcon,
             searchIconFile: libPath + "comp/search-input/filter.png",
             clearIconFile: libPath + "comp/search-input/clear.svg",

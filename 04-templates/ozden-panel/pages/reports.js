@@ -11,7 +11,7 @@ Reports Page (Sales Report Template) - v26.09
 
 COMPONENTS:
 - Tabs (comp-m4): Quick date ranges
-- SelectDate (comp-m4): Date range
+- DatePicker (comp-m4): Date range
 - TinySelect (comp-m2): Region and group by
 - CheckBox (comp-m3): Compare with the previous period
 - SmartButton (comp-m4) + ContextMenu (comp-m4): Export menu
@@ -451,7 +451,7 @@ const ReportsPage = function(params = {}) {
         endGroup();
     };
 
-    // Dark style for SelectDate
+    // Dark style for DatePicker
     const DATE_STYLE = {
         field: { color: FIELD_COLOR, border: 1, borderColor: CARD_BORDER_COLOR, round: 8 },
         fieldHover: { borderColor: Ink(0.3) },
@@ -480,9 +480,9 @@ const ReportsPage = function(params = {}) {
             border: 1,
             borderColor: CARD_BORDER_COLOR,
             round: 8,
-            labelBoldFont: 0,
+            labelBold: 0,
             labelTextColor: Ink(0.9),
-            arrowIcon: LIB_PATH + "comp/tiny-select/arrow.svg",
+            arrowIconFile: LIB_PATH + "comp/tiny-select/arrow.svg",
             arrowSize: 18,
             invertIconColor: T.invertIcon,
             listFontSize: 14,
@@ -490,7 +490,7 @@ const ReportsPage = function(params = {}) {
             listOverTextColor: ACCENT_COLOR,
             listBackgroundColor: FIELD_COLOR,
             listBorderColor: Ink(0.15),
-            onSelect: onSelect,
+            onChange: function (self) { onSelect(self.selectedIndex, self.getSelectedItem().id); },
         });
 
         return select;
@@ -620,7 +620,7 @@ const ReportsPage = function(params = {}) {
 
                 startField("From");
 
-                    fromDate = SelectDate({
+                    fromDate = DatePicker({
                         width: 150,
                         height: 40,
                         format: "DD MMM YYYY",
@@ -641,7 +641,7 @@ const ReportsPage = function(params = {}) {
 
                 startField("To");
 
-                    toDate = SelectDate({
+                    toDate = DatePicker({
                         width: 150,
                         height: 40,
                         format: "DD MMM YYYY",
@@ -728,7 +728,7 @@ const ReportsPage = function(params = {}) {
 
             const params = {
                 height: 100,
-                title: kpi.title,
+                titleText: kpi.title,
                 valueText: "",
                 iconFile: "",
                 style: {
@@ -921,7 +921,7 @@ const ReportsPage = function(params = {}) {
                         placeholderColor: Ink(0.4),
                         searchIconSize: 15,
                         searchIconOpacity: 0.55,
-                        placeholderText: "Filter (Ex: Books, 2026-09)",
+                        placeholder: "Filter (Ex: Books, 2026-09)",
                         fontSize: 14,
                         invertIconColor: T.invertIcon,
                         searchIconFile: LIB_PATH + "comp/search-input/filter.png",

@@ -28,10 +28,10 @@ const EditUser = function(params = {}) {
     const fillForm = function (itemData) {
 
         selectedId = itemData.id;
-        inputId.setInputValue(String(itemData.id));
-        inputName.setInputValue(itemData.name);
-        inputEmail.setInputValue(itemData.email);
-        inputActive.setInputValue(String(itemData.active));
+        inputId.setValue(String(itemData.id));
+        inputName.setValue(itemData.name);
+        inputEmail.setValue(itemData.email);
+        inputActive.setValue(String(itemData.active));
         toggleActive.setValue(itemData.active);
         //lblStatus.text = "Selected ID: " + itemData.id;
         btnEdit.enabled = 1;
@@ -44,10 +44,10 @@ const EditUser = function(params = {}) {
     const clearForm = function () {
 
         selectedId = null;
-        inputId.setInputValue("");
-        inputName.setInputValue("");
-        inputEmail.setInputValue("");
-        inputActive.setInputValue("");
+        inputId.setValue("");
+        inputName.setValue("");
+        inputEmail.setValue("");
+        inputActive.setValue("");
         toggleActive.setValue(0);
         //lblStatus.text = "No record selected";
         btnEdit.enabled = 0;
@@ -66,20 +66,20 @@ const EditUser = function(params = {}) {
             border: 1,
             borderColor: Black(0.05),
             round: 4,
-            createDescription: 0,
+            showDescription: 0,
             backgroundColor: "#F6F6F6",
-            selectedBackgroundColor: "#FFFFFF",
+            focusBackgroundColor: "#FFFFFF",
             lineColor: "transparent",
-            selectedLineColor: T.accent,
+            focusLineColor: T.accent,
             //backgroundColor: "transparent",
-            //selectedBackgroundColor: "transparent", // "#F1E2C4", "#F4FAFF",
+            //focusBackgroundColor: "transparent", // "#F1E2C4", "#F4FAFF",
             //lineColor: "transparent",
-            //selectedLineColor: "transparent", // "#F1E2C4", "#588ABE",
-            createLeftBox: 0,
-            createRightBox: 0,
-            createUnit: 0,
-            inputValue: "",
-            maxChar: 100,
+            //focusLineColor: "transparent", // "#F1E2C4", "#588ABE",
+            showLeftBox: 0,
+            showRightBox: 0,
+            showUnit: 0,
+            value: "",
+            maxLength: 100,
             position: "relative",
         };
 
@@ -93,7 +93,7 @@ const EditUser = function(params = {}) {
         };
 
         // ID (read-only)
-        inputId = InputB({
+        inputId = TextField({
             key: "id",
             ...inputStyle,
             titleText: "ID",
@@ -105,7 +105,7 @@ const EditUser = function(params = {}) {
         inputId.input.enabled = 0;
 
         // Name
-        inputName = InputB({
+        inputName = TextField({
             key: "name",
             ...inputStyle,
             titleText: "NAME",
@@ -115,10 +115,10 @@ const EditUser = function(params = {}) {
         box.grpContent.add(that);
 
         // Email
-        inputEmail = EmailInputB({
+        inputEmail = EmailField({
             key: "email",
             ...inputStyle,
-            isRequired: 0,
+            required: 0,
             titleText: "EMAIL",
             placeholder: "Enter email",
             warningText: "Invalid email format",
@@ -128,12 +128,12 @@ const EditUser = function(params = {}) {
         box.grpContent.add(that);
 
         // Active
-        inputActive = NumberInputB({
+        inputActive = NumberField({
             key: "active",
             ...inputStyle,
             titleText: "ACTIVE",
             placeholder: "1 or 0",
-            maxChar: 1,
+            maxLength: 1,
             allowNegative: 0,
             allowDecimal: 0,
         });
@@ -142,10 +142,10 @@ const EditUser = function(params = {}) {
         that.visible = 0;
 
         // 0 or whatever enter just write 1
-        inputActive.onEdit = function () {
+        inputActive.onChange = function () {
 
-            const value = inputActive.getInputValue();
-            if (!(value == 1 || value == 0)) inputActive.setInputValue("1");
+            const value = inputActive.getValue();
+            if (!(value == 1 || value == 0)) inputActive.setValue("1");
             
         }
 
@@ -247,15 +247,15 @@ const EditUser = function(params = {}) {
         that.on("click", function () {
 
             // WHY: an empty name or a wrong e-mail was saved
-            const name = String(inputName.getInputValue() || "").trim();
-            const email = String(inputEmail.getInputValue() || "").trim();
+            const name = String(inputName.getValue() || "").trim();
+            const email = String(inputEmail.getValue() || "").trim();
             const isEmailValid = UserListPage.isEmail(email);
             inputEmail.showWarningIfNotValid(isEmailValid);
             if (!name || !isEmailValid) return;
 
             box.itemData.name = name;
             box.itemData.email = email;
-            //box.itemData.active = parseInt(inputActive.getInputValue()) || 0;
+            //box.itemData.active = parseInt(inputActive.getValue()) || 0;
             box.itemData.active = toggleActive.value || 0;
             box.onSave(box.itemData);
 

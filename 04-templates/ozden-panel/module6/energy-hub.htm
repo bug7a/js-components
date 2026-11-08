@@ -535,7 +535,7 @@
         };
 
         // range: { minValue, maxValue, step }: the real values of the setting (no converter)
-        const createSlider = function (width, color, range, onDragMove, onDragEnd) {
+        const createSlider = function (width, color, range, onMove, onMoveEnd) {
             const slider = Slider({
                 width: width,
                 styleName: T.sliderStyle,
@@ -546,8 +546,8 @@
                 step: range.step,
                 showValueOnSet: 0,
                 showValueOnDrag: 0, // WHY: the value is shown in a label.
-                onDragMove: onDragMove,
-                onDragEnd: onDragEnd,
+                onChange: function (self) { onMove(self.value); },
+                onChangeEnd: onMoveEnd,
             });
             return slider;
         };
@@ -774,7 +774,7 @@
 
                     const kpiBox = SparkLineBox({
                         height: 100,
-                        title: kpi.title,
+                        titleText: kpi.title,
                         valueText: "",
                         iconFile: ASSETS + kpi.iconFile,
                         lineColor: kpi.lineColor,
@@ -990,9 +990,9 @@
                                 border: 1,
                                 borderColor: CARD_BORDER_COLOR,
                                 round: 8,
-                                labelBoldFont: 0,
+                                labelBold: 0,
                                 labelTextColor: Ink(0.9),
-                                arrowIcon: LIB_PATH + "comp/tiny-select/arrow.svg",
+                                arrowIconFile: LIB_PATH + "comp/tiny-select/arrow.svg",
                                 arrowSize: 16,
                                 invertIconColor: T.invertIcon,
                                 listFontSize: 14,
@@ -1000,7 +1000,8 @@
                                 listOverTextColor: ACCENT_COLOR,
                                 listBackgroundColor: FIELD_COLOR,
                                 listBorderColor: Ink(0.15),
-                                onSelect: function (index, id) {
+                                onChange: function (self) {
+                                    const id = self.getSelectedItem().id;
                                     if (!isReady || isRendering || Number(id) == system.ev.targetSoc) return;
                                     system.ev.targetSoc = Number(id);
                                     addEvent("Info", "EV target charge set to " + id + "%");

@@ -130,10 +130,10 @@
         const fillTestData = function() {
 
             // TEST DATA: Fill the user data
-            loginPage.loginEmail.setInputValue("bugra.ozden@gmail.com");
-            loginPage.loginPassword.setInputValue("123456");
+            loginPage.loginEmail.setValue("bugra.ozden@gmail.com");
+            loginPage.loginPassword.setValue("123456");
             // Call manuel to check form with out edit
-            loginPage.loginEmail.onEdit();
+            loginPage.loginEmail.onChange();
 
         };
 
@@ -149,8 +149,8 @@
                 showPasswordIconFile: "../../comp/password-field/show-btn.png",
                 hidePasswordIconFile: "../../comp/password-field/hide-btn.png",
                 signupPasswordParams: {
-                    minChar: 8,
-                    minCharWarningText: "Password must be at least 8 characters",
+                    minLength: 8,
+                    minLengthWarningText: "Password must be at least 8 characters",
                     mustUseNumber: 1,
                     mustUseLetter: 1,
                     mustUseUppercase: 0,
@@ -541,8 +541,8 @@
         // Actions
         const onLoginClick = function() {
 
-            const email = loginPage.loginEmail.getInputValue();
-            const password = loginPage.loginPassword.getInputValue();
+            const email = loginPage.loginEmail.getValue();
+            const password = loginPage.loginPassword.getValue();
 
             if (!email || !password) { loginPage.showAlert("Please enter email and password"); return; }
 
@@ -580,9 +580,9 @@
 
         const onSignupClick = function() {
 
-            const email = loginPage.signupEmail.getInputValue();
-            const p1 = loginPage.signupPassword.getInputValue();
-            const p2 = loginPage.signupPassword2.getInputValue();
+            const email = loginPage.signupEmail.getValue();
+            const p1 = loginPage.signupPassword.getValue();
+            const p2 = loginPage.signupPassword2.getValue();
 
             if (!email || !p1 || !p2) { loginPage.showAlert("Please fill all fields"); return; }
             if (p1 !== p2) { loginPage.showAlert("Passwords do not match"); return; }
@@ -590,9 +590,9 @@
             const onSuccess = function() {
 
                 loginPage.showAlert("Sign up successful. Check your email to confirm.", "#5DB182");
-                loginPage.signupPassword.setInputValue("");
-                loginPage.signupPassword2.setInputValue("");
-                loginPage.loginEmail.setInputValue(loginPage.signupEmail.getInputValue());
+                loginPage.signupPassword.setValue("");
+                loginPage.signupPassword2.setValue("");
+                loginPage.loginEmail.setValue(loginPage.signupEmail.getValue());
                 loginPage.setActiveTab(0); // (it also selects the tab on the tab bar)
 
             };

@@ -263,7 +263,7 @@ const UsersPage = function(params = {}) {
                 placeholderColor: Ink(0.4),
                 searchIconSize: 15,
                 searchIconOpacity: 0.55,
-                placeholderText: "Filter the table",
+                placeholder: "Filter the table",
                 fontSize: 15,
                 invertIconColor: T.invertIcon,
                 searchIconFile: "../../comp/search-input/filter.png",

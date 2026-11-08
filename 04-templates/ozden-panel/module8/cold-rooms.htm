@@ -529,7 +529,7 @@
 
         };
 
-        // Dark style for SelectTime and SelectDate
+        // Dark style for TimePicker and DatePicker
         const PICKER_STYLE = {
             field: { color: FIELD_COLOR, border: 1, borderColor: CARD_BORDER_COLOR, round: 8 },
             fieldHover: { borderColor: Ink(0.3) },
@@ -573,7 +573,7 @@
                     endGroup();
 
                     deviceSelect = TinySelect({
-                        title: "Device",
+                        titleText: "Device",
                         list: DEVICES.map(function (d) { return { id: d.id, label: d.name }; }),
                         height: 40,
                         fontSize: 15,
@@ -582,7 +582,7 @@
                         borderColor: CARD_BORDER_COLOR,
                         round: 8,
                         labelTextColor: Ink(0.95),
-                        arrowIcon: LIB_PATH + "comp/tiny-select/arrow.svg",
+                        arrowIconFile: LIB_PATH + "comp/tiny-select/arrow.svg",
                         arrowSize: 20,
                         invertIconColor: T.invertIcon,
                         listFontSize: 15,
@@ -590,7 +590,8 @@
                         listOverTextColor: ACCENT_COLOR,
                         listBackgroundColor: FIELD_COLOR,
                         listBorderColor: Ink(0.15),
-                        onSelect: function (index) {
+                        onChange: function (self) {
+                            const index = self.selectedIndex;
                             if (isReady) selectDevice(index);
                         },
                     });
@@ -662,7 +663,7 @@
 
                     const kpiBox = SparkLineBox({
                         height: 100,
-                        title: kpi.title,
+                        titleText: kpi.title,
                         valueText: "",
                         iconFile: ASSETS + kpi.iconFile,
                         lineColor: kpi.lineColor,
@@ -877,10 +878,11 @@
                             maxValue: TARGET_MAX,
                             showValueOnSet: 0,
                             showValueOnDrag: 0, // WHY: the value is shown in lblTarget.
-                            onDragMove: function (value) {
+                            onChange: function (self) {
+                                const value = self.value;
                                 lblTarget.text = value + " °C";
                             },
-                            onDragEnd: function () {
+                            onChangeEnd: function () {
                                 const target = sliderTarget.getValue();
                                 if (target == device.target) return;
                                 device.target = target;
@@ -899,7 +901,7 @@
 
                             createSmallTitle("Daily defrost");
 
-                            selectDefrostTime = SelectTime({
+                            selectDefrostTime = TimePicker({
                                 width: 130,
                                 height: 40,
                                 minuteStep: 15,
@@ -923,7 +925,7 @@
 
                             createSmallTitle("Next maintenance");
 
-                            selectMaintenanceDate = SelectDate({
+                            selectMaintenanceDate = DatePicker({
                                 width: 170,
                                 height: 40,
                                 minDate: new Date(),

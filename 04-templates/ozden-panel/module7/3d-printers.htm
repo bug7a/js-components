@@ -430,7 +430,7 @@
         };
 
         // range: { minValue, maxValue, step }: the real values of the setting (no converter)
-        const createSlider = function (color, range, onDragMove, onDragEnd) {
+        const createSlider = function (color, range, onMove, onMoveEnd) {
             return Slider({
                 width: 250,
                 styleName: T.sliderStyle,
@@ -441,8 +441,8 @@
                 step: range.step,
                 showValueOnSet: 0,
                 showValueOnDrag: 0, // WHY: the value is shown in a label.
-                onDragMove: onDragMove,
-                onDragEnd: onDragEnd,
+                onChange: function (self) { onMove(self.value); },
+                onChangeEnd: onMoveEnd,
             });
         };
 
@@ -455,9 +455,9 @@
                 border: 1,
                 borderColor: CARD_BORDER_COLOR,
                 round: 8,
-                labelBoldFont: 0,
+                labelBold: 0,
                 labelTextColor: Ink(0.9),
-                arrowIcon: LIB_PATH + "comp/tiny-select/arrow.svg",
+                arrowIconFile: LIB_PATH + "comp/tiny-select/arrow.svg",
                 arrowSize: 18,
                 invertIconColor: T.invertIcon,
                 listFontSize: 14,
@@ -465,7 +465,9 @@
                 listOverTextColor: ACCENT_COLOR,
                 listBackgroundColor: FIELD_COLOR,
                 listBorderColor: Ink(0.15),
-                onSelect: function (index, id) {
+                onChange: function (self) {
+                    const index = self.selectedIndex;
+                    const id = self.getSelectedItem().id;
                     if (isReady && !isRendering) onSelect(index, id);
                 },
             });

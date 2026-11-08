@@ -16,9 +16,9 @@ COMPONENTS:
 - MiniGraphBox (comp-m4): Summary (bars: one value per category, not a time series)
 - Tabs (comp-m4), SearchInput, TinySelect (comp-m2): Filters
 - SmartTable (comp-m3): Product list (custom thumbnail cell)
-- InputB, NumberInputB (comp-m2): Editor fields
+- TextField, NumberField (comp-m2): Editor fields
 - RadioButton, CheckBox (comp-m3): Status, stock settings
-- SelectFile (comp-m4): Images
+- FilePicker (comp-m4): Images
 - SmartButton (comp-m4), HoldToConfirmButton (comp-m3): Actions
 - LoadingScreen (comp-m4; waiting): Saving
 
@@ -253,7 +253,7 @@ const ProductsPage = function(params = {}) {
                 // WHY: MiniGraphBox (bars), not SparkLineBox: every bar is a category, not a point in time.
                 const kpiBox = MiniGraphBox({
                     height: 96,
-                    title: kpi.title,
+                    titleText: kpi.title,
                     valueText: "",
                     iconFile: "",
                     barColor: kpi.barColor,
@@ -333,11 +333,12 @@ const ProductsPage = function(params = {}) {
                     textColor: Ink(0.9),
                     fontSize: 14,
                     searchIconSize: 16,
-                    placeholderText: "Name or SKU",
+                    placeholder: "Name or SKU",
                     invertIconColor: T.invertIcon,
                     searchIconFile: LIB_PATH + "comp/search-input/search.svg",
                     clearIconFile: LIB_PATH + "comp/search-input/clear.svg",
-                    onSearch: function(text) {
+                    onChange: function(self) {
+                        const text = self.getSearchText();
                         filter.search = text;
                         searchTimer = waitAndRun(searchTimer, render, 150);
                     },
@@ -580,7 +581,7 @@ const ProductEditor = function(params = {}) {
     // *** PRIVATE FUNCTIONS:
 
     const toNumber = function(input) {
-        const text = input.getInputValue().trim();
+        const text = input.getValue().trim();
         return (text === "") ? null : Number(text);
     };
 
@@ -617,7 +618,7 @@ const ProductEditor = function(params = {}) {
     };
 
     const setStock = function(value) {
-        inputStock.setInputValue(String(Math.max(0, value)));
+        inputStock.setValue(String(Math.max(0, value)));
         draft.stock = Math.max(0, value);
         updateStockInfo();
     };
@@ -631,26 +632,26 @@ const ProductEditor = function(params = {}) {
         return group;
     };
 
-    // Dark style for InputB and NumberInputB
+    // Dark style for TextField and NumberField
     const createInput = function(Component, params) {
         const input = Component({
             width: "100%",
             leftPadding: 14,
             rightPadding: 36,
             backgroundColor: S.FIELD_COLOR,
-            selectedBackgroundColor: T.surface3,
+            focusBackgroundColor: T.surface3,
             lineColor: "transparent",
-            selectedLineColor: "transparent",
+            focusLineColor: "transparent",
             backBorderColor: S.CARD_BORDER_COLOR,
-            selectedBackBorderColor: S.ACCENT_COLOR,
+            focusBackBorderColor: S.ACCENT_COLOR,
             backBorderTopRound: 8,
             backBorderBottomRound: 8,
             requiredColor: S.ERROR_COLOR,
             warningColor: S.ERROR_COLOR,
-            isRequired: 0,
+            required: 0,
             ...params,
         });
-        // WHY: InputB has fixed text colors for light backgrounds.
+        // WHY: TextField has fixed text colors for light backgrounds.
         input.title.textColor = Ink(0.45);
         input.title.fontSize = 11;
         input.title.elem.style.letterSpacing = "1px";
@@ -715,25 +716,25 @@ const ProductEditor = function(params = {}) {
             // PRODUCT
             startSection("Product");
 
-                inputName = createInput(InputB, {
+                inputName = createInput(TextField, {
                     titleText: "NAME",
-                    inputValue: draft.name, // WHY: Created with the value, so a required warning ball is not left on the screen.
+                    value: draft.name, // WHY: Created with the value, so a required warning ball is not left on the screen.
                     placeholder: "Ex: Wireless Headphones",
-                    maxChar: 80,
-                    onEdit: function() { draft.name = inputName.getInputValue(); },
+                    maxLength: 80,
+                    onChange: function() { draft.name = inputName.getValue(); },
                 });
 
                 startRow();
 
-                    inputSku = createInput(InputB, {
+                    inputSku = createInput(TextField, {
                         titleText: "SKU",
-                        inputValue: draft.sku,
+                        value: draft.sku,
                         placeholder: "HP-BLK-01",
-                        maxChar: 30,
-                        onEdit: function() {
+                        maxLength: 30,
+                        onChange: function() {
                             // Capital letters, numbers and "-"
-                            const value = inputSku.getInputValue().toUpperCase().replace(/[^A-Z0-9-]/g, "");
-                            if (value != inputSku.getInputValue()) inputSku.setInputValue(value);
+                            const value = inputSku.getValue().toUpperCase().replace(/[^A-Z0-9-]/g, "");
+                            if (value != inputSku.getValue()) inputSku.setValue(value);
                             draft.sku = value;
                         },
                     });
@@ -753,12 +754,12 @@ const ProductEditor = function(params = {}) {
 
                 endGroup();
 
-                inputDescription = createInput(InputB, {
+                inputDescription = createInput(TextField, {
                     titleText: "SHORT DESCRIPTION",
-                    inputValue: draft.description,
+                    value: draft.description,
                     placeholder: "One line for the product list (optional)",
-                    maxChar: 120,
-                    onEdit: function() { draft.description = inputDescription.getInputValue(); },
+                    maxLength: 120,
+                    onChange: function() { draft.description = inputDescription.getValue(); },
                 });
 
                 Label({ text: "STATUS", fontSize: 11, textColor: Ink(0.45) });
@@ -794,30 +795,30 @@ const ProductEditor = function(params = {}) {
 
                 startRow();
 
-                    inputPrice = createInput(NumberInputB, {
+                    inputPrice = createInput(NumberField, {
                         titleText: "PRICE ($)",
-                        inputValue: (draft.price) ? String(draft.price) : "",
+                        value: (draft.price) ? String(draft.price) : "",
                         placeholder: "0.00",
                         allowNegative: 0,
-                        onEdit: function() { draft.price = toNumber(inputPrice) || 0; updatePriceInfo(); },
+                        onChange: function() { draft.price = toNumber(inputPrice) || 0; updatePriceInfo(); },
                     });
                     flex(inputPrice);
 
-                    inputCompare = createInput(NumberInputB, {
+                    inputCompare = createInput(NumberField, {
                         titleText: "COMPARE-AT ($)",
-                        inputValue: (draft.compareAtPrice !== null) ? String(draft.compareAtPrice) : "",
+                        value: (draft.compareAtPrice !== null) ? String(draft.compareAtPrice) : "",
                         placeholder: "Old price",
                         allowNegative: 0,
-                        onEdit: function() { draft.compareAtPrice = toNumber(inputCompare); updatePriceInfo(); },
+                        onChange: function() { draft.compareAtPrice = toNumber(inputCompare); updatePriceInfo(); },
                     });
                     flex(inputCompare);
 
-                    inputCost = createInput(NumberInputB, {
+                    inputCost = createInput(NumberField, {
                         titleText: "COST ($)",
-                        inputValue: (draft.cost !== null) ? String(draft.cost) : "",
+                        value: (draft.cost !== null) ? String(draft.cost) : "",
                         placeholder: "Not shown",
                         allowNegative: 0,
-                        onEdit: function() { draft.cost = toNumber(inputCost); updatePriceInfo(); },
+                        onChange: function() { draft.cost = toNumber(inputCost); updatePriceInfo(); },
                     });
                     flex(inputCost);
 
@@ -832,23 +833,23 @@ const ProductEditor = function(params = {}) {
 
                 startRow();
 
-                    inputStock = createInput(NumberInputB, {
+                    inputStock = createInput(NumberField, {
                         titleText: "IN STOCK",
-                        inputValue: String(draft.stock),
+                        value: String(draft.stock),
                         placeholder: "0",
                         allowNegative: 0,
                         allowDecimal: 0,
-                        onEdit: function() { draft.stock = toNumber(inputStock) || 0; updateStockInfo(); },
+                        onChange: function() { draft.stock = toNumber(inputStock) || 0; updateStockInfo(); },
                     });
                     flex(inputStock);
 
-                    inputLowLimit = createInput(NumberInputB, {
+                    inputLowLimit = createInput(NumberField, {
                         titleText: "LOW STOCK AT",
-                        inputValue: String(draft.lowStockLimit),
+                        value: String(draft.lowStockLimit),
                         placeholder: "5",
                         allowNegative: 0,
                         allowDecimal: 0,
-                        onEdit: function() { draft.lowStockLimit = toNumber(inputLowLimit) || 0; updateStockInfo(); },
+                        onChange: function() { draft.lowStockLimit = toNumber(inputLowLimit) || 0; updateStockInfo(); },
                     });
                     flex(inputLowLimit);
 
@@ -898,7 +899,7 @@ const ProductEditor = function(params = {}) {
                     endGroup();
                 }
 
-                imageFile = SelectFile({
+                imageFile = FilePicker({
                     width: "100%",
                     multiple: 1,
                     maxFiles: 6,
@@ -1098,9 +1099,9 @@ ProductsPage.createTinySelect = function(list, onSelect, selectedIndex = 0) {
         border: 1,
         borderColor: S.CARD_BORDER_COLOR,
         round: 8,
-        labelBoldFont: 0,
+        labelBold: 0,
         labelTextColor: Ink(0.9),
-        arrowIcon: "../../comp/tiny-select/arrow.svg",
+        arrowIconFile: "../../comp/tiny-select/arrow.svg",
         arrowSize: 18,
         invertIconColor: T.invertIcon,
         listFontSize: 14,
@@ -1108,7 +1109,8 @@ ProductsPage.createTinySelect = function(list, onSelect, selectedIndex = 0) {
         listOverTextColor: S.ACCENT_COLOR,
         listBackgroundColor: S.FIELD_COLOR,
         listBorderColor: Ink(0.15),
-        onSelect: function(index, id) {
+        onChange: function(self) {
+            const id = self.getSelectedItem().id;
             if (isReady) onSelect(id);
         },
     });
@@ -1129,7 +1131,7 @@ ProductsPage.getSmartTableStyle = function(libPath) {
             width: "50%", height: 34, border: 1, round: 8, color: S.FIELD_COLOR, borderColor: S.CARD_BORDER_COLOR,
             borderBottomStyle: "1px solid " + S.CARD_BORDER_COLOR,
             textColor: Ink(0.9), placeholderColor: Ink(0.4), fontSize: 14,
-            placeholderText: "Filter the table",
+            placeholder: "Filter the table",
             searchIconSize: 15, searchIconOpacity: 0.55, invertIconColor: T.invertIcon,
             searchIconFile: libPath + "comp/search-input/filter.png",
             clearIconFile: libPath + "comp/search-input/clear.svg",

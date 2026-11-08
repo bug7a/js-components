@@ -16,7 +16,7 @@ Roles & Permissions Page (Template) - v26.09
 
 COMPONENTS:
 - SmartButton (comp-m4): Role list, actions
-- InputB (comp-m2): Role name and description
+- TextField (comp-m2): Role name and description
 - Tabs (comp-m4): Permissions / Members
 - CheckBox (comp-m3): Permission matrix
 - TinySelect (comp-m2): Add a member
@@ -322,8 +322,8 @@ const RolesPage = function(params = {}) {
     const renderRoleHeader = function() {
 
         isRendering = 1;
-        inputName.setInputValue(draft.name);
-        inputDescription.setInputValue(draft.description);
+        inputName.setValue(draft.name);
+        inputDescription.setValue(draft.description);
         isRendering = 0;
 
         const canDelete = !draft.isSystem;
@@ -646,25 +646,25 @@ const RolesPage = function(params = {}) {
         return btn;
     };
 
-    // Dark style for InputB
+    // Dark style for TextField
     const createInput = function(params) {
-        const input = InputB({
+        const input = TextField({
             width: "100%",
             leftPadding: 14,
             rightPadding: 36,
             backgroundColor: FIELD_COLOR,
-            selectedBackgroundColor: T.surface3,
+            focusBackgroundColor: T.surface3,
             lineColor: "transparent",
-            selectedLineColor: "transparent",
+            focusLineColor: "transparent",
             backBorderColor: CARD_BORDER_COLOR,
-            selectedBackBorderColor: ACCENT_COLOR,
+            focusBackBorderColor: ACCENT_COLOR,
             backBorderTopRound: 8,
             backBorderBottomRound: 8,
             requiredColor: ERROR_COLOR,
             warningColor: ERROR_COLOR,
             ...params,
         });
-        // WHY: InputB has fixed text colors for light backgrounds.
+        // WHY: TextField has fixed text colors for light backgrounds.
         input.title.textColor = Ink(0.45);
         input.title.fontSize = 11;
         input.title.elem.style.letterSpacing = "1px";
@@ -744,10 +744,10 @@ const RolesPage = function(params = {}) {
                 inputName = createInput({
                     titleText: "ROLE NAME",
                     placeholder: "Ex: Editor",
-                    maxChar: 40,
-                    onEdit: function() {
+                    maxLength: 40,
+                    onChange: function() {
                         if (isRendering) return;
-                        draft.name = inputName.getInputValue();
+                        draft.name = inputName.getValue();
                         updateFooter();
                     },
                 });
@@ -764,10 +764,10 @@ const RolesPage = function(params = {}) {
             inputDescription = createInput({
                 titleText: "DESCRIPTION",
                 placeholder: "What is this role for? (Optional)",
-                maxChar: 120,
-                onEdit: function() {
+                maxLength: 120,
+                onChange: function() {
                     if (isRendering) return;
-                    draft.description = inputDescription.getInputValue();
+                    draft.description = inputDescription.getValue();
                     updateFooter();
                 },
             });
@@ -865,11 +865,12 @@ const RolesPage = function(params = {}) {
                     textColor: Ink(0.9),
                     fontSize: 14,
                     searchIconSize: 16,
-                    placeholderText: "Search members",
+                    placeholder: "Search members",
                     invertIconColor: T.invertIcon,
                     searchIconFile: LIB_PATH + "comp/search-input/search.svg",
                     clearIconFile: LIB_PATH + "comp/search-input/clear.svg",
-                    onSearch: function(text) {
+                    onChange: function(self) {
+                        const text = self.getSearchText();
                         memberSearch = text;
                         renderMembers();
                     },
@@ -889,9 +890,9 @@ const RolesPage = function(params = {}) {
                     border: 1,
                     borderColor: CARD_BORDER_COLOR,
                     round: 8,
-                    labelBoldFont: 0,
+                    labelBold: 0,
                     labelTextColor: Ink(0.9),
-                    arrowIcon: LIB_PATH + "comp/tiny-select/arrow.svg",
+                    arrowIconFile: LIB_PATH + "comp/tiny-select/arrow.svg",
                     arrowSize: 18,
                     invertIconColor: T.invertIcon,
                     listFontSize: 14,
@@ -899,7 +900,8 @@ const RolesPage = function(params = {}) {
                     listOverTextColor: ACCENT_COLOR,
                     listBackgroundColor: FIELD_COLOR,
                     listBorderColor: Ink(0.15),
-                    onSelect: function(index, id) {
+                    onChange: function(self) {
+                        const id = self.getSelectedItem().id;
                         if (isRendering || !id || !draft) return;
                         draft.memberIds.push(Number(id));
                         renderMembers();

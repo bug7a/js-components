@@ -34,7 +34,7 @@ const ModulePage = function(params = {}) {
             width: "100%",
             height: "100%",
             url: box.moduleURL,
-            title: box.pageKey || "Module",
+            ariaLabel: box.pageKey || "Module",
             showLoading: 0,
             style: { box: { color: "transparent", border: 0, round: 0 } },
         });

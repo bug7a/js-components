@@ -563,7 +563,7 @@
         };
 
         // range: { minValue, maxValue, step }: the real values of the setting (no converter)
-        const createSlider = function (color, range, onDragMove, onDragEnd) {
+        const createSlider = function (color, range, onMove, onMoveEnd) {
             return Slider({
                 width: 250,
                 styleName: T.sliderStyle,
@@ -574,8 +574,8 @@
                 step: range.step,
                 showValueOnSet: 0,
                 showValueOnDrag: 0, // WHY: the value is shown in a label.
-                onDragMove: onDragMove,
-                onDragEnd: onDragEnd,
+                onChange: function (self) { onMove(self.value); },
+                onChangeEnd: onMoveEnd,
             });
         };
 
@@ -596,7 +596,7 @@
             label: { fontSize: 13, textColor: Ink(0.75) },
         };
 
-        // Dark style for SelectDate
+        // Dark style for DatePicker
         const PICKER_STYLE = {
             field: { color: FIELD_COLOR, border: 1, borderColor: CARD_BORDER_COLOR, round: 8 },
             fieldHover: { borderColor: Ink(0.3) },
@@ -634,7 +634,7 @@
                     endGroup();
 
                     carSelect = TinySelect({
-                        title: "Car",
+                        titleText: "Car",
                         list: CARS.map(function (c) { return { id: c.id, label: c.name }; }),
                         height: 40,
                         fontSize: 15,
@@ -643,7 +643,7 @@
                         borderColor: CARD_BORDER_COLOR,
                         round: 8,
                         labelTextColor: Ink(0.95),
-                        arrowIcon: LIB_PATH + "comp/tiny-select/arrow.svg",
+                        arrowIconFile: LIB_PATH + "comp/tiny-select/arrow.svg",
                         arrowSize: 20,
                         invertIconColor: T.invertIcon,
                         listFontSize: 15,
@@ -651,7 +651,7 @@
                         listOverTextColor: ACCENT_COLOR,
                         listBackgroundColor: FIELD_COLOR,
                         listBorderColor: Ink(0.15),
-                        onSelect: function (index) { if (isReady) selectCar(index); },
+                        onChange: function (self) { if (isReady) selectCar(self.selectedIndex); },
                     });
                     carSelect.lblTitle.textColor = Ink(0.5);
 
@@ -763,7 +763,7 @@
                 KPI_LIST.forEach(function (kpi) {
                     const kpiBox = SparkLineBox({
                         height: 100,
-                        title: kpi.title,
+                        titleText: kpi.title,
                         valueText: "",
                         iconFile: ASSETS + kpi.iconFile,
                         lineColor: kpi.lineColor,
@@ -1430,7 +1430,7 @@
                 that.elem.style.borderTop = "1px solid " + Ink(0.06);
                 that.elem.style.justifyContent = "space-between";
                     Label({ text: "Next inspection", fontSize: 14, textColor: Ink(0.5) });
-                    selectNextInspection = SelectDate({
+                    selectNextInspection = DatePicker({
                         width: 150, height: 36, format: "DD MMM YYYY",
                         date: c.inspection.next, minDate: new Date(),
                         showClearButton: 0, style: PICKER_STYLE,

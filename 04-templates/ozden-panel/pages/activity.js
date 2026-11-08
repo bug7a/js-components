@@ -291,9 +291,9 @@ const ActivityPage = function(params = {}) {
             border: 1,
             borderColor: S.CARD_BORDER_COLOR,
             round: 8,
-            labelBoldFont: 0,
+            labelBold: 0,
             labelTextColor: Ink(0.9),
-            arrowIcon: LIB_PATH + "comp/tiny-select/arrow.svg",
+            arrowIconFile: LIB_PATH + "comp/tiny-select/arrow.svg",
             arrowSize: 18,
             invertIconColor: T.invertIcon,
             listFontSize: 14,
@@ -301,7 +301,8 @@ const ActivityPage = function(params = {}) {
             listOverTextColor: S.ACCENT_COLOR,
             listBackgroundColor: S.FIELD_COLOR,
             listBorderColor: Ink(0.15),
-            onSelect: function(index, id) {
+            onChange: function(self) {
+                const id = self.getSelectedItem().id;
                 if (isRendering || !smartTable) return; // Called on create
                 onSelect(id);
             },
@@ -427,11 +428,12 @@ const ActivityPage = function(params = {}) {
                     textColor: Ink(0.9),
                     fontSize: 14,
                     searchIconSize: 16,
-                    placeholderText: "Search user, target, IP",
+                    placeholder: "Search user, target, IP",
                     invertIconColor: T.invertIcon,
                     searchIconFile: LIB_PATH + "comp/search-input/search.svg",
                     clearIconFile: LIB_PATH + "comp/search-input/clear.svg",
-                    onSearch: function(text) {
+                    onChange: function(self) {
+                        const text = self.getSearchText();
                         filter.search = text;
                         searchTimer = waitAndRun(searchTimer, renderTable, 200); // WHY: Filtering thousands of rows on every key is slow.
                     },
@@ -481,7 +483,7 @@ const ActivityPage = function(params = {}) {
 
                 const kpiBox = SparkLineBox({
                     height: 96,
-                    title: kpi.title,
+                    titleText: kpi.title,
                     valueText: "",
                     iconFile: "",
                     lineColor: kpi.lineColor,
@@ -860,7 +862,7 @@ ActivityPage.getSmartTableStyle = function(libPath) {
             width: "50%", height: 34, border: 1, round: 8, color: S.FIELD_COLOR, borderColor: S.CARD_BORDER_COLOR,
             borderBottomStyle: "1px solid " + S.CARD_BORDER_COLOR,
             textColor: Ink(0.9), placeholderColor: Ink(0.4), fontSize: 14,
-            placeholderText: "Filter the table",
+            placeholder: "Filter the table",
             searchIconSize: 15, searchIconOpacity: 0.55, invertIconColor: T.invertIcon,
             searchIconFile: libPath + "comp/search-input/filter.png",
             clearIconFile: libPath + "comp/search-input/clear.svg",

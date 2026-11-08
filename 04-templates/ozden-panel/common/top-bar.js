@@ -72,10 +72,10 @@ const TopBar = function(params = {}) {
     // WHY: On a narrow screen the search must not fill the top bar. Create, notifications
     //      and profile buttons need space too.
     const SEARCH_SIZES = [
-        { minPageWidth: 1200, width: 260, placeholderText: "Search  (Ctrl K)" },
-        { minPageWidth: 1000, width: 200, placeholderText: "Search  (Ctrl K)" },
-        { minPageWidth: 760, width: 160, placeholderText: "Search" },
-        { minPageWidth: 0, width: 130, placeholderText: "" },
+        { minPageWidth: 1200, width: 260, placeholder: "Search  (Ctrl K)" },
+        { minPageWidth: 1000, width: 200, placeholder: "Search  (Ctrl K)" },
+        { minPageWidth: 760, width: 160, placeholder: "Search" },
+        { minPageWidth: 0, width: 130, placeholder: "" },
     ];
 
     let searchPages = []; // Menu items (setSearchPages)
@@ -231,7 +231,7 @@ const TopBar = function(params = {}) {
         const size = SEARCH_SIZES.find(function(item) { return page.width >= item.minPageWidth; });
         if (!size || box.searchInput.width == size.width) return;
         box.searchInput.width = size.width; // WHY: SearchInput lays its parts out again on resize.
-        box.searchInput.setPlaceholderText(size.placeholderText);
+        box.searchInput.setPlaceholder(size.placeholder);
     };
 
     // *** DIALOGS:
@@ -388,12 +388,12 @@ const TopBar = function(params = {}) {
         // EXAMPLE: How to add a ComboBox on topBar
         // Panel select: opens another panel. Write the URLs into PANELS.
         box.selPanel = TinySelect({
-            title: "",
+            titleText: "",
             label: "",
             fontSize: 14,
             height: 30,
             paddingX: 8,
-            labelBoldFont: 0,
+            labelBold: 0,
             round: 8,
             color: "#141414DD", // "whitesmoke"
             labelTextColor: White(0.8), // WHY: On the colored top bar, not on the page.
@@ -403,11 +403,12 @@ const TopBar = function(params = {}) {
             listBorder: 1,
             listBorderColor: Ink(0.4),
             list: PANELS,
-            arrowIcon: "assets/top-bar/arrow-down.svg",
+            arrowIconFile: "assets/top-bar/arrow-down.svg",
             invertIconColor: 1,
             selectedIndex: 0,
         });
-        that.onSelect = function(index, id) {
+        that.onChange = function(self) {
+            const index = self.selectedIndex;
             if (isRendering) return;
             const panel = PANELS[index];
             if (panel && panel.url) basic.go(panel.url); // USAGE: basic.go(url, "_blank") opens it in a new tab.
@@ -543,14 +544,15 @@ const TopBar = function(params = {}) {
             round: 30,
             fontSize: 14,
             searchIconSize: 18,
-            placeholderText: "Search  (Ctrl K)",
+            placeholder: "Search  (Ctrl K)",
             position: "relative",
             invertIconColor: 1,
             searchIconFile: "assets/top-bar/search.svg",
             clearIconFile: "assets/top-bar/close.svg",
         });
-        box.searchInput.onSearch = function(text) {
-            if (text == searchText) return; // WHY: Arrow keys also call onSearch (keyup).
+        box.searchInput.onChange = function(self) {
+            const text = self.getSearchText();
+            if (text == searchText) return; // WHY: the same text again is not searched again
             searchText = text;
             searchTimer = waitAndRun(searchTimer, showResults, 120);
         };

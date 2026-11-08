@@ -343,7 +343,7 @@ const HomePage = function(params = {}) {
 
         const params = {
             height: 100,
-            title: kpi.title,
+            titleText: kpi.title,
             valueText: "",
             iconFile: ASSETS + kpi.iconFile,
             style: {
