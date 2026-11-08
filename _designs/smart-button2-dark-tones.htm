@@ -24,7 +24,7 @@
         // HOW TO CHOOSE: in basic-designer, give the CHOSEN button of a row the color you like (copy the hex of a
         // candidate, or any other) and the color of its text, then Copy prompt / Send to AI with a note ("bileşene
         // aktar"). The chosen colors go into SmartButton.tones of comp/smart-button.js (cyanDark ... blueDark).
-        // The shape is ozdenType1Dark of SmartButton 2: a white edge of 0.35 and a 2 px white line of 0.2 at its bottom.
+        // The shape is ozdenDark of SmartButton 2: a white edge of 0.35 and a 2 px white line of 0.2 at its bottom.
         // The contrast is the one of the text on the color: 4.5 is enough to read it well.
         // http://127.0.0.1:5505/_basic-designer/index.htm?page=_designs/smart-button2-dark-tones.htm
 
@@ -36,7 +36,7 @@
         const DARK_TEXT = Black(0.75); // SmartButton.DARK_TEXT
         const LIGHT_TEXT = White(0.9); // SmartButton.LIGHT_TEXT (the icon turns white with it)
 
-        // THE SHAPE (ozdenType1Dark of SmartButton.styles in comp/smart-button.js)
+        // THE SHAPE (ozdenDark of SmartButton.styles in comp/smart-button.js)
         const SHAPE = {
             round: 4,
             border: 1,
@@ -49,7 +49,7 @@
         };
         const PRESS = { scale: 0.94, brightness: 0.88 }; // the press of the dark templates
         const DISABLED = { color: "#232322", borderColor: White(0.06), textColor: White(0.28) };
-        const GRAY = { color: "#2E2E2C", hover: "#383835", textColor: White(0.85) }; // ozdenType1Dark with no tone (to compare)
+        const GRAY = { color: "#2E2E2C", hover: "#383835", textColor: White(0.85) }; // ozdenDark with no tone (to compare)
 
         // THE COLORS (one row each). chosen: the tone in the button (45 % of the color over the card, 53 % under the
         // mouse; the user chose these on 2026-11-04). candidates: { color, textColor, from } (from: how it was made,
@@ -160,7 +160,7 @@
                     endGroup();
 
                     // GROUP: The chosen ones together, after the gray dark button
-                    Label({ text: "The chosen ones together (the first one: ozdenType1Dark with no tone)", fontSize: 13, bold: 1, textColor: White(0.6) });
+                    Label({ text: "The chosen ones together (the first one: ozdenDark with no tone)", fontSize: 13, bold: 1, textColor: White(0.6) });
                     HGroup({ width: "auto", height: "auto", align: "left center", gap: 12, padding: [30, 28], color: CARD_COLOR, round: 10, border: 1, borderColor: White(0.08), clipContent: 0 });
                         drawButton({ text: "Cancel", icon: "" }, GRAY, {});
                         TONES.forEach(function (tone) {
@@ -228,7 +228,7 @@
             return cell;
         };
 
-        // GROUP: A button (the ozdenType1Dark shape) in a color and a state
+        // GROUP: A button (the ozdenDark shape) in a color and a state
         const drawButton = function (tone, look, state) {
 
             const button = HGroup({

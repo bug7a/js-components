@@ -369,7 +369,7 @@ App.createButton = function (params = {}) {
 // A button with only an icon (the header, a row of a list)
 App.createIconButton = function (iconPath, ariaLabel, onClick) {
     return SmartButton({
-        styleName: "ozdenType4",
+        styleName: "ozden4",
         labelText: "",
         iconFile: App.makeIcon(iconPath, App.colors.text),
         ariaLabel: ariaLabel,

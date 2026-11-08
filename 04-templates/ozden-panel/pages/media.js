@@ -647,7 +647,7 @@ const MediaPage = function(params = {}) {
 
                 [""].concat(MediaPage.FOLDERS).forEach(function(folder) {
                     folderButtons[folder] = SmartButton({
-                        styleName: "ozdenType4",
+                        styleName: "ozden4",
                         width: "100%",
                         height: 40, // WHY: the height of the fields and the selects of the panel (SmartButton: 44)
                         labelText: folder || "All files",
@@ -1249,7 +1249,7 @@ MediaPage.SELECT_FILE_STYLE = {
 MediaPage.createButton = function(text, iconFile, onClick, params = {}) {
     const S = MediaPage.STYLE;
     const btn = SmartButton({
-        styleName: "ozdenType2",
+        styleName: "ozden2",
         width: params.width || "auto",
         height: 40, // WHY: the height of the fields and the selects of the panel (SmartButton: 44)
         labelText: text,

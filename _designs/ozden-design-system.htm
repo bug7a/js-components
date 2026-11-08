@@ -32,7 +32,7 @@
                 { name: "Ink deep", value: "#141414", use: "check mark, clock lines" },
                 { name: "Text", value: "#373836", use: "field text, scroll bar" },
                 { name: "Text title", value: "#555555", use: "field titles" },
-                { name: "Button", value: "#E3E3E3", use: "ozdenType1-3" },
+                { name: "Button", value: "#E3E3E3", use: "ozden ... ozden3" },
                 { name: "Button hover", value: "#D9D9D9", use: "hover / pressed" },
                 { name: "Disabled", value: "#EBEBEA", use: "a disabled button" },
                 { name: "Track", value: "#F2F2F2", use: "progress track" },
@@ -61,7 +61,7 @@
                 { name: "Dark card", value: "#1A1A19", use: "cards" },
                 { name: "Dark disabled", value: "#232322", use: "a disabled button" },
                 { name: "Dark search", value: "#2B2D31", use: "SearchInput ozdenDark" },
-                { name: "Dark button", value: "#2E2E2C", use: "ozdenType1Dark" },
+                { name: "Dark button", value: "#2E2E2C", use: "ozdenDark" },
                 { name: "Dark hover", value: "#383835", use: "hover / pressed" },
                 { name: "Dark focus", value: "rgba(101, 162, 147, 0.75)", use: "focus ring, field edge" },
             ],
@@ -88,15 +88,15 @@
         ];
 
         const EDGES = [
-            { name: "Strong", border: 1, color: Black(0.35), use: "ozdenType1-2" },
+            { name: "Strong", border: 1, color: Black(0.35), use: "ozden and ozden2" },
             { name: "Select", border: 1, color: Black(0.3), use: "SelectBox" },
-            { name: "Faint", border: 1, color: Black(0.1), use: "ozdenType3, search" },
+            { name: "Faint", border: 1, color: Black(0.1), use: "ozden3, search" },
             { name: "Field", border: 1, color: Black(0.05), use: "TextField" },
             { name: "Dialog", border: 2, color: "#232323", use: "dialog card" },
         ];
 
         const SHADOWS = [
-            { name: "Bottom line", value: "inset 0 -2px 0 rgba(0, 0, 0, 0.25)", use: "ozdenType1" },
+            { name: "Bottom line", value: "inset 0 -2px 0 rgba(0, 0, 0, 0.25)", use: "ozden" },
             { name: "Dialog", value: "0 10px 30px rgba(0, 0, 0, 0.08), inset 0 -3px 0 rgba(0, 0, 0, 0.06)", use: "dialog card" },
             { name: "Bubble", value: "0 6px 16px rgba(0, 0, 0, 0.18)", use: "the ask bubble" },
             { name: "Floating", value: "0px 4px 12px rgba(0, 0, 0, 0.18)", use: "action button" },
@@ -115,10 +115,10 @@
             waitingOpacity: 0.18,
         };
         const BUTTON_TYPES = {
-            ozdenType1: { color: "#E3E3E3", border: 1, borderColor: Black(0.35), shadow: "inset 0 -2px 0 rgba(0, 0, 0, 0.25)" },
-            ozdenType2: { color: "#E3E3E3", border: 1, borderColor: Black(0.35), shadow: "none" },
-            ozdenType3: { color: "#E3E3E3", border: 1, borderColor: Black(0.1), shadow: "none" },
-            ozdenType4: { color: White(0), border: 0, borderColor: "transparent", shadow: "none" },
+            ozden: { color: "#E3E3E3", border: 1, borderColor: Black(0.35), shadow: "inset 0 -2px 0 rgba(0, 0, 0, 0.25)" },
+            ozden2: { color: "#E3E3E3", border: 1, borderColor: Black(0.35), shadow: "none" },
+            ozden3: { color: "#E3E3E3", border: 1, borderColor: Black(0.1), shadow: "none" },
+            ozden4: { color: White(0), border: 0, borderColor: "transparent", shadow: "none" },
         };
         const SITUATION_TEXT_COLOR = Black(0.75);
         const ASK = { color: "#E8796D", textColor: "white", bubbleFontSize: 13, bubbleRound: 8, bubblePadding: [12, 7], arrow: 12, gap: 6, bubbleShadow: "0 6px 16px rgba(0, 0, 0, 0.18)", text: "Click again to delete." };
@@ -192,7 +192,7 @@
                     drawSection("1. Colors", "Neutrals, situations, accents (the dark ones are in section 8).", drawColors);
                     drawSection("2. Type", "Open Sans: opensans and opensans-bold. The sizes the components use.", drawType);
                     drawSection("3. Shape", "Corners, edges, shadows and the spaces between things.", drawShape);
-                    drawSection("4. Buttons", "SmartButton: ozdenType1 is the default. Hover, pressed and focus are still frames.", drawButtons);
+                    drawSection("4. Buttons", "SmartButton: ozden is the default. Hover, pressed and focus are still frames.", drawButtons);
                     drawSection("5. Fields and choices", "TextField ozden, SearchInput ozden, SelectBox ozden, CheckBox / RadioButton (classic), pill Tabs.", drawFields);
                     drawSection("6. Feedback", "ProgressBar ozden, the waiting clock, Tooltip, the ask bubble, Notice.", drawFeedback);
                     drawSection("7. Surfaces", "Dialog ozden, ActionButton ozden, ItemList ozden.", drawSurfaces);
@@ -335,33 +335,33 @@
         const drawButtons = function () {
             drawRow("The four types", function () {
                 Object.keys(BUTTON_TYPES).forEach(function (name) {
-                    drawNamed(name + (name == "ozdenType1" ? " (default)" : ""), function () {
+                    drawNamed(name + (name == "ozden" ? " (default)" : ""), function () {
                         drawButton({ type: BUTTON_TYPES[name] });
                     });
                 });
             });
-            drawRow("Situations (ozdenType1 in a color)", function () {
+            drawRow("Situations (ozden in a color)", function () {
                 COLORS.situation.forEach(function (token) {
                     drawNamed(token.name, function () {
                         drawButton({ type: getSituationType(token), text: token.name, isWhite: (token.name == "Danger") });
                     });
                 });
             });
-            drawRow("States (ozdenType1)", function () {
-                drawNamed("hover", function () { drawButton({ type: BUTTON_TYPES.ozdenType1, hover: 1 }); });
-                drawNamed("pressed", function () { drawButton({ type: BUTTON_TYPES.ozdenType1, pressed: 1 }); });
-                drawNamed("keyboard focus", function () { drawButton({ type: BUTTON_TYPES.ozdenType1, focus: 1 }); });
-                drawNamed("disabled", function () { drawButton({ type: BUTTON_TYPES.ozdenType1, disabled: 1 }); });
-                drawNamed("waiting", function () { drawButton({ type: BUTTON_TYPES.ozdenType1, waiting: 1 }); });
+            drawRow("States (ozden)", function () {
+                drawNamed("hover", function () { drawButton({ type: BUTTON_TYPES.ozden, hover: 1 }); });
+                drawNamed("pressed", function () { drawButton({ type: BUTTON_TYPES.ozden, pressed: 1 }); });
+                drawNamed("keyboard focus", function () { drawButton({ type: BUTTON_TYPES.ozden, focus: 1 }); });
+                drawNamed("disabled", function () { drawButton({ type: BUTTON_TYPES.ozden, disabled: 1 }); });
+                drawNamed("waiting", function () { drawButton({ type: BUTTON_TYPES.ozden, waiting: 1 }); });
             });
             drawRow("The ask (two clicks to delete)", function () {
                 drawNamed("first click", drawAskingButton);
-                drawNamed("only an icon", function () { drawButton({ type: BUTTON_TYPES.ozdenType2, iconOnly: 1 }); });
+                drawNamed("only an icon", function () { drawButton({ type: BUTTON_TYPES.ozden2, iconOnly: 1 }); });
             });
         };
 
         const getSituationType = function (token) {
-            return { color: token.value, border: 1, borderColor: Black(0.35), shadow: BUTTON_TYPES.ozdenType1.shadow };
+            return { color: token.value, border: 1, borderColor: Black(0.35), shadow: BUTTON_TYPES.ozden.shadow };
         };
 
         // GROUP: A SmartButton in one state
@@ -439,7 +439,7 @@
         const drawAskingButton = function () {
             const group = VGroup({ hug: 1, align: "center bottom", gap: ASK.gap, clipContent: 0 });
                 drawBubble(ASK.text, { color: ASK.color, textColor: ASK.textColor, fontSize: ASK.bubbleFontSize, bold: 1, round: ASK.bubbleRound, padding: ASK.bubblePadding, arrow: ASK.arrow, shadow: ASK.bubbleShadow });
-                drawButton({ type: BUTTON_TYPES.ozdenType1, asking: 1, text: "Delete" });
+                drawButton({ type: BUTTON_TYPES.ozden, asking: 1, text: "Delete" });
             endGroup();
             return group;
         };
@@ -609,7 +609,7 @@
             return group;
         };
 
-        // BOX: The bar (a SmartButton ozdenType1: its color, a dark edge and a line at its bottom), over the edge of the
+        // BOX: The bar (a SmartButton ozden: its color, a dark edge and a line at its bottom), over the edge of the
         // track; round at the ends of the track, straight in the middle of it
         const drawProgressFill = function (value) {
             const rightRound = (value >= 1) ? PROGRESS.round : PROGRESS.innerRound;
@@ -654,7 +654,7 @@
                 endGroup();
                 const footer = HGroup({ width: "100%", height: "auto", align: "right center", gap: DIALOG.footerGap, padding: DIALOG.footerPadding, color: DIALOG.footerColor, clipContent: 0 });
                 footer.css = { borderTop: "1px solid " + DIALOG.footerLine };
-                    drawButton({ type: BUTTON_TYPES.ozdenType1, text: "Cancel", noIcon: 1 });
+                    drawButton({ type: BUTTON_TYPES.ozden, text: "Cancel", noIcon: 1 });
                     drawButton({ type: getSituationType(COLORS.situation[1]), text: "Delete", isWhite: 1, noIcon: 1 });
                 endGroup();
             endGroup();
@@ -715,7 +715,7 @@
             const card = VGroup({ width: "auto", height: "auto", align: "left top", gap: 20, padding: [30, 28], color: DARK.card, round: 10, border: 1, borderColor: White(0.08), clipContent: 0 });
                 VGroup({ hug: 1, align: "left top", gap: 2 });
                     Label({ text: "8. Dark (ozdenDark)", fontSize: 18, fontFamily: FONT.bold, textColor: White(0.9) });
-                    Label({ text: "On the #1A1A19 card: the dark colors, ozdenType1Dark, TextField ozdenDark, SearchInput ozdenDark, the dark clock.", fontSize: 13, textColor: White(0.5) });
+                    Label({ text: "On the #1A1A19 card: the dark colors, ozdenDark, TextField ozdenDark, SearchInput ozdenDark, the dark clock.", fontSize: 13, textColor: White(0.5) });
                 endGroup();
                 drawDarkRow("Colors", function () { COLORS.dark.forEach(drawDarkSwatch); });
                 drawDarkRow("Button · field · search · clock", function () {
@@ -749,7 +749,7 @@
             return group;
         };
 
-        // GROUP: ozdenType1Dark (normal, or under the mouse)
+        // GROUP: ozdenDark (normal, or under the mouse)
         const drawDarkButton = function (isHover) {
             const button = HGroup({ hug: 1, align: "center center", gap: BUTTON.gap, padding: BUTTON.padding, color: isHover ? DARK.hover : DARK.button, round: BUTTON.round, border: 1, borderColor: DARK.buttonEdge, boxShadow: DARK.buttonShadow });
             button.height = BUTTON.height;

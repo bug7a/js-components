@@ -45,7 +45,7 @@
     const PANEL_TIME = 200; // ms: the motion of the menu
     const COVER_COLOR = "rgba(0, 0, 0, 0.4)"; // behind the menu
 
-    // The buttons of the page: SmartButton ozdenType1 (the default) with a smaller text
+    // The buttons of the page: SmartButton ozden (the default) with a smaller text
     const BUTTON_LOOK = { label: { fontSize: 15 } };
 
     // ☰ (the color is in the file: SmartButton loads an image)
@@ -138,7 +138,7 @@
             lblTitle = Label({ text: MENU_ITEMS[0], fontSize: 20, bold: 1, textColor: INK, grow: 1 });
 
             SmartButton({
-                styleName: "ozdenType4",
+                styleName: "ozden4",
                 labelText: "",
                 iconFile: MENU_ICON,
                 ariaLabel: "Menu",
@@ -252,7 +252,7 @@
     // A row of the menu: it shows its page and closes the menu
     const createMenuRow = function (itemName) {
         SmartButton({
-            styleName: "ozdenType4",
+            styleName: "ozden4",
             labelText: itemName,
             width: "100%",
             height: MENU_ROW_HEIGHT,

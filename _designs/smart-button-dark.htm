@@ -17,7 +17,7 @@
         /* Bismillah */
 
         // DRAFT DESIGN of the DARK packages of comp/smart-button.js (SmartButton), 2026-10-31.
-        // The values below are copies of SmartButton.styles.ozdenType1Dark ... ozdenType4Dark (added 2026-10-31 from
+        // The values below are copies of SmartButton.styles.ozdenDark ... ozden4Dark (added 2026-10-31 from
         // this draft; SmartButton.createDarkPackage): keep them in step with smart-button.js when it changes. Every package (a column) in every state (a row), drawn with plain basic.js objects (no
         // SmartButton here), on two dark grounds: a card (#1A1A19) and the page (#000000).
         // The light packages: _designs/smart-button.htm.
@@ -29,27 +29,27 @@
         const COLUMN_WIDTH = 240;
         const STATE_COLUMN_WIDTH = 170;
 
-        // THE DARK STYLE PACKAGES (copies of SmartButton.styles.ozdenType1Dark...: the shapes of the light packages, dark colors)
+        // THE DARK STYLE PACKAGES (copies of SmartButton.styles.ozdenDark...: the shapes of the light packages, dark colors)
         const OZDEN_LAYOUT = { gap: 8, padding: [16, 0] };
         const OZDEN_ICON = { size: 24, opacity: 0.85 };
         const OZDEN_LABEL = { fontSize: 20, textColor: White(0.85), fontFamily: "opensans" };
         const LOOKS = {
-            ozdenType1Dark: { // edge + bottom line (the default)
+            ozdenDark: { // edge + bottom line (the default)
                 layout: OZDEN_LAYOUT, icon: OZDEN_ICON, label: OZDEN_LABEL,
                 box: { color: "#2E2E2C", border: 1, borderColor: White(0.16), round: 4, boxShadow: "inset 0 -2px 0 rgba(0, 0, 0, 0.45)" },
                 hoverColor: "#383835", activeColor: "#383835",
             },
-            ozdenType2Dark: { // edge
+            ozden2Dark: { // edge
                 layout: OZDEN_LAYOUT, icon: OZDEN_ICON, label: OZDEN_LABEL,
                 box: { color: "#2E2E2C", border: 1, borderColor: White(0.16), round: 4, boxShadow: "none" },
                 hoverColor: "#383835", activeColor: "#383835",
             },
-            ozdenType3Dark: { // faint edge
+            ozden3Dark: { // faint edge
                 layout: OZDEN_LAYOUT, icon: OZDEN_ICON, label: OZDEN_LABEL,
                 box: { color: "#2E2E2C", border: 1, borderColor: White(0.06), round: 4, boxShadow: "none" },
                 hoverColor: "#383835", activeColor: "#383835",
             },
-            ozdenType4Dark: { // the ghost
+            ozden4Dark: { // the ghost
                 layout: OZDEN_LAYOUT, icon: OZDEN_ICON, label: OZDEN_LABEL,
                 box: { color: White(0), border: 0, borderColor: "transparent", round: 4, boxShadow: "none" },
                 hoverColor: White(0.08), activeColor: White(0.08),
@@ -130,7 +130,7 @@
                 HGroup({ width: "auto", height: "auto", align: "left top", gap: 20 });
                     Label({ width: STATE_COLUMN_WIDTH, text: "state", fontSize: 12, textColor: White(0.35) });
                     Object.keys(LOOKS).forEach(function (name) {
-                        Label({ width: COLUMN_WIDTH, text: name + (name == "ozdenType1Dark" ? " (default)" : ""), fontSize: 13, bold: 1, textColor: White(0.6) });
+                        Label({ width: COLUMN_WIDTH, text: name + (name == "ozdenDark" ? " (default)" : ""), fontSize: 13, bold: 1, textColor: White(0.6) });
                     });
                 endGroup();
 

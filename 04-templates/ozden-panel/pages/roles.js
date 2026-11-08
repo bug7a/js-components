@@ -291,7 +291,7 @@ const RolesPage = function(params = {}) {
                 const countsText = memberCount + " member" + ((memberCount == 1) ? "" : "s") + " · " + role.permissions.length + " permissions";
 
                 SmartButton({
-                    styleName: "ozdenType4",
+                    styleName: "ozden4",
                     width: "100%",
                     height: "auto", // WHY: two lines (the name of the role and its counts)
                     // WHY the bold name: the new templates have a regular text; the name leads, its counts under it
@@ -628,7 +628,7 @@ const RolesPage = function(params = {}) {
 
     const createButton = function(text, iconFile, onClick, params = {}) {
         const btn = SmartButton({
-            styleName: "ozdenType2",
+            styleName: "ozden2",
             width: params.width || "auto",
             height: 40, // WHY: the height of the fields and the selects of the panel (SmartButton: 44)
             labelText: text,

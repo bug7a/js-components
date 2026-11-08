@@ -37,7 +37,7 @@ NOTE: still in development: more style packages come; their buttons may be anima
   "minimal", "minimalDark" (_designs/minimal-theme.htm: a card with a line, no shadow, the minimal buttons and fields).
   (Dialog.styles)
 - The buttons: style.buttons[type] = { styleName, tone, style }: a template of SmartButton
-  ("ozdenType1"; Cancel and icon: "ozdenType3", a faint edge), a tone of it
+  ("ozden"; Cancel and icon: "ozden3", a faint edge), a tone of it
   (primary: "cyan", danger: "orange"...; icon: "white") and only the keys that differ.
 - Scale: scale multiplies every size of the dialog (its style, width, motion, its buttons and the bubble
   of their ask). null (default): basic.uiScale (1; a page fitted with page.fit() sets 1 / page.zoom: the dialog keeps
@@ -125,17 +125,17 @@ const DialogDefaults = {
         // The looks of the buttons: a template of SmartButton, a tone of it and only what differs from them. The colors
         // of the situations are the tones of SmartButton (the draft _designs/smart-button-colors.htm)
         buttons: {
-            primary: { styleName: "ozdenType1", tone: "cyan", style: {} },
+            primary: { styleName: "ozden", tone: "cyan", style: {} },
             // the gray of the template, a faint edge (as the Cancel of 02-comp-examples/smart-button.htm)
-            secondary: { styleName: "ozdenType3", tone: "", style: {} },
-            danger: { styleName: "ozdenType1", tone: "orange", style: {} },
-            warning: { styleName: "ozdenType1", tone: "yellow", style: {} },
-            success: { styleName: "ozdenType1", tone: "green", style: {} },
-            info: { styleName: "ozdenType1", tone: "blue", style: {} },
+            secondary: { styleName: "ozden3", tone: "", style: {} },
+            danger: { styleName: "ozden", tone: "orange", style: {} },
+            warning: { styleName: "ozden", tone: "yellow", style: {} },
+            success: { styleName: "ozden", tone: "green", style: {} },
+            info: { styleName: "ozden", tone: "blue", style: {} },
             // white, whitesmoke under the mouse (as the trash of the SmartButton samples). An icon button has no room at
-            // its sides by itself. A faint edge as Cancel (ozdenType3)
+            // its sides by itself. A faint edge as Cancel (ozden3)
             icon: {
-                styleName: "ozdenType3",
+                styleName: "ozden3",
                 tone: "white",
                 style: {
                     icon: { opacity: 1 },
@@ -925,14 +925,14 @@ Dialog.styles = {
             icon: { color: White(0.88), lightColor: White(0.35) },
         },
         buttons: {
-            primary: { styleName: "ozdenType1Dark", tone: "cyanDark", style: {} },
-            secondary: { styleName: "ozdenType3Dark", tone: "", style: {} },
-            danger: { styleName: "ozdenType1Dark", tone: "orangeDark", style: {} },
-            warning: { styleName: "ozdenType1Dark", tone: "yellowDark", style: {} },
-            success: { styleName: "ozdenType1Dark", tone: "greenDark", style: {} },
-            info: { styleName: "ozdenType1Dark", tone: "blueDark", style: {} },
+            primary: { styleName: "ozdenDark", tone: "cyanDark", style: {} },
+            secondary: { styleName: "ozden3Dark", tone: "", style: {} },
+            danger: { styleName: "ozdenDark", tone: "orangeDark", style: {} },
+            warning: { styleName: "ozdenDark", tone: "yellowDark", style: {} },
+            success: { styleName: "ozdenDark", tone: "greenDark", style: {} },
+            info: { styleName: "ozdenDark", tone: "blueDark", style: {} },
             icon: {
-                styleName: "ozdenType3Dark",
+                styleName: "ozden3Dark",
                 tone: "",
                 style: {
                     icon: { opacity: 1 },

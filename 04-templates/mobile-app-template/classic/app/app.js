@@ -566,7 +566,7 @@ App.createLockButton = function () {
     const BUTTON_SIZE = 50;
     const BUTTON_SPACE = 30;
     SmartButton({
-        styleName: "ozdenType4",
+        styleName: "ozden4",
         labelText: "",
         iconFile: App.ICONS.lock,
         ariaLabel: "Lock",

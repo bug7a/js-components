@@ -22,9 +22,9 @@
 
         // SMARTBUTTON · THE MODEL PAGE: new pages and projects take their buttons from it.
         // The look in three steps: styleName (the template), tone (a color of the kit), style (your own).
-        // - SmartButton({ labelText, onClick })                         -> the default: ozdenType1, gray, 44 px high
+        // - SmartButton({ labelText, onClick })                         -> the default: ozden, gray, 44 px high
         // - SmartButton({ tone: "cyan", labelText, onClick })           -> a color: white, cyan, orange, yellow, green, blue
-        // - SmartButton({ styleName: "ozdenType2", tone: "white", labelText: "", iconFile, ariaLabel })  -> an icon button (a square)
+        // - SmartButton({ styleName: "ozden2", tone: "white", labelText: "", iconFile, ariaLabel })  -> an icon button (a square)
         // - button.setTone("green")                                     -> another color after create
         // - button.setWaiting(1) / setWaiting(0)                        -> it waits while a job runs
         // - ask: "Click again to delete."                               -> two clicks (load tooltip.js for the bubble)
@@ -181,7 +181,7 @@
             startCard("Profile", "Ayşe Yılmaz · ayse@example.com. Save waits while the job runs, then it says \"Saved\" in the color of a success for a moment.");
 
                 SmartButton({
-                    styleName: "ozdenType2",
+                    styleName: "ozden2",
                     tone: "white",
                     labelText: "",
                     iconFile: TRASH_ICON,

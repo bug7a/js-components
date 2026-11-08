@@ -858,7 +858,7 @@ SliderField.styles = {
     light: SliderFieldDefaults.style,
 
     // For general use: the colors of SmartButton and of ProgressBar
-    // ozden. The fill is a cyan SmartButton ozdenType1 (an edge and a line at its bottom) that ends with a white knob,
+    // ozden. The fill is a cyan SmartButton ozden (an edge and a line at its bottom) that ends with a white knob,
     // straight inside the field. The label is always on the fill (aroundLabel) and the value never (beforeValue): the
     // end of the fill cuts no text. A ring for the keyboard focus, a gray fill when it is off.
     // Another tone: style: { fill: { color, hoverColor, activeColor } }.

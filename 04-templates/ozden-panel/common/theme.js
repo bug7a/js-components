@@ -404,7 +404,7 @@ Theme.fillTableWidth = function(table) {
     table.header.css = { width: "100%" };
 };
 
-// The Dialog of the panel: a card in the surface color; the main button is a SmartButton ozdenType1 with only its
+// The Dialog of the panel: a card in the surface color; the main button is a SmartButton ozden with only its
 // color changed: the same orange in every dialog and theme.
 const DIALOG_ACTION_COLOR = "#DE815B";
 const DIALOG_ACTION_HOVER_COLOR = "#D0724D"; // a little darker under the mouse
@@ -414,7 +414,7 @@ Theme.dialogStyle = function() {
     const BUTTON_FONT_SIZE = 16;
     const createButtonLook = function(color, textColor) {
         return {
-            styleName: "ozdenType1",
+            styleName: "ozden",
             style: {
                 box: { color: color, borderColor: Ink(0.2), boxShadow: "inset 0 -2px 0 rgba(0, 0, 0, 0.2)" },
                 hover: { color: "color-mix(in srgb, " + color + " 85%, white)" },
@@ -433,12 +433,12 @@ Theme.dialogStyle = function() {
         footer: { color: T.surface2, lineColor: Ink(0.1) },
         buttons: {
             primary: {
-                styleName: "ozdenType1",
+                styleName: "ozden",
                 style: {
                     box: { color: DIALOG_ACTION_COLOR },
                     hover: { color: DIALOG_ACTION_HOVER_COLOR },
                     active: { color: DIALOG_ACTION_HOVER_COLOR },
-                    label: { textColor: SmartButton.styles.ozdenType1.label.textColor, fontSize: BUTTON_FONT_SIZE },
+                    label: { textColor: SmartButton.styles.ozden.label.textColor, fontSize: BUTTON_FONT_SIZE },
                 },
             },
             secondary: createButtonLook(T.surface3, Ink(0.85)),

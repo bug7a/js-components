@@ -12,7 +12,7 @@ THE TOP BAR OF A TAB PAGE of a mobile app.
   the bar when only one button is shown.
 - A back button at the left (showBack: 1) and a menu button at the right (showMenu: 1): 40 x 40, 20 px from the
   sides. The buttons and the title stand 24 px from the bottom of the bar.
-- The buttons are SmartButtons (styleName "ozdenType4": a gray square under the mouse), with only an icon and an
+- The buttons are SmartButtons (styleName "ozden4": a gray square under the mouse), with only an icon and an
   aria label: the keyboard and the screen readers work as with every SmartButton.
 - The icons are drawn in SVG in iconColor (a back arrow with a shaft, three dots), or your own files
   (backIconFile, menuIconFile: a file keeps its own colors).
@@ -126,7 +126,7 @@ const AppBar = function (params = {}) {
     const createButton = function (iconFile, ariaLabel, onClick, place) {
         const iconSpace = (_s.button.size - _s.button.iconSize) / 2;
         const button = SmartButton({
-            styleName: "ozdenType4",
+            styleName: "ozden4",
             labelText: "",
             iconFile: iconFile,
             ariaLabel: ariaLabel,

@@ -23,7 +23,7 @@ UI COMPONENT TEMPLATE
   track darkTrack.limitColor), half and half while the end of the bar goes over it. The own color of a limit is
   its color on the track. limit.dotOpacity: every dot ("ozden": 0.85).
 - Style packages: "light" (default; the old name "classic" works too), "modern", "ozden" (the bar is a cyan SmartButton
-  ozdenType1, with its edge and its line at the bottom; a round track, the second part a light bar next to it; a dark
+  ozden, with its edge and its line at the bottom; a round track, the second part a light bar next to it; a dark
   limit line with a text). "ozdenDark" (for a dark page). Select with styleName.
   (ProgressBar.styles)
 - THE ENDS: an end of a bar at an end of the track is as round as the track; an end in the middle of the track has
@@ -763,7 +763,7 @@ ProgressBar.styles = {
     light: ProgressBarDefaults.style,
 
     // The ozden bar: the colors of
-    // SmartButton. The bar is a cyan SmartButton ozdenType1 (its edge and its line at the bottom: it looks raised);
+    // SmartButton. The bar is a cyan SmartButton ozden (its edge and its line at the bottom: it looks raised);
     // the track keeps the colors of the default (#F2F2F2, a 2 px light gray edge) and its two ends are round; an end
     // in the middle of the track is straight. darkTrack: 1 is a soft black with no edge. The second part is a second
     // bar next to the bar, the main color mixed with white (not transparent). A limit is a dot, a little soft.
@@ -783,7 +783,7 @@ ProgressBar.styles = {
         bar: {
             color: "#5BBAC1", // cyan (SmartButton.tones.cyan)
             fillOpacity: 1,
-            border: 1, // the edge and the bottom line of SmartButton ozdenType1
+            border: 1, // the edge and the bottom line of SmartButton ozden
             borderColor: "rgba(0, 0, 0, 0.35)",
             boxShadow: "inset 0 -2px 0 rgba(0, 0, 0, 0.25)",
             innerRound: 0, // straight in the middle of the track

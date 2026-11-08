@@ -542,7 +542,7 @@ const ReportsPage = function(params = {}) {
             HGroup({ width: "auto", height: "auto", align: "right center", gap: 10 });
 
                 const btnExport = SmartButton({
-                    styleName: "ozdenType2",
+                    styleName: "ozden2",
                     height: 40, // WHY: the height of the fields and the selects of the panel (SmartButton: 44)
                     labelText: "Export",
                     iconFile: ASSETS + "arrow_down.png",

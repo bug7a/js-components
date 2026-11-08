@@ -21,7 +21,7 @@
 
     // SmartButton: the places of the
     // icon, your own look, setText / setIcon, the waiting cover, the motion and the keyboard. No styleName: the
-    // default template ozdenType1.
+    // default template ozden.
     // (The other samples: smart-button.htm the model page (the tones), smart-button-alternatif.htm pill and
     // outlined, smart-button-3-ozden.htm the templates, smart-button-4-dark.htm the dark templates.)
 
@@ -41,7 +41,7 @@
             hover: { color: "#FDF2F2" },
             label: { fontSize: 16, textColor: "indianred", fontFamily: "opensans-bold" },
         },
-        // on ozdenType4 (no edge, no bottom line)
+        // on ozden4 (no edge, no bottom line)
         pill: {
             layout: { gap: 6 },
             box: { color: Black(0.05), round: 30 },
@@ -128,13 +128,13 @@
 
                 startCard(
                     "Your own look: style",
-                    "styleName is the template (ozdenType1 - 4), tone a color of the kit (white, cyan, orange...), style your own keys: box, hover, layout, icon and label. A color is two colors: box.color and hover.color; pressed, it gets darker by itself."
+                    "styleName is the template (ozden - 4), tone a color of the kit (white, cyan, orange...), style your own keys: box, hover, layout, icon and label. A color is two colors: box.color and hover.color; pressed, it gets darker by itself."
                 );
                     SmartButton({ labelText: "Continue", style: LOOKS.blue });
                     SmartButton({ labelText: "Delete", iconFile: ICONS + "trash.svg", style: LOOKS.redEdge });
-                    SmartButton({ styleName: "ozdenType4", labelText: "Filter", iconFile: ICONS + "panel.png", style: LOOKS.pill });
+                    SmartButton({ styleName: "ozden4", labelText: "Filter", iconFile: ICONS + "panel.png", style: LOOKS.pill });
                     SmartButton({
-                        styleName: "ozdenType4",
+                        styleName: "ozden4",
                         labelText: "Alert",
                         iconFile: ICONS + "alert-black.png",
                         style: LOOKS.pill,

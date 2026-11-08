@@ -39,7 +39,7 @@
         box: { color: "#F8E57A" },
         hover: { color: "#EFDA62" },
         active: { color: "#EFDA62" },
-        label: { textColor: SmartButton.styles.ozdenType1.label.textColor },
+        label: { textColor: SmartButton.styles.ozden.label.textColor },
     };
 
     // An icon at the top: its drawing as an "<svg" text (the dialog fills its colors in)
@@ -313,7 +313,7 @@
 
     const createButton = function (text, onClick) {
         return SmartButton({
-            styleName: "ozdenType1",
+            styleName: "ozden",
             labelText: text,
             height: 40,
             style: { box: { color: "white" } }, // white inside (its hover stays gray)

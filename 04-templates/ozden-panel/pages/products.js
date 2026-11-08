@@ -1069,7 +1069,7 @@ ProductsPage.createEmptyProduct = function() {
 ProductsPage.createButton = function(text, iconFile, onClick, params = {}) {
     const S = ProductsPage.STYLE;
     const btn = SmartButton({
-        styleName: "ozdenType2",
+        styleName: "ozden2",
         width: params.width || "auto",
         height: 40, // WHY: the height of the fields and the selects of the panel (SmartButton: 44)
         labelText: text,

@@ -310,7 +310,7 @@ const UserActionsPage = function(params = {}) {
     that.elem.style.borderTop = "1px solid " + Ink(0.08);
 
         const btnSignOut = SmartButton({
-            styleName: "ozdenType2",
+            styleName: "ozden2",
             width: "auto",
             height: 40, // WHY: the height of the fields and the selects of the panel (SmartButton: 44)
             labelText: "Sign Out",

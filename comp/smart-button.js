@@ -12,11 +12,11 @@ The other samples: smart-button-alternatif.htm (pill and outlined with the color
 
 - A button with an icon and a text (or only one of them); the icon on the left or on top (iconPosition).
 - THE LOOK IN THREE STEPS. The order: style > tone > the template.
-  1. styleName: the template (the shape), gray. "ozdenType1" (THE DEFAULT: #E3E3E3, a thin dark edge and a darker
-     line at the bottom), "ozdenType2" (no bottom line), "ozdenType3" (a faint edge), "ozdenType4" (a ghost: no
+  1. styleName: the template (the shape), gray. "ozden" (THE DEFAULT: #E3E3E3, a thin dark edge and a darker
+     line at the bottom), "ozden2" (no bottom line), "ozden3" (a faint edge), "ozden4" (a ghost: no
      surface, no edge, only its hover is gray), "pill" (round, no edge, a bold text), "outlined" (round, a thicker
      edge with a line at its bottom). For a dark page (the draft _designs/smart-button-dark.htm):
-     "ozdenType1Dark" ... "ozdenType4Dark" (#2E2E2C, a white text and icon, the dark waiting clock).
+     "ozdenDark" ... "ozden4Dark" (#2E2E2C, a white text and icon, the dark waiting clock).
      "minimal" / "minimalDark" (the minimal theme, _designs/minimal-theme.htm): 28 px high, a 13 px text, only a line
      that gets darker under the mouse; the main action takes the tone "ink" / "inkDark"; a delete "minimalDanger" /
      "minimalDangerDark" (the line and the text in the danger color).
@@ -56,11 +56,11 @@ The other samples: smart-button-alternatif.htm (pill and outlined with the color
 - setStyle(style): changes the look after create with only the keys it gets.
 
 USAGE:
-SmartButton({ labelText: "Cancel", onClick: function (self) { } }); // the default: ozdenType1, gray
+SmartButton({ labelText: "Cancel", onClick: function (self) { } }); // the default: ozden, gray
 SmartButton({ tone: "cyan", labelText: "Send", iconFile: "../assets/icons/send.png", onClick: send });
 SmartButton({ styleName: "pill", tone: "blue", labelText: "Follow" });
-SmartButton({ styleName: "ozdenType1Dark", tone: "blueDark", labelText: "Send" }); // on a dark page
-SmartButton({ styleName: "ozdenType2", tone: "white", labelText: "", iconFile: "trash.svg", ariaLabel: "Delete", ask: "Click again to delete.", onClick: deleteFile });
+SmartButton({ styleName: "ozdenDark", tone: "blueDark", labelText: "Send" }); // on a dark page
+SmartButton({ styleName: "ozden2", tone: "white", labelText: "", iconFile: "trash.svg", ariaLabel: "Delete", ask: "Click again to delete.", onClick: deleteFile });
 SmartButton({ labelText: "Archive", style: { box: { color: "#C3DBCE" }, hover: { color: "#B5D0C1" } } }); // your own color
 const btnDownload = SmartButton({ labelText: "Download", onClick: function (self) {
     self.setWaiting(1);
@@ -80,7 +80,7 @@ Webpage: https://bug7a.github.io/js-components/
 // Default values:
 const SmartButtonDefaults = {
     key: "0",
-    styleName: "ozdenType1", // the template (SmartButton.styles): "ozdenType1" (the default) ... "ozdenType4", "pill", "outlined", "ozdenType1Dark" ... "ozdenType4Dark", "minimal", "minimalDark", "minimalDanger", "minimalDangerDark"
+    styleName: "ozden", // the template (SmartButton.styles): "ozden" (the default) ... "ozden4", "pill", "outlined", "ozdenDark" ... "ozden4Dark", "minimal", "minimalDark", "minimalDanger", "minimalDangerDark"
     tone: "", // a color of the kit (SmartButton.tones): "white", "cyan", "orange", "yellow", "green", "blue", "cyanDark"..., "ink" / "inkDark" (minimal). "": the gray of the template. setTone()
     width: "auto", // an icon button (labelText: "") is a square
     height: 44, // "auto": as high as its padding and content (an icon on top of a text is "auto")
@@ -97,7 +97,7 @@ const SmartButtonDefaults = {
     onBeforeClick: null, // function (self): false stops the press, with no ask either
     onClick: function (self) { }, // Not called while waiting
     onWaitingEnd: function (self) { }, // The wait ended (setWaiting(0))
-    style: { // ozdenType1 (the default template)
+    style: { // ozden (the default template)
         layout: {
             gap: 8,
             padding: [16, 0],
@@ -700,17 +700,17 @@ SmartButton.injectCss = function () {
 };
 
 // *** THE TEMPLATES (the shapes), all gray. A template is a style with only the keys that differ from the default
-// (ozdenType1); its color comes from a tone or from style. Every template has the default height (44).
+// (ozden); its color comes from a tone or from style. Every template has the default height (44).
 SmartButton.WHITE_ICON = "brightness(0) invert(1)"; // a CSS filter: any icon file turns white
 SmartButton.ROUND = 100; // pill, outlined: always round, at any height
 SmartButton.EDGE_WIDTH = 2; // outlined: the edge and the line at its bottom
 
 SmartButton.styles = {
     // (the buttons of 02-comp-examples/smart-button-3-ozden.htm)
-    ozdenType1: SmartButtonDefaults.style, // an edge and a bottom line
-    ozdenType2: { box: { boxShadow: "none" } }, // only the edge
-    ozdenType3: { box: { borderColor: Black(0.1), boxShadow: "none" } }, // a faint edge
-    ozdenType4: { box: { color: White(0), border: 0, borderColor: "transparent", boxShadow: "none" } }, // a ghost
+    ozden: SmartButtonDefaults.style, // an edge and a bottom line
+    ozden2: { box: { boxShadow: "none" } }, // only the edge
+    ozden3: { box: { borderColor: Black(0.1), boxShadow: "none" } }, // a faint edge
+    ozden4: { box: { color: White(0), border: 0, borderColor: "transparent", boxShadow: "none" } }, // a ghost
     // ROUND (the buttons of 02-comp-examples/smart-button-alternatif.htm). WHY a smaller text
     // and icon: they were 52 px high with a 30 px icon; now as high as the other buttons
     pill: { // no edge, a bold text
@@ -727,16 +727,16 @@ SmartButton.styles = {
     },
 };
 
-// THE DARK TEMPLATES (the draft _designs/smart-button-dark.htm): the shapes of ozdenType1-4 with the
+// THE DARK TEMPLATES (the draft _designs/smart-button-dark.htm): the shapes of ozden ... ozden4 with the
 // colors of a dark page (the cards of Ozden Panel / Ozden Manager, #1A1A19). The icon turns white, the waiting clock
 // is the dark one, the dots yellow; the ask stays orange.
-// THE EDGE AND THE BOTTOM LINE: the edge of ozdenType1 in white and its 2 px line in white, a
+// THE EDGE AND THE BOTTOM LINE: the edge of ozden in white and its 2 px line in white, a
 // little fainter. A light tone on a dark template keeps them too.
 // WHY 0.2 / 0.12 (0.35 / 0.2 were too bright on a dark page; a white edge on a dark page is
-//     much stronger than the same black on a light one): still twice the faint edge of ozdenType3Dark (0.1).
+//     much stronger than the same black on a light one): still twice the faint edge of ozden3Dark (0.1).
 SmartButton.DARK_EDGE = White(0.2);
 SmartButton.DARK_BOTTOM_LINE = "inset 0 -2px 0 " + White(0.12);
-// boxKeys: only the keys of the box that differ from ozdenType1Dark (as the light templates from ozdenType1)
+// boxKeys: only the keys of the box that differ from ozdenDark (as the light templates from ozden)
 SmartButton.createDarkTemplate = function (boxKeys, hoverColor = "#383835") {
     return {
         box: Object.assign({ color: "#2E2E2C", borderColor: SmartButton.DARK_EDGE, boxShadow: SmartButton.DARK_BOTTOM_LINE }, boxKeys),
@@ -749,10 +749,10 @@ SmartButton.createDarkTemplate = function (boxKeys, hoverColor = "#383835") {
         waiting: { clock: "ozdenDark", dots: { color: "#F1C74A" } },
     };
 };
-SmartButton.styles.ozdenType1Dark = SmartButton.createDarkTemplate({}); // an edge and a bottom line
-SmartButton.styles.ozdenType2Dark = SmartButton.createDarkTemplate({ boxShadow: "none" }); // only the edge
-SmartButton.styles.ozdenType3Dark = SmartButton.createDarkTemplate({ borderColor: White(0.1), boxShadow: "none" }); // a faint edge: the 0.1 of ozdenType3 in white
-SmartButton.styles.ozdenType4Dark = SmartButton.createDarkTemplate({ color: White(0), border: 0, borderColor: "transparent", boxShadow: "none" }, White(0.08)); // a ghost
+SmartButton.styles.ozdenDark = SmartButton.createDarkTemplate({}); // an edge and a bottom line
+SmartButton.styles.ozden2Dark = SmartButton.createDarkTemplate({ boxShadow: "none" }); // only the edge
+SmartButton.styles.ozden3Dark = SmartButton.createDarkTemplate({ borderColor: White(0.1), boxShadow: "none" }); // a faint edge: the 0.1 of ozden3 in white
+SmartButton.styles.ozden4Dark = SmartButton.createDarkTemplate({ color: White(0), border: 0, borderColor: "transparent", boxShadow: "none" }, White(0.08)); // a ghost
 
 // THE MINIMAL TEMPLATES (the draft _designs/minimal-theme.htm): small (28 px, a 13 px text, a 14 px icon) and made of
 // lines: no fill, the edge gets darker under the mouse, a blue focus ring, a ring that waits. The main action takes the
@@ -869,7 +869,7 @@ SmartButton.getTemplateColors = function (styleName) {
 };
 
 // The tone goes under the style of the page, so a color the page gives still wins.
-// WHY a new object: params.style can be a template given as it is (style: SmartButton.styles.ozdenType2)
+// WHY a new object: params.style can be a template given as it is (style: SmartButton.styles.ozden2)
 SmartButton.applyTone = function (params) {
     if (!params.tone) return;
     const ownStyle = {};

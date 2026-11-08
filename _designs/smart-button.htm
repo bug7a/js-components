@@ -30,27 +30,27 @@
         const COLUMN_WIDTH = 240;
         const STATE_COLUMN_WIDTH = 170;
 
-        // THE STYLE PACKAGES (copies of SmartButton.styles; ozdenType1 is the default)
+        // THE STYLE PACKAGES (copies of SmartButton.styles; ozden is the default)
         const OZDEN_LAYOUT = { gap: 8, padding: [16, 0] };
         const OZDEN_ICON = { size: 24, opacity: 0.8 };
         const OZDEN_LABEL = { fontSize: 20, textColor: Black(0.7), fontFamily: "opensans" };
         const LOOKS = {
-            ozdenType1: {
+            ozden: {
                 layout: OZDEN_LAYOUT, icon: OZDEN_ICON, label: OZDEN_LABEL,
                 box: { color: "#E3E3E3", border: 1, borderColor: Black(0.35), round: 4, boxShadow: "inset 0 -2px 0 rgba(0, 0, 0, 0.25)" },
                 hoverColor: "#D9D9D9", activeColor: "#D9D9D9",
             },
-            ozdenType2: {
+            ozden2: {
                 layout: OZDEN_LAYOUT, icon: OZDEN_ICON, label: OZDEN_LABEL,
                 box: { color: "#E3E3E3", border: 1, borderColor: Black(0.35), round: 4, boxShadow: "none" },
                 hoverColor: "#D9D9D9", activeColor: "#D9D9D9",
             },
-            ozdenType3: {
+            ozden3: {
                 layout: OZDEN_LAYOUT, icon: OZDEN_ICON, label: OZDEN_LABEL,
                 box: { color: "#E3E3E3", border: 1, borderColor: Black(0.1), round: 4, boxShadow: "none" },
                 hoverColor: "#D9D9D9", activeColor: "#D9D9D9",
             },
-            ozdenType4: { // the ghost
+            ozden4: { // the ghost
                 layout: OZDEN_LAYOUT, icon: OZDEN_ICON, label: OZDEN_LABEL,
                 box: { color: White(0), border: 0, borderColor: "transparent", round: 4, boxShadow: "none" },
                 hoverColor: "#D9D9D9", activeColor: "#D9D9D9",
@@ -120,7 +120,7 @@
                         HGroup({ width: "auto", height: "auto", align: "left top", gap: 20 });
                             Label({ width: STATE_COLUMN_WIDTH, text: "state", fontSize: 12, textColor: Black(0.4) });
                             Object.keys(LOOKS).forEach(function (name) {
-                                Label({ width: COLUMN_WIDTH, text: name + (name == "ozdenType1" ? " (default)" : ""), fontSize: 13, bold: 1, textColor: Black(0.6) });
+                                Label({ width: COLUMN_WIDTH, text: name + (name == "ozden" ? " (default)" : ""), fontSize: 13, bold: 1, textColor: Black(0.6) });
                             });
                         endGroup();
 

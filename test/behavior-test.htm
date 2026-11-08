@@ -940,15 +940,15 @@
 
         // 2026-11-04 (the user): a tone is three colors (the button, under the mouse, the text) on any template
         test("SmartButton: a tone colors any template, and style wins over it", async function () {
-            const templateBefore = JSON.stringify(SmartButton.styles.ozdenType2);
+            const templateBefore = JSON.stringify(SmartButton.styles.ozden2);
             const cyan = SmartButton.tones.cyan;
             const outlined = SmartButton({ styleName: "outlined", tone: "cyan", labelText: "Go" });
             check("SmartButton: outlined takes the colors of the tone", outlined.style.box.color === cyan.color && outlined.style.hover.color === cyan.hover && outlined.style.label.textColor === cyan.text, outlined.style.box.color);
             const own = SmartButton({ styleName: "pill", tone: "blue", style: { box: { color: "tomato" } }, labelText: "Go" });
             check("SmartButton: style wins over tone", own.style.box.color === "tomato" && own.style.hover.color === SmartButton.tones.blue.hover, own.style.box.color + " / " + own.style.hover.color);
-            const shared = SmartButton({ tone: "green", style: SmartButton.styles.ozdenType2, labelText: "Go" });
-            check("SmartButton: a template given as style is not changed", JSON.stringify(SmartButton.styles.ozdenType2) === templateBefore);
-            const dark = SmartButton({ styleName: "ozdenType1Dark", tone: "cyanDark", labelText: "Go" });
+            const shared = SmartButton({ tone: "green", style: SmartButton.styles.ozden2, labelText: "Go" });
+            check("SmartButton: a template given as style is not changed", JSON.stringify(SmartButton.styles.ozden2) === templateBefore);
+            const dark = SmartButton({ styleName: "ozdenDark", tone: "cyanDark", labelText: "Go" });
             check("SmartButton: the light text of a dark tone turns the icon white", dark.style.label.textColor === SmartButton.LIGHT_TEXT && dark.style.icon.filter === SmartButton.WHITE_ICON, dark.style.icon.filter);
             outlined.setTone("");
             const gray = SmartButton.getTemplateColors("outlined");
@@ -3380,10 +3380,10 @@
             login.remove();
         });
 
-        // 2026-11-05 (the user): LOGIN of login-page.htm is a blue ozdenType3 SmartButton
+        // 2026-11-05 (the user): LOGIN of login-page.htm is a blue ozden3 SmartButton
         test("LoginPageV2: buttonStyleName makes LOGIN a SmartButton; passive it does not log in (a click, Enter), active it does", async function () {
             let logins = 0;
-            const login = LoginPage({ buttonStyleName: "ozdenType3", buttonTone: "blue", onLoginClick: function () { logins++; } });
+            const login = LoginPage({ buttonStyleName: "ozden3", buttonTone: "blue", onLoginClick: function () { logins++; } });
             const button = login.loginBtn;
             const isSmartButton = (typeof button.setEnabled === "function" && button.tone === "blue" && button.enabled != 1);
             button.elem.click();

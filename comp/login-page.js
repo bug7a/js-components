@@ -16,7 +16,7 @@ UI COMPONENT
 : one light gray (#EFEFEF), the edge of the Google / Apple buttons (Black(0.2)), a white
   selected tab with a soft shadow (its tabStyle). A page that gives its own tabStyle after it replaces that shadow.
 - The LOGIN / SIGN UP buttons: buttonStyleName "" (default) keeps the flat buttons in
-  primaryColor; a SmartButton template (Ex: "ozdenType3") makes them SmartButtons of the kit, in buttonTone (Ex:
+  primaryColor; a SmartButton template (Ex: "ozden3") makes them SmartButtons of the kit, in buttonTone (Ex:
   "blue"), with the text color of the tone. A passive one has the passive look of SmartButton.
 - The logos of createButtonWithIcon, drawn in the page (no links to other sites):
   LoginPage.GOOGLE_LOGO (the colored G) and LoginPage.getAppleLogo(color) (the apple in one color on a transparent
@@ -57,7 +57,7 @@ const LoginPageDefaults = {
     tabWidth: "auto", // the LOGIN / SIGN UP bar: "auto" (as wide as its tabs) or a width the tabs share (Ex: the panelWidth)
     tabStyle: {}, // more keys of the style of its Tabs (pillBar, tab, pillActive, pillIndicator...), over the tab_ look
     inputStyleName: "", // "": the fields take the input_ colors below. A TextField package ("ozden", "ozdenDark"...): the fields take its look.
-    buttonStyleName: "", // "": LOGIN / SIGN UP are flat buttons in primaryColor. A SmartButton template ("ozdenType3"...): SmartButtons
+    buttonStyleName: "", // "": LOGIN / SIGN UP are flat buttons in primaryColor. A SmartButton template ("ozden3"...): SmartButtons
     buttonTone: "", // The tone of those SmartButtons (Ex: "blue"; "": the gray of the template)
     input_backgroundColor: "#141414",
     input_lineColor: "transparent",
