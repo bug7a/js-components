@@ -19,6 +19,9 @@ The results:
     LIVE    it differs, and it differs from itself too in the same parts (a live chart, a running animation):
             this tool can not tell; read the lines it prints
     DIFF    a real difference. The exit code is 1, the pictures and the texts are in the folder it prints
+A difference of the picture prints where the pixels changed: the box (x, y), how many pixels, and how many of them
+changed strongly (more than 40 of 255 in a color: more than the smoothing of an edge). The old | new picture of that
+part is saved as -diff.png, enlarged when it is small.
 Under a difference of a text (dom, endDom, presses, log): its first line, old and new, around the first letter that
 differs, then the changes of all its lines, word by word, the most common first:
     the changes of all 80 lines: - "cursor: pointer;" x64, + "cursor: pointer;" x16
@@ -455,12 +458,132 @@ const compareAtSize = async function (browser, port, pair, size) {
     const fileStart = path.join(OUT_FOLDER, path.basename(pair.newPath, ".htm") + "-" + size.width);
     saveRun(fileStart + "-old", oldRun);
     saveRun(fileStart + "-new", newRun);
+    const pictureDifference = differences.find(function (difference) { return difference.part === "picture"; });
+    if (pictureDifference) {
+        pictureDifference.place = await describePictureChange(browser, oldRun.picture, newRun.picture, fileStart + "-diff.png");
+    }
 
     // Does the page differ from itself in the same parts?
     const ownDifferences = compareRuns(await runPage(browser, newUrl, size), await runPage(browser, newUrl, size));
     const ownParts = ownDifferences.map(function (difference) { return difference.part; });
     const isLive = differences.every(function (difference) { return ownParts.includes(difference.part); });
     return { status: isLive ? "LIVE" : "DIFF", counts: newRun.counts, differences, fileStart };
+};
+
+// *** THE CHANGED PART OF A PICTURE:
+
+const STRONG_CHANGE = 40; // of 255 in a color: a change that is seen (the smoothing of an edge changes less)
+const DIFF_MARGIN = 24; // px around the changed part
+const DIFF_GAP = 16; // px between the old and the new part
+const DIFF_MAX_WIDTH = 1800; // px of the saved picture (a small part is enlarged up to 4 times)
+const DIFF_LABEL_HEIGHT = 22; // px
+
+// Runs in the browser: the box of the changed pixels (of the strong ones when there are any) and the picture of that
+// part, old | new. null when the pixels are the same.
+const findPictureChange = async function (oldSource, newSource, limits) {
+    const loadImage = function (source) {
+        return new Promise(function (resolve, reject) {
+            const image = new Image();
+            image.onload = function () { resolve(image); };
+            image.onerror = reject;
+            image.src = source;
+        });
+    };
+    const readPixels = function (image) {
+        const canvas = document.createElement("canvas");
+        canvas.width = image.width;
+        canvas.height = image.height;
+        const context = canvas.getContext("2d");
+        context.drawImage(image, 0, 0);
+        return context.getImageData(0, 0, image.width, image.height).data;
+    };
+    const newBox = function () {
+        return { left: Infinity, top: Infinity, right: -1, bottom: -1, count: 0 };
+    };
+    const addToBox = function (box, x, y) {
+        box.left = Math.min(box.left, x);
+        box.top = Math.min(box.top, y);
+        box.right = Math.max(box.right, x);
+        box.bottom = Math.max(box.bottom, y);
+        box.count++;
+    };
+
+    const oldImage = await loadImage(oldSource);
+    const newImage = await loadImage(newSource);
+    const oldPixels = readPixels(oldImage);
+    const newPixels = readPixels(newImage);
+    const width = Math.min(oldImage.width, newImage.width);
+    const height = Math.min(oldImage.height, newImage.height);
+    const changed = newBox();
+    const strong = newBox();
+    for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+            const oldAt = (y * oldImage.width + x) * 4;
+            const newAt = (y * newImage.width + x) * 4;
+            let change = 0;
+            for (let channel = 0; channel < 4; channel++) {
+                change = Math.max(change, Math.abs(oldPixels[oldAt + channel] - newPixels[newAt + channel]));
+            }
+            if (change === 0) continue;
+            addToBox(changed, x, y);
+            if (change > limits.strongChange) addToBox(strong, x, y);
+        }
+    }
+    if (changed.count === 0) return null;
+
+    const box = (strong.count > 0) ? strong : changed;
+    const left = Math.max(0, box.left - limits.margin);
+    const top = Math.max(0, box.top - limits.margin);
+    const partWidth = Math.min(width, box.right + 1 + limits.margin) - left;
+    const partHeight = Math.min(height, box.bottom + 1 + limits.margin) - top;
+    const scale = Math.min(4, limits.maxWidth / (partWidth * 2 + limits.gap));
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.round(partWidth * scale * 2 + limits.gap);
+    canvas.height = Math.round(partHeight * scale) + limits.labelHeight;
+    const context = canvas.getContext("2d");
+    context.fillStyle = "#E9E9EC";
+    context.fillRect(0, 0, canvas.width, canvas.height);
+    context.imageSmoothingEnabled = (scale < 1); // WHY: an enlarged part shows its pixels as they are
+    context.fillStyle = "#333333";
+    context.font = "600 13px sans-serif";
+    [oldImage, newImage].forEach(function (image, index) {
+        const x = index * (partWidth * scale + limits.gap);
+        context.fillText((index === 0) ? "old" : "new", x + 2, limits.labelHeight - 7);
+        const target = { width: partWidth * scale, height: partHeight * scale };
+        context.drawImage(image, left, top, partWidth, partHeight, x, limits.labelHeight, target.width, target.height);
+    });
+    return {
+        box: { left: box.left, top: box.top, right: box.right, bottom: box.bottom },
+        changedCount: changed.count,
+        strongCount: strong.count,
+        isSizeChanged: (oldImage.width !== newImage.width || oldImage.height !== newImage.height),
+        picture: canvas.toDataURL("image/png"),
+    };
+};
+
+// The changed part of the two pictures as a line of the report; its picture goes to the file.
+const describePictureChange = async function (browser, oldPicture, newPicture, file) {
+    const context = await browser.createBrowserContext();
+    try {
+        const page = await context.newPage();
+        const toSource = function (picture) { return "data:image/png;base64," + Buffer.from(picture).toString("base64"); };
+        const limits = {
+            strongChange: STRONG_CHANGE,
+            margin: DIFF_MARGIN,
+            gap: DIFF_GAP,
+            maxWidth: DIFF_MAX_WIDTH,
+            labelHeight: DIFF_LABEL_HEIGHT,
+        };
+        const change = await page.evaluate(findPictureChange, toSource(oldPicture), toSource(newPicture), limits);
+        if (!change) return "the pixels are the same (only the files differ)";
+        fs.writeFileSync(file, Buffer.from(change.picture.split(",")[1], "base64"));
+        const box = change.box;
+        const sizeNote = (change.isSizeChanged) ? ", the size of the picture changed" : "";
+        return "x " + box.left + "-" + box.right + ", y " + box.top + "-" + box.bottom + " (" + change.changedCount
+            + " px changed, " + change.strongCount + " strongly" + sizeNote + "): " + file;
+    } finally {
+        await context.close();
+    }
 };
 
 // *** THE REPORT:
@@ -481,7 +604,10 @@ const printResult = function (size, result) {
     const parts = result.differences.map(function (difference) { return difference.part; }).join(", ");
     console.log("  " + size.width + ": " + result.status + " " + counts + ": " + parts);
     result.differences.forEach(function (difference) {
-        if (difference.part === "picture") return;
+        if (difference.part === "picture") {
+            console.log("    picture: " + difference.place);
+            return;
+        }
         const [oldText, newText] = cutAround(difference.oldLine, difference.newLine);
         console.log("    " + difference.part + ", " + difference.count + " lines, the first at line " + difference.lineNumber + ":");
         console.log("      old: " + oldText);
