@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>SearchInput light / dark draft</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- LIBRARY FILES (a draft: no component, only basic.js objects) -->
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Bold.ttf" as="font" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="../basic/basic.css">
+    <script src="../basic/basic.js" type="text/javascript" charset="utf-8"></script>
+
+    <script>
+
+        /* Bismillah */
+
+        // DRAFT DESIGN of comp/search-input.js (SearchInput): the "light" package and a "dark" twin of it, every state
+        // side by side. light: SearchInput.styles.light (a standard search box: white, a thin gray edge, round 8, 44 px,
+        // a line search icon, a gray round clear button, a dark 2 px edge while typing). dark: a proposal, SearchInput
+        // has no dark package yet (ozdenDark is the dark of ozden): the same shape in the dark colors of the kit
+        // (#232322, white lines, white icons). Plain basic.js objects (no SearchInput here); under the mouse and while
+        // typing are still frames of those moments. The light values are copies: keep them in step with
+        // search-input.js when it changes.
+        // http://127.0.0.1:5505/_basic-designer/index.htm?page=_designs/search-input.htm
+
+        const PAGE_COLOR = "#F4F5F2"; // the ground of the draft, not of the fields
+        const PAGE_TEXT = { title: Black(0.8), note: Black(0.5), state: Black(0.45), stateTitle: Black(0.4) }; // the texts of the draft
+        const STATE_COLUMN_WIDTH = 250;
+        const ROW_HEIGHT = 64;
+        const HEADER_HEIGHT = 24;
+        const CARD_PADDING = 24;
+        const COLUMN_GAP = 24;
+
+        // THE SIZES (the light package; the same in both looks)
+        const SIZE = {
+            width: 300,
+            height: 44,
+            round: 8,
+            fontSize: 16,
+            textOffsetY: -2, // the text a little up: the small letters of Open Sans sit low in their line
+            searchIcon: { size: 20, left: 16, gap: 8 }, // searchIconSize, searchIconLeft, searchIconGap
+            clearIcon: { size: 20, right: 16 }, // (20 px) clearIconRight
+            iconsSpace: 80, // the width of the box that is not for the text (SearchInput: ICONS_SPACE)
+            textUnderEnd: 20, // while not typing a cut text goes this far under the clear icon (SearchInput.TEXT_UNDER_END)
+            textFadeWidth: 24, // a cut text fades out over this width (textFadeWidth)
+            focusEdgeWidth: 2, // the edge while typing: the 1 px edge and a 1 px line inside it (focusBorderWidth)
+            hoverRingWidth: 1, // animated: the line inside the edge under the mouse
+            focusRingWidth: 2, // animated: the line while typing
+            caretHeight: 20,
+        };
+        const ANIMATED_ICON = { hoverScale: 1.08, focusScale: 1.06, focusTilt: -12, opacityGain: 0.25 }; // animated: the search icon under the mouse (x2 while typing)
+
+        // THE LIGHT LOOK (SearchInput.styles.light)
+        const LIGHT = {
+            page: { color: "white", textColor: Black(0.45) }, // the light page the fields sit on
+            field: { color: "white", border: 1, borderColor: Black(0.2), bottomLine: "1px solid " + Black(0.2) }, // color, border, borderColor, borderBottomStyle
+            focusBorderColor: Black(0.6), // the edge while typing
+            text: { color: Black(0.85), placeholderColor: Black(0.45), caretColor: Black(0.85) }, // textColor, placeholderColor
+            searchIcon: { color: "#000000", opacity: 0.55 }, // the line icon (its color is in the drawing), searchIconOpacity
+            clearIcon: { circleColor: "#8C8C8C", crossColor: "#FFFFFF", opacity: 1 }, // the gray round button (its colors are in the drawing), clearIconOpacity
+            animated: { hoverRingColor: Black(0.08), focusRingColor: Black(0.16) }, // animated: 1 (hoverRingColor, focusRingColor)
+        };
+
+        // THE DARK LOOK (a proposal: the dark twin of light, in the colors of the dark fields of the kit)
+        const DARK = {
+            page: { color: "#1A1A19", textColor: White(0.5) }, // the dark card of the kit
+            field: { color: "#232322", border: 1, borderColor: White(0.12), bottomLine: "1px solid " + White(0.12) },
+            focusBorderColor: White(0.6),
+            text: { color: White(0.9), placeholderColor: White(0.4), caretColor: White(0.9) },
+            searchIcon: { color: "#FFFFFF", opacity: 0.55 },
+            clearIcon: { circleColor: "#8C8C8C", crossColor: "#232322", opacity: 1 }, // the same gray button, the cross in the color of the field
+            animated: { hoverRingColor: White(0.08), focusRingColor: White(0.16) },
+        };
+
+        // THE STATES (one row each)
+        const STATES = [
+            { name: "Empty (the placeholder)", text: "" },
+            { name: "With a text (the clear icon shows)", text: "fishing boat" },
+            { name: "Typing (focus): the 2 px edge of focusBorderColor", text: "fishing boat", focus: 1 },
+            { name: "Under the mouse, animated: 1 (a thin line inside the edge, the icon a little bigger and clearer)", text: "", hover: 1, animated: 1 },
+            { name: "Typing, animated: 1 (the line of focusRingColor, the icon tilted)", text: "fishing", focus: 1, animated: 1 },
+            { name: "A long text, not typing: it goes on under the clear icon and fades out there", text: "Search results for the fishing company of the north sea" },
+        ];
+
+        const start = function () {
+
+            page.color = PAGE_COLOR;
+
+            // BOX: Scrolling page
+            startBox(0, 0, "100%", "100%", { color: "transparent", scrollY: 1, scrollX: 1 });
+
+                VGroup({ width: "max-content", height: "auto", align: "left top", gap: 22, padding: 40, clipContent: 0 });
+
+                    Label({ text: "SearchInput · light / dark · draft (comp/search-input.js)", fontSize: 20, bold: 1, textColor: PAGE_TEXT.title });
+                    Label({ text: "light is SearchInput.styles.light; dark is a proposal (the component has no dark package yet). Every row is a state.", fontSize: 13, textColor: PAGE_TEXT.note });
+
+                    // GROUP: The names of the states, then a card for every look
+                    HGroup({ width: "auto", height: "auto", align: "left top", gap: COLUMN_GAP, clipContent: 0 });
+                        drawStateColumn();
+                        drawLookCard(LIGHT, "light");
+                        drawLookCard(DARK, "dark (a proposal)");
+                    endGroup();
+
+                endGroup();
+
+            endBox();
+
+        };
+
+        // GROUP: The names of the states, one per row (the rows of the cards have the same heights)
+        const drawStateColumn = function () {
+            const column = VGroup({ width: STATE_COLUMN_WIDTH, height: "auto", align: "left top", gap: 0, padding: [0, CARD_PADDING] });
+                Label({ height: HEADER_HEIGHT, text: "state", fontSize: 12, textColor: PAGE_TEXT.stateTitle });
+                STATES.forEach(function (state) {
+                    HGroup({ width: "100%", height: ROW_HEIGHT, align: "left center" });
+                        Label({ width: "100%", text: state.name, fontSize: 12, textColor: PAGE_TEXT.state, css: { lineHeight: "1.3" } });
+                    endGroup();
+                });
+            endGroup();
+            return column;
+        };
+
+        // GROUP: A card in the color of the page of a look: its name, then one row per state
+        const drawLookCard = function (look, name) {
+            const card = VGroup({ width: "auto", height: "auto", align: "left top", gap: 0, padding: CARD_PADDING, color: look.page.color, round: 10, border: 1, borderColor: Black(0.08), clipContent: 0 });
+                Label({ height: HEADER_HEIGHT, text: name, fontSize: 13, bold: 1, textColor: look.page.textColor, css: { whiteSpace: "nowrap" } });
+                STATES.forEach(function (state) {
+                    // GROUP: A row: the field in this state
+                    HGroup({ width: SIZE.width, height: ROW_HEIGHT, align: "left center", clipContent: 0 });
+                        drawField(look, state);
+                    endGroup();
+                });
+            endGroup();
+            return card;
+        };
+
+        // BOX: The field in one state: its edge and lines, the search icon, the text (or the placeholder) with its caret, the clear icon
+        const drawField = function (look, state) {
+            const _f = look.field;
+            const field = Box({ width: SIZE.width, height: SIZE.height, color: _f.color, round: SIZE.round, border: _f.border, borderColor: getEdgeColor(look, state), clipContent: 0, position: "relative" });
+            field.shrink = 0;
+            field.css = { borderBottom: getBottomLine(look, state), boxShadow: getInnerLine(look, state) };
+            createIn(field, function () {
+                drawSearchIcon(look, state);
+                drawText(look, state);
+                if (state.text) drawClearIcon(look);
+            });
+            return field;
+        };
+
+        // *** THE EDGE AND THE LINES OF A STATE (as the component paints them)
+
+        const getEdgeColor = function (look, state) {
+            if (state.focus) return look.focusBorderColor;
+            return look.field.borderColor;
+        };
+
+        // While typing the edge is the focus color on every side; the bottom line of the package comes back after it
+        const getBottomLine = function (look, state) {
+            if (state.focus) return look.field.border + "px solid " + look.focusBorderColor;
+            return look.field.bottomLine;
+        };
+
+        // animated: a line inside the edge under the mouse and while typing; not animated: the inner part of the 2 px focus edge
+        const getInnerLine = function (look, state) {
+            if (state.animated && state.focus) return "inset 0 0 0 " + SIZE.focusRingWidth + "px " + look.animated.focusRingColor;
+            if (state.animated && state.hover) return "inset 0 0 0 " + SIZE.hoverRingWidth + "px " + look.animated.hoverRingColor;
+            if (state.focus) return "inset 0 0 0 " + (SIZE.focusEdgeWidth - look.field.border) + "px " + look.focusBorderColor;
+            return "none";
+        };
+
+        // *** THE PARTS
+
+        // ICON: The search icon at the left (animated: bigger under the mouse, tilted while typing, clearer in both)
+        const drawSearchIcon = function (look, state) {
+            const _i = SIZE.searchIcon;
+            const icon = Icon(_i.left, (SIZE.height - _i.size) / 2, _i.size, _i.size, { opacity: getSearchIconOpacity(look, state) });
+            icon.load(getSearchIconFile(look.searchIcon.color));
+            icon.css = { transform: getSearchIconTransform(state) };
+            return icon;
+        };
+
+        const getSearchIconOpacity = function (look, state) {
+            let gain = 0;
+            if (state.animated && state.hover) gain = ANIMATED_ICON.opacityGain;
+            if (state.animated && state.focus) gain = ANIMATED_ICON.opacityGain * 2;
+            return Math.min(1, look.searchIcon.opacity + gain);
+        };
+
+        const getSearchIconTransform = function (state) {
+            if (state.animated && state.focus) return "scale(" + ANIMATED_ICON.focusScale + ") rotate(" + ANIMATED_ICON.focusTilt + "deg)";
+            if (state.animated && state.hover) return "scale(" + ANIMATED_ICON.hoverScale + ")";
+            return "none";
+        };
+
+        // GROUP: The text (or the placeholder) after the search icon, its caret while typing; a long text is cut at the
+        // right (under the clear icon while not typing) and fades out there
+        const drawText = function (look, state) {
+            const left = SIZE.searchIcon.left + SIZE.searchIcon.size + SIZE.searchIcon.gap;
+            const underEnd = state.focus ? 0 : SIZE.textUnderEnd;
+            const width = SIZE.width - SIZE.iconsSpace + underEnd;
+            const hasText = !!state.text;
+            const text = HGroup({ left: left, top: 0, width: width, height: "100%", align: "left center", gap: 1, clipContent: 1 });
+            text.css = { transform: "translateY(" + SIZE.textOffsetY + "px)", maskImage: getTextFade(underEnd), webkitMaskImage: getTextFade(underEnd) };
+                Label({ text: hasText ? state.text : "Search", fontSize: SIZE.fontSize, textColor: hasText ? look.text.color : look.text.placeholderColor, css: { whiteSpace: "nowrap", flexShrink: "0" } });
+                if (state.focus) Box({ width: 1, height: SIZE.caretHeight, color: look.text.caretColor, position: "relative" });
+            endGroup();
+            return text;
+        };
+
+        // The fade at the right end of a cut text (the component fades only a cut side; here every text can be cut there)
+        const getTextFade = function (underEnd) {
+            const endFade = (SIZE.textFadeWidth + underEnd) + "px";
+            return "linear-gradient(to right, #000 0px, #000 calc(100% - " + endFade + "), transparent 100%)";
+        };
+
+        // ICON: The round clear button at the right (shown while there is a text)
+        const drawClearIcon = function (look) {
+            const _c = SIZE.clearIcon;
+            const icon = Icon({ right: _c.right, top: (SIZE.height - _c.size) / 2, width: _c.size, height: _c.size, opacity: look.clearIcon.opacity });
+            icon.load(getClearIconFile(look.clearIcon.circleColor, look.clearIcon.crossColor));
+            return icon;
+        };
+
+        // *** THE ICONS (the icons of the light package; the colors are in the drawing)
+
+        const getSearchIconFile = function (color) {
+            return "data:image/svg+xml;utf8," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="' + color + '" stroke-width="2" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L20 20"/><\/svg>');
+        };
+
+        const getClearIconFile = function (circleColor, crossColor) {
+            return "data:image/svg+xml;utf8," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="' + circleColor + '"/><path d="M9 9l6 6M15 9l-6 6" fill="none" stroke="' + crossColor + '" stroke-width="2" stroke-linecap="round"/><\/svg>');
+        };
+
+    </script>
+
+</head>
+
+<body>
+</body>
+
+</html>
