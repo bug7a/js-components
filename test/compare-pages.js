@@ -18,8 +18,8 @@ The old page loads the old basic/ and comp/ too, so a change in a component is m
 
 The results:
     SAME    no difference (a difference that goes away when the page is opened again was only timing)
-    LIVE    it differs, and it differs from itself too in the same parts (a live chart, a running animation):
-            this tool can not tell; read the lines it prints
+    LIVE    it differs, and it differs from itself too in the same parts, in any of the runs of the old page or of
+            the new one (a live chart, a running animation, a timer): this tool can not tell; read the lines it prints
     DIFF    a real difference. The exit code is 1, the pictures and the texts are in the folder it prints
 A difference of the picture prints where the pixels changed: the box (x, y), how many pixels, and how many of them
 changed strongly (more than 40 of 255 in a color: more than the smoothing of an edge). The old | new picture of that
@@ -442,6 +442,14 @@ const compareRuns = function (oldRun, newRun) {
     return differences;
 };
 
+// The parts in which the runs of one page are not all the same.
+// WHY each one against the first: a run that is the same as the first one is the same as the others too.
+const findLiveParts = function (runs) {
+    return runs.slice(1).flatMap(function (run) {
+        return compareRuns(runs[0], run).map(function (difference) { return difference.part; });
+    });
+};
+
 const saveRun = function (fileStart, run) {
     fs.writeFileSync(fileStart + ".png", run.picture);
     TEXT_PARTS.forEach(function (part) {
@@ -466,10 +474,14 @@ const compareAtSize = async function (browser, port, pair, size) {
     const oldUrl = "http://127.0.0.1:" + port + OLD_PATH + "/" + pair.oldPath;
     const newUrl = "http://127.0.0.1:" + port + "/" + pair.newPath;
     let oldRun, newRun, differences;
+    const oldRuns = [];
+    const newRuns = [];
 
     for (let attempt = 1; attempt <= TRIES; attempt++) {
         oldRun = await runPage(browser, oldUrl, size);
         newRun = await runPage(browser, newUrl, size);
+        oldRuns.push(oldRun);
+        newRuns.push(newRun);
         differences = compareRuns(oldRun, newRun);
         if (differences.length === 0) return { status: "SAME", counts: newRun.counts };
     }
@@ -482,10 +494,11 @@ const compareAtSize = async function (browser, port, pair, size) {
         pictureDifference.place = await describePictureChange(browser, oldRun.picture, newRun.picture, fileStart + "-diff.png");
     }
 
-    // Does the page differ from itself in the same parts?
-    const ownDifferences = compareRuns(await runPage(browser, newUrl, size), await runPage(browser, newUrl, size));
-    const ownParts = ownDifferences.map(function (difference) { return difference.part; });
-    const isLive = differences.every(function (difference) { return ownParts.includes(difference.part); });
+    // Does the page differ from itself in the same parts? Every run of the old page and of the new one counts.
+    newRuns.push(await runPage(browser, newUrl, size));
+    newRuns.push(await runPage(browser, newUrl, size));
+    const liveParts = findLiveParts(oldRuns).concat(findLiveParts(newRuns));
+    const isLive = differences.every(function (difference) { return liveParts.includes(difference.part); });
     return { status: isLive ? "LIVE" : "DIFF", counts: newRun.counts, differences, fileStart };
 };
 
