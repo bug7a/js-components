@@ -20,7 +20,7 @@
     /* Bismillah */
 
     // SmartButton: the places of the
-    // icon, your own look, setText / setIcon, the waiting cover, the motion and the keyboard. No styleName: the
+ // icon, your own look, setLabelText / setIcon, the waiting cover, the motion and the keyboard. No styleName: the
     // default template ozden.
     // (The other samples: smart-button.htm the model page (the tones), smart-button-alternatif.htm pill and
     // outlined, smart-button-3-ozden.htm the templates, smart-button-4-dark.htm the dark templates.)
@@ -95,8 +95,8 @@
         button.setWaiting(1);
         button.after(JOB_TIME, function () {
             button.setWaiting(0);
-            button.setText("Saved");
-            cancelSavedText = button.after(DONE_TIME, function () { button.setText("Save"); });
+            button.setLabelText("Saved");
+            cancelSavedText = button.after(DONE_TIME, function () { button.setLabelText("Save"); });
         });
     };
 
@@ -141,13 +141,13 @@
                     });
                 endCard();
 
-                startCard("setText() and setIcon()", "A button that changes itself: the lamp is turned on and off.");
+                startCard("setLabelText() and setIcon()", "A button that changes itself: the lamp is turned on and off.");
                     SmartButton({
                         labelText: "Lamp is off",
                         iconFile: ICONS + "lamp.png",
                         onClick: function (self) {
                             const isOn = (self.labelText == "Lamp is on");
-                            self.setText(isOn ? "Lamp is off" : "Lamp is on");
+                            self.setLabelText(isOn ? "Lamp is off" : "Lamp is on");
                             self.setIcon(ICONS + (isOn ? "lamp.png" : "lamp-on.png"));
                         },
                     });
@@ -193,7 +193,7 @@
                         onClick: function (self) {
                             const isOn = (btnSend.enabled == 1);
                             btnSend.setEnabled(isOn ? 0 : 1);
-                            self.setText(isOn ? "Enable Send" : "Disable Send");
+                            self.setLabelText(isOn ? "Enable Send" : "Disable Send");
                         },
                     });
                 endCard();

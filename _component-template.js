@@ -37,7 +37,8 @@ const card = CompName({
     onClick: function (self) { self.setSelected(!self.selected); },
     onChange: function (self) { println("selected: " + self.selected); },
 });
-card.setText("Orders", "15 new orders today");
+card.setLabelText("Orders");
+card.setDescriptionText("15 new orders today");
 card.setBadge("");              // no badge
 card.setItems(["A", "B", "C"]);
 card.addItem("D");
@@ -159,7 +160,7 @@ const CompName = function (params = {}) {
     // DRAWING: each function does one job, and a change calls only the one it needs:
     // createItems()   -> the objects made from the data are made again    (setItems)
     // createItem()    -> one object of the data (createItems, addItem)     (addItem: the others are kept)
-    // applyContent()  -> the texts, the icon, the badge                     (setText, setBadge, setIcon)
+    // applyContent()  -> the texts, the icon, the badge                     (setLabelText, setBadge, setIcon...)
     // paint()         -> the colors and the look of the state               (hover, pressed, selected, enabled)
     // refreshLayout() -> what depends on the sizes (measured, after the objects are placed)   (resize)
     // drawAll()       -> all of them                                        (the first drawing, box.refresh)
@@ -236,14 +237,20 @@ const CompName = function (params = {}) {
     };
 
     // *** PUBLIC FUNCTIONS:
-    // A param that can change after create gets a setter. It saves the value, then calls the drawing it needs.
+    // A param that can change after create gets a setter with its name (setLabelText for labelText).
+    // It saves the value, then calls the drawing it needs.
 
-    box.setText = function (labelText, descriptionText = box.descriptionText) {
-        box.labelText = labelText;
-        box.descriptionText = descriptionText;
+    box.setLabelText = function (text) {
+        box.labelText = text;
         applyContent();
     };
-    // USAGE: get: card.labelText, set: card.setText("Orders", "12 new")
+    // USAGE: get: card.labelText, set: card.setLabelText("Orders")
+
+    box.setDescriptionText = function (text) {
+        box.descriptionText = text;
+        applyContent();
+    };
+    // USAGE: card.setDescriptionText("12 new") / card.setDescriptionText("") // no description
 
     box.setBadge = function (text) {
         box.badgeText = text;

@@ -185,7 +185,7 @@
             stopWriting();
             const pieces = ANSWER.match(/\s*\S+|\s+$/g);
             let position = 0;
-            answerView.setText("");
+            answerView.setMarkdownText("");
             writeTimer = setInterval(function () {
                 if (position >= pieces.length) {
                     stopWriting();

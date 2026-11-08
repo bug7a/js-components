@@ -12,13 +12,13 @@ UI COMPONENT TEMPLATE
 - Link: the link bar opens under the toolbar (no browser prompt). Ctrl / Cmd + K opens it too.
 - Keyboard: Ctrl / Cmd + B, I, U (the browser), Ctrl / Cmd + Z undo. Tab leaves the editor (accessibility).
 - Paste: "clean" (default) keeps only the allowed tags (the formats of the toolbar), "text" pastes plain text.
-- getHtml() is always cleaned: only b, strong, i, em, u, s, strike, del, h2, h3, p, div, br, ul, ol, li,
+- getHtmlText() is always cleaned: only b, strong, i, em, u, s, strike, del, h2, h3, p, div, br, ul, ol, li,
   blockquote and a (href: http, https, mailto, tel or a relative address). No scripts, styles or events.
-  setHtml() cleans its input the same way before it is shown.
+  setHtmlText() cleans its input the same way before it is shown.
 - maxLength (characters of the text, 0: no limit) and a counter at the bottom right (showCounter: 1).
 - placeholder, readOnly, enabled. height: the whole editor. The writing area scrolls with
   basic/scroll-bar.js (if it is loaded).
-- onChange(self) is called while the user writes. It is NOT called when the component is created or by setHtml().
+- onChange(self) is called while the user writes. It is NOT called when the component is created or by setHtmlText().
 - Everything is drawn with code (no image files needed).
 - Style packages: "light" (default; the old name "classic" works too), "modern", "dark". Select with styleName. (RichTextEditor.styles)
 
@@ -27,10 +27,10 @@ const editor = RichTextEditor({
     width: 560,
     height: 300,
     placeholder: "Write the product description...",
-    onChange: function (self) { println(self.getHtml()); },
+    onChange: function (self) { println(self.getHtmlText()); },
 });
-editor.setHtml("<p>Hello <b>world</b></p>");
-editor.getHtml();       // "<p>Hello <b>world</b></p>"
+editor.setHtmlText("<p>Hello <b>world</b></p>");
+editor.getHtmlText();   // "<p>Hello <b>world</b></p>"
 editor.getText();       // "Hello world"
 editor.isEmpty();       // 0
 RichTextEditor({ tools: ["bold", "italic", "|", "ul", "ol"], maxLength: 500, showCounter: 1 });
@@ -83,7 +83,7 @@ const RichTextEditorDefaults = {
         counter: "{count} / {max}", // With maxLength
         counterNoLimit: "{count} characters", // Without maxLength
     },
-    onChange: function (self) { }, // self.getHtml(), self.getText()
+    onChange: function (self) { }, // self.getHtmlText(), self.getText()
     onFocus: function (self) { },
     onBlur: function (self) { },
     styleName: "light", // "light" ("classic": its old name), "modern", "dark" or a name added to RichTextEditor.styles
@@ -349,10 +349,10 @@ const RichTextEditor = function (params = {}) {
         updateToolbar();
         if (box.scrollBar) box.scrollBar.refreshScroll();
         if (!fireChange) {
-            lastHtml = box.getHtml();
+            lastHtml = box.getHtmlText();
             return;
         }
-        const html = box.getHtml();
+        const html = box.getHtmlText();
         if (html === lastHtml) return;
         lastHtml = html;
         box.onChange(box);
@@ -527,19 +527,19 @@ const RichTextEditor = function (params = {}) {
 
     // *** PUBLIC FUNCTIONS:
 
-    box.getHtml = function () {
+    box.getHtmlText = function () {
         if (box.isEmpty()) return "";
         return RichTextEditor.cleanHtml(box.editor.innerHTML);
     };
-    // USAGE: const html = editor.getHtml(); // "" when it is empty
+ // USAGE: const html = editor.getHtmlText(); // "" when it is empty
 
     // The content is cleaned before it is shown. onChange is not called.
-    box.setHtml = function (html) {
+    box.setHtmlText = function (html) {
         box.htmlText = RichTextEditor.cleanHtml(html || "");
         box.editor.innerHTML = box.htmlText || "<p><br></p>"; // WHY: The first line is a paragraph too, not a loose text.
         contentChanged(0);
     };
-    // USAGE: editor.setHtml("<p>Hello <b>world</b></p>")
+ // USAGE: editor.setHtmlText("<p>Hello <b>world</b></p>")
 
     box.getText = function () {
         return RichTextEditor.htmlToText(box.editor.innerHTML);
@@ -555,7 +555,7 @@ const RichTextEditor = function (params = {}) {
     };
 
     box.clear = function () {
-        box.setHtml("");
+        box.setHtmlText("");
     };
 
     // Inserts text at the cursor (at the end, when the editor does not have the focus). onChange is called.
@@ -884,7 +884,7 @@ const RichTextEditor = function (params = {}) {
     box.btnLinkRemove.on("click", removeLink);
 
     box.setPlaceholder(box.placeholder);
-    box.setHtml(box.htmlText);
+    box.setHtmlText(box.htmlText);
     box.setMaxLength(box.maxLength);
     applyEditableState();
 

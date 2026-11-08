@@ -54,7 +54,7 @@
                     // SAMPLE 1: Default
                     startCard(
                         "1. Default",
-                        "Select text and use the toolbar. Ctrl / Cmd + B, I, U, K (link), Z (undo). The HTML below is the output of getHtml(): only the allowed tags, no styles or scripts."
+                        "Select text and use the toolbar. Ctrl / Cmd + B, I, U, K (link), Z (undo). The HTML below is the output of getHtmlText(): only the allowed tags, no styles or scripts."
                     );
 
                         edtDefault = RichTextEditor({
@@ -133,7 +133,7 @@
                     // SAMPLE 4: API
                     startCard(
                         "4. API",
-                        "setHtml(), getHtml(), getText(), insertText(), runTool(), clear(), isEmpty(), setReadOnly(), setEnabled()"
+                        "setHtmlText(), getHtmlText(), getText(), insertText(), runTool(), clear(), isEmpty(), setReadOnly(), setEnabled()"
                     );
 
                         edtApi = RichTextEditor({
@@ -146,7 +146,7 @@
                         // GROUP: Buttons
                         HGroup({ width: "100%", height: "auto", gap: 8, wrap: 1 });
                             addSampleButton("Set HTML", function () {
-                                edtApi.setHtml("<p>Hello <b>world</b>!</p><ul><li>One</li><li>Two</li></ul>");
+                                edtApi.setHtmlText("<p>Hello <b>world</b>!</p><ul><li>One</li><li>Two</li></ul>");
                                 showApiState();
                             });
                             addSampleButton("Insert text", function () { edtApi.insertText(" (added)"); }, 1);
@@ -177,7 +177,7 @@
         // *** OTHER FUNCTIONS:
 
         const showHtml = function () {
-            lblHtml.plainText = edtDefault.getHtml() || "(empty)";
+            lblHtml.plainText = edtDefault.getHtmlText() || "(empty)";
         };
 
         const showApiState = function () {

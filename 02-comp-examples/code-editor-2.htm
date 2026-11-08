@@ -205,11 +205,11 @@
             editor.setLanguage(FILES[name].language);
             editor.setValue(FILES[name].value, 1);
             statusBar.setItemText("language", FILES[name].language);
-            statusBar.setMessage(name);
+            statusBar.setMessageText(name);
         };
 
         const save = function () {
-            statusBar.setMessage(openFileName + " was saved", "success", SAVED_MESSAGE_TIME);
+            statusBar.setMessageText(openFileName + " was saved", "success", SAVED_MESSAGE_TIME);
             logView.success("Saved: " + openFileName);
         };
 
@@ -242,12 +242,12 @@
                 clearInterval(runTimer);
                 runTimer = null;
                 statusBar.setBusy(0);
-                statusBar.setMessage("Ready");
+                statusBar.setMessageText("Ready");
                 return;
             }
             runTimer = setInterval(writeRunLine, RUN_LINE_TIME);
             statusBar.setBusy(1);
-            statusBar.setMessage("Running... (F5 stops it)");
+            statusBar.setMessageText("Running... (F5 stops it)");
         };
 
         </script>

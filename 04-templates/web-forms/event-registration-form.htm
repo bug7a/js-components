@@ -735,7 +735,7 @@
             const error = getPromoError();
             const code = getPromoCode();
             promoInput.setWarningText(error);
-            promoInput.setDescription((code && !error) ? "<span style='color:" + ACCENT_COLOR + "'>✓ " + PROMO_CODES[code].text + " is applied.</span>" : "");
+            promoInput.setDescriptionText((code && !error) ? "<span style='color:" + ACCENT_COLOR + "'>✓ " + PROMO_CODES[code].text + " is applied.</span>" : "");
             promoInput.checkIfInputIsRequiredAndEmpty();
             promoInput.showWarningIfNotValid(promoInput.isValid());
             form.refresh();

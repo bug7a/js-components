@@ -265,7 +265,7 @@ const ReportsPage = function(params = {}) {
         ];
 
         kpiBoxList.forEach(function(kpiBox, i) {
-            kpiBox.setTitle(kpiTexts[i].title);
+            kpiBox.setTitleText(kpiTexts[i].title);
             kpiBox.setValueText(kpiTexts[i].value);
             kpiBox.setValues(kpiSeries[i]);
         });

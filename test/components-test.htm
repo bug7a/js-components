@@ -316,6 +316,8 @@
             check("no console warnings", newWarnings.length === notEnded.length, newWarnings.filter(function (w) { return notEnded.indexOf(w) < 0; }).join(" | "), "warn");
             const broken = brokenImages();
             check("icons load", broken.length === 0, "not found: " + broken.join(", "), "warn");
+            const setterProblems = __findSetterProblems(test.name, box);
+            check("the names of its setters (code rules, 9)", setterProblems.length === 0, setterProblems.join("; "));
 
             if (test.keysOnly) return { steps: steps, keys: keys };
 
@@ -408,6 +410,27 @@
                 .filter(function (problem) { return problem !== ""; });
         };
 
+        // A setter takes the name of its param: setTitleText for titleText, not setTitle (code rules, 9).
+        const findSetterProblems = function (componentName, box) {
+            let defaults = null;
+            try { defaults = (0, eval)(componentName + "Defaults"); } catch (e) { return []; }
+            if (!defaults || typeof defaults !== "object") return [];
+            // WHY kept: Filters.setSelected chooses the options of a section; its selectedText is another thing.
+            const KEPT = { Filters: ["setSelected"] };
+            const kept = KEPT[componentName] || [];
+            const hasTextParam = Object.keys(defaults).some(function (key) { return /[a-z]Text$/.test(key); });
+            const problemOf = function (setter) {
+                const name = setter.charAt(3).toLowerCase() + setter.slice(4);
+                if (setter === "setText" && hasTextParam && !("text" in defaults)) return setter + " -> set + the name of its ...Text param";
+                if (!(name in defaults) && ((name + "Text") in defaults)) return setter + " -> " + setter + "Text";
+                return "";
+            };
+            return Object.keys(box)
+                .filter(function (key) { return /^set[A-Z]/.test(key) && typeof box[key] === "function" && !kept.includes(key); })
+                .map(problemOf)
+                .filter(function (problem) { return problem !== ""; });
+        };
+
         // *** PARENT PAGE:
 
         // The iframe page: watchers, basic.js, dependencies, the file, then the probe in start().
@@ -420,6 +443,7 @@
                 scripts.map(function (src) { return "<script src=\"../" + src + "\" onerror=\"__probe.missingFiles.push('" + src + "')\"><\/script>"; }).join("") +
                 "<script>const __runProbe = " + runProbe.toString() + ";" +
                 "const __findNameProblems = " + findNameProblems.toString() + ";" +
+                "const __findSetterProblems = " + findSetterProblems.toString() + ";" +
                 "const __setup = " + (test.setup ? test.setup.toString() : "null") + ";" +
                 "function start() { __runProbe(" + JSON.stringify(probeTest) + ", __setup)" +
                 ".then(function (r) { parent.__frameDone(" + id + ", r); })" +

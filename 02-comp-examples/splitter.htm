@@ -91,7 +91,7 @@
 
         const toggleList = function () {
             isListVisible = (isListVisible) ? 0 : 1;
-            btnList.setText((isListVisible) ? "Hide the list" : "Show the list");
+            btnList.setLabelText((isListVisible) ? "Hide the list" : "Show the list");
             eachOuter(function (split) { split.setAreaVisible("first", isListVisible); });
         };
 

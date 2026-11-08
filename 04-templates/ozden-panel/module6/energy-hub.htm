@@ -1365,7 +1365,7 @@
             const index = TARGET_SOC_LIST.indexOf(ev.targetSoc);
             if (index >= 0 && index != targetSelect.selectedIndex) targetSelect.setSelectedIndex(index);
 
-            btnPlug.setText((ev.plugged) ? "Test: Unplug the car" : "Test: Plug in the car");
+            btnPlug.setLabelText((ev.plugged) ? "Test: Unplug the car" : "Test: Plug in the car");
             [toggleEv, sliderEvLimit, chkSolarOnly, targetSelect].forEach(function (obj) { setInteractive(obj, ev.plugged == 1); });
 
             isRendering = 0;

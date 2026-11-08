@@ -98,7 +98,7 @@
 
         const toggleAnimated = function () {
             isAnimated = (isAnimated) ? 0 : 1;
-            btnAnimated.setText("animated: " + isAnimated);
+            btnAnimated.setLabelText("animated: " + isAnimated);
             eachAccordion(function (one) { one.setAnimated(isAnimated); });
         };
 

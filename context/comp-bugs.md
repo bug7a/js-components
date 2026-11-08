@@ -266,4 +266,4 @@ Satır numaraları 2026-11-05'teki dosyalara göredir.
   Tabs'ta kapalı ama kapatılabilir bir sekme (x) ile kapanır; Notice açıkken her Escape'i alır; Form'un pasif düğmesi
   hover'da etkin görünür; SelectTime `inline: 1` gizliyken seçili saati görünüme kaydırmaz; SmartTable başparmak
   sürüklenirken silinirse `body`'nin `userSelect`'i "none" kalır; SmartButton `render()` sayfanın verdiği transform'u
-  siler ve etiketsiz / ikonsuz yapılmış bir düğmede `setText()` / `setIcon()` bir şey göstermez.
+  siler ve etiketsiz / ikonsuz yapılmış bir düğmede `setLabelText()` / `setIcon()` bir şey göstermez.

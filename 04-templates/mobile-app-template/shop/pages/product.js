@@ -31,7 +31,7 @@ App.addPage({
 
         const refreshFooter = function () {
             stepper.lblValue.plainText = String(count);
-            btnAdd.setText(tx("Add to cart") + "  ·  " + Store.money(product.price * count));
+            btnAdd.setLabelText(tx("Add to cart") + "  ·  " + Store.money(product.price * count));
         };
 
         const paintSwatch = function (swatch) {

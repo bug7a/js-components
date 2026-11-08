@@ -90,7 +90,7 @@
         };
 
         const setMessage = function (text, tone) {
-            eachBar(function (bar) { bar.setMessage(text, tone); });
+            eachBar(function (bar) { bar.setMessageText(text, tone); });
         };
 
         // GROUP: A title and a small window with a StatusBar. Returns the StatusBar.
@@ -143,12 +143,12 @@
 
         // A message with a time: after it the bar goes back to its lasting message.
         const showSaved = function () {
-            eachBar(function (bar) { bar.setMessage("Saved", "success", SAVED_MESSAGE_TIME); });
+            eachBar(function (bar) { bar.setMessageText("Saved", "success", SAVED_MESSAGE_TIME); });
         };
 
         const toggleBusy = function () {
             isBusy = (isBusy) ? 0 : 1;
-            btnBusy.setText((isBusy) ? "Stop the job" : "Start a job");
+            btnBusy.setLabelText((isBusy) ? "Stop the job" : "Start a job");
             setMessage((isBusy) ? "Copying the files..." : "Ready", "");
             eachBar(function (bar) { bar.setBusy(isBusy); });
         };

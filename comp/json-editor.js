@@ -2307,13 +2307,13 @@ const JsonEditor = function (params = {}) {
         return (box.isChanged == 1 || hasJsonChange) ? 1 : 0;
     };
 
-    box.setTitle = function (titleText, noteText = box.noteText) {
+    box.setTitleText = function (titleText, noteText = box.noteText) {
         box.titleText = titleText;
         box.noteText = noteText;
         box.aria = { label: box.ariaLabel || box.titleText || box.texts.table };
         drawPath();
     };
-    // USAGE: editor.setTitle("Products", "A row is a product")
+ // USAGE: editor.setTitleText("Products", "A row is a product")
 
     // The keys go to the table (Ex: after the editor opens in a window).
     box.focus = function () {

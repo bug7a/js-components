@@ -205,12 +205,12 @@
             self.after(SAVE_TIME, function () {
                 self.setWaiting(0);
                 self.setTone("green");
-                self.setText("Saved");
+                self.setLabelText("Saved");
                 self.setIcon(ICONS.check);
                 showResult("Saved.");
                 self.after(SAVED_TIME, function () {
                     self.setTone("cyan");
-                    self.setText("Save");
+                    self.setLabelText("Save");
                     self.setIcon(ICONS.save);
                 });
             });

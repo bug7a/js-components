@@ -82,7 +82,7 @@
 
         const toggleNarrow = function () {
             isNarrow = (isNarrow) ? 0 : 1;
-            btnNarrow.setText((isNarrow) ? "Wide" : "Narrow");
+            btnNarrow.setLabelText((isNarrow) ? "Wide" : "Narrow");
             windows.forEach(function (one) { one.width = (isNarrow) ? WINDOW_WIDTH_NARROW : "100%"; });
         };
 
@@ -144,7 +144,7 @@
                     MenuBar({ styleName: look.styleName, menus: MENUS, shrink: 0 });
 
                     let statusBar = null;
-                    const tell = function (text) { statusBar.setMessage(text); };
+                    const tell = function (text) { statusBar.setMessageText(text); };
                     ToolBar({
                         styleName: look.styleName,
                         items: getItems(tell),

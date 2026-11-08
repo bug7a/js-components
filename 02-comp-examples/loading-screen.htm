@@ -79,7 +79,7 @@
                                 const timer = setInterval(function () {
                                     value = Math.min(1, value + 0.1);
                                     loading.setProgress(value);
-                                    loading.setMessage(Math.round(value * 100) + "%");
+                                    loading.setMessageText(Math.round(value * 100) + "%");
                                     if (value >= 1) {
                                         clearInterval(timer);
                                         loading.close();

@@ -141,7 +141,7 @@
 
                             smallButton("maxItems: 0", function (self) {
                                 crumbCollapse.setMaxItems((crumbCollapse.maxItems) ? 0 : 4);
-                                self.setText((crumbCollapse.maxItems) ? "maxItems: 0" : "maxItems: 4");
+                                self.setLabelText((crumbCollapse.maxItems) ? "maxItems: 0" : "maxItems: 4");
                             });
 
                         endGroup();
@@ -193,7 +193,7 @@
 
                             smallButton("Disable", function (self) {
                                 crumbExplorer.setEnabled(crumbExplorer.enabled ? 0 : 1);
-                                self.setText((crumbExplorer.enabled) ? "Disable" : "Enable");
+                                self.setLabelText((crumbExplorer.enabled) ? "Disable" : "Enable");
                                 refreshBackButton();
                             });
 

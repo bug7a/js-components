@@ -1058,7 +1058,7 @@
             grpJob.lblRight.text = (job) ? Math.floor(job.done / job.minutes * 100) + "%" : "";
 
             btnPause.visible = (job) ? 1 : 0;
-            btnPause.setText((p.status == "paused") ? "Resume" : (p.status == "done") ? "Clear the Bed" : "Pause");
+            btnPause.setLabelText((p.status == "paused") ? "Resume" : (p.status == "done") ? "Clear the Bed" : "Pause");
             btnCancel.visible = (job && p.status != "done") ? 1 : 0;
             btnStartNext.visible = (!job && p.queue.length) ? 1 : 0;
 

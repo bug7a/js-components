@@ -258,7 +258,7 @@ const HomePage = function(params = {}) {
         chartRevenue.data.datasets[1].data = period.target;
         chartRevenue.update();
 
-        chartRevenue.setSubtitle("Actual vs. target, this " + period.name.toLowerCase());
+        chartRevenue.setSubtitleText("Actual vs. target, this " + period.name.toLowerCase());
 
     };
 
@@ -338,7 +338,7 @@ const HomePage = function(params = {}) {
     };
 
     // Creates the KPI box of one item: bars (MiniGraphBox) or a line (SparkLineBox).
-    // NOTE: Both components have the same API (setValues, setValueText, setTitle, refresh, .icon).
+ // NOTE: Both components have the same API (setValues, setValueText, setTitleText, refresh, .icon).
     const createKpiBox = function(kpi) {
 
         const params = {

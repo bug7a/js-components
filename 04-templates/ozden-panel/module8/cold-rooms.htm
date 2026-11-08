@@ -326,7 +326,7 @@
             addEvent(d, "Warning", reason);
             renderAll();
 
-            waiting.setMessage("Restarting " + d.name + "...");
+            waiting.setMessageText("Restarting " + d.name + "...");
             waiting.open();
 
             setTimeout(function () {
@@ -342,7 +342,7 @@
         // Test: Connection always fails for offline devices.
         const reconnectDevice = function (d) {
 
-            waiting.setMessage("Connecting to " + d.name + " (" + d.ip + ")...");
+            waiting.setMessageText("Connecting to " + d.name + " (" + d.ip + ")...");
             waiting.open();
 
             setTimeout(function () {
@@ -360,7 +360,7 @@
 
             if (!d.online || d.firmware == LATEST_FIRMWARE) return;
 
-            waiting.setMessage("Installing firmware " + LATEST_FIRMWARE + "...");
+            waiting.setMessageText("Installing firmware " + LATEST_FIRMWARE + "...");
             waiting.open();
 
             setTimeout(function () {
@@ -1060,7 +1060,7 @@
             chartTemp.data.datasets[0].data = h.temp.slice(-CHART_COUNT);
             chartTemp.data.datasets[1].data = h.target.slice(-CHART_COUNT);
             chartTemp.update();
-            chartTemp.setSubtitle((device.online) ? "Live, last " + CHART_COUNT + " seconds" : "Last data before the connection was lost");
+            chartTemp.setSubtitleText((device.online) ? "Live, last " + CHART_COUNT + " seconds" : "Last data before the connection was lost");
 
             kpiBoxList[0].setValues(h.tempPoints);
             kpiBoxList[1].setValues(h.humidity);

@@ -300,16 +300,16 @@ test("SidePanel: fade 0 only slides (its opacity stays 1 while it opens)", async
 
 test("StatusBar: a message with a time goes back to the lasting one, a new message stops the old time", async function () {
     const bar = StatusBar({ messageText: "Ready" });
-    bar.setMessage("Saved", "success", 40);
+    bar.setMessageText("Saved", "success", 40);
     const during = bar.lblMessage.plainText + (bar.dot.elem.style.display !== "none" ? " dot" : "");
     await wait(90);
     const after = bar.lblMessage.plainText + " " + bar.messageTone + (bar.dot.elem.style.display === "none" ? "no dot" : "");
-    bar.setMessage("A", "", 40);
-    bar.setMessage("B");
+    bar.setMessageText("A", "", 40);
+    bar.setMessageText("B");
     await wait(90);
     const lasting = bar.lblMessage.plainText;
-    bar.setMessage("C", "", 40);
-    bar.setMessage("D", "", 400);
+    bar.setMessageText("C", "", 40);
+    bar.setMessageText("D", "", 400);
     await wait(90);
     const newer = bar.lblMessage.plainText;
     check("StatusBar: a message with a time goes back to the lasting one, a new message stops the old time",

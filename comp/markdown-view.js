@@ -26,9 +26,9 @@ const view = MarkdownView({
     markdownText: "# A report\n\nSome **bold** words and a [link](https://example.com).",
     onLinkClick: function (self, address) { println(address); },
 });
-view.setText("# Another text");
+view.setMarkdownText("# Another text");
 view.appendText("\n\nThe next words");
-view.getText();
+view.getMarkdownText();
 view.getHeadings();                     // [{ id: "another-text", level: 1, text: "Another text" }]
 view.scrollToHeading("another-text");
 view.setTheme("dark");
@@ -53,7 +53,7 @@ const MarkdownViewDefaults = {
     top: 0,
     width: "100%",
     height: "100%", // A number or "100%": the text scrolls inside it. "auto": it grows with its text.
-    markdownText: "", // The text. setText(), appendText()
+    markdownText: "", // The text. setMarkdownText(), appendText()
     emptyText: "", // Shown when there is no text
     autoScroll: 1, // 1: with appendText() the view follows the end, until the reader scrolls up
     remotePictures: 0, // 1: a picture with an http address is drawn, not a link (See the note at the top)
@@ -396,12 +396,12 @@ const MarkdownView = function (params = {}) {
     // *** PUBLIC FUNCTIONS:
 
     // The scroll stays where it is. A new document: scrollToTop() after it.
-    box.setText = function (text) {
+    box.setMarkdownText = function (text) {
         box.markdownText = (text === null || text === undefined) ? "" : String(text);
         drawText();
         isFollowing = isAtEnd() ? 1 : 0;
     };
-    // USAGE: view.setText("# A title")
+ // USAGE: view.setMarkdownText("# A title")
 
     // The next piece of the text. WHY later: a stream brings many small pieces, and they are drawn together.
     box.appendText = function (text) {
@@ -411,12 +411,12 @@ const MarkdownView = function (params = {}) {
     };
     // USAGE: view.appendText(" and the next words")
 
-    box.getText = function () {
+    box.getMarkdownText = function () {
         return box.markdownText;
     };
 
     box.clear = function () {
-        box.setText("");
+        box.setMarkdownText("");
     };
 
     box.setEmptyText = function (text) {
@@ -506,7 +506,7 @@ const MarkdownView = function (params = {}) {
         box.scrollArea.on("scroll", onScroll);
         box.blockGroup.onResize(refreshScroll);
     }
-    box.setText(box.markdownText);
+    box.setMarkdownText(box.markdownText);
 
     return endObject(box);
 

@@ -31,9 +31,9 @@ const bar = StatusBar({
         { key: "zoom", text: "100%", onClick: function (self, part) { println(part.text); } },
     ],
 });
-bar.setMessage("Ready");                     // the lasting message
-bar.setMessage("Saved", "success", 3000);    // for 3 seconds, then "Ready" again
-bar.setMessage("The disk is full", "error"); // stays
+bar.setMessageText("Ready");                 // the lasting message
+bar.setMessageText("Saved", "success", 3000); // for 3 seconds, then "Ready" again
+bar.setMessageText("The disk is full", "error"); // stays
 bar.setBusy(1);
 bar.setItemText("files", "4 files");
 bar.setItemVisible("zoom", 0);
@@ -235,7 +235,7 @@ const StatusBar = function (params = {}) {
     // *** PUBLIC FUNCTIONS:
 
     // showTime (ms): after it the bar goes back to the lasting message. 0: this one is the lasting message.
-    box.setMessage = function (text, tone = "", showTime = 0) {
+    box.setMessageText = function (text, tone = "", showTime = 0) {
         stopMessageTimer();
         showMessage(text, tone);
         if (showTime > 0) {
@@ -248,7 +248,7 @@ const StatusBar = function (params = {}) {
         lastingText = text;
         lastingTone = tone;
     };
-    // USAGE: bar.setMessage("Saved", "success", 3000)
+ // USAGE: bar.setMessageText("Saved", "success", 3000)
 
     box.setBusy = function (value) {
         box.busy = basic.isOn(value) ? 1 : 0;

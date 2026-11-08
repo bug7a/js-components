@@ -58,7 +58,7 @@ const start = function () {
                     messageText: fldName.value,
                     confirmText: "Save",
                 });
-                if (isSure) self.setText("Saved");
+                if (isSure) self.setLabelText("Saved");
             },
         });
 
@@ -109,8 +109,8 @@ The components use the same name for the same thing, so a page moves from one co
 ## After It Is Made: setX()
 
 - **Read** a value from the component: `fldName.value`, `btnSave.labelText`.
-- **Change** it with a `setX()` function: `fldName.setValue("Ada")`, `btnSave.setEnabled(0)`, `btnSave.setText("Saved")`. The function saves the value and draws it. A property written directly (`btnSave.labelText = "Saved"`) is only saved: the component does not see it.
-- The setters of a component are in the `USAGE` lines of its file.
+- **Change** it with a `setX()` function: `fldName.setValue("Ada")`, `btnSave.setEnabled(0)`, `btnSave.setLabelText("Saved")`. The function saves the value and draws it. A property written directly (`btnSave.labelText = "Saved"`) is only saved: the component does not see it.
+- A setter takes the whole name of its param: `setValue()`, `setLabelText()`, `setTitleText()`. The setters of a component are in the `USAGE` lines of its file.
 - A setter that takes `silent` changes the value without calling `onChange`: `selLanguage.setValue("tr", 1)`.
 
 ---

@@ -1076,14 +1076,14 @@ const SettingsPage = function(params = {}) {
 
                     const btnShowKey = createButton("Show", "", function() {
                         isApiKeyVisible = (isApiKeyVisible) ? 0 : 1;
-                        btnShowKey.setText((isApiKeyVisible) ? "Hide" : "Show");
+                        btnShowKey.setLabelText((isApiKeyVisible) ? "Hide" : "Show");
                         lblApiKey.text = (isApiKeyVisible) ? draft.apiKey : maskApiKey(draft.apiKey);
                     });
 
                     const btnCopyKey = createButton("Copy", "", function() {
                         navigator.clipboard.writeText(draft.apiKey).then(function() {
-                            btnCopyKey.setText("Copied");
-                            setTimeout(function() { if (box) btnCopyKey.setText("Copy"); }, 1500);
+                            btnCopyKey.setLabelText("Copied");
+                            setTimeout(function() { if (box) btnCopyKey.setLabelText("Copy"); }, 1500);
                         });
                     });
 

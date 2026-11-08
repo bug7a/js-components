@@ -25,7 +25,7 @@
         // Every button is one SmartButton({ ... }) call; the colors and the icons come from the small helpers below.
         // - SmartButton({ styleName: "pill", labelText, iconFile: pillIcon("clock", COLORS.orange), style: pillColors(COLORS.orange) })
         // - pillColors: a soft tint, pillSolidColors: the full color, outlinedColors: a colored edge
-        // - button.setStyle(colors), button.setText(text), button.setIcon(file) -> after create
+   // - button.setStyle(colors), button.setLabelText(text), button.setIcon(file) -> after create
         // TRY: click the buttons of "Click to change": "Add" becomes "Added" (click again: back to "Add").
 
         // *** VARIABLES:
@@ -253,7 +253,7 @@
                 style: off.colors,
                 onClick: function (self) {
                     const next = (self.labelText == off.text) ? on : off;
-                    self.setText(next.text);
+                    self.setLabelText(next.text);
                     self.setIcon(next.icon);
                     self.setStyle(next.colors);
                 },

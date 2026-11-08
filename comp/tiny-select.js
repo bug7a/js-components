@@ -100,7 +100,7 @@ const TinySelect = function(params = {}) {
     };
 
     // Change the title
-    box.setTitle = function(titleText) {
+    box.setTitleText = function(titleText) {
 
         box.titleText = titleText;
         box.lblTitle.text = (box.titleText) ? box.titleText + ":" : "";
@@ -195,7 +195,7 @@ const TinySelect = function(params = {}) {
     box.on("click", function() {
         TinySelect.createList(box);
     });
-    box.setTitle(box.titleText);
+    box.setTitleText(box.titleText);
     // WHY: Silent: onChange is a choice of the user, not the start value (the pages that use it
     //      guarded against this first call with isReady / isRendering).
     box.setSelectedIndex(box.selectedIndex, 1);

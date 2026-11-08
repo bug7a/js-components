@@ -148,7 +148,7 @@
                     { text: "Clear the output", key: "clear", onClick: function () { logView.clearLines(); } },
                 ] },
                 { text: "Help", items: [
-                    { text: "About", key: "about", onClick: function () { statusBar.setMessage("A small program, made with basic.js", "info", SAVED_MESSAGE_TIME); } },
+                    { text: "About", key: "about", onClick: function () { statusBar.setMessageText("A small program, made with basic.js", "info", SAVED_MESSAGE_TIME); } },
                 ] },
             ];
         };
@@ -162,7 +162,7 @@
         };
 
         const save = function () {
-            statusBar.setMessage("Saved", "success", SAVED_MESSAGE_TIME);
+            statusBar.setMessageText("Saved", "success", SAVED_MESSAGE_TIME);
             logView.success("The file was saved");
         };
 
@@ -191,13 +191,13 @@
                 clearInterval(jobTimer);
                 jobTimer = null;
                 statusBar.setBusy(0);
-                statusBar.setMessage("Ready");
+                statusBar.setMessageText("Ready");
                 logView.info("The job was stopped");
                 return;
             }
             jobTimer = setInterval(writeJobLine, JOB_LINE_TIME);
             statusBar.setBusy(1);
-            statusBar.setMessage("The job is running... (F5 stops it)");
+            statusBar.setMessageText("The job is running... (F5 stops it)");
         };
 
         // A plot in a data: address, like a picture that a Python program sends.

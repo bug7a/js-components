@@ -208,7 +208,7 @@ const NumericKeyboard = function (params = {}) {
         changeValue("", silent);
     };
 
-    box.setTitle = function (text) {
+    box.setTitleText = function (text) {
         box.titleText = text;
         box.aria = { label: text || "Numeric keyboard" };
         if (!box.lblTitle) return;
@@ -234,7 +234,7 @@ const NumericKeyboard = function (params = {}) {
 
             // LABEL: Title
             box.lblTitle = Label({ ..._s.title, textAlign: "center" });
-            box.setTitle(box.titleText);
+            box.setTitleText(box.titleText);
 
             // LABEL: Value
             // WHY a fixed height: the keys must not move when the first digit comes (an empty label is lower)

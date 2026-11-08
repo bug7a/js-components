@@ -20,7 +20,7 @@ USAGE:
 ScrollingText({ width: 200, labelText: "Start. Vegetables are healthy. End." });
 ScrollingText({ width: 120, labelText: "A long name of a file.pdf", mode: "hover" });
 ScrollingText({ width: 200, labelText: "A long title", waitTime: 2, minWaitTime: 0.8, fullWaitDistance: 200 });
-text.setText("Another text");
+text.setLabelText("Another text");
 
 Started Date: October 2026
 Webpage: https://bug7a.github.io/js-components/
@@ -224,14 +224,14 @@ const ScrollingText = function (params = {}) {
 
     // *** PUBLIC FUNCTIONS:
 
-    box.setText = function (text) {
+    box.setLabelText = function (text) {
         if (!box) return;
         box.labelText = (text === undefined || text === null) ? "" : String(text);
         if (box.allowHtml == 1) box.label.text = box.labelText;
         else box.label.plainText = box.labelText;
         refreshLayout();
     };
-    // USAGE: get: text.labelText, set: text.setText("A long text")
+ // USAGE: get: text.labelText, set: text.setLabelText("A long text")
 
     box.refresh = function () {
         refreshLayout();
@@ -281,7 +281,7 @@ const ScrollingText = function (params = {}) {
     if (box.mode == "hover") box.clickable = 1; // WHY: a basic.js box gets no mouse events by default
 
     box.onResize(refreshLayout);
-    box.setText(box.labelText);
+    box.setLabelText(box.labelText);
     // WHY: the text is measured again when the font is loaded (a fixed width box gets no resize then)
     if (document.fonts) document.fonts.ready.then(function () { if (box) refreshLayout(); });
 

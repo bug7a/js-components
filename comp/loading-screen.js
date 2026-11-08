@@ -30,7 +30,7 @@ USAGE:
 const loading = LoadingScreen({ styleName: "dark", iconFile: "icon/icon-192.png", titleText: "My App" });
 loading.close();                                   // Fades out (after minDuration).
 loading.open();                                    // Shows it again.
-loading.setMessage("Loading the data...");
+loading.setMessageText("Loading the data...");
 loading.setProgress(0.4);                          // A progress bar under the spinner. -1 hides it.
 LoadingScreen({ spinnerType: "dots", removeOnClose: 1, onClose: (self) => println("ready") });
 LoadingScreen({ spinnerType: "clock", messageText: "Saving..." });   // The moving clock
@@ -188,13 +188,13 @@ const LoadingScreen = function (params = {}) {
         cancelClose = box.after(wait, fadeOut);
     };
 
-    box.setTitle = function (text) {
+    box.setTitleText = function (text) {
         box.titleText = text || "";
         box.titleLabel.text = box.titleText;
         box.titleLabel.visible = box.titleText ? 1 : 0;
     };
 
-    box.setMessage = function (text) {
+    box.setMessageText = function (text) {
         box.messageText = text || "";
         box.messageLabel.text = box.messageText;
         box.messageLabel.visible = box.messageText ? 1 : 0;

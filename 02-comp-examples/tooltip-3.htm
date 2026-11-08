@@ -151,7 +151,7 @@
                 height: 36,
                 onClick: function (self) {
                     if (navigator.clipboard) navigator.clipboard.writeText(SHARE_LINK).catch(function () { });
-                    self.setText("Copied");
+                    self.setLabelText("Copied");
                     showResult("The link is copied.");
                 },
             });

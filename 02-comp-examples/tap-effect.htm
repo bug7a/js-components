@@ -38,7 +38,7 @@
     let lblTapped;
 
     const showState = function () {
-        btnStartStop.setText(TapEffect.isOn ? "Stop" : "Start");
+        btnStartStop.setLabelText(TapEffect.isOn ? "Stop" : "Start");
         const reducedMotionNote = TapEffect.isReducedMotion() ? " (the system asks for reduced motion: no circle)" : "";
         lblState.plainText = "TapEffect.isOn: " + TapEffect.isOn + reducedMotionNote;
     };

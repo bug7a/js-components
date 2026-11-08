@@ -202,7 +202,7 @@ const ActivityPage = function(params = {}) {
 
     const updateNewEventsButton = function() {
         btnNewEvents.visible = (pendingCount > 0) ? 1 : 0;
-        btnNewEvents.setText("↑ " + pendingCount + " new event" + ((pendingCount > 1) ? "s" : "") + " · Show");
+        btnNewEvents.setLabelText("↑ " + pendingCount + " new event" + ((pendingCount > 1) ? "s" : "") + " · Show");
     };
 
     const setLive = function(isOn) {
@@ -517,7 +517,7 @@ const ActivityPage = function(params = {}) {
 
                 lblResultCount = Label({ text: "", fontSize: 14, textColor: Ink(0.6) });
 
-                // WHY: SmartButton does not create its label when the text is empty. setText() needs the label.
+           // WHY: SmartButton does not create its label when the text is empty. setLabelText() needs the label.
                 btnNewEvents = ActivityPage.createButton("New events", "", renderTable, { primary: 1 });
 
             endGroup();
@@ -745,8 +745,8 @@ const ActivityDetails = function(params = {}) {
 
         const btnCopy = ActivityPage.createButton("Copy JSON", "", function() {
             navigator.clipboard.writeText(JSON.stringify(event, null, 2)).then(function() {
-                btnCopy.setText("Copied ✓");
-                setTimeout(function() { if (box) btnCopy.setText("Copy JSON"); }, 1500);
+                btnCopy.setLabelText("Copied ✓");
+                setTimeout(function() { if (box) btnCopy.setLabelText("Copy JSON"); }, 1500);
             });
         });
 

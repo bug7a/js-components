@@ -477,7 +477,7 @@ Theme.confirm = function(params = {}) {
 };
 
 // The waiting cover of the panel: a LoadingScreen (comp-m4) over a dark cover, with the moving clock.
-// USAGE: waiting.setMessage("Saving..."); waiting.open(); ... waiting.close();
+// USAGE: waiting.setMessageText("Saving..."); waiting.open(); ... waiting.close();
 Theme.createWaiting = function() {
 
     const waiting = LoadingScreen({

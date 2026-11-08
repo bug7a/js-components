@@ -6,7 +6,7 @@ SparkLineBox - v26.09
 
 UI COMPONENT TEMPLATE
 - An alternative to MiniGraphBox: a small KPI box with a title, a value text, an icon and a line graph (sparkline)
-  instead of bars. Same API: addValue, setValues, setTitle, setValueText, setIcon...
+  instead of bars. Same API: addValue, setValues, setTitleText, setValueText, setIcon...
 - The line is drawn with SVG (one path for the line, one for the area under it). Objects are created one time,
   only the path data changes. (Fast for live data)
 - Trend badge: "▲ 12%" or "▼ 3%", the last value compared with the first visible value. (showTrend, or your own trendText)
@@ -520,7 +520,7 @@ const SparkLineBox = function (params = {}) {
         draw(0);
     };
 
-    box.setTitle = function (text) {
+    box.setTitleText = function (text) {
         box.titleText = text;
         box.lblTitle.text = text;
     };

@@ -6,7 +6,7 @@ MiniGraphBox - v26.09
 
 UI COMPONENT TEMPLATE
 - A small box with a title, a value text, an icon and a bar graph.
-- The title, value text and icon can be changed. (setTitle, setValueText, setIcon)
+- The title, value text and icon can be changed. (setTitleText, setValueText, setIcon)
 - The bar color can be changed. (setBarColor) A value can have its own color too. (addValue(12, "red"))
 - New values are added to the right. When the graph is full, the first value is removed
   and all the bars move one step to the left.
@@ -353,7 +353,7 @@ const MiniGraphBox = function (params = {}) {
         updateBars();
     };
 
-    box.setTitle = function (text) {
+    box.setTitleText = function (text) {
         box.titleText = text;
         box.lblTitle.text = text;
     };

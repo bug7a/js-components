@@ -81,7 +81,7 @@ App.addPage({
                 ShopUI.row(tx("Shipping"), getShippingText(deliveryId));
                 ShopUI.row(tx("Total"), Store.money(Store.getTotal(deliveryId)), true);
             });
-            btnPlace.setText(tx("Place order") + "  ·  " + Store.money(Store.getTotal(deliveryId)));
+            btnPlace.setLabelText(tx("Place order") + "  ·  " + Store.money(Store.getTotal(deliveryId)));
         };
 
         const drawAll = function () {

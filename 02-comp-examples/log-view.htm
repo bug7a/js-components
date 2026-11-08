@@ -158,11 +158,11 @@
             if (jobTimer) {
                 clearInterval(jobTimer);
                 jobTimer = null;
-                btnJob.setText("Run a job");
+                btnJob.setLabelText("Run a job");
                 return;
             }
             jobTimer = setInterval(writeJobLine, JOB_LINE_TIME);
-            btnJob.setText("Stop the job");
+            btnJob.setLabelText("Stop the job");
         };
 
         // WHY: The lines that come at once are drawn together, and only the last 1000 of them (maxLines).

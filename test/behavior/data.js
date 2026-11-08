@@ -1283,7 +1283,7 @@ test("MarkdownView: the blocks of a text: headings, lists, check marks, a quote,
     const headings = view.getHeadings().map(function (heading) { return heading.id; }).join();
     check("MarkdownView: the blocks of a text: headings, lists, check marks, a quote, a line, a table, a code",
         levels === "1,2,3,2" && paragraph === "Text of a paragraph on two lines." && nested === 2 && goesOn === "Third" && checks === "2,1" && cells === 4 &&
-        code === "x = 1" && headings === "one,two,three,in-a-quote" && view.getText().startsWith("# One"),
+        code === "x = 1" && headings === "one,two,three,in-a-quote" && view.getMarkdownText().startsWith("# One"),
         [levels, paragraph, nested, goesOn, checks, cells, code, headings].join(" | "));
     view.remove();
 });
@@ -1449,7 +1449,7 @@ test("MarkdownView: a text piece by piece: drawn together, what is above stays o
     const notYet = area.textContent.includes("words");
     view.appendText("more");
     view.appendText(null);
-    const text = view.getText();
+    const text = view.getMarkdownText();
     await wait(70);
     const drawn = area.textContent.includes("First words and more");
     const isSameObject = (area.querySelector('[role="heading"]') === heading);
@@ -1465,7 +1465,7 @@ test("MarkdownView: a text piece by piece: drawn together, what is above stays o
     view.remove();
 });
 
-test("MarkdownView: appendText() follows the end until the reader scrolls up; scrollToEnd() follows again; setText() keeps the place", async function () {
+test("MarkdownView: appendText() follows the end until the reader scrolls up; scrollToEnd() follows again; setMarkdownText() keeps the place", async function () {
     const view = MarkdownView({ width: 300, height: 120, markdownText: "" });
     await wait(30);
     const area = view.scrollArea.elem;
@@ -1492,10 +1492,10 @@ test("MarkdownView: appendText() follows the end until the reader scrolls up; sc
     view.setAutoScroll(1);
     area.scrollTop = 30;
     await wait(50);
-    view.setText(view.getText() + "Changed");
+    view.setMarkdownText(view.getMarkdownText() + "Changed");
     const keeps = (area.scrollTop === 30);
     view.scrollToTop();
-    check("MarkdownView: appendText() follows the end until the reader scrolls up; scrollToEnd() follows again; setText() keeps the place",
+    check("MarkdownView: appendText() follows the end until the reader scrolls up; scrollToEnd() follows again; setMarkdownText() keeps the place",
         followed && followedAgain && stays && followsAgain && off && keeps && area.scrollTop === 0,
         [followed, followedAgain, stays, followsAgain, off, keeps, area.scrollTop].join(" | "));
     view.remove();
@@ -1519,23 +1519,23 @@ test("MarkdownView: a selection above the end stays while the text comes, and th
     view.remove();
 });
 
-test("MarkdownView: setText(), clear() and the text of an empty view", async function () {
+test("MarkdownView: setMarkdownText(), clear() and the text of an empty view", async function () {
     const view = MarkdownView({ width: 300, height: 120, emptyText: "<b>Nothing</b>" });
     await wait(30);
     const isShown = function () { return view.lblEmpty.elem.getClientRects().length > 0; };
     const atStart = [isShown(), view.lblEmpty.elem.textContent].join();
-    view.setText("# Hi");
+    view.setMarkdownText("# Hi");
     const withText = isShown();
     const blocksWithText = view.blockGroup.elem.querySelectorAll('[role="heading"]').length;
     view.clear();
-    const afterClear = [isShown(), view.getText(), view.blockGroup.elem.querySelectorAll('[role="heading"]').length].join();
+    const afterClear = [isShown(), view.getMarkdownText(), view.blockGroup.elem.querySelectorAll('[role="heading"]').length].join();
     view.setEmptyText("");
     const noText = isShown();
-    view.setText(null);
-    const nothing = view.getText();
-    view.setText(123);
-    const number = view.getText();
-    check("MarkdownView: setText(), clear() and the text of an empty view",
+    view.setMarkdownText(null);
+    const nothing = view.getMarkdownText();
+    view.setMarkdownText(123);
+    const number = view.getMarkdownText();
+    check("MarkdownView: setMarkdownText(), clear() and the text of an empty view",
         atStart === "true,<b>Nothing</b>" && !withText && blocksWithText === 1 && afterClear === "true,,0" && !noText && nothing === "" && number === "123",
         [atStart, withText, blocksWithText, afterClear, noText, nothing, number].join(" | "));
     view.remove();
@@ -1633,7 +1633,7 @@ test("MarkdownView: height \"auto\" grows with its text, a number scrolls inside
     const auto = MarkdownView({ width: 300, height: "auto", markdownText: "A line" });
     await wait(30);
     const small = auto.elem.offsetHeight;
-    auto.setText(text);
+    auto.setMarkdownText(text);
     await wait(30);
     const big = auto.elem.offsetHeight;
     const noArea = (auto.scrollArea === undefined);
@@ -1689,7 +1689,7 @@ test("MarkdownView.parse(): alone: the title, heading names, the kinds of a code
 test("MarkdownView: remove(): a text that was still coming draws nothing; a heading of an old text is not found", async function () {
     const view = MarkdownView({ width: 300, height: 100, markdownText: "# Old\n\n# New" });
     await wait(30);
-    view.setText("# New");
+    view.setMarkdownText("# New");
     view.scrollToHeading("old");
     const stays = view.scrollArea.elem.scrollTop;
     const group = view.blockGroup;

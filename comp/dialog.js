@@ -526,14 +526,14 @@ const Dialog = function (params = {}) {
     };
     // USAGE: dialog.setStatus("Could not save.", "error") / dialog.setStatus("The title is saved.", "success")
 
-    box.setTitle = function (text) {
+    box.setTitleText = function (text) {
         box.titleText = text;
         setText(box.lblTitle, text);
         box.lblTitle.visible = text ? 1 : 0;
         box.card.aria = { labelledby: text ? box.lblTitle.elem.id : null, label: text ? null : (box.ariaLabel || null) };
     };
 
-    box.setMessage = function (text) {
+    box.setMessageText = function (text) {
         box.messageText = text;
         setText(box.lblMessage, text);
         box.lblMessage.visible = text ? 1 : 0;
@@ -707,8 +707,8 @@ const Dialog = function (params = {}) {
 
     // *** OBJECT INIT CODE:
 
-    box.setTitle(box.titleText);
-    box.setMessage(box.messageText);
+    box.setTitleText(box.titleText);
+    box.setMessageText(box.messageText);
     box.setStatus("");
     box.footer.visible = buttonList.length ? 1 : 0;
 

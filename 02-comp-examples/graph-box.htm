@@ -50,7 +50,7 @@
 
                     addButton("Dark theme", function (self) {
                         isDark = (isDark) ? 0 : 1;
-                        self.setText((isDark) ? "Light theme" : "Dark theme");
+                        self.setLabelText((isDark) ? "Light theme" : "Dark theme");
                         applyPageTheme();
                     });
 
@@ -304,12 +304,12 @@
                         });
                         addButton("Table", function (self) {
                             chartDemo.setTableView(chartDemo.tableView ? 0 : 1);
-                            self.setText((chartDemo.tableView) ? "Chart" : "Table");
+                            self.setLabelText((chartDemo.tableView) ? "Chart" : "Table");
                         });
                         addButton("Download", function () { chartDemo.download("quarterly.png"); });
                         addButton("Pause live", function (self) {
                             isPaused = (isPaused) ? 0 : 1;
-                            self.setText((isPaused) ? "Continue live" : "Pause live");
+                            self.setLabelText((isPaused) ? "Continue live" : "Pause live");
                         });
 
                     endGroup();

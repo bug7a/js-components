@@ -573,7 +573,7 @@ const ContentEditor = function(params = {}) {
 
     const updateSaveButton = function() {
         const texts = { draft: "Save Draft", published: (isNew || content.status != "published") ? "Publish" : "Update", scheduled: "Schedule", archived: "Archive" };
-        btnSave.setText(texts[draft.status]);
+        btnSave.setLabelText(texts[draft.status]);
     };
 
     // Schedule time from the date and time fields

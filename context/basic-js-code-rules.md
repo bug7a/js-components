@@ -93,7 +93,7 @@ Bir bileşenin parametreleri kitin geri kalanındaki adları taşır: bir sayfay
 | Değer değişti | `onChange(self)`: oluşturulurken, `setValue()` ile ve `silent` ile çağrılmaz | `onEdit`, `onValueChange` |
 | Bir olay | `onXxx(self, ...)`: ilk argüman `self` | |
 | Görünüş | `styleName` + `style` (`Comp.styles`). Renkleri `"auto"` ile sistemi izleyenler (GraphBox, Toast): `theme` (`basic.resolveTheme`) | |
-| Sonradan değiştirmek | `setX()`, parametrenin adıyla: `setValue`, `setRequired`, `setMaxLength` | `setInputValue` |
+| Sonradan değiştirmek | `setX()`, parametrenin tam adıyla: `setValue`, `setRequired`, `setMaxLength`, `setTitleText`, `setLabelText` (bir resmin setter'ı `set...Icon()`) | `setInputValue`, `titleText` için `setTitle`, `labelText` için `setText` |
 | Bir listenin öğesi (items, sections, steps, nodes, options) | `key` (kimliği), `text` (görünen metni), `description` (ikinci, küçük metni), `iconFile`, `enabled: 0` (seçilemez, açılamaz) | `title`, `label`, `labelText`, `titleText`, `desc`, `note`, `id`, `disabled` |
 | Bir form denetiminin seçeneği (SelectBox, TinySelect) | HTML'in `<option>` adları: `value`, `label`, `disabled` | `id` |
 
@@ -106,7 +106,7 @@ Bir bileşenin parametreleri kitin geri kalanındaki adları taşır: bir sayfay
 - Bileşenin kendi kopyasını yükleyen bir sayfa (`03-webpages` sitelerinin `comp/*.min.js`'i, `_sources.txt`) o kopyanın adlarıyla kalır; kopya yenilenince (kullanıcı isteyince) yeni adları alır.
 - Bir olayın argümanları da değişirse (`onEdit(input)` → `onChange(self, input)`) onu kullanan her fonksiyon yeni biçime çevrilir.
 - Bir verinin anahtarı (bir sunucuya giden JSON) değişirse onu okuyan da aynı işte değişir (Form'un JSON'u ve PHP mail servisi).
-- `test/components-test.htm` her bileşenin varsayılanlarını bu tabloya göre denetler: "Böyle değil" sütunundaki adlar, `is...`, `...Path`, bir resim tutan `...Icon`, sayı olan bir `create...` ve ilk argümanı `self` olmayan bir `onX` hata verir.
+- `test/components-test.htm` her bileşenin varsayılanlarını bu tabloya göre denetler: "Böyle değil" sütunundaki adlar, `is...`, `...Path`, bir resim tutan `...Icon`, sayı olan bir `create...` ve ilk argümanı `self` olmayan bir `onX` hata verir. Oluşturulan bileşenin setter'larını da denetler: `XText` parametresi olup `X` parametresi olmayan bir bileşende `setX` ve bir `...Text` parametresi olan bileşende `setText` hata verir.
 - Adı değişen bir sayfa: `node test/compare-pages.js eski.htm=yeni.htm`. 2026-11-08'deki geçici köprü (`basic.keepOldNames`) ve hikâyesi: `context/repo-map.md`, "Parameter names".
 
 ---

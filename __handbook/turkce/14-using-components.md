@@ -58,7 +58,7 @@ const start = function () {
                     messageText: fldName.value,
                     confirmText: "Kaydet",
                 });
-                if (isSure) self.setText("Kaydedildi");
+                if (isSure) self.setLabelText("Kaydedildi");
             },
         });
 
@@ -109,8 +109,8 @@ Bileşenler aynı şey için aynı adı kullanır; böylece bir sayfa bir bileş
 ## Oluşturulduktan Sonra: setX()
 
 - Bileşenden bir değeri **okuyun**: `fldName.value`, `btnSave.labelText`.
-- Onu bir `setX()` fonksiyonuyla **değiştirin**: `fldName.setValue("Ada")`, `btnSave.setEnabled(0)`, `btnSave.setText("Kaydedildi")`. Fonksiyon değeri kaydeder ve çizer. Doğrudan yazılan bir özellik (`btnSave.labelText = "Kaydedildi"`) yalnızca kaydedilir: bileşen onu görmez.
-- Bir bileşenin setter'ları dosyasındaki `USAGE` satırlarındadır.
+- Onu bir `setX()` fonksiyonuyla **değiştirin**: `fldName.setValue("Ada")`, `btnSave.setEnabled(0)`, `btnSave.setLabelText("Kaydedildi")`. Fonksiyon değeri kaydeder ve çizer. Doğrudan yazılan bir özellik (`btnSave.labelText = "Kaydedildi"`) yalnızca kaydedilir: bileşen onu görmez.
+- Bir setter parametresinin tam adını alır: `setValue()`, `setLabelText()`, `setTitleText()`. Bir bileşenin setter'ları dosyasındaki `USAGE` satırlarındadır.
 - `silent` alan bir setter, değeri `onChange`'i çağırmadan değiştirir: `selLanguage.setValue("tr", 1)`.
 
 ---

@@ -787,12 +787,12 @@
             //      so its "display: flex" comes back when it is shown again. (style.display = "" would break the row.)
             cityInput.elem.parentElement._basicObject.visible = (delivery) ? 1 : 0;
 
-            dateField.setTitle((delivery) ? "DELIVERY DATE" : "PICK UP DATE");
+            dateField.setTitleText((delivery) ? "DELIVERY DATE" : "PICK UP DATE");
             dateField.setWarningText((delivery) ? "We do not deliver on this day" : "We are closed on this day");
             dateField.infoLabel.text = (delivery)
                 ? "Order until " + CUTOFF_HOUR + ":00 for next-day delivery. No delivery on Sundays."
                 : "Ready from 10:00 at the shop. Closed on Sundays.";
-            timeField.setTitle((delivery) ? "TIME WINDOW" : "PICK UP TIME");
+            timeField.setTitleText((delivery) ? "TIME WINDOW" : "PICK UP TIME");
             fulfillmentField.pickupLabel.visible = (delivery) ? 0 : 1;
 
             form.refresh();

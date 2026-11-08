@@ -170,7 +170,7 @@
             if (stopAnimation) {
                 stopAnimation();
                 stopAnimation = null;
-                btnAnimate.setText("Animate");
+                btnAnimate.setLabelText("Animate");
                 return;
             }
             let value = 0;
@@ -178,7 +178,7 @@
                 value = (value >= 100) ? 0 : value + 1;
                 setAllBars(value);
             });
-            btnAnimate.setText("Stop");
+            btnAnimate.setLabelText("Stop");
         };
 
     </script>

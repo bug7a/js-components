@@ -38,9 +38,9 @@ SPDX-License-Identifier: Apache-2.0
 
 - input.setPlaceholder("Text");          // Change placeholder
 
-- input.setTitle("Title");               // Set title text
+- input.setTitleText("Title");           // Set title text
 
-- input.setDescription("Description");   // Add description
+- input.setDescriptionText("Description"); // Add description
 
 - input.setRequired(1);                   // Mark as required
 
@@ -66,7 +66,7 @@ SPDX-License-Identifier: Apache-2.0
 -- minimal / minimalDark (_designs/minimal-theme.htm): the title over a 28 px field of a line (titlePosition "above").
 - The sizes: titleFontSize, inputFontSize, inputHeight, fieldPadding, descriptionFontSize (the defaults: 16, 20, 40, 14, 14).
 - titlePosition: "inside" (default: the title in the field) | "above" (the title over the field, titleGap under it).
-  "above" with titleText "": no title row, the field starts at the top (a title set later with setTitle() is not shown).
+  "above" with titleText "": no title row, the field starts at the top (a title set later with setTitleText() is not shown).
 - hoverBackBorderColor: the edge under the mouse ("": no change).
 - warningBorderColor: the edge while a warning shows, not while typing ("": no change). warningBallSize, warningBallBorder:
   the colored ball (16, 2; minimal: an 8 px dot).
@@ -352,7 +352,7 @@ const TextField = function(params = {}) {
     };
 
     // Sets the title text for the input component
-    box.setTitle = function(titleText) {
+    box.setTitleText = function(titleText) {
         box.titleText = titleText;
         if (!box.title || typeof box.title.text === "undefined") return;
 
@@ -363,7 +363,7 @@ const TextField = function(params = {}) {
     };
     
     // Sets the description below or next to the input field
-    box.setDescription = function(descriptionText) {
+    box.setDescriptionText = function(descriptionText) {
         box.descriptionText = descriptionText;
         if (!box.description || typeof box.description.text === "undefined") return;
 

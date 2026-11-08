@@ -53,7 +53,7 @@ App.addPage({
 
         const selectSort = function (sort, sheet) {
             selectedSort = sort;
-            btnSort.setText(tx("Sort") + ": " + tx(sort.name));
+            btnSort.setLabelText(tx("Sort") + ": " + tx(sort.name));
             sheet.close();
             drawProducts();
         };

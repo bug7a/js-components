@@ -301,7 +301,7 @@ const GraphBox = function (params = {}) {
 
     // DRAWING: each function does one job, and a change calls only the one it needs:
     // applyLook()       -> the colors of the card and the texts      (setTheme, setStyle)
-    // applyContent()    -> the title and the subtitle                (setTitle, setSubtitle)
+ // applyContent()    -> the title and the subtitle                (setTitleText, setSubtitleText)
     // createLegend()    -> the items of the legend, from the data    (the data changed)
     // drawPlot()        -> the SVG: the axes and the marks           (the data or the size changed)
     // paintActiveItem() -> the mark under the mouse and the tooltip  (the mouse or the keyboard moved)
@@ -3217,12 +3217,12 @@ const GraphBox = function (params = {}) {
         drawPlot();
     };
 
-    box.setTitle = function (text) {
+    box.setTitleText = function (text) {
         box.titleText = text;
         applyContent();
     };
 
-    box.setSubtitle = function (text) {
+    box.setSubtitleText = function (text) {
         box.subtitleText = text;
         applyContent();
     };

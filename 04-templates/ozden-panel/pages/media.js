@@ -117,7 +117,7 @@ const MediaPage = function(params = {}) {
 
         // TEST: Like an upload request
         if (typeof waiting !== "undefined") {
-            waiting.setMessage("Uploading " + files.length + " file" + ((files.length > 1) ? "s" : "") + "...");
+            waiting.setMessageText("Uploading " + files.length + " file" + ((files.length > 1) ? "s" : "") + "...");
             waiting.open();
         }
 
@@ -147,7 +147,7 @@ const MediaPage = function(params = {}) {
 
             if (typeof waiting !== "undefined") {
                 waiting.close();
-                waiting.setMessage("");
+                waiting.setMessageText("");
             }
 
             onDone();
@@ -313,7 +313,7 @@ const MediaPage = function(params = {}) {
             const count = (folder) ? all.filter(function(item) { return item.folder == folder; }).length : all.length;
             const isSelected = (view.folder == folder);
 
-            btn.setText((folder || "All files") + " <span style='opacity:0.45'>" + count + "</span>");
+            btn.setLabelText((folder || "All files") + " <span style='opacity:0.45'>" + count + "</span>");
             // WHY: SmartButton uses style.box.color on mouse out. Change it too, so the selection stays.
             btn.style.box.color = (isSelected) ? S.SELECTED_COLOR : "transparent";
             btn.color = btn.style.box.color;
@@ -361,7 +361,7 @@ const MediaPage = function(params = {}) {
         });
 
         btnLoadMore.visible = (list.length > view.shownCount) ? 1 : 0;
-        btnLoadMore.setText("Load more (" + (list.length - view.shownCount) + ")");
+        btnLoadMore.setLabelText("Load more (" + (list.length - view.shownCount) + ")");
 
     };
 
@@ -561,7 +561,7 @@ const MediaPage = function(params = {}) {
             btnUpload = MediaPage.createButton("Upload Files", ASSETS + "top-bar/add.png", function() {
                 const show = !uploadCard.visible;
                 uploadCard.visible = (show) ? 1 : 0;
-                btnUpload.setText((show) ? "Close Upload" : "Upload Files");
+                btnUpload.setLabelText((show) ? "Close Upload" : "Upload Files");
             }, { primary: 1 });
 
         endGroup();
@@ -594,7 +594,7 @@ const MediaPage = function(params = {}) {
                 descriptionText: "or click to select",
                 style: MediaPage.SELECT_FILE_STYLE,
                 onChange: function(self) {
-                    btnStartUpload.setText("Upload " + self.files.length + " file" + ((self.files.length == 1) ? "" : "s"));
+                    btnStartUpload.setLabelText("Upload " + self.files.length + " file" + ((self.files.length == 1) ? "" : "s"));
                     btnStartUpload.elem.inert = (self.files.length == 0);
                     btnStartUpload.opacity = (self.files.length) ? 1 : 0.4;
                 },
@@ -618,7 +618,7 @@ const MediaPage = function(params = {}) {
                         if (!box) return;
                         uploadFile.clear();
                         uploadCard.visible = 0;
-                        btnUpload.setText("Upload Files");
+                        btnUpload.setLabelText("Upload Files");
                         view.folder = folder;
                         view.sort = "newest";
                         sortSelect.setSelectedIndex(0);
@@ -1142,8 +1142,8 @@ const MediaDetails = function(params = {}) {
 
                     const btnCopy = MediaPage.createButton("Copy", "", function() {
                         box.onCopyUrl(item);
-                        btnCopy.setText("Copied");
-                        setTimeout(function() { if (box) btnCopy.setText("Copy"); }, 1500);
+                        btnCopy.setLabelText("Copied");
+                        setTimeout(function() { if (box) btnCopy.setLabelText("Copy"); }, 1500);
                     });
 
                 endGroup();

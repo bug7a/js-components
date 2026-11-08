@@ -142,7 +142,7 @@
             onClick: function (self) {
                 qualityIndex = (qualityIndex + 1) % VIDEO_QUALITIES.length;
                 const quality = VIDEO_QUALITIES[qualityIndex];
-                self.setText(quality.name);
+                self.setLabelText(quality.name);
                 row.setDescriptionText(quality.descriptionText); // The small text fades, the title slides
             },
         });

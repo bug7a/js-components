@@ -286,7 +286,7 @@
         function toggleMotion() {
             const isOn = (foodList.animated == 1);
             foodList.setAnimated(isOn ? 0 : 1);
-            btnMotion.setText(isOn ? "Motion: off" : "Motion: on");
+            btnMotion.setLabelText(isOn ? "Motion: off" : "Motion: on");
         }
 
         showCount();

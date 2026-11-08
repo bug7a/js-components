@@ -461,12 +461,12 @@ const SmartButton = function (params = {}) {
 
     box.isAsking = 0; // 1: the first click of ask was made, the button is red
 
-    box.setText = function (text) {
+    box.setLabelText = function (text) {
         box.labelText = text;
         if (box.label) box.label.text = text;
         render(); // (the label read by a screen reader)
     };
-    // USAGE: button.setText("Save")
+ // USAGE: button.setLabelText("Save")
 
     box.setIcon = function (file) {
         box.iconFile = file;
