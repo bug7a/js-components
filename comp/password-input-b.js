@@ -2,12 +2,12 @@
 
 /*
 
-PasswordInputB - v25.07
+PasswordField - v26.11
 
 UI COMPONENT TEMPLATE
 - You can customize, this template code as you need:
 - NEW PROJECTS: styleName "ozden" on a light page, "ozdenDark" on a dark page (the packages
-  of InputB, comp/input-b.js; the look of 02-comp-examples/input-b-ex7-ozden.htm), unless the user asks for another one.
+  of TextField, comp/input-b.js; the look of 02-comp-examples/input-b-ex7-ozden.htm), unless the user asks for another one.
 
 Started Date: June 2024
 Developer: Bugra Ozden
@@ -19,7 +19,7 @@ Webpage: https://bug7a.github.io/js-components/
 "use strict";
 
 // Default values
-const PasswordInputBDefaults = {
+const PasswordFieldDefaults = {
     required: 1,
     requiredText: "Password must be entered",
     type: "password",
@@ -49,22 +49,22 @@ const PasswordInputBDefaults = {
     invertIconColor: 0, 
 };
 
-const PasswordInputB = function(params = {}) {
+const PasswordField = function(params = {}) {
 
     // Merge params:
-    // WHY the style package of InputB first: a key it sets (warningColor) wins over the defaults here, as over the
-    //     defaults of InputB
-    basic.applyStylePackage(params, InputB.styles, InputBDefaults);
-    mergeIntoIfMissing(params, PasswordInputBDefaults);
+    // WHY the style package of TextField first: a key it sets (warningColor) wins over the defaults here, as over the
+    //     defaults of TextField
+    basic.applyStylePackage(params, TextField.styles, TextFieldDefaults);
+    mergeIntoIfMissing(params, PasswordFieldDefaults);
 
     // Edit params:
     // WHY the old names first: showLeftBox is forced, an old createLeftBox of the page would win over it
-    basic.renameOldParams(params, InputB.OLD_NAMES, "InputB");
+    basic.renameOldParams(params, TextField.OLD_NAMES, "TextField");
     params.showLeftBox = 1; // WHY: to add show/hide password button
 
     // BOX: Component container
-    let box = startExtendedObject(InputB, params);
-    basic.keepOldNames(box, PasswordInputB.OLD_NAMES, "PasswordInputB"); // the pages made with the old names, for a while
+    let box = startExtendedObject(TextField, params);
+    basic.keepOldNames(box, PasswordField.OLD_NAMES, "PasswordField"); // the pages made with the old names, for a while
 
     // *** PRIVATE VARIABLES:
 
@@ -125,7 +125,7 @@ const PasswordInputB = function(params = {}) {
     // *** OBJECT VIEW:
     box.input.inputElement.type = "password";
 
-    // GROUP: btnShowPassword (in the left box of InputB)
+    // GROUP: btnShowPassword (in the left box of TextField)
     AutoLayout({
         align: "right center",
         padding: [10, 0],
@@ -165,7 +165,7 @@ const PasswordInputB = function(params = {}) {
         lbl_fontSize: hintStyle.fontSize,
         lbl_round: hintStyle.round,
     });
-    // WHY: The tooltip may be made outside the box (after InputB is closed); box.own() removes it with the box.
+    // WHY: The tooltip may be made outside the box (after TextField is closed); box.own() removes it with the box.
     box.own(box.btnShowPassword.tooltip);
 
     // *** OBJECT INIT CODE:
@@ -174,17 +174,21 @@ const PasswordInputB = function(params = {}) {
     });
 
     box.setShowPassword(box.showPassword);
-    box.checkInputValue(); // WHY: InputB checked the start value before this isValid()
+    box.checkInputValue(); // WHY: TextField checked the start value before this isValid()
 
     return endExtendedObject(box);
 
 };
 
-// THE OLD NAMES (basic.keepOldNames; the old names of InputB are in InputB.OLD_NAMES). Delete a name when no page uses it.
-PasswordInputB.OLD_NAMES = {
+// THE OLD NAMES (basic.keepOldNames; the old names of TextField are in TextField.OLD_NAMES). Delete a name when no page uses it.
+PasswordField.OLD_NAMES = {
     minChar: "minLength",
     minCharWarningText: "minLengthWarningText",
     showTooltipMessage: "showPasswordHintText",
     hideTooltipMessage: "hidePasswordHintText",
     showPasswordIconInvert: "invertIconColor",
 };
+
+// THE OLD NAME of the component, for a while: the pages made with PasswordInputB keep working (the same object).
+// Delete it when no page uses it any more (context/repo-map.md, "Parameter names").
+const PasswordInputB = PasswordField;

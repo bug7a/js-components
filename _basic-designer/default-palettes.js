@@ -13,10 +13,10 @@ BasicDesigner.DEFAULT_PALETTES = [
     { key: "favorites", name: "★ Favorites", colors: [
         ["#FFFFFF", "white (SmartButton white)"],
         ["whitesmoke", "whitesmoke (fields, soft backgrounds)"],
-        ["#F4F5F2", "soft box (InputB ozden, ItemList)"],
+        ["#F4F5F2", "soft box (TextField ozden, ItemList)"],
         ["lightgray", "lightgray (Toggle, ActionButton, LineProgressBar)"],
         ["#A0A0A0", "middle gray (ItemList, DataTable, SmartTable)"],
-        ["#373836", "dark gray (InputB, ItemList, Form)"],
+        ["#373836", "dark gray (TextField, ItemList, Form)"],
         ["#5BBAC1", "SmartButton cyan (the main action)"],
         ["#DE815B", "SmartButton orange (a delete)"],
         ["#F1C74A", "SmartButton yellow (look first)"],
@@ -32,7 +32,7 @@ BasicDesigner.DEFAULT_PALETTES = [
         ["#141414", "dark of the kit (BottomBar circle)"],
         ["indianred", "indianred (warnings, badges)"],
         ["cadetblue", "cadetblue (focus, modern CheckBox)"],
-        ["#65A293", "field focus (InputB)"],
+        ["#65A293", "field focus (TextField)"],
     ] },
 
     // The jobs of the colors of an app: buttons, messages.

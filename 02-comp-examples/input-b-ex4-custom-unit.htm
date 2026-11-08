@@ -2,7 +2,7 @@
 <html lang="en">
     <head>
 
-        <title>InputB JS Component</title>
+        <title>TextField JS Component</title>
 
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0"><!-- , user-scalable=no -->
@@ -30,7 +30,7 @@
             AutoLayout();
 
                 // INPUT: #1
-                const myInput = InputB({
+                const myInput = TextField({
                     key: "1",
                     titleText: "TITLE",
                     placeholder: "Placeholder",
@@ -65,7 +65,7 @@
 
             const unitXL = addCustomUnit(myInput, "XL");
             unitXL.color = "#F0DB4E";
-            unitXL.textColor = InputBDefaults.unitStyle.color;
+            unitXL.textColor = TextFieldDefaults.unitStyle.color;
             unitXL.border = 2;
             unitXL.padding = [8, 2];
 
@@ -78,7 +78,7 @@
 
         // LABEL: A unit in the right box of the field
         const addCustomUnit = function (input, text) {
-            const unit = Label(InputBDefaults.unitStyle);
+            const unit = Label(TextFieldDefaults.unitStyle);
             unit.text = text;
             unit.position = "relative";
             input.rightBox.add(unit);

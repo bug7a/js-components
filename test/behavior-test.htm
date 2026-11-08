@@ -1018,9 +1018,9 @@
             [checkBox, radio, toggle].forEach(function (object) { object.remove(); });
         });
 
-        test("InputB minimal: the title over a 28 px field, its edge darker under the mouse; the default field is as before", async function () {
-            const minimal = InputB({ styleName: "minimal", titleText: "E-mail" });
-            const plain = InputB({ titleText: "E-mail" });
+        test("TextField minimal: the title over a 28 px field, its edge darker under the mouse; the default field is as before", async function () {
+            const minimal = TextField({ styleName: "minimal", titleText: "E-mail" });
+            const plain = TextField({ titleText: "E-mail" });
             await basic.nextFrame();
             const fieldHeight = minimal.background.elem.offsetHeight;
             const isFieldUnderTitle = (minimal.background.elem.offsetTop >= minimal.title.elem.offsetHeight);
@@ -1028,9 +1028,9 @@
             minimal.elem.dispatchEvent(new MouseEvent("mouseenter"));
             await basic.nextFrame();
             const edgeOver = minimal.background.elem.style.borderColor;
-            check("InputB minimal: the field is 28 high, under its title", fieldHeight === 28 && isFieldUnderTitle, fieldHeight + " / top " + minimal.background.elem.offsetTop);
-            check("InputB minimal: the edge is darker under the mouse", edgeOver !== edgeBefore, edgeBefore + " -> " + edgeOver);
-            check("InputB: the default field keeps its sizes (a 40 px text row, the title inside)", plain.input.elem.offsetHeight === 40 && plain.background.elem.offsetTop === 0, plain.input.elem.offsetHeight + " / " + plain.background.elem.offsetTop);
+            check("TextField minimal: the field is 28 high, under its title", fieldHeight === 28 && isFieldUnderTitle, fieldHeight + " / top " + minimal.background.elem.offsetTop);
+            check("TextField minimal: the edge is darker under the mouse", edgeOver !== edgeBefore, edgeBefore + " -> " + edgeOver);
+            check("TextField: the default field keeps its sizes (a 40 px text row, the title inside)", plain.input.elem.offsetHeight === 40 && plain.background.elem.offsetTop === 0, plain.input.elem.offsetHeight + " / " + plain.background.elem.offsetTop);
             [minimal, plain].forEach(function (field) { field.remove(); });
         });
 
@@ -1046,10 +1046,10 @@
             [list, select, danger].forEach(function (object) { object.remove(); });
         });
 
-        test("InputB minimal: a warning colors the edge of the field; a package wins over the defaults of TextareaB; ink colors the edge", async function () {
-            const field = EmailInputB({ styleName: "minimal", titleText: "E-mail", value: "bugra@" });
-            const plain = EmailInputB({ titleText: "E-mail", value: "bugra@" });
-            const note = TextareaB({ styleName: "minimal", titleText: "Note" });
+        test("TextField minimal: a warning colors the edge of the field; a package wins over the defaults of TextAreaField; ink colors the edge", async function () {
+            const field = EmailField({ styleName: "minimal", titleText: "E-mail", value: "bugra@" });
+            const plain = EmailField({ titleText: "E-mail", value: "bugra@" });
+            const note = TextAreaField({ styleName: "minimal", titleText: "Note" });
             const send = SmartButton({ styleName: "minimal", tone: "ink", labelText: "Send" });
             await basic.nextFrame();
             const plainEdgeBefore = plain.background.elem.style.borderColor;
@@ -1057,9 +1057,9 @@
             plain.checkInputValue();
             await basic.nextFrame();
             const fieldEdge = field.background.elem.style.borderColor;
-            check("InputB minimal: an invalid value colors the edge (warningBorderColor)", field.status == 2 && fieldEdge === "rgb(194, 74, 54)", field.status + " / " + fieldEdge);
-            check("InputB: without warningBorderColor the edge stays", plain.status == 2 && plain.background.elem.style.borderColor === plainEdgeBefore, plainEdgeBefore + " -> " + plain.background.elem.style.borderColor);
-            check("TextareaB minimal: the count takes the unitStyle of the package (not the dark pill of TextareaB)", note.unit && note.unit.elem.style.backgroundColor === "transparent", note.unit && note.unit.elem.style.backgroundColor);
+            check("TextField minimal: an invalid value colors the edge (warningBorderColor)", field.status == 2 && fieldEdge === "rgb(194, 74, 54)", field.status + " / " + fieldEdge);
+            check("TextField: without warningBorderColor the edge stays", plain.status == 2 && plain.background.elem.style.borderColor === plainEdgeBefore, plainEdgeBefore + " -> " + plain.background.elem.style.borderColor);
+            check("TextAreaField minimal: the count takes the unitStyle of the package (not the dark pill of TextAreaField)", note.unit && note.unit.elem.style.backgroundColor === "transparent", note.unit && note.unit.elem.style.backgroundColor);
             check("SmartButton ink: the edge is the color of the button", send.style.box.borderColor === send.style.box.color && send.style.hover.borderColor === send.style.hover.color, send.style.box.borderColor + " / " + send.style.hover.borderColor);
             [field, plain, note, send].forEach(function (object) { object.remove(); });
         });
@@ -1163,13 +1163,13 @@
             [dark, light].forEach(function (bar) { bar.remove(); });
         });
 
-        test("InputB minimal with no title: the field starts at the top and the box is as high as the field (the field of Dialog.prompt)", async function () {
-            const untitled = InputB({ styleName: "minimal", titleText: "", value: "report.pdf" });
-            const titled = InputB({ styleName: "minimal", titleText: "Name" });
+        test("TextField minimal with no title: the field starts at the top and the box is as high as the field (the field of Dialog.prompt)", async function () {
+            const untitled = TextField({ styleName: "minimal", titleText: "", value: "report.pdf" });
+            const titled = TextField({ styleName: "minimal", titleText: "Name" });
             await basic.nextFrame();
             const untitledTop = untitled.background.elem.offsetTop;
-            check("InputB minimal, no title: the field at the top, the box 28 high", untitledTop === 0 && untitled.elem.offsetHeight === 28, untitledTop + " / " + untitled.elem.offsetHeight);
-            check("InputB minimal with a title: the field under the title", titled.background.elem.offsetTop > 0, titled.background.elem.offsetTop);
+            check("TextField minimal, no title: the field at the top, the box 28 high", untitledTop === 0 && untitled.elem.offsetHeight === 28, untitledTop + " / " + untitled.elem.offsetHeight);
+            check("TextField minimal with a title: the field under the title", titled.background.elem.offsetTop > 0, titled.background.elem.offsetTop);
             [untitled, titled].forEach(function (field) { field.remove(); });
         });
 
@@ -1549,7 +1549,7 @@
         test("Form: a press that is not a click does not send; a click sends once", async function () {
             let sends = 0;
             const form = Form({ onSendClick: function () { sends++; } });
-            const input = InputB({ titleText: "Name", required: 1 });
+            const input = TextField({ titleText: "Name", required: 1 });
             form.addInput(input);
             input.setValue("Ali");
             input.input.inputElement.dispatchEvent(new Event("input", { bubbles: true }));
@@ -1566,9 +1566,9 @@
 
         test("Form: the hint of the passive send button is as round as the list of the missing entries (and the hints of the fields)", async function () {
             const form = Form({});
-            const input = InputB({ titleText: "Name", required: 1 });
+            const input = TextField({ titleText: "Name", required: 1 });
             form.addInput(input);
-            const password = PasswordInputB({ titleText: "Password" });
+            const password = PasswordField({ titleText: "Password" });
             await wait(50);
             form.btnSendCover.elem.dispatchEvent(new MouseEvent("mouseover"));
             const hintRadius = window.lblHint ? getComputedStyle(window.lblHint.elem).borderTopLeftRadius : "(no hint)";
@@ -1585,7 +1585,7 @@
         test("Form: onChange(self, input) on an edit; the old onEdit(input) is still called with the input", async function () {
             let changed = [];
             const form = Form({ onChange: function (self, input) { changed = [self, input]; } });
-            const input = InputB({ titleText: "Name" });
+            const input = TextField({ titleText: "Name" });
             form.addInput(input);
             input.input.inputElement.value = "A";
             input.input.inputElement.dispatchEvent(new Event("input", { bubbles: true }));
@@ -1596,7 +1596,7 @@
             let editedInput = null;
             const oldForm = Form({ onEdit: function (input) { editedInput = input; } });
             console.warn = realWarn;
-            const oldInput = InputB({ titleText: "Name" });
+            const oldInput = TextField({ titleText: "Name" });
             oldForm.addInput(oldInput);
             oldInput.input.inputElement.value = "B";
             oldInput.input.inputElement.dispatchEvent(new Event("input", { bubbles: true }));
@@ -1607,8 +1607,8 @@
 
         // *** INPUT B (comp/input-b.js)
 
-        test("EmailInputB: a fast typing that ends valid leaves no warning ball", async function () {
-            const email = EmailInputB({ titleText: "Email", animatedWarningBall: 1 });
+        test("EmailField: a fast typing that ends valid leaves no warning ball", async function () {
+            const email = EmailField({ titleText: "Email", animatedWarningBall: 1 });
             const inputElement = email.input.inputElement;
             // WHY: the letters come faster than the delay of withMotion() (a paste or a fast typist)
             for (const letter of "a@b.co") {
@@ -1617,16 +1617,16 @@
             }
             await wait(300);
             const opacity = Number(email.warningBall.opacity);
-            check("EmailInputB: a fast typing that ends valid leaves no warning ball", email.status === 0 && opacity === 0, "status: " + email.status + ", opacity: " + opacity);
+            check("EmailField: a fast typing that ends valid leaves no warning ball", email.status === 0 && opacity === 0, "status: " + email.status + ", opacity: " + opacity);
             email.remove();
         });
 
-        test("InputB: the old names of the params, properties, methods and events still work (basic.keepOldNames)", async function () {
+        test("TextField: the old names of the params, properties, methods and events still work (basic.keepOldNames)", async function () {
             const realWarn = console.warn;
             const warnings = [];
             console.warn = function (text) { warnings.push(String(text)); };
             let changeCount = 0;
-            const field = InputB({ titleText: "Name", inputValue: "Ali", isRequired: 1, maxChar: 12, selectedLineColor: "#3987E5" });
+            const field = TextField({ titleText: "Name", inputValue: "Ali", isRequired: 1, maxChar: 12, selectedLineColor: "#3987E5" });
             field.onEdit = function () { changeCount++; }; // an event set later with its old name
             const inputElement = field.input.inputElement;
             inputElement.value = "Veli";
@@ -1634,16 +1634,18 @@
             const isParamsMoved = field.value === "Veli" && field.required === 1 && field.maxLength === 12 && inputElement.maxLength === 12 && field.focusLineColor === "#3987E5";
             field.setInputValue("Ayşe");
             const isMethodsKept = field.getInputValue() === "Ayşe" && field.getValue() === "Ayşe" && field.inputValue === "Ayşe";
-            // WHY a child: an old name of the page must win over a default of the child (EmailInputB: required 1)
-            const email = EmailInputB({ isRequired: 0, maxChar: 50 });
-            const password = PasswordInputB({ minChar: 3, showTooltipMessage: "Show it" });
+            // WHY a child: an old name of the page must win over a default of the child (EmailField: required 1)
+            const email = EmailField({ isRequired: 0, maxChar: 50 });
+            const password = PasswordField({ minChar: 3, showTooltipMessage: "Show it" });
             password.input.inputElement.value = "ab1";
             const isChildKept = email.required === 0 && email.maxLength === 50 && password.minLength === 3 && password.isValid() === 1 && password.showPasswordHintText === "Show it";
+            // WHY: a page made with the old component names (InputB, EmailInputB...) gets the same objects
+            const isComponentKept = InputB === TextField && EmailInputB === EmailField && PasswordInputB === PasswordField && URLInputB === UrlField && TextareaB === TextAreaField;
             console.warn = realWarn;
-            const isNamed = warnings.indexOf('InputB: "inputValue" is an old name, use "value"') > -1 && warnings.indexOf('PasswordInputB: "minChar" is an old name, use "minLength"') > -1;
-            check("InputB: the old names of the params, properties, methods and events still work (basic.keepOldNames)",
-                isParamsMoved && changeCount === 1 && isMethodsKept && isChildKept && isNamed,
-                "params: " + isParamsMoved + ", onEdit: " + changeCount + ", methods: " + isMethodsKept + ", children: " + isChildKept + ", console: " + warnings.length);
+            const isNamed = warnings.indexOf('TextField: "inputValue" is an old name, use "value"') > -1 && warnings.indexOf('PasswordField: "minChar" is an old name, use "minLength"') > -1;
+            check("TextField: the old names of the params, properties, methods and events still work (basic.keepOldNames)",
+                isParamsMoved && changeCount === 1 && isMethodsKept && isChildKept && isNamed && isComponentKept,
+                "params: " + isParamsMoved + ", onEdit: " + changeCount + ", methods: " + isMethodsKept + ", children: " + isChildKept + ", components: " + isComponentKept + ", console: " + warnings.length);
             field.remove();
             email.remove();
             password.remove();
@@ -1684,8 +1686,8 @@
 
         // *** PHONE INPUT (comp/phone-input-b.js)
 
-        test("PhoneInputB: a pasted number keeps all its digits", async function () {
-            const phone = PhoneInputB({ titleText: "Phone" });
+        test("PhoneField: a pasted number keeps all its digits", async function () {
+            const phone = PhoneField({ titleText: "Phone" });
             const el = phone.input.inputElement;
             const results = [];
             ["555 123 45 67", "(555) 123-4567", "0555 123 45 67", "+90 555 123 45 67"].forEach(function (text) {
@@ -1697,39 +1699,39 @@
                 phone.setValue("");
             });
             const isAllRight = results.every(function (value) { return value === "+90 (555) 123-4567"; });
-            check("PhoneInputB: a pasted number keeps all its digits", isAllRight, results.join(" | "));
+            check("PhoneField: a pasted number keeps all its digits", isAllRight, results.join(" | "));
             phone.remove();
         });
 
         // *** URL INPUT (comp/url-input-b.js)
 
-        test("URLInputB: a path with an 's' is valid, an empty required field is not sent", async function () {
-            const url = URLInputB({ titleText: "Site", required: 1 });
+        test("UrlField: a path with an 's' is valid, an empty required field is not sent", async function () {
+            const url = UrlField({ titleText: "Site", required: 1 });
             const results = [];
             ["example.com/news", "example.com/a b"].forEach(function (text) {
                 url.input.text = text;
                 results.push(url.isValid());
             });
             url.input.text = "";
-            check("URLInputB: a path with an 's' is valid and a path with a space is not", results[0] === 1 && results[1] === 0, results.join(", "));
-            check("URLInputB: an empty field gives an empty value (not the protocol alone)", url.getValue() === "", "\"" + url.getValue() + "\"");
+            check("UrlField: a path with an 's' is valid and a path with a space is not", results[0] === 1 && results[1] === 0, results.join(", "));
+            check("UrlField: an empty field gives an empty value (not the protocol alone)", url.getValue() === "", "\"" + url.getValue() + "\"");
             url.remove();
         });
 
         // *** TEXTAREA B (comp/textarea-b.js)
 
-        test("TextareaB: setPlaceholder and setMaxLength change its textarea", async function () {
-            const area = TextareaB({ titleText: "Note" });
+        test("TextAreaField: setPlaceholder and setMaxLength change its textarea", async function () {
+            const area = TextAreaField({ titleText: "Note" });
             let error = "";
             try {
                 area.setPlaceholder("Write a note");
                 area.setMaxLength(500);
             } catch (e) {
-                error = e.message; // WHY: they wrote to box.input, which a TextareaB does not have
+                error = e.message; // WHY: they wrote to box.input, which a TextAreaField does not have
             }
             const el = area.textareaElem;
             const isChanged = el.placeholder === "Write a note" && el.maxLength === 500 && area.maxLength === 500;
-            check("TextareaB: setPlaceholder and setMaxLength change its textarea", !error && isChanged, error || ("placeholder: " + el.placeholder + ", maxLength: " + el.maxLength));
+            check("TextAreaField: setPlaceholder and setMaxLength change its textarea", !error && isChanged, error || ("placeholder: " + el.placeholder + ", maxLength: " + el.maxLength));
             area.remove();
         });
 
@@ -3426,13 +3428,13 @@
             button.remove();
         });
 
-        test("EmailInputB: setRequired() and the start value keep the warning of an invalid e-mail", async function () {
-            const typed = EmailInputB({ width: 300 });
+        test("EmailField: setRequired() and the start value keep the warning of an invalid e-mail", async function () {
+            const typed = EmailField({ width: 300 });
             typed.setValue("abc");
             const beforeRequired = typed.status;
             typed.setRequired(1);
-            const started = EmailInputB({ width: 300, value: "not-an-email" });
-            check("EmailInputB: setRequired() and the start value keep the warning of an invalid e-mail", beforeRequired === 2 && typed.status === 2 && started.status === 2, "typed: " + beforeRequired + " -> " + typed.status + ", start value: " + started.status);
+            const started = EmailField({ width: 300, value: "not-an-email" });
+            check("EmailField: setRequired() and the start value keep the warning of an invalid e-mail", beforeRequired === 2 && typed.status === 2 && started.status === 2, "typed: " + beforeRequired + " -> " + typed.status + ", start value: " + started.status);
             typed.remove();
             started.remove();
         });
@@ -3465,24 +3467,24 @@
         });
 
         // 2026-11-05 (the user): the show password hint was white on the dark login page
-        test("PasswordInputB: the eye is white on a dark field", async function () {
+        test("PasswordField: the eye is white on a dark field", async function () {
             const filterOf = function (styleName) {
-                const password = PasswordInputB({ titleText: "Password", styleName: styleName });
+                const password = PasswordField({ titleText: "Password", styleName: styleName });
                 const filter = password.btnShowPassword.elem.style.filter;
                 password.remove();
                 return filter;
             };
             const filters = ["classic", "ozden", "dark", "ozdenDark"].map(filterOf);
-            check("PasswordInputB: the eye is white on a dark field", filters.join() === ",,invert(100%),invert(100%)", filters.join());
+            check("PasswordField: the eye is white on a dark field", filters.join() === ",,invert(100%),invert(100%)", filters.join());
         });
 
-        test("PasswordInputB: the show password hint takes the hint look of the field (white on classic, dark on ozdenDark and dark)", async function () {
+        test("PasswordField: the show password hint takes the hint look of the field (white on classic, dark on ozdenDark and dark)", async function () {
             const fields = ["classic", "ozdenDark", "dark"].map(function (styleName) {
-                return PasswordInputB({ titleText: "Password", styleName: styleName });
+                return PasswordField({ titleText: "Password", styleName: styleName });
             });
             const colors = fields.map(function (field) { return field.btnShowPassword.tooltip.lbl_color; });
             const textColors = fields.map(function (field) { return field.btnShowPassword.tooltip.lbl_textColor; });
-            check("PasswordInputB: the show password hint takes the hint look of the field (white on classic, dark on ozdenDark and dark)",
+            check("PasswordField: the show password hint takes the hint look of the field (white on classic, dark on ozdenDark and dark)",
                 colors[0] === "white" && textColors[0] === "#141414" && colors[1] === "#262624" && colors[2] === "#262624",
                 "bubbles: " + colors.join(", ") + " | texts: " + textColors.join(", "));
             fields.forEach(function (field) { field.remove(); });
@@ -3507,12 +3509,12 @@
             pages.remove();
         });
 
-        test("URLInputB: the value it gives can be put back, also as the start value", async function () {
-            const url = URLInputB({ width: 360 });
+        test("UrlField: the value it gives can be put back, also as the start value", async function () {
+            const url = UrlField({ width: 360 });
             url.setValue("https://www.example.com/news");
             url.setValue(url.getValue());
-            const started = URLInputB({ width: 360, value: "https://www.example.com" });
-            check("URLInputB: the value it gives can be put back, also as the start value", url.getValue() === "https://www.example.com/news" && url.status === 0 && started.getValue() === "https://www.example.com" && started.status === 0, url.getValue() + " (" + url.status + "), " + started.getValue() + " (" + started.status + ")");
+            const started = UrlField({ width: 360, value: "https://www.example.com" });
+            check("UrlField: the value it gives can be put back, also as the start value", url.getValue() === "https://www.example.com/news" && url.status === 0 && started.getValue() === "https://www.example.com" && started.status === 0, url.getValue() + " (" + url.status + "), " + started.getValue() + " (" + started.status + ")");
             url.remove();
             started.remove();
         });
@@ -3532,16 +3534,16 @@
             group.remove();
         });
 
-        test("TextareaB: filled while hidden, it is as tall as its field when shown", async function () {
+        test("TextAreaField: filled while hidden, it is as tall as its field when shown", async function () {
             const group = VGroup({ width: 400, height: 200, visible: 0 });
-                const note = TextareaB({ width: 360, height: 140, titleText: "Note" });
+                const note = TextAreaField({ width: 360, height: 140, titleText: "Note" });
             endGroup();
             note.setValue("A saved note.");
             group.visible = 1;
             await wait(200);
             const textHeight = note.textareaElem.getBoundingClientRect().height;
             const fieldHeight = note.inputBox.elem.getBoundingClientRect().height;
-            check("TextareaB: filled while hidden, it is as tall as its field when shown", textHeight > 0 && textHeight >= fieldHeight - 6, "textarea: " + textHeight + ", field: " + fieldHeight);
+            check("TextAreaField: filled while hidden, it is as tall as its field when shown", textHeight > 0 && textHeight >= fieldHeight - 6, "textarea: " + textHeight + ", field: " + fieldHeight);
             group.remove();
         });
 
@@ -3754,7 +3756,7 @@
             table.remove();
         });
 
-        test("NumberInputB and CurrencyInputB: a second decimal separator typed in the number keeps every digit", async function () {
+        test("NumberField and CurrencyField: a second decimal separator typed in the number keeps every digit", async function () {
             const insertAt = function (field, position, letter) {
                 const el = field.input.inputElement;
                 el.focus();
@@ -3766,13 +3768,13 @@
             const typeText = function (field, text) {
                 for (const letter of text) insertAt(field, field.input.inputElement.value.length, letter);
             };
-            const number = NumberInputB({ titleText: "Number" });
-            const currency = CurrencyInputB({ titleText: "Price" });
+            const number = NumberField({ titleText: "Number" });
+            const currency = CurrencyField({ titleText: "Price" });
             typeText(number, "12.5");
             typeText(currency, "12.5");
             const numberValue = insertAt(number, 1, "."); // the point moved: "1.25"
             const currencyValue = insertAt(currency, 1, ".");
-            check("NumberInputB and CurrencyInputB: a second decimal separator typed in the number keeps every digit", numberValue === "1.25" && currencyValue === "1.25", "number: " + numberValue + ", currency: " + currencyValue);
+            check("NumberField and CurrencyField: a second decimal separator typed in the number keeps every digit", numberValue === "1.25" && currencyValue === "1.25", "number: " + numberValue + ", currency: " + currencyValue);
             number.remove();
             currency.remove();
         });
@@ -4673,15 +4675,15 @@
             check("SliderField and Stepper: a value typed in a field that is removed is not sent", calls.length === 0, "onChange of: " + calls.join(", "));
         });
 
-        test("PhoneInputB: setCountryCode() keeps the number, a number filled without its code keeps its digits", async function () {
-            const phone = PhoneInputB({ width: 300, value: "+90 (555) 123-4567" });
+        test("PhoneField: setCountryCode() keeps the number, a number filled without its code keeps its digits", async function () {
+            const phone = PhoneField({ width: 300, value: "+90 (555) 123-4567" });
             phone.setCountryCode("+1");
             const changed = phone.getValue();
-            const filled = PhoneInputB({ width: 300 });
+            const filled = PhoneField({ width: 300 });
             const el = filled.input.inputElement;
             el.value = "5551234567"; // (autofill: the digits, with no code)
             el.dispatchEvent(new Event("input", { bubbles: true }));
-            check("PhoneInputB: setCountryCode() keeps the number, a number filled without its code keeps its digits", changed === "+1 (555) 123-4567" && filled.getValue() === "+90 (555) 123-4567", changed + ", " + filled.getValue());
+            check("PhoneField: setCountryCode() keeps the number, a number filled without its code keeps its digits", changed === "+1 (555) 123-4567" && filled.getValue() === "+90 (555) 123-4567", changed + ", " + filled.getValue());
             phone.remove();
             filled.remove();
         });

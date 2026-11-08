@@ -56,7 +56,7 @@ const LoginPageDefaults = {
     tab_selectedColor: "#000000", // "#000000", "white",
     tabWidth: "auto", // the LOGIN / SIGN UP bar: "auto" (as wide as its tabs) or a width the tabs share (Ex: the panelWidth)
     tabStyle: {}, // more keys of the style of its Tabs (pillBar, tab, pillActive, pillIndicator...), over the tab_ look
-    inputStyleName: "", // "": the fields take the input_ colors below. An InputB package ("ozden", "ozdenDark"...): the fields take its look.
+    inputStyleName: "", // "": the fields take the input_ colors below. A TextField package ("ozden", "ozdenDark"...): the fields take its look.
     buttonStyleName: "", // "": LOGIN / SIGN UP are flat buttons in primaryColor. A SmartButton template ("ozdenType3"...): SmartButtons
     buttonTone: "", // The tone of those SmartButtons (Ex: "blue"; "": the gray of the template)
     input_backgroundColor: "#141414",
@@ -193,7 +193,7 @@ const LoginPage = function(params = {}) {
                     });
                     that.setMotion("opacity 0.2s");
 
-                        // The params of every field: an InputB package (inputStyleName), or the input_ colors.
+                        // The params of every field: a TextField package (inputStyleName), or the input_ colors.
                         const common = (box.inputStyleName) ? {
                             width: "100%",
                             leftPadding: 16,
@@ -209,7 +209,7 @@ const LoginPage = function(params = {}) {
                             focusLineColor: box.primaryColor,
                         };
 
-                        box.loginEmail = EmailInputB({
+                        box.loginEmail = EmailField({
                             ...common,
                             titleText: "EMAIL",
                             placeholder: "example@site.com",
@@ -222,7 +222,7 @@ const LoginPage = function(params = {}) {
                             checkLoginForm();
                         };
 
-                        box.loginPassword = PasswordInputB({
+                        box.loginPassword = PasswordField({
                             ...common,
                             titleText: "PASSWORD",
                             placeholder: "Enter your password",
@@ -292,7 +292,7 @@ const LoginPage = function(params = {}) {
                     that.opacity = 0;
                     that.setMotion("opacity 0.2s");
 
-                        box.signupEmail = EmailInputB({
+                        box.signupEmail = EmailField({
                             ...common,
                             titleText: "EMAIL",
                             placeholder: "example@site.com",
@@ -304,7 +304,7 @@ const LoginPage = function(params = {}) {
                             checkSignupForm();
                         };
 
-                        box.signupPassword = PasswordInputB({
+                        box.signupPassword = PasswordField({
                             ...common,
                             titleText: "PASSWORD",
                             placeholder: "Create a password",
@@ -320,7 +320,7 @@ const LoginPage = function(params = {}) {
                             checkSignupForm();
                         };
 
-                        box.signupPassword2 = PasswordInputB({
+                        box.signupPassword2 = PasswordField({
                             ...common,
                             titleText: "CONFIRM PASSWORD",
                             placeholder: "Re-enter password",
@@ -548,7 +548,7 @@ const LoginPage = function(params = {}) {
     // Style
     const styleInput = function(obj) {
 
-        // WHY: an InputB package gives the whole look of the field (its round, border and text color).
+        // WHY: a TextField package gives the whole look of the field (its round, border and text color).
         if (box.inputStyleName) return;
 
         obj.background.round = 4;

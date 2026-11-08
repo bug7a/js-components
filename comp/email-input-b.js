@@ -2,12 +2,12 @@
 
 /*
 
-EmailInputB - v25.07
+EmailField - v26.11
 
 UI COMPONENT TEMPLATE
 - You can customize, this template code as you need:
 - NEW PROJECTS: styleName "ozden" on a light page, "ozdenDark" on a dark page (the packages
-  of InputB, comp/input-b.js; the look of 02-comp-examples/input-b-ex7-ozden.htm), unless the user asks for another one.
+  of TextField, comp/input-b.js; the look of 02-comp-examples/input-b-ex7-ozden.htm), unless the user asks for another one.
 
 
 Started Date: June 2024
@@ -20,7 +20,7 @@ Webpage: https://bug7a.github.io/js-components/
 "use strict";
 
 // Default values
-const EmailInputBDefaults = {
+const EmailFieldDefaults = {
     required: 1,
     type: "email",
     titleText: "EMAIL",
@@ -30,16 +30,16 @@ const EmailInputBDefaults = {
     maxLength: 40,
 };
 
-const EmailInputB = function(params = {}) {
+const EmailField = function(params = {}) {
 
     // Merge params first
-    // WHY the style package of InputB first: a key it sets (warningColor) wins over the defaults here, as over the
-    //     defaults of InputB
-    basic.applyStylePackage(params, InputB.styles, InputBDefaults);
-    mergeIntoIfMissing(params, EmailInputBDefaults);
+    // WHY the style package of TextField first: a key it sets (warningColor) wins over the defaults here, as over the
+    //     defaults of TextField
+    basic.applyStylePackage(params, TextField.styles, TextFieldDefaults);
+    mergeIntoIfMissing(params, EmailFieldDefaults);
 
     // BOX: Component container
-    const box = startExtendedObject(InputB, params);
+    const box = startExtendedObject(TextField, params);
 
     // *** PRIVATE VARIABLES:
     const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/; // name@domain.ext
@@ -56,8 +56,12 @@ const EmailInputB = function(params = {}) {
     // *** OBJECT VIEW:
 
     // *** OBJECT INIT CODE:
-    box.checkInputValue(); // WHY: InputB checked the start value before this isValid(): "not-an-email" got status 0
+    box.checkInputValue(); // WHY: TextField checked the start value before this isValid(): "not-an-email" got status 0
 
     return endExtendedObject(box);
 
 };
+
+// THE OLD NAME of the component, for a while: the pages made with EmailInputB keep working (the same object).
+// Delete it when no page uses it any more (context/repo-map.md, "Parameter names").
+const EmailInputB = EmailField;

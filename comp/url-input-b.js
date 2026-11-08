@@ -2,12 +2,12 @@
 
 /*
 
-URLInputB - v25.07
+UrlField - v26.11
 
 UI COMPONENT TEMPLATE
 - You can customize, this template code as you need:
 - NEW PROJECTS: styleName "ozden" on a light page, "ozdenDark" on a dark page (the packages
-  of InputB, comp/input-b.js; the look of 02-comp-examples/input-b-ex7-ozden.htm), unless the user asks for another one.
+  of TextField, comp/input-b.js; the look of 02-comp-examples/input-b-ex7-ozden.htm), unless the user asks for another one.
 
 Started Date: July 2025
 Developer: Bugra Ozden
@@ -19,7 +19,7 @@ Webpage: https://bug7a.github.io/js-components/
 "use strict";
 
 // Default values
-const URLInputBDefaults = {
+const UrlFieldDefaults = {
     width: 400,
     required: 1,
     titleText: "URL",
@@ -41,20 +41,20 @@ const URLInputBDefaults = {
         arrowSize: 20,
         fontSize: 20,
         round: 3,
-        // NOTE: The colors come from selectStyle of InputB (its style packages); a color given here wins.
+        // NOTE: The colors come from selectStyle of TextField (its style packages); a color given here wins.
     },
 };
 
-const URLInputB = function(params = {}) {
+const UrlField = function(params = {}) {
 
     params.createInput = 0; // WHY: The input is made here, after the TinySelect of the protocol.
 
-    // WHY the style package of InputB first: a key it sets (warningColor, rightPadding) wins over the defaults here, as
-    //     over the defaults of InputB
-    basic.applyStylePackage(params, InputB.styles, InputBDefaults);
+    // WHY the style package of TextField first: a key it sets (warningColor, rightPadding) wins over the defaults here, as
+    //     over the defaults of TextField
+    basic.applyStylePackage(params, TextField.styles, TextFieldDefaults);
 
     // BOX: Component container
-    const box = startExtendedObject(InputB, URLInputBDefaults, params);
+    const box = startExtendedObject(TextField, UrlFieldDefaults, params);
 
     // *** PRIVATE VARIABLES:
 
@@ -62,7 +62,7 @@ const URLInputB = function(params = {}) {
 
     // *** PRIVATE FUNCTIONS:
 
-    // The params of the protocol select: the colors of selectStyle (InputB) and the text color of the field,
+    // The params of the protocol select: the colors of selectStyle (TextField) and the text color of the field,
     // then the tinySelectParams of the page over them.
     const getTinySelectParams = function() {
         const selectStyle = box.selectStyle;
@@ -108,7 +108,7 @@ const URLInputB = function(params = {}) {
     };
 
     const superSetValue = box.setValue;
-    // WHY: getValue() gives the protocol and the text; the setValue of InputB wrote them all into the text,
+    // WHY: getValue() gives the protocol and the text; the setValue of TextField wrote them all into the text,
     //      so a saved value came back as "https://www.https://www.example.com" and could not be sent
     box.setValue = function(value) { // *** OVERRIDE ***
         const text = String(value ?? "");
@@ -149,7 +149,7 @@ const URLInputB = function(params = {}) {
     // *** OBJECT INIT CODE:
     const inputElem = box.input.inputElement;
 
-    // WHY: box.paintFocus() of InputB: this copy did not change the border on focus.
+    // WHY: box.paintFocus() of TextField: this copy did not change the border on focus.
     box.focusFunc = function () {
         box.paintFocus(1);
         box.onFocus();
@@ -176,3 +176,7 @@ const URLInputB = function(params = {}) {
 
     return endExtendedObject(box);
 };
+
+// THE OLD NAME of the component, for a while: the pages made with URLInputB keep working (the same object).
+// Delete it when no page uses it any more (context/repo-map.md, "Parameter names").
+const URLInputB = UrlField;

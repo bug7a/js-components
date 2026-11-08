@@ -208,8 +208,8 @@
             { name: "filled", title: "E-mail", value: "bugra@ozden.com" },
             { name: "error", title: "E-mail", value: "bugra@", error: "Write the whole address." },
             { name: "disabled", title: "E-mail", value: "bugra@ozden.com", disabled: 1 },
-            { name: "PasswordInputB", title: "Password", value: "••••••••", password: 1 },
-            { name: "TextareaB", title: "Note", value: "Two lines of a note that goes on to the next line.", textarea: 1 },
+            { name: "PasswordField", title: "Password", value: "••••••••", password: 1 },
+            { name: "TextAreaField", title: "Note", value: "Two lines of a note that goes on to the next line.", textarea: 1 },
         ];
 
         const SEARCH_STATES = [
@@ -444,7 +444,7 @@
 
                     drawComponent({ title: "Tokens", note: "The colors of the two packages, the type and the sizes.", cellWidth: 450, states: TOKEN_ROWS, drawCell: drawTokenCell });
                     drawComponent({ title: "SmartButton", note: "line (the default), primary (the only fill), danger, quiet, only an icon. Under the mouse the line gets darker.", cellWidth: 400, states: BUTTON_STATES, drawCell: drawButtonCell });
-                    drawComponent({ title: "InputB · PasswordInputB · TextareaB", note: "The title over the field, a line around it: darker under the mouse, ink when it is focused.", cellWidth: 270, states: FIELD_STATES, drawCell: drawFieldCell });
+                    drawComponent({ title: "TextField · PasswordField · TextAreaField", note: "The title over the field, a line around it: darker under the mouse, ink when it is focused.", cellWidth: 270, states: FIELD_STATES, drawCell: drawFieldCell });
                     drawComponent({ title: "SearchInput", note: "Round ends, the icon in the line color, a cross when there is text.", cellWidth: 270, states: SEARCH_STATES, drawCell: drawSearchCell });
                     drawComponent({ title: "SelectBox", note: "A field with a chevron. Its list has the rows of ItemList.", cellWidth: 270, states: SELECT_STATES, drawCell: drawSelectCell });
                     drawComponent({ title: "CheckBox · RadioButton · Toggle", note: "Lines when off; an ink mark inside the line when on.", cellWidth: 380, states: CHOICE_STATES, drawCell: drawChoiceCell });

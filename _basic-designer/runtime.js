@@ -198,7 +198,7 @@ Developer: Bugra Ozden
     const originalStartObject = window.startObject;
     if (typeof originalStartObject === "function") {
         window.startObject = function ($defaults, $params) {
-            // The two argument form (Ex: InputB): the merge is done inside basic.js, the copy is made here.
+            // The two argument form: the merge is done inside basic.js, the copy is made here.
             if (arguments.length >= 2 && $params && $defaults) {
                 const merged = designer.cloneParams($params);
                 originalMerge(merged, $defaults);

@@ -2,7 +2,7 @@
 <html lang="en">
     <head>
 
-        <title>InputB - Dark Style</title>
+        <title>TextField - Dark Style</title>
 
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -20,7 +20,7 @@
 
         /* Bismillah */
 
-        // InputB with styleName: "dark": the dark theme of classic (the same shape: a line under the field, no border).
+        // TextField with styleName: "dark": the dark theme of classic (the same shape: a line under the field, no border).
 
         const PAGE_COLOR = "black";
         const CARD_COLOR = "#1A1A19";
@@ -39,7 +39,7 @@
 
                 VGroup({ width: "100%", height: "auto", align: "center top", padding: 40, gap: 20 });
 
-                    Label({ text: "InputB · styleName: \"dark\"", fontSize: 22, textColor: White(0.9) });
+                    Label({ text: "TextField · styleName: \"dark\"", fontSize: 22, textColor: White(0.9) });
 
                     // GROUP: A dark card (Ozden Panel)
                     VGroup({
@@ -56,7 +56,7 @@
                     });
 
                         addCaption("REQUIRED");
-                        InputB({
+                        TextField({
                             styleName: "dark",
                             width: "100%",
                             titleText: "FULL NAME",
@@ -65,7 +65,7 @@
                         });
 
                         addCaption("UNIT AND DESCRIPTION");
-                        InputB({
+                        TextField({
                             styleName: "dark",
                             width: "100%",
                             titleText: "WEIGHT",
@@ -75,7 +75,7 @@
                         });
 
                         addCaption("WARNING ICON (warningBallType: \"icon\")");
-                        const codeInput = InputB({
+                        const codeInput = TextField({
                             styleName: "dark",
                             width: "100%",
                             titleText: "CODE",
@@ -91,7 +91,7 @@
                         codeInput.showWarningIfNotValid(codeInput.isValid());
 
                         addCaption("ONE PARAM OF THE PACKAGE CHANGED (focusLineColor)");
-                        InputB({
+                        TextField({
                             styleName: "dark",
                             width: "100%",
                             titleText: "E-MAIL",

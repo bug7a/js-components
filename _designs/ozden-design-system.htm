@@ -19,7 +19,7 @@
         // DRAFT DESIGN: the "ozden" style as one design system, 2026-11-01.
         // The colors, the type, the shapes and the ozden look of the components on one page, drawn with plain
         // basic.js objects (no component here). The values below are copies of the ozden packages of comp/
-        // (SmartButton, InputB, SearchInput, SelectBox, ProgressBar, Dialog, ActionButton, ItemList, LoadingScreen,
+        // (SmartButton, TextField, SearchInput, SelectBox, ProgressBar, Dialog, ActionButton, ItemList, LoadingScreen,
         // Tooltip, Tabs of login-page); CheckBox, RadioButton and Notice have no ozden package: their classic
         // look is shown. Change a value in basic-designer; then it is carried to the packages by hand.
         // http://127.0.0.1:5505/_basic-designer/index.htm?page=_designs/ozden-design-system.htm
@@ -36,7 +36,7 @@
                 { name: "Button hover", value: "#D9D9D9", use: "hover / pressed" },
                 { name: "Disabled", value: "#EBEBEA", use: "a disabled button" },
                 { name: "Track", value: "#F2F2F2", use: "progress track" },
-                { name: "Field", value: "#F6F6F6", use: "InputB field" },
+                { name: "Field", value: "#F6F6F6", use: "TextField field" },
                 { name: "Whitesmoke", value: "#F5F5F5", use: "search, select field" },
                 { name: "Footer", value: "#FAFAF9", use: "dialog footer band" },
                 { name: "Page", value: "#F4F5F2", use: "the page under the cards" },
@@ -51,7 +51,7 @@
             ],
             accent: [
                 { name: "Indianred", value: "#CD5C5C", use: "clock hand, waiting dots" },
-                { name: "Field warning", value: "#E5885E", use: "InputB error ball" },
+                { name: "Field warning", value: "#E5885E", use: "TextField error ball" },
                 { name: "Search yellow", value: "#FFFCD6", use: "SelectBox search" },
                 { name: "Focus ring", value: "rgba(95, 158, 160, 0.6)", use: "keyboard focus" },
             ],
@@ -73,7 +73,7 @@
             { name: "Title", size: 20, family: FONT.bold, color: "#1B1F23", sample: "Delete the project?", use: "dialog title" },
             { name: "Control", size: 20, family: FONT.regular, color: Black(0.7), sample: "Send the message", use: "buttons, fields, rows" },
             { name: "Body", size: 16, family: FONT.regular, color: Black(0.55), sample: "This can not be undone. The files stay in the archive.", use: "dialog message" },
-            { name: "Field title", size: 16, family: FONT.bold, color: "#555555", sample: "E-mail address", use: "InputB title" },
+            { name: "Field title", size: 16, family: FONT.bold, color: "#555555", sample: "E-mail address", use: "TextField title" },
             { name: "Label", size: 15, family: FONT.regular, color: "#232323", sample: "Uploading files", use: "progress title" },
             { name: "Small", size: 14, family: FONT.regular, color: Black(0.6), sample: "62 of 100 files", use: "values, descriptions" },
             { name: "Bubble", size: 13, family: FONT.bold, color: "#E8796D", sample: "Click again to delete.", use: "the ask bubble" },
@@ -91,7 +91,7 @@
             { name: "Strong", border: 1, color: Black(0.35), use: "ozdenType1-2" },
             { name: "Select", border: 1, color: Black(0.3), use: "SelectBox" },
             { name: "Faint", border: 1, color: Black(0.1), use: "ozdenType3, search" },
-            { name: "Field", border: 1, color: Black(0.05), use: "InputB" },
+            { name: "Field", border: 1, color: Black(0.05), use: "TextField" },
             { name: "Dialog", border: 2, color: "#232323", use: "dialog card" },
         ];
 
@@ -193,7 +193,7 @@
                     drawSection("2. Type", "Open Sans: opensans and opensans-bold. The sizes the components use.", drawType);
                     drawSection("3. Shape", "Corners, edges, shadows and the spaces between things.", drawShape);
                     drawSection("4. Buttons", "SmartButton: ozdenType1 is the default. Hover, pressed and focus are still frames.", drawButtons);
-                    drawSection("5. Fields and choices", "InputB ozden, SearchInput ozden, SelectBox ozden, CheckBox / RadioButton (classic), pill Tabs.", drawFields);
+                    drawSection("5. Fields and choices", "TextField ozden, SearchInput ozden, SelectBox ozden, CheckBox / RadioButton (classic), pill Tabs.", drawFields);
                     drawSection("6. Feedback", "ProgressBar ozden, the waiting clock, Tooltip, the ask bubble, Notice.", drawFeedback);
                     drawSection("7. Surfaces", "Dialog ozden, ActionButton ozden, ItemList ozden.", drawSurfaces);
                     drawDarkSection();
@@ -458,7 +458,7 @@
         // *** 5. FIELDS AND CHOICES
 
         const drawFields = function () {
-            drawRow("InputB ozden", function () {
+            drawRow("TextField ozden", function () {
                 drawNamed("normal", function () { drawField({ value: "" }); });
                 drawNamed("hover", function () { drawField({ value: "", hover: 1 }); });
                 drawNamed("focus, filled", function () { drawField({ value: "bugra@ozden.com", focus: 1 }); });
@@ -486,7 +486,7 @@
             });
         };
 
-        // GROUP: An InputB field: the title over the text, an error ball at the top right
+        // GROUP: A TextField field: the title over the text, an error ball at the top right
         const drawField = function (state) {
             const field = VGroup({
                 width: FIELD.width, height: "auto", align: "left top", gap: 0, padding: FIELD.padding,
@@ -506,7 +506,7 @@
             return field;
         };
 
-        // LABEL: The round warning icon of an InputB with an error
+        // LABEL: The round warning icon of a TextField with an error
         const drawWarningBall = function () {
             const ball = Label({ width: FIELD.warningSize, height: FIELD.warningSize, text: "!", fontSize: 13, fontFamily: FONT.bold, textColor: "white", color: FIELD.warningColor, round: 100, textAlign: "center" });
             ball.css = { position: "absolute", left: "auto", right: "5px", top: "5px", lineHeight: FIELD.warningSize + "px" };
@@ -715,7 +715,7 @@
             const card = VGroup({ width: "auto", height: "auto", align: "left top", gap: 20, padding: [30, 28], color: DARK.card, round: 10, border: 1, borderColor: White(0.08), clipContent: 0 });
                 VGroup({ hug: 1, align: "left top", gap: 2 });
                     Label({ text: "8. Dark (ozdenDark)", fontSize: 18, fontFamily: FONT.bold, textColor: White(0.9) });
-                    Label({ text: "On the #1A1A19 card: the dark colors, ozdenType1Dark, InputB ozdenDark, SearchInput ozdenDark, the dark clock.", fontSize: 13, textColor: White(0.5) });
+                    Label({ text: "On the #1A1A19 card: the dark colors, ozdenType1Dark, TextField ozdenDark, SearchInput ozdenDark, the dark clock.", fontSize: 13, textColor: White(0.5) });
                 endGroup();
                 drawDarkRow("Colors", function () { COLORS.dark.forEach(drawDarkSwatch); });
                 drawDarkRow("Button · field · search · clock", function () {
@@ -760,7 +760,7 @@
             return button;
         };
 
-        // GROUP: InputB ozdenDark with the focus edge
+        // GROUP: TextField ozdenDark with the focus edge
         const drawDarkField = function () {
             const field = VGroup({ width: 300, height: "auto", align: "left top", gap: 0, padding: FIELD.padding, color: DARK.fieldColor, round: DARK.fieldRound, border: 1, borderColor: DARK.fieldFocusEdge });
                 Label({ text: "E-MAIL", fontSize: FIELD.titleSize, fontFamily: FONT.bold, textColor: DARK.titleColor, css: { letterSpacing: "0.06em" } });

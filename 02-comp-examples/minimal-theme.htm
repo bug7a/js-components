@@ -64,7 +64,7 @@
     // _designs/minimal-theme.htm). Small (28 px, a 13 px text) and made of lines: a component has no fill of its
     // own, it takes the ground of its window. The main action is the only filled button: tone "ink" / "inkDark".
     // The components that have it so far: SmartButton (and minimalDanger for a delete), CheckBox, RadioButton, Toggle,
-    // InputB (EmailInputB, PasswordInputB, TextareaB...), SearchInput, SelectBox, ItemList, Slider, RangeSlider,
+    // TextField (EmailField, PasswordField, TextAreaField...), SearchInput, SelectBox, ItemList, Slider, RangeSlider,
     // ProgressBar, Tabs, Stepper, MenuBar (its menus: ContextMenu), ToolBar, StatusBar, TreeView, SmartTable,
     // DataTable, JsonEditor, Tooltip, Dialog, Toast.
     // The pickers, the fields and the panels too: SelectDate, SelectTime, SelectColor, SliderField, TagInput,
@@ -196,9 +196,9 @@
                     endGroup();
 
                     Label({ text: "FIELDS", fontSize: 11, bold: 1, textColor: LIGHT_CAPTION_COLOR });
-                    EmailInputB({ styleName: "minimal", width: 260, titleText: "E-mail", placeholder: "name@mail.com" });
-                    PasswordInputB({ styleName: "minimal", width: 260, titleText: "Password", value: "secret" });
-                    TextareaB({ styleName: "minimal", width: 260, height: 96, titleText: "Note", placeholder: "A few words" });
+                    EmailField({ styleName: "minimal", width: 260, titleText: "E-mail", placeholder: "name@mail.com" });
+                    PasswordField({ styleName: "minimal", width: 260, titleText: "Password", value: "secret" });
+                    TextAreaField({ styleName: "minimal", width: 260, height: 96, titleText: "Note", placeholder: "A few words" });
                     SearchInput({ styleName: "minimal", width: 260 });
                     SelectBox({ styleName: "minimal", width: 260, options: FRUITS, value: "Apple" });
                     Stepper({ styleName: "minimal", value: 3 });
@@ -316,9 +316,9 @@
                     endGroup();
 
                     Label({ text: "FIELDS", fontSize: 11, bold: 1, textColor: DARK_CAPTION_COLOR });
-                    EmailInputB({ styleName: "minimalDark", width: 260, titleText: "E-mail", placeholder: "name@mail.com" });
-                    PasswordInputB({ styleName: "minimalDark", width: 260, titleText: "Password", value: "secret" });
-                    TextareaB({ styleName: "minimalDark", width: 260, height: 96, titleText: "Note", placeholder: "A few words" });
+                    EmailField({ styleName: "minimalDark", width: 260, titleText: "E-mail", placeholder: "name@mail.com" });
+                    PasswordField({ styleName: "minimalDark", width: 260, titleText: "Password", value: "secret" });
+                    TextAreaField({ styleName: "minimalDark", width: 260, height: 96, titleText: "Note", placeholder: "A few words" });
                     SearchInput({ styleName: "minimalDark", width: 260 });
                     SelectBox({ styleName: "minimalDark", width: 260, options: FRUITS, value: "Apple" });
                     Stepper({ styleName: "minimalDark", value: 3 });

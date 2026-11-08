@@ -2,13 +2,13 @@
 
 /*
 
-InputB - v25.07
+TextField - v26.11
 
 UI COMPONENT TEMPLATE
 - You can customize, this template code as you need:
 - NEW PROJECTS: use styleName "ozden" on a light page and "ozdenDark" on a dark page (the
-  look of 02-comp-examples/input-b-ex7-ozden.htm), unless the user asks for another one. The fields made from InputB
-  (EmailInputB, PhoneInputB, PasswordInputB, URLInputB, NumberInputB, CurrencyInputB, TextareaB) take the same
+  look of 02-comp-examples/input-b-ex7-ozden.htm), unless the user asks for another one. The fields made from TextField
+  (EmailField, PhoneField, PasswordField, UrlField, NumberField, CurrencyField, TextAreaField) take the same
   packages: give them the same styleName. The default (classic) stays for the pages made before.
 
 
@@ -51,7 +51,7 @@ WebSite: https://bug7a.github.io/js-components
 
 - onChange(self): the user changed the text (not at create time, not by setValue()). onFocus(self), onBlur(self).
 
-- THE OLD NAMES (inputValue, isRequired, maxChar, onEdit, getInputValue()... in InputB.OLD_NAMES) work for a while,
+- THE OLD NAMES (inputValue, isRequired, maxChar, onEdit, getInputValue()... in TextField.OLD_NAMES) work for a while,
   for the pages made with them; the console names the new name once. New code uses the new names.
 
 - warningBallType: "color" | "icon"
@@ -59,10 +59,10 @@ WebSite: https://bug7a.github.io/js-components
 -- "icon": Top-right icon (requiredIconFile / warningIconFile). Empty path uses the built-in icon.
 
 - tooltipStyle: { color, hintColor, textColor, border, borderColor, round, fontSize }
--- hintColor: the bubble of a button of the field (the show password button of PasswordInputB) when color is "".
+-- hintColor: the bubble of a button of the field (the show password button of PasswordField) when color is "".
 -- The tooltip of the warning ball. color "": requiredColor / warningColor.
 
-- styleName: "light" (default; "classic": its old name) | "dark" | "ozden" | "ozdenDark" | "minimal" | "minimalDark"  (InputB.styles)
+- styleName: "light" (default; "classic": its old name) | "dark" | "ozden" | "ozdenDark" | "minimal" | "minimalDark"  (TextField.styles)
 -- minimal / minimalDark (_designs/minimal-theme.htm): the title over a 28 px field of a line (titlePosition "above").
 - The sizes: titleFontSize, inputFontSize, inputHeight, fieldPadding, descriptionFontSize (the defaults: 16, 20, 40, 14, 14).
 - titlePosition: "inside" (default: the title in the field) | "above" (the title over the field, titleGap under it).
@@ -70,15 +70,15 @@ WebSite: https://bug7a.github.io/js-components
 - hoverBackBorderColor: the edge under the mouse ("": no change).
 - warningBorderColor: the edge while a warning shows, not while typing ("": no change). warningBallSize, warningBallBorder:
   the colored ball (16, 2; minimal: an 8 px dot).
-- The children (EmailInputB, PhoneInputB, URLInputB, PasswordInputB, TextareaB) apply the style package before their own
+- The children (EmailField, PhoneField, UrlField, PasswordField, TextAreaField) apply the style package before their own
   defaults: a key the package sets (warningColor, unitStyle, rightPadding) wins over them.
--- The look of InputB is in flat params (backgroundColor, lineColor, titleTextColor...), not in one
+-- The look of TextField is in flat params (backgroundColor, lineColor, titleTextColor...), not in one
    "style" object. So its packages are packages of params (basic.js v26.10.27: a package with a
    "style" key): any param can be in it, also an image (requiredIconFile, warningIconFile).
-   Order: your params > the package > InputBDefaults.
--- InputB({ styleName: "dark" })
--- InputB({ styleName: "dark", focusLineColor: "#588ABE" })   // one param of the package changed
--- InputB.styles.myStyle = { style: {}, backgroundColor: "#FFF8E8", requiredIconFile: "icons/star.svg" };
+   Order: your params > the package > TextFieldDefaults.
+-- TextField({ styleName: "dark" })
+-- TextField({ styleName: "dark", focusLineColor: "#588ABE" })   // one param of the package changed
+-- TextField.styles.myStyle = { style: {}, backgroundColor: "#FFF8E8", requiredIconFile: "icons/star.svg" };
    (style: {} marks a package of params; without it the keys would go into params.style)
 
 */
@@ -86,10 +86,10 @@ WebSite: https://bug7a.github.io/js-components
 "use strict";
 
 // Default values
-const InputBDefaults = {
+const TextFieldDefaults = {
 
     key: "0",
-    styleName: "light", // "light" ("classic": its old name), "dark", "ozden", "ozdenDark", "minimal", "minimalDark" or a name added to InputB.styles
+    styleName: "light", // "light" ("classic": its old name), "dark", "ozden", "ozdenDark", "minimal", "minimalDark" or a name added to TextField.styles
     type: "text",
     width: 350,
     height: "auto",
@@ -147,7 +147,7 @@ const InputBDefaults = {
     requiredIconColor: "#373836", // built-in required icon color (built-in warning icon uses warningColor)
 
     // The tooltip of the warning ball (required / warning text), and of the buttons of the field (the show password
-    // button of PasswordInputB)
+    // button of PasswordField)
     tooltipStyle: {
         color: "", // "": requiredColor / warningColor
         hintColor: "white", // a button of the field has no ball: its bubble when color is ""
@@ -158,7 +158,7 @@ const InputBDefaults = {
         fontSize: 14,
     },
 
-    // The select inside the field (the protocol of URLInputB, a TinySelect) and its open list
+    // The select inside the field (the protocol of UrlField, a TinySelect) and its open list
     selectStyle: {
         color: "rgba(0,0,0,0.05)",
         invertIconColor: 0, // 1: a white arrow (on a dark field)
@@ -187,19 +187,19 @@ const InputBDefaults = {
 
 };
 
-const InputB = function(params = {}) {
+const TextField = function(params = {}) {
 
-    // Merge style package: your params > InputB.styles[styleName] (a package of params) > InputBDefaults
-    basic.applyStylePackage(params, InputB.styles, InputBDefaults);
+    // Merge style package: your params > TextField.styles[styleName] (a package of params) > TextFieldDefaults
+    basic.applyStylePackage(params, TextField.styles, TextFieldDefaults);
 
     // Merge params:
-    mergeIntoIfMissing(params, InputBDefaults);
+    mergeIntoIfMissing(params, TextFieldDefaults);
     // WHY read here: box.height never reads "auto" (it gives the measured size)
     const isAutoHeight = (String(params.height) === "auto");
 
     // BOX: Component container
     const box = startObject(params);
-    basic.keepOldNames(box, InputB.OLD_NAMES, "InputB"); // the pages made with the old names, for a while
+    basic.keepOldNames(box, TextField.OLD_NAMES, "TextField"); // the pages made with the old names, for a while
 
     // *** DATA CONTROL:
     if (box.descriptionText != "") {
@@ -227,7 +227,7 @@ const InputB = function(params = {}) {
     
     // [var] 0: okay, 1: empty but required, 2: not valid
     box.status = 0;
-    // [var] px: where the field starts under the title (titlePosition "above"; 0 "inside"). TextareaB reads it.
+    // [var] px: where the field starts under the title (titlePosition "above"; 0 "inside"). TextAreaField reads it.
     box.fieldTop = fieldTop;
 
     // *** PRIVATE FUNCTIONS:
@@ -428,7 +428,7 @@ const InputB = function(params = {}) {
     };
 
     // The colors of the field while it is focused (1) or not (0): background, border and line.
-    // NOTE: A component made from InputB (PhoneInputB, UrlInputB, TextareaB) calls this in its own focusFunc / blurFunc.
+    // NOTE: A component made from TextField (PhoneField, UrlField, TextAreaField) calls this in its own focusFunc / blurFunc.
     box.paintFocus = function(isFocused) {
         isFieldFocused = isFocused ? 1 : 0;
         box.background.color = getBackgroundColor();
@@ -437,10 +437,10 @@ const InputB = function(params = {}) {
     };
 
     // The text colors of a field element (<input> or <textarea>): inputTextColor, placeholderColor, inputColorScheme.
-    // NOTE: A component that makes its own field element (UrlInputB, TextareaB) calls this for it.
+    // NOTE: A component that makes its own field element (UrlField, TextAreaField) calls this for it.
     box.applyTextColors = function(fieldElement) {
         fieldElement.style.color = box.inputTextColor;
-        if (box.placeholderColor) InputB.setPlaceholderColor(fieldElement, box.placeholderColor);
+        if (box.placeholderColor) TextField.setPlaceholderColor(fieldElement, box.placeholderColor);
         if (box.inputColorScheme) fieldElement.style.colorScheme = box.inputColorScheme;
     };
 
@@ -716,7 +716,7 @@ const InputB = function(params = {}) {
 };
 
 // The color of the placeholder text: a CSS variable on the <input>, read by one CSS rule.
-InputB.setPlaceholderColor = function(inputElement, color) {
+TextField.setPlaceholderColor = function(inputElement, color) {
     basic.addCss("input-b-placeholder", ".input-b-placeholder::placeholder { color: var(--input-b-placeholder); opacity: 1; }");
     inputElement.classList.add("input-b-placeholder");
     inputElement.style.setProperty("--input-b-placeholder", color);
@@ -724,7 +724,7 @@ InputB.setPlaceholderColor = function(inputElement, color) {
 
 // THE OLD NAMES of the params, the properties and the methods (basic.keepOldNames): the pages made with them keep
 // working until they move to the new names. Delete a name when no page uses it any more.
-InputB.OLD_NAMES = {
+TextField.OLD_NAMES = {
     inputValue: "value",
     isRequired: "required",
     maxChar: "maxLength",
@@ -746,12 +746,12 @@ InputB.OLD_NAMES = {
 };
 
 // *** STYLE PACKAGES:
-// WHY style: {} in every package: InputB has no "style" object, its look is in flat params. A package with
+// WHY style: {} in every package: TextField has no "style" object, its look is in flat params. A package with
 //      a "style" key is a package of params (basic.applyStylePackage, v26.10.27): its keys fill the params
 //      that were not given. Without the key they would go into params.style and change nothing.
-InputB.styles = {
+TextField.styles = {
 
-    // The default look (InputBDefaults): a light field with a line under it.
+    // The default look (TextFieldDefaults): a light field with a line under it.
     light: { style: {} },
 
     // The dark theme of classic: the same shape (a line under the field, no border, the warning as a colored
@@ -817,7 +817,7 @@ InputB.styles = {
         },
 
         unitStyle: {
-            color: "#373836EE", // the count of the message (TextareaB)
+            color: "#373836EE", // the count of the message (TextAreaField)
             textColor: "white",
         },
     },
@@ -871,12 +871,12 @@ InputB.styles = {
     },
 
 };
-InputB.styles.classic = InputB.styles.light; // the old name of light: the pages made with it keep their look
+TextField.styles.classic = TextField.styles.light; // the old name of light: the pages made with it keep their look
 
 // The minimal theme (_designs/minimal-theme.htm): the title (12 px) over the field, a 28 px field of a line with a
 // 13 px text, no fill; the line gets darker under the mouse and turns ink while typing. minimalDark: the same on a
-// dark window. (EmailInputB, PasswordInputB, TextareaB... take them too.)
-InputB.createMinimalStyle = function (colors) {
+// dark window. (EmailField, PasswordField, TextAreaField... take them too.)
+TextField.createMinimalStyle = function (colors) {
     return {
         style: {},
         leftPadding: 10,
@@ -916,17 +916,22 @@ InputB.createMinimalStyle = function (colors) {
         selectStyle: { color: "transparent", invertIconColor: colors.invertIcons, listBackgroundColor: colors.ground, listTextColor: colors.text, listOverTextColor: colors.ink, listBorderColor: colors.line },
         invertIconColor: colors.invertIcons,
         unitStyle: { padding: [6, 1], color: "transparent", textColor: colors.softText, round: 4, fontSize: 11 },
-        // TextareaB: a thin scroll bar in the color of the text, with no dots
+        // TextAreaField: a thin scroll bar in the color of the text, with no dots
         scrollBarStyle: { bar_color: colors.scrollBar, bar_mouseOverColor: colors.scrollBar, bar_width: 3, bar_mouseOverWidth: 4, bar_opacity: 0.45, bar_mouseOverOpacity: 0.9, bar_padding: 2, showDots: 0 },
     };
 };
-InputB.MINIMAL_COLORS = {
+TextField.MINIMAL_COLORS = {
     ground: "#FFFFFF", text: Black(0.85), softText: Black(0.55), faintText: Black(0.54), line: Black(0.2),
     lineHover: Black(0.45), edge: Black(0.45), edgeHover: Black(0.65), ink: "#1F1F1F", danger: "#C24A36", colorScheme: "", invertIcons: 0, scrollBar: "#373836",
 };
-InputB.styles.minimal = InputB.createMinimalStyle(InputB.MINIMAL_COLORS);
-InputB.MINIMAL_DARK_COLORS = {
+TextField.styles.minimal = TextField.createMinimalStyle(TextField.MINIMAL_COLORS);
+TextField.MINIMAL_DARK_COLORS = {
     ground: "#1A1A19", text: White(0.88), softText: White(0.55), faintText: White(0.48), line: White(0.18),
     lineHover: White(0.42), edge: White(0.42), edgeHover: White(0.62), ink: "#EDEDEB", danger: "#FF9F93", colorScheme: "dark", invertIcons: 1, scrollBar: "#CFCFCD",
 };
-InputB.styles.minimalDark = InputB.createMinimalStyle(InputB.MINIMAL_DARK_COLORS);
+TextField.styles.minimalDark = TextField.createMinimalStyle(TextField.MINIMAL_DARK_COLORS);
+
+// THE OLD NAME of the component, for a while: the pages made with InputB keep working (the same object).
+// Delete it when no page uses it any more (context/repo-map.md, "Parameter names").
+const InputB = TextField;
+const InputBDefaults = TextFieldDefaults;

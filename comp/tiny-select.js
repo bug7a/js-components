@@ -138,7 +138,7 @@ const TinySelect = function(params = {}) {
     // USAGE: get: componentName.color, set: componentName.setColor("red")
 
     // *** OBJECT VIEW:
-    // WHY: In a row (the protocol of URLInputB), a box shrinks for its "100%" neighbour and cut "https://www.".
+    // WHY: In a row (the protocol of UrlField), a box shrinks for its "100%" neighbour and cut "https://www.".
     //      A flex group does not shrink (flexShrink 0): the same here.
     box.shrink = 0;
     box.css.whiteSpace = "nowrap";

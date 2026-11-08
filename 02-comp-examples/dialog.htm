@@ -30,7 +30,7 @@
     // - Dialog({ buttons: [{ text, type: "primary" | "secondary" | "danger" | "warning" | "success" | "info" | "icon" }] })
     // - Dialog.confirm({ ..., danger: 1 }) / Dialog.confirm({ ..., confirmType: "warning" })
     // - Dialog.alert({ ..., buttonType: "success" })
-    // Dialogs with content: a file to upload (SelectFile), choices (CheckBox), a text to edit (an InputB field: Save is
+    // Dialogs with content: a file to upload (SelectFile), choices (CheckBox), a text to edit (a TextField field: Save is
     // on only when it is changed, it waits, then the dialog says that it is saved) and an order to change (SortableList).
     // TRY: open each dialog; on Delete click twice (the first click asks); in Publish leave the title empty.
 
@@ -174,7 +174,7 @@
         });
     };
 
-    // EDIT: the title comes ready in an InputB field; Save is off until it is changed. Save waits (its clock), then the
+    // EDIT: the title comes ready in a TextField field; Save is off until it is changed. Save waits (its clock), then the
     // dialog stays open and says under the field that it is saved.
     const openEditDialog = function () {
         const dialog = Dialog({
@@ -198,7 +198,7 @@
             ],
             onClose: showClose,
         });
-        // WHY on the InputB: the input event of its field goes up to it (InputB has no event of its own for it)
+        // WHY on the TextField: the input event of its field goes up to it (TextField has no event of its own for it)
         dialog.fieldList[0].input.on("input", function () {
             dialog.setStatus("");
             refreshSaveButton(dialog);

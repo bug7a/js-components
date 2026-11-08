@@ -182,7 +182,7 @@
             };
 
             // ID (read-only)
-            inputId = InputB({
+            inputId = TextField({
                 key: "id",
                 ...inputStyle,
                 titleText: "ID",
@@ -192,7 +192,7 @@
             inputId.input.enabled = 0;
 
             // Name
-            inputName = InputB({
+            inputName = TextField({
                 key: "name",
                 ...inputStyle,
                 titleText: "NAME",
@@ -200,7 +200,7 @@
             });
 
             // Email
-            inputEmail = EmailInputB({
+            inputEmail = EmailField({
                 key: "email",
                 ...inputStyle,
                 required: 0,
@@ -211,7 +211,7 @@
             });
 
             // Active
-            inputActive = NumberInputB({
+            inputActive = NumberField({
                 key: "active",
                 ...inputStyle,
                 titleText: "ACTIVE",

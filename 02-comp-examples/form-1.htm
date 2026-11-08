@@ -24,7 +24,7 @@
 
         /*
         Form: a page-wide form that checks its fields.
-        - addTitle(obj), addInput(input), addDoubleInput(input1, input2): the fields are InputB, EmailInputB, TextareaB...
+        - addTitle(obj), addInput(input), addDoubleInput(input1, input2): the fields are TextField, EmailField, TextAreaField...
         - The send button is passive until every required field is valid; "2 missing entries" shows which ones.
         - onSendClick(json): [{ key, type, titleText, inputValue }, ...]
         - showMessage({ ... }): the message over the form after sending.
@@ -61,7 +61,7 @@
             form.addTitle(that);
 
             // INPUT: Name, Email (side by side; under each other on a narrow page)
-            const nameInput = InputB({
+            const nameInput = TextField({
                 key: "name",
                 styleName: "ozden",
                 titleText: "YOUR NAME",
@@ -69,7 +69,7 @@
                 required: 1,
                 maxLength: 50,
             });
-            const emailInput = EmailInputB({
+            const emailInput = EmailField({
                 key: "email",
                 styleName: "ozden",
                 titleText: "YOUR EMAIL",
@@ -80,7 +80,7 @@
             form.addDoubleInput(nameInput, emailInput);
 
             // INPUT: Subject (optional)
-            const subjectInput = InputB({
+            const subjectInput = TextField({
                 key: "subject",
                 styleName: "ozden",
                 titleText: "SUBJECT",
@@ -91,7 +91,7 @@
             form.addInput(subjectInput);
 
             // TEXTAREA: Message
-            const messageInput = TextareaB({
+            const messageInput = TextAreaField({
                 key: "message",
                 styleName: "ozden",
                 titleText: "MESSAGE",

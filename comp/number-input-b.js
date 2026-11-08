@@ -2,12 +2,12 @@
 
 /*
 
-NumberInputB - v25.07
+NumberField - v26.11
 
 UI COMPONENT TEMPLATE
 - You can customize, this template code as you need:
 - NEW PROJECTS: styleName "ozden" on a light page, "ozdenDark" on a dark page (the packages
-  of InputB, comp/input-b.js; the look of 02-comp-examples/input-b-ex7-ozden.htm), unless the user asks for another one.
+  of TextField, comp/input-b.js; the look of 02-comp-examples/input-b-ex7-ozden.htm), unless the user asks for another one.
 
 
 Started Date: June 2024
@@ -20,7 +20,7 @@ Webpage: https://bug7a.github.io/js-components/
 "use strict";
 
 // Default values
-const NumberInputBDefaults = {
+const NumberFieldDefaults = {
     required: 0,
     type: "number",
     titleText: "NUMERIC",
@@ -32,13 +32,13 @@ const NumberInputBDefaults = {
     maxDecimalDigits: 2,
 };
 
-const NumberInputB = function(params = {}) {
+const NumberField = function(params = {}) {
 
     // Merge params first
-    mergeIntoIfMissing(params, NumberInputBDefaults);
+    mergeIntoIfMissing(params, NumberFieldDefaults);
 
     // BOX: Component container
-    const box = startExtendedObject(InputB, params);
+    const box = startExtendedObject(TextField, params);
 
     // *** PRIVATE VARIABLES:
 
@@ -124,3 +124,7 @@ const NumberInputB = function(params = {}) {
     return endExtendedObject(box);
 
 };
+
+// THE OLD NAME of the component, for a while: the pages made with NumberInputB keep working (the same object).
+// Delete it when no page uses it any more (context/repo-map.md, "Parameter names").
+const NumberInputB = NumberField;

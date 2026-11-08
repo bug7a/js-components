@@ -2,7 +2,7 @@
 <html lang="en">
     <head>
 
-        <title>InputB: ozden, ozdenDark</title>
+        <title>TextField: ozden, ozdenDark</title>
 
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -25,8 +25,8 @@
 
         /* Bismillah */
 
-        // InputB with styleName: "ozden" (on a light page) and "ozdenDark" (on a dark page).
-        // EmailInputB, PhoneInputB, URLInputB and TextareaB are made from InputB, so they take the same packages.
+        // TextField with styleName: "ozden" (on a light page) and "ozdenDark" (on a dark page).
+        // EmailField, PhoneField, UrlField and TextAreaField are made from TextField, so they take the same packages.
 
         const LIGHT_PAGE_COLOR = "white";
         const DARK_PAGE_COLOR = "#1A1A19";
@@ -42,7 +42,7 @@
 
                 VGroup({ width: "100%", height: "auto", align: "center top", padding: 40, gap: 24 });
 
-                    Label({ text: "InputB · ozden, ozdenDark", fontSize: 22, fontFamily: "opensans-bold", textColor: Black(0.8) });
+                    Label({ text: "TextField · ozden, ozdenDark", fontSize: 22, fontFamily: "opensans-bold", textColor: Black(0.8) });
 
                     // GROUP: The two cards side by side (one under the other on a narrow screen)
                     HGroup({ width: "100%", height: "auto", align: "center top", gap: 24, wrap: 1 });
@@ -85,7 +85,7 @@
         // The fields of the contact form, all with the same package.
         const addFields = function (styleName) {
 
-            InputB({
+            TextField({
                 styleName: styleName,
                 width: "100%",
                 titleText: "FIRST NAME",
@@ -93,7 +93,7 @@
                 required: 1,
             });
 
-            const emailInput = EmailInputB({
+            const emailInput = EmailField({
                 styleName: styleName,
                 width: "100%",
                 titleText: "YOUR EMAIL",
@@ -104,7 +104,7 @@
             });
             emailInput.showWarningIfNotValid(emailInput.isValid());
 
-            PhoneInputB({
+            PhoneField({
                 styleName: styleName,
                 width: "100%",
                 titleText: "PHONE NUMBER",
@@ -115,14 +115,14 @@
                 unitText: "TR",
             });
 
-            URLInputB({
+            UrlField({
                 styleName: styleName,
                 width: "100%",
                 titleText: "WEBSITE",
                 required: 0,
             });
 
-            TextareaB({
+            TextAreaField({
                 styleName: styleName,
                 width: "100%",
                 height: 170,

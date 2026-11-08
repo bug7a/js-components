@@ -2,12 +2,12 @@
 
 /*
 
-TextareaB - v25.07
+TextAreaField - v26.11
 
 UI COMPONENT TEMPLATE
 - You can customize, this template code as you need:
 - NEW PROJECTS: styleName "ozden" on a light page, "ozdenDark" on a dark page (the packages
-  of InputB, comp/input-b.js; the look of 02-comp-examples/input-b-ex7-ozden.htm), unless the user asks for another one.
+  of TextField, comp/input-b.js; the look of 02-comp-examples/input-b-ex7-ozden.htm), unless the user asks for another one.
 - scrollBarStyle: the scroll bar of the text (the params of ScrollBar; a style package can give it: minimal).
 - rightPadding is its own (5): a style package does not change it (on the right is the scroll bar). Under its title
   (titlePosition "above", minimal), from the right edge: the scroll bar right inside the edge, the warning ball left
@@ -24,7 +24,7 @@ Webpage: https://bug7a.github.io/js-components/
 "use strict";
 
 // Default values
-const TextareaBDefaults = {
+const TextAreaFieldDefaults = {
     type: "textarea",
     titleText: "MESSAGE",
     placeholder: "How can we help you?",
@@ -58,22 +58,22 @@ const TextareaBDefaults = {
     },
 };
 
-const TextareaB = function(params = {}) {
+const TextAreaField = function(params = {}) {
 
-    // Merge params first: the style package of InputB, then the defaults of TextareaB
-    // WHY the package first: a package that sets a key of TextareaB (minimal: unitStyle, scrollBarStyle) wins over the
-    //     defaults here, as over the defaults of InputB
-    // WHY its own rightPadding: on the right of a TextareaB is its scroll bar, not the room of the warning ball of a
+    // Merge params first: the style package of TextField, then the defaults of TextAreaField
+    // WHY the package first: a package that sets a key of TextAreaField (minimal: unitStyle, scrollBarStyle) wins over the
+    //     defaults here, as over the defaults of TextField
+    // WHY its own rightPadding: on the right of a TextAreaField is its scroll bar, not the room of the warning ball of a
     //     one-line field (the rightPadding of a package pushed the scroll bar to the middle)
     // WHY the old names first: the params forced below (showDescription, showUnit) would lose to an old name of the page
-    basic.renameOldParams(params, InputB.OLD_NAMES, "InputB");
+    basic.renameOldParams(params, TextField.OLD_NAMES, "TextField");
     const givenRightPadding = params.rightPadding;
-    basic.applyStylePackage(params, InputB.styles, InputBDefaults);
-    params.rightPadding = (givenRightPadding !== undefined) ? givenRightPadding : TextareaBDefaults.rightPadding;
-    mergeIntoIfMissing(params, TextareaBDefaults);
+    basic.applyStylePackage(params, TextField.styles, TextFieldDefaults);
+    params.rightPadding = (givenRightPadding !== undefined) ? givenRightPadding : TextAreaFieldDefaults.rightPadding;
+    mergeIntoIfMissing(params, TextAreaFieldDefaults);
 
     // Control params
-    params.createInput = 0; // WHY: A <textarea> is made here instead of the Input of InputB.
+    params.createInput = 0; // WHY: A <textarea> is made here instead of the Input of TextField.
     params.showDescription = 0;
     params.descriptionText = "";
 
@@ -82,7 +82,7 @@ const TextareaB = function(params = {}) {
     }
 
     // BOX: Component container
-    const box = startExtendedObject(InputB, params);
+    const box = startExtendedObject(TextField, params);
 
     // *** PRIVATE VARIABLES:
     const textareaElem = document.createElement("textarea");
@@ -116,7 +116,7 @@ const TextareaB = function(params = {}) {
         if (value != textareaElem.value) {
             box.value = value;
             textareaElem.value = value;
-            // WHY: Same as InputB.setValue. Without it, a required textarea cleared by code (after a form is sent) showed no required icon.
+            // WHY: Same as TextField.setValue. Without it, a required textarea cleared by code (after a form is sent) showed no required icon.
             box.checkIfInputIsRequiredAndEmpty();
             box.showWarningIfNotValid(box.isValid());
             refreshCount();
@@ -128,7 +128,7 @@ const TextareaB = function(params = {}) {
         return textareaElem.value;
     };
 
-    // WHY: The ones of InputB write to box.input, which a TextareaB does not have (createInput: 0): a TypeError.
+    // WHY: The ones of TextField write to box.input, which a TextAreaField does not have (createInput: 0): a TypeError.
     box.setPlaceholder = function(text) { // OVERRIDE
         box.placeholder = text;
         textareaElem.placeholder = text;
@@ -177,7 +177,7 @@ const TextareaB = function(params = {}) {
         textareaElem.style.height = "auto";
         
         textareaElem.placeholder = box.placeholder;
-        // WHY: The <textarea> is made here, not by InputB, so the text colors of InputB were never given to it:
+        // WHY: The <textarea> is made here, not by TextField, so the text colors of TextField were never given to it:
         //      on a dark package (dark, ozdenDark) the typed text was dark on a dark field.
         box.applyTextColors(textareaElem);
         textareaElem.maxLength = box.maxLength;
@@ -231,3 +231,7 @@ const TextareaB = function(params = {}) {
     return endExtendedObject(box);
 
 };
+
+// THE OLD NAME of the component, for a while: the pages made with TextareaB keep working (the same object).
+// Delete it when no page uses it any more (context/repo-map.md, "Parameter names").
+const TextareaB = TextAreaField;

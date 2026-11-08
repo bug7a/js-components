@@ -2,12 +2,12 @@
 
 /*
 
-CurrencyInputB - v25.07
+CurrencyField - v26.11
 
 UI COMPONENT TEMPLATE
 - You can customize, this template code as you need:
 - NEW PROJECTS: styleName "ozden" on a light page, "ozdenDark" on a dark page (the packages
-  of InputB, comp/input-b.js; the look of 02-comp-examples/input-b-ex7-ozden.htm), unless the user asks for another one.
+  of TextField, comp/input-b.js; the look of 02-comp-examples/input-b-ex7-ozden.htm), unless the user asks for another one.
 
 Started Date: June 2024
 Developer: Bugra Ozden
@@ -27,7 +27,7 @@ Webpage: https://bug7a.github.io/js-components/
 "use strict";
 
 // Default values
-const CurrencyInputBDefaults = {
+const CurrencyFieldDefaults = {
     required: 0,
     titleText: "CURRENCY",
     placeholder: "(auto)",
@@ -40,10 +40,10 @@ const CurrencyInputBDefaults = {
     unitText: "TL",
 };
 
-const CurrencyInputB = function(params = {}) {
+const CurrencyField = function(params = {}) {
 
-    const box = startExtendedObject(InputB, CurrencyInputBDefaults, params);
-    basic.keepOldNames(box, CurrencyInputB.OLD_NAMES, "CurrencyInputB"); // the pages made with the old names, for a while
+    const box = startExtendedObject(TextField, CurrencyFieldDefaults, params);
+    basic.keepOldNames(box, CurrencyField.OLD_NAMES, "CurrencyField"); // the pages made with the old names, for a while
 
     // *** PRIVATE VARIABLES:
     const inputElem = box.input.inputElement;
@@ -195,7 +195,11 @@ const CurrencyInputB = function(params = {}) {
     return endExtendedObject(box);
 };
 
-// THE OLD NAMES (basic.keepOldNames; the old names of InputB are in InputB.OLD_NAMES). Delete a name when no page uses it.
-CurrencyInputB.OLD_NAMES = {
+// THE OLD NAMES (basic.keepOldNames; the old names of TextField are in TextField.OLD_NAMES). Delete a name when no page uses it.
+CurrencyField.OLD_NAMES = {
     getInputValueAsNumber: "getValueAsNumber",
 };
+
+// THE OLD NAME of the component, for a while: the pages made with CurrencyInputB keep working (the same object).
+// Delete it when no page uses it any more (context/repo-map.md, "Parameter names").
+const CurrencyInputB = CurrencyField;

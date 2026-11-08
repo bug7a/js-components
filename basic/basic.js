@@ -511,7 +511,7 @@ basic.applyStylePackage = function ($params, $packages, $defaults) {
 //      method, an event set after create). The console says once which name to use. A component drops its list when
 //      no page uses its old names any more.
 // An old name wins over its new name: after startObject() the new name may hold only its default.
-// USAGE: basic.keepOldNames(box, { inputValue: "value", getInputValue: "getValue" }, "InputB")
+// USAGE: basic.keepOldNames(box, { inputValue: "value", getInputValue: "getValue" }, "TextField")
 const warnedOldNames = new Set();
 
 const warnOldName = function ($componentName, $oldName, $newName) {

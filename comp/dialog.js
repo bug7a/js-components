@@ -16,7 +16,7 @@ NOTE: still in development: more style packages come; their buttons may be anima
     over it; the second one runs onClick. It forgets after 5 s. (The ask of SmartButton.)
   - onClick(dialog, button) returns false: the dialog stays open. A Promise: the button waits (its clock), the
     others are disabled, and the dialog closes when it ends (a rejected one keeps it open).
-- Fields: fields: [{ key, titleText, placeholder, value, required, validate(value) -> error text }] make InputB
+- Fields: fields: [{ key, titleText, placeholder, value, required, validate(value) -> error text }] make TextField
   fields (comp/input-b.js, load it with comp/tooltip.js; without it a plain Input). A "primary" button checks
   them first: an error is written under the message and the field gets the focus. getValues() -> { key: value }.
 - content(dialog): any objects in the body (under the message).
@@ -42,7 +42,7 @@ NOTE: still in development: more style packages come; their buttons may be anima
 - Scale: scale multiplies every size of the dialog (its style, width, motion, its buttons and the bubble
   of their ask). null (default): basic.uiScale (1; a page fitted with page.fit() sets 1 / page.zoom: the dialog keeps
   its size on the screen). Dialog.confirm / alert / prompt take it too. The objects of content(dialog) are made by
-  the page: dialog.scale is their scale. (The InputB fields keep their own px: InputB has no scale param yet.)
+  the page: dialog.scale is their scale. (The TextField fields keep their own px: TextField has no scale param yet.)
 
 USAGE:
 Dialog({
@@ -110,7 +110,7 @@ const DialogDefaults = {
         // errorColor: #E8796D deeper and calmer (the same hue). WHY: #E8796D is 2.8:1 on white; #C74B3D is 4.7:1
         status: { fontSize: 13, errorColor: "#C74B3D", infoColor: Black(0.55), successColor: "#498335" },
         footer: { color: "#FAFAF9", lineColor: Black(0.1), padding: [16, 14], gap: 10, buttonHeight: 40, iconButtonWidth: 50 },
-        fieldStyleName: "ozden", // the styleName of the InputB fields
+        fieldStyleName: "ozden", // the styleName of the TextField fields
         // variant: "centered" (the colors of ozden)
         centered: {
             // A light gray circle on white, a dark icon
@@ -198,7 +198,7 @@ const Dialog = function (params = {}) {
     const SECTION_SPACE = 8 * box.scale; // over the fields, under the icon at the top
     const FIELD_GAP = 10 * box.scale; // between the fields (and the objects of content)
     const STATUS_MIN_HEIGHT = 18 * box.scale;
-    const INPUT_HEIGHT = 44 * box.scale; // a plain Input (without InputB)
+    const INPUT_HEIGHT = 44 * box.scale; // a plain Input (without TextField)
     const isCentered = (params.variant == "centered");
     let isOpen = 0;
     let isBusy = 0;
@@ -208,7 +208,7 @@ const Dialog = function (params = {}) {
 
     // *** PUBLIC VARIABLES:
     box.buttonList = []; // { data, button } (button: the SmartButton)
-    box.fieldList = []; // { data, input } (input: InputB or Input)
+    box.fieldList = []; // { data, input } (input: TextField or Input)
 
     // *** PRIVATE FUNCTIONS:
 
@@ -226,10 +226,10 @@ const Dialog = function (params = {}) {
 
     const createField = function (field) {
         let input;
-        if (typeof InputB !== "undefined") {
-            input = InputB({
+        if (typeof TextField !== "undefined") {
+            input = TextField({
                 styleName: _s.fieldStyleName,
-                scale: box.scale, // (taken when InputB has a scale param; its sizes are fixed px today)
+                scale: box.scale, // (taken when TextField has a scale param; its sizes are fixed px today)
                 width: "100%",
                 titleText: field.titleText,
                 placeholder: field.placeholder,
