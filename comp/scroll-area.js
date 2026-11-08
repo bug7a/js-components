@@ -11,7 +11,8 @@ UI COMPONENT
 - On a box (the page): it fills it (0, 0, 100%, 100%). In a group: it takes the room the other objects leave (the height
   left in a VGroup, the width left in an HGroup), so a column of a MenuBar, a ScrollArea and a StatusBar needs no css.
   A size of its own (height: 300) wins. (A group with height: "auto" leaves no room: give the area a height there.)
-- scrollY: 1 (default) scrolls down. scrollX: 1 scrolls to the side too: the content is as wide as its widest object.
+- scrollY: 1 (default) scrolls down. scrollX: 1 scrolls to the side too: what can wrap (a text, a group with wrap: 1)
+  wraps at the width of the area, what can not (a wide table, a row of tiles) scrolls.
 - The scroll bar of the kit (basic/scroll-bar.js), when it is loaded. Without it the area scrolls with the wheel and the
   finger, with no bar (basic.css hides the bar of the browser).
 - Objects added later: createIn(area.content, function () { ... }). The place: scrollToTop(), scrollToEnd(),
@@ -125,9 +126,10 @@ const ScrollArea = function (params = {}) {
     // WHY made in the container of the area, then moved: endGroup() goes back to the box that was open when the group
     //     was started (the start stack of basic.js), so the next objects of the page go there, not into the area.
     // WHY saveCurrentThat: "that" stays the area, as after any component.
+    // WHY clipContent 0: the box that scrolls cuts at the edges of the area; the content does not cut a second time.
     const startContent = function () {
         saveCurrentThat();
-        box.content = VGroup({ width: "100%", height: "auto", align: box.align, gap: box.gap, color: "transparent" });
+        box.content = VGroup({ width: "100%", height: "auto", align: box.align, gap: box.gap, color: "transparent", clipContent: 0 });
         box.scrollBox.add(box.content);
         box.content.position = "absolute";
         box.content.left = 0;
@@ -146,13 +148,18 @@ const ScrollArea = function (params = {}) {
 
     // SCROLL: the box that scrolls takes the axes of the area. (The area keeps them too, so area.scrollY reads them; it
     //     has nothing to scroll itself.) An axis that is turned off goes back to its start.
-    // WHY "max-content" to the side: a group as wide as the area cuts what is wider; to the side it grows with it.
+    // WHY "fit-content" to the side: what can wrap (a text, a group with wrap: 1) still wraps at the width of the area,
+    //     what can not (a wide table, a row of tiles) makes the content wider, so it scrolls and nothing in the middle
+    //     is cut on the left. ("max-content" would put every wrap on one line.)
+    // WHY not clickable: scrollY / scrollX make the area clickable (basic.js); the box that scrolls over it takes the
+    //     mouse, the area is only its frame.
     const applyScrollAxes = function () {
+        box.clickable = 0;
         box.scrollBox.scrollY = box.scrollY;
         box.scrollBox.scrollX = box.scrollX;
         if (box.scrollY != 1) box.scrollBox.elem.scrollTop = 0;
         if (box.scrollX != 1) box.scrollBox.elem.scrollLeft = 0;
-        box.content.width = (box.scrollX == 1) ? "max-content" : "100%";
+        box.content.width = (box.scrollX == 1) ? "fit-content" : "100%";
         box.content.css.minWidth = (box.scrollX == 1) ? "100%" : "";
         if (box.scrollBar) box.scrollBar.refreshScroll();
     };

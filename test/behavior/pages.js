@@ -613,6 +613,28 @@ test("ScrollArea: scrollX: 1 makes the content as wide as its objects; scrollY: 
     area.remove();
 });
 
+test("ScrollArea: with scrollX: 1 a wrap still wraps at the width of the area, and a wide object in the middle is not cut on the left", async function () {
+    const wrapping = ScrollArea({ left: 0, top: 0, width: 300, height: 200, scrollX: 1, padding: 10 });
+        const row = HGroup({ hug: 1, gap: 10, wrap: 1 });
+            for (let i = 0; i < 6; i++) Box({ width: 80, height: 30 });
+        endGroup();
+    endGroup();
+    const rowHeight = Math.round(row.elem.getBoundingClientRect().height);
+    const wrapElem = wrapping.scrollBox.elem;
+    const hasNoSideScroll = (wrapElem.scrollWidth === wrapElem.clientWidth);
+    const centered = ScrollArea({ left: 0, top: 0, width: 300, height: 200, scrollX: 1, align: "center top", padding: 10 });
+        const wide = Box({ width: 500, height: 40 });
+    endGroup();
+    const wideLeft = scrollAreaPlaceIn(wide, centered).split(",")[0];
+    const sideWidth = centered.scrollBox.elem.scrollWidth;
+    const pointers = [getComputedStyle(centered.elem).pointerEvents, getComputedStyle(centered.scrollBox.elem).pointerEvents].join(",");
+    check("ScrollArea: with scrollX: 1 a wrap still wraps at the width of the area, and a wide object in the middle is not cut on the left",
+        rowHeight === 70 && hasNoSideScroll && wideLeft === "10" && sideWidth === 520 && pointers === "none,auto",
+        [rowHeight, hasNoSideScroll, wideLeft, sideWidth, pointers].join(" | "));
+    wrapping.remove();
+    centered.remove();
+});
+
 test("ScrollArea: scrollToEnd(), scrollToTop(), scrollToObject(), getScrollTop() / setScrollTop(), onScroll(self)", async function () {
     let scrolledBy = null;
     const area = ScrollArea({ left: 0, top: 0, width: 200, height: 100, onScroll: function (self) { scrolledBy = self; } });
