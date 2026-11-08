@@ -2941,8 +2941,8 @@
         // *** BOTTOM BAR (comp/bottom-bar.js) and BADGE (comp/badge.js)
 
         const BOTTOM_BAR_ITEMS = [
-            { icon: "../02-comp-examples/bottom-bar/icon1.png", text: "Home" },
-            { icon: "../02-comp-examples/bottom-bar/icon2.png", text: "Basket" },
+            { iconFile: "../02-comp-examples/bottom-bar/icon1.png", text: "Home" },
+            { iconFile: "../02-comp-examples/bottom-bar/icon2.png", text: "Basket" },
         ];
 
         test("BottomBar: the selected box takes the color of the selected item", async function () {
@@ -2972,7 +2972,7 @@
         });
 
         test("BottomBar: a name of two words stays on one line, also while the bar grows", async function () {
-            const items = BOTTOM_BAR_ITEMS.concat([{ icon: BOTTOM_BAR_ITEMS[0].icon, text: "Two Words" }]);
+            const items = BOTTOM_BAR_ITEMS.concat([{ iconFile: BOTTOM_BAR_ITEMS[0].iconFile, text: "Two Words" }]);
             const bar = BottomBar({ bottom: 0, items: items });
             await wait(50);
             const oneLineHeight = bar.itemObjList[0].label.elem.getBoundingClientRect().height;
@@ -2985,6 +2985,17 @@
             }
             check("BottomBar: a name of two words stays on one line, also while the bar grows", highest <= oneLineHeight, highest + " / " + oneLineHeight);
             bar.remove();
+        });
+
+        test("BottomBar: selectedIconFile is the icon of the selected item; an item without it shows its iconFile there", async function () {
+            const bar = BottomBar({ bottom: 0, items: [
+                { iconFile: "../02-comp-examples/bottom-bar/icon1.png", selectedIconFile: "../02-comp-examples/bottom-bar/icon1s.png", text: "Home" },
+                { iconFile: "../02-comp-examples/bottom-bar/icon2.png", text: "Basket" },
+            ] });
+            const selectedIcons = bar.itemObjList.map((item) => item.icon.i2.elem.getAttribute("src"));
+            bar.remove();
+            check("BottomBar: selectedIconFile is the icon of the selected item; an item without it shows its iconFile there",
+                selectedIcons[0].endsWith("icon1s.png") && selectedIcons[1].endsWith("icon2.png"), selectedIcons.join(" | "));
         });
 
         test("BottomBar: the selected box is as wide after the name as before an icon smaller than its box", async function () {

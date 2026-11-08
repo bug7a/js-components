@@ -646,7 +646,7 @@ App.start = function () {
     App.tabBar = BottomBar({
         bottom: App.safeArea.bottom,
         height: App.TAB_BAR_HEIGHT,
-        items: AppSettings.tabs.map((tab) => ({ icon: tab.icon, text: tab.text })),
+        items: AppSettings.tabs.map((tab) => ({ iconFile: tab.iconFile, text: tab.text })),
         badge: {
             dotForOne: 0,
             style: { color: App.colors.orange, textColor: App.colors.white },

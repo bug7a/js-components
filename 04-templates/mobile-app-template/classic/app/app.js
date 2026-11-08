@@ -434,7 +434,7 @@ App.createBottomBar = function () {
         height: App.BOTTOM_BAR_HEIGHT,
         hoverEffect: false,
         labelMode: "float",
-        items: AppSettings.tabs.map((tab) => ({ icon: tab.icon, text: tab.text, color: tab.color })),
+        items: AppSettings.tabs.map((tab) => ({ iconFile: tab.iconFile, selectedIconFile: tab.selectedIconFile, text: tab.text, color: tab.color })),
         onItemClick: (self, item, index) => App.open(AppSettings.tabs[index].pageId),
         // The number on a tab (App.setTabBadge): indianred with a white ring, 0 and 1 too
         badge: {

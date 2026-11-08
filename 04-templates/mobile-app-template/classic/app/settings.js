@@ -31,14 +31,14 @@ const AppSettings = {
     //      has its components in "comp/": change this line to "comp/" there.
     componentPath: "../../../comp/",
 
-    // The tabs of the bottom bar. Each tab needs two icons: "home.png" and "homes.png" (selected, white).
+    // The tabs of the bottom bar: iconFile, and selectedIconFile (white) for the selected tab.
     // text: its name over the bar for a moment (in capitals). color: the circle behind it ("": colors.dark)
     tabs: [
-        { pageId: "home", text: "Home", icon: "assets/tabs/home.png", color: "#5ABB9F" },
-        { pageId: "search", text: "Search", icon: "assets/tabs/search.png", color: "" },
-        { pageId: "examples", text: "Usage Examples", icon: "assets/tabs/grid.png", color: "indianred" },
-        { pageId: "tasks", text: "Tasks", icon: "assets/tabs/tasks.png", color: "" },
-        { pageId: "settings", text: "Settings", icon: "assets/tabs/settings.png", color: "" },
+        { pageId: "home", text: "Home", iconFile: "assets/tabs/home.png", selectedIconFile: "assets/tabs/homes.png", color: "#5ABB9F" },
+        { pageId: "search", text: "Search", iconFile: "assets/tabs/search.png", selectedIconFile: "assets/tabs/searchs.png", color: "" },
+        { pageId: "examples", text: "Usage Examples", iconFile: "assets/tabs/grid.png", selectedIconFile: "assets/tabs/grids.png", color: "indianred" },
+        { pageId: "tasks", text: "Tasks", iconFile: "assets/tabs/tasks.png", selectedIconFile: "assets/tabs/taskss.png", color: "" },
+        { pageId: "settings", text: "Settings", iconFile: "assets/tabs/settings.png", selectedIconFile: "assets/tabs/settingss.png", color: "" },
     ],
 
     // The side menu (the ⋮ button of the top bar). Each item opens its page with params.

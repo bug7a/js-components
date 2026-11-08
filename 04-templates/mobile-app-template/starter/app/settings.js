@@ -30,12 +30,12 @@ const AppSettings = {
     //      has its components in "comp/": change this line to "comp/" there.
     componentPath: "../../../comp/",
 
-    // The tabs of the bottom bar. Each tab needs two icons: "home.png" and "homes.png" (selected).
+    // The tabs of the bottom bar: iconFile, and selectedIconFile for the selected tab ("": the same icon).
     tabs: [
-        { pageId: "home", text: "Home", icon: "assets/tabs/home.png" },
-        { pageId: "products", text: "Products", icon: "assets/tabs/grid.png" },
-        { pageId: "tasks", text: "Tasks", icon: "assets/tabs/tasks.png" },
-        { pageId: "settings", text: "Settings", icon: "assets/tabs/settings.png" },
+        { pageId: "home", text: "Home", iconFile: "assets/tabs/home.png", selectedIconFile: "assets/tabs/homes.png" },
+        { pageId: "products", text: "Products", iconFile: "assets/tabs/grid.png", selectedIconFile: "assets/tabs/grids.png" },
+        { pageId: "tasks", text: "Tasks", iconFile: "assets/tabs/tasks.png", selectedIconFile: "assets/tabs/taskss.png" },
+        { pageId: "settings", text: "Settings", iconFile: "assets/tabs/settings.png", selectedIconFile: "assets/tabs/settingss.png" },
     ],
 
     // The side menu (the button at the top left of a tab page). A tab page opens as a tab, others over it.

@@ -14,7 +14,7 @@ SPDX-License-Identifier: Apache-2.0
 - Design idea from an Instagram post by shahinurstk02
 
 NEEDS: comp/badge.js (Badge), loaded before the first item is created.
-NOTE: Each item needs two icon files: "home.png" (normal) and "homes.png" (selected: the same name + "s").
+ITEMS: { iconFile, selectedIconFile, text, color }. selectedIconFile is the icon of the selected item ("": its iconFile).
 
 THE NAME OF THE SELECTED ITEM (labelMode):
 - "inline" (the default): next to its icon, in the selected box.
@@ -32,7 +32,7 @@ KEYBOARD AND SCREEN READERS: every item is a button named by its text ("Tab 1"..
 USAGE:
 const bar = BottomBar({
     top: page.height - 100,
-    items: [{ icon: "home.png", text: "Home" }, { icon: "search.png", text: "Search" }],
+    items: [{ iconFile: "home.png", selectedIconFile: "homes.png", text: "Home" }, { iconFile: "search.png", text: "Search" }],
     onItemClick: function (self, item, index) { println(item.data.text); },
 });
 bar.setBadge(1, 5);
@@ -45,7 +45,7 @@ BottomBar({
     bottom: 0,
     height: 80,
     labelMode: "float",
-    items: [{ icon: "home.png", text: "Home", color: "#5ABB9F" }, { icon: "tasks.png", text: "Tasks" }],
+    items: [{ iconFile: "home.png", text: "Home", color: "#5ABB9F" }, { iconFile: "tasks.png", text: "Tasks" }],
     badge: {
         showZero: 1,
         dotForOne: 0,
@@ -70,7 +70,7 @@ const BottomBarDefaults = {
     left: 0,
     width: "100%",
     height: 100,
-    items: [], // JSON list for buttons: [{ icon: "file.png", text: "Home", color: "#5ABB9F" }] (color: optional)
+    items: [], // [{ iconFile: "home.png", selectedIconFile: "homes.png", text: "Home", color: "#5ABB9F" }] (selectedIconFile, color: optional)
     onItemClick: function (self, item, index) { },
     hoverEffect: true, // For desktop usage
     labelMode: "inline", // "inline": the name next to the selected icon, "float": over it for a moment, "none": no names
@@ -175,9 +175,9 @@ const BottomBar = function (params = {}) {
         return box.labelMode !== "float" && box.labelMode !== "none";
     };
 
-    // WHY: The selected icon is a second file: "home.png" -> "homes.png".
-    const getSelectedIconFile = function (iconFile) {
-        return iconFile.replace(".png", "s.png");
+    // The icon of the selected item: a file of its own, or its icon again.
+    const getSelectedIconFile = function (itemData) {
+        return itemData.selectedIconFile || itemData.iconFile;
     };
 
     // The name of an item for a screen reader
@@ -387,7 +387,7 @@ const BottomBar = function (params = {}) {
                 position: "absolute",
             });
             itemView.icon.i1.center(); // WHY: An icon box bigger than the icon (layout.iconBoxSize).
-            itemView.icon.i1.load(itemData.icon);
+            itemView.icon.i1.load(itemData.iconFile);
             itemView.icon.i1.setMotion("opacity 0.3s");
 
             // ICON: selected (orange)
@@ -398,7 +398,7 @@ const BottomBar = function (params = {}) {
                 opacity: 0,
             });
             itemView.icon.i2.center();
-            itemView.icon.i2.load(getSelectedIconFile(itemData.icon));
+            itemView.icon.i2.load(getSelectedIconFile(itemData));
             itemView.icon.i2.setMotion("opacity 0.3s");
 
             // Hover effect for icons (for desktop usage)
