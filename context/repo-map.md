@@ -87,6 +87,28 @@ The user asked to rename the params of the components that were far from the sta
 
 The user asked to draw the icons that the components use by default inside their files, so that a component needs no picture file ("as much as needed"). SVG texts (`data:image/svg+xml`) now: the eye of `PasswordField` (LoginPage takes it), the trash of `HoldToConfirmButton`, the plus of `ActionButton`, the arrows, the sort arrow, the filter and the clock of `SmartTable` (its `green` look too), the check mark of `Form.showMessage()`. `SelectBox` and `DataTable` no longer look for the SVG files of `comp/search-input/` (next to the loaded script): their search box takes the icons of SearchInput (a `minimal` DataTable got the line icons of the minimal theme with it; before, the round clear button of `ozden`). The PNG / SVG files in `comp/action-button/`, `comp/hold-to-confirm-button/`, `comp/password-field/`, `comp/smart-table/`, `comp/search-input/` stay: `ozden-panel` and the mobile template name them.
 
+## The header and the license notice (2026-11-08, the user)
+
+The user asked for one standard credit in the files, for the license and for the people who want to reach them (ads, work). The old block (`Started Date`, `Developer`, `Email`, `Webpage`) became, in 140 files (`comp/`, `basic/`, `index/`, `03-webpages/`, `04-templates/`, `_basic-designer/`, `test/`, `_component-template.js`):
+
+```
+Started Date: September 2026
+Webpage: https://bug7a.github.io/js-components/
+
+Copyright 2020-2026 Bugra Ozden <bugra.ozden@gmail.com> (https://bug7a.github.io/)
+Licensed under the Apache License, Version 2.0
+SPDX-License-Identifier: Apache-2.0
+```
+
+- 2020: the first versions of these components were made in 2020 (the user); the year of the kit, the date of the file is its `Started Date`. The copyright line is the one of `LICENSE` ("Name <e-mail> (address)", the person format of npm). The two sites of `03-webpages` name their own address in `Webpage`.
+- Why in every file: Apache 2.0, 4(c): a copy must keep the notices of the files, so the name and the address go with every copy. `NOTICE` at the root: 4(d), a work made from the kit carries its lines.
+- The min copies: terser keeps only the Bismillah line of a header, so `_make-min-js.sh`, `_make-standalone.sh` (once in `components.min.js`) and `03-webpages/webpage-handbook/_update-copies.sh` write the notice in one line after it: `/*! Copyright ... | Apache-2.0 | <Webpage> */`.
+- The name: `Bugra Ozden` in the code, `LICENSE` and the addresses (the same as the e-mail and the GitHub name; fonts without Turkish letters); `Buğra Özden` on the pages people see (the footer of the catalog).
+- Claude: one line in `README.md` and the catalog's footer ("Developed with the help of Claude Code (Anthropic)"), not in the headers: an AI holds no copyright, and the model changes (every commit names it in `Co-Authored-By`).
+- Not in the samples of `01-` / `02-` (they are copied into other people's pages), nor in `delete-` files. The published copies take it when the user says so.
+- In January, the end year of the sources (the copies of the library and of the handbook change when the user says so; `basic/backup/` never), then `./_make-min-js.sh --build --all`:
+  `OLD=2026; NEW=2027; git grep -lz "Copyright 2020-$OLD Bugra Ozden" -- . ':(exclude)basic/backup' ':(exclude)03-webpages/*/basic' ':(exclude)03-webpages/webpage-handbook/handbook' ':(exclude)04-templates/todo-app-example/basic' ':(exclude)_npm' | xargs -0 sed -i '' "s/Copyright 2020-$OLD Bugra Ozden/Copyright 2020-$NEW Bugra Ozden/"`
+
 ## Notes moved from CLAUDE.md (2026-11-07, the user)
 
 CLAUDE.md was shortened to its rules on 2026-11-07 (it is in the context of every turn; it was 39 KB). The paragraphs below are its old text, word for word, kept for their history, the version each component needs and the details of the scripts. The whole old file: `git show 1f4e2f6:CLAUDE.md`. Where they and CLAUDE.md differ, CLAUDE.md is right.
