@@ -473,7 +473,7 @@ HomeView.createCard = function (comp) {
             height: L.previewHeight,
             scale: L.previewScale,
             interactive: 0, // Tıklama karta gider, önizleme kaydırılmaz.
-            title: comp.name,
+            ariaLabel: comp.name,
             placeholderText: "",
             loadTimeout: CONFIG.previewTimeout,
             style: {

@@ -206,7 +206,7 @@ BasicDesigner.buildParamFilter = function (left, top, width) {
                 textOffsetY: 0,
                 clearIconOffsetY: 0,
                 clearOnEscape: 1,
-                placeholderText: "Search the parameters",
+                placeholder: "Search the parameters",
                 onSearch: function (text) {
                     s.paramFilter = String(text || "");
                     BasicDesigner.applyParamFilter();

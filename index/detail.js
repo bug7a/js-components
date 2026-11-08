@@ -254,7 +254,7 @@ DetailView.createPreviewPane = function () {
         DetailView.view = WebView({
             width: "100%",
             height: 100,
-            title: DetailView.comp.name,
+            ariaLabel: DetailView.comp.name,
             placeholderText: "",
             style: {
                 box: { color: "#FFFFFF", border: 0, round: 0 },
