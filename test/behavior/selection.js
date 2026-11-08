@@ -34,6 +34,18 @@ test("Toggle: the keyboard and screen readers can use it", async function () {
     toggle.remove();
 });
 
+test("Toggle: setValue() calls onChange, setValue(value, 1) does not; nothing at create time", async function () {
+    const changes = [];
+    const toggle = Toggle({ value: 0, onChange: function (self) { changes.push(self.value); } });
+    const atCreate = changes.length;
+    toggle.setValue(1);
+    toggle.setValue(0, 1);
+    check("Toggle: setValue() calls onChange, setValue(value, 1) does not; nothing at create time",
+        atCreate === 0 && changes.join(",") === "1" && toggle.value === 0 && toggle.state === "normal",
+        "at create: " + atCreate + ", changes: " + changes.join(",") + ", value: " + toggle.value + ", state: " + toggle.state);
+    toggle.remove();
+});
+
 // *** ITEM LIST (comp/item-list.js)
 
 test("ItemList: style.hover {} means no look under the mouse, the default stays without it", async function () {

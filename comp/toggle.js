@@ -37,6 +37,7 @@ USAGE:
 const toggle = Toggle({ value: 1, onChange: (self) => println(self.value) });
 toggle.switch();
 toggle.setValue(0);                             // onChange is called
+toggle.setValue(1, 1);                          // silent: onChange is not called
 toggle.setBackgroundSelectedColor("tomato");
 Toggle({ styleName: "classic" });
 Toggle({ styleName: "classic", backgroundStyle: { selectedColor: "#6AC966" } }); // A green classic toggle
@@ -77,7 +78,7 @@ const ToggleDefaults = {
         color: Black(0.5), // off
         selectedColor: White(0.95), // on
     },
-    onChange: function(self) {},
+    onChange: function(self) {}, // self.value changed (a click, a key, setValue()). Not at create time, not with setValue(value, 1)
     backgroundStyle: { // The track
         color: "whitesmoke", // off
         selectedColor: "#689BD2", // on
@@ -260,12 +261,13 @@ const Toggle = function(params = {}) {
         box.setValue((box.value === 1) ? 0 : 1);
     };
     
-    box.setValue = function(value) {
+    // silent: 1 -> onChange is not called.
+    box.setValue = function(value, silent = 0) {
 
         box.value = value;
 
         box.setState((value === 1) ? "selected" : "normal");
-        box.onChange(box);
+        if (!silent) box.onChange(box);
 
     };
 
