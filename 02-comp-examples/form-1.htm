@@ -32,7 +32,6 @@
         */
 
         const ACCENT_COLOR = "#65A293";
-        const SUCCESS_ICON = "../04-templates/web-forms/assets/success.png";
 
         let form;
 
@@ -105,8 +104,7 @@
 
         const showThanks = function () {
             form.showMessage({
-                iconColor: "#3C8553",
-                iconFile: SUCCESS_ICON,
+                iconColor: "#3C8553", // the circle behind the check mark of Form (iconFile: your own picture)
                 messageText: "<b>Thank you!</b><br>Your message was sent.",
                 buttonText: "OKAY",
                 backgroundColor: "rgba(255, 255, 255, 0.92)",

@@ -130,7 +130,7 @@ const SmartTableDefaults = {
         searchIconSize: 16,
         searchIconOpacity: 0.5,
         placeholder: "Filter",
-        searchIconFile: "../comp/search-input/filter.png",
+        searchIconFile: "data:image/svg+xml;utf8," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" preserveAspectRatio="none" fill="#000000"><rect x="0" y="85" width="512" height="57"/><rect x="85" y="227" width="342" height="56"/><rect x="199" y="370" width="114" height="57"/></svg>'), // three bars
         clearIconMinTextWidth: 80, // (a narrow filter box has no clear icon; its text keeps that place)
         clearOnEscape: 1, // Escape clears the filter (a narrow box has no clear icon)
     },
@@ -152,11 +152,11 @@ const SmartTableDefaults = {
         titleUppercase: 1, // 1: the titles in capital letters (0: as titleDataList writes them)
         verticalScrollWidth: 20,
         verticalScrollMargin: 2,
-        btnScrollDownIconFile: "../comp/smart-table/down.png",
-        btnScrollUpIconFile: "../comp/smart-table/up.png",
+        btnScrollDownIconFile: "data:image/svg+xml;utf8," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 200" preserveAspectRatio="none" fill="none" stroke="#141414" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="M40 84V116M27 103L40 116L53 103"/></svg>'),
+        btnScrollUpIconFile: "data:image/svg+xml;utf8," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 200" preserveAspectRatio="none" fill="none" stroke="#141414" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="M40 116V84M27 97L40 84L53 97"/></svg>'),
         btnScrollCenterIconFile: "data:image/svg+xml," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 50" fill="none" stroke="#000000" stroke-opacity="0.4" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 17.5v15M6.5 21 10 17.5 13.5 21M6.5 29 10 32.5 13.5 29"/></svg>'),
         sortIconFile: "data:image/svg+xml," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17.71,9.88l-4.3-4.29a2,2,0,0,0-2.82,0L6.29,9.88a1,1,0,0,0,0,1.41,1,1,0,0,0,1.42,0L11,8V19a1,1,0,0,0,2,0V8l3.29,3.29a1,1,0,1,0,1.42-1.41Z"/></svg>'),
-        loadingIconFile: "../comp/smart-table/clock.png",
+        loadingIconFile: "data:image/svg+xml;utf8," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" preserveAspectRatio="none"><circle cx="256" cy="256" r="206" fill="#FFFFFF" stroke="#141414" stroke-width="20"/><path d="M256 113V256H358" fill="none" stroke="#141414" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/></svg>'),
         searchTitleCheckIconFile: "data:image/svg+xml," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#373836" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5 10 17.5 19 7"/></svg>'),
         invertIconColor: 0, // 1: the sort and the scroll arrows are drawn light (a dark page)
         sortIcon: { size: 16, opacity: 0.25, activeOpacity: 1 }, // the arrow of a title: not sorted / sorted
@@ -1763,11 +1763,11 @@ SmartTable.styles = {
             titleUppercase: 0,
             verticalScrollWidth: 20,
             verticalScrollMargin: 2,
-            btnScrollDownIconFile: "../comp/smart-table/down.png",
-            btnScrollUpIconFile: "../comp/smart-table/up.png",
-            btnScrollCenterIconFile: "../comp/smart-table/scroll.png",
-            sortIconFile: "../comp/smart-table/sort.png",
-            loadingIconFile: "../comp/smart-table/clock.png",
+            btnScrollDownIconFile: SmartTableDefaults.style.btnScrollDownIconFile,
+            btnScrollUpIconFile: SmartTableDefaults.style.btnScrollUpIconFile,
+            btnScrollCenterIconFile: "data:image/svg+xml;utf8," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 200" preserveAspectRatio="none" fill="none" stroke="#D96450" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="M40 28V172M27 41L40 28L53 41M27 159L40 172L53 159"/></svg>'), // a red line with two heads
+            sortIconFile: "data:image/svg+xml;utf8," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80" preserveAspectRatio="none" fill="none" stroke="#141414" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="M40 24V56M27 43L40 56L53 43"/></svg>'), // an arrow down
+            loadingIconFile: SmartTableDefaults.style.loadingIconFile,
             searchTitleCheckIconFile: "data:image/svg+xml," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#373836" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5 10 17.5 19 7"/></svg>'),
             invertIconColor: 0,
             sortIcon: { size: 22, opacity: 0.5, activeOpacity: 1 },
@@ -1800,7 +1800,7 @@ SmartTable.styles = {
             fontSize: 16,
             borderColor: Black(0.15), // (light edges in the filter)
             borderBottomStyle: "1px solid " + Black(0.15),
-            searchIconFile: "../comp/search-input/filter.png",
+            searchIconFile: SmartTableDefaults.searchInputParams.searchIconFile,
             searchIconOpacity: 0.8, // (a softer filter icon, in tune with the edges)
         },
     },

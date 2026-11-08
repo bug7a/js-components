@@ -35,8 +35,8 @@ const HoldToConfirmButtonDefaults = {
     height: 50,
     labelText: "Hold to Delete", // Hold to Vanish, Hold to Delete
     completedText: "DELETED", // Poof! And it's gone.  // DELETED // REMOVED
-    iconFile: "../comp/hold-to-confirm-button/trash.png",
-    holdingIconFile: "../comp/hold-to-confirm-button/trash-red.png",
+    iconFile: "data:image/svg+xml;utf8," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 144 144" preserveAspectRatio="none" fill="none" stroke="#141414" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"><path d="M56.5 22.5H87.5M30.5 27H113.5M34.5 31V112A9.5 9.5 0 0 0 44 121.5H100A9.5 9.5 0 0 0 109.5 112V31M59.5 48.5V99.5M84.5 48.5V99.5"/></svg>'), // a bin (a page can give its own picture)
+    holdingIconFile: "data:image/svg+xml;utf8," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 144 144" preserveAspectRatio="none" fill="none" stroke="#FE5D49" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"><path d="M56.5 22.5H87.5M30.5 27H113.5M34.5 31V112A9.5 9.5 0 0 0 44 121.5H100A9.5 9.5 0 0 0 109.5 112V31M59.5 48.5V99.5M84.5 48.5V99.5"/></svg>'), // the bin in red while it is held
     onConfirm: function (self) { },
     onReset: function (self) {},
     holdDuration: 3000, // ms

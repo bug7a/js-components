@@ -52,7 +52,7 @@ const ActionButtonDefaults = {
     width: "100%",
     height: "100%",
     items: [], // [{ key, labelText }] or ["text"]
-    iconFile: "../comp/action-button/add.png",
+    iconFile: "data:image/svg+xml;utf8," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" preserveAspectRatio="none" fill="#000000"><path d="M231 0H281V512H231ZM0 231H512V281H0Z"/></svg>'), // a plus (a page can give its own picture)
     openIconFile: "", // "": iconFile. The icon while the menu is open.
     iconSize: 30,
     iconRotate: 0, // deg

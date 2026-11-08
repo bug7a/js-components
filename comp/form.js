@@ -95,17 +95,17 @@ const Form = function(params = {}) {
 
     };
 
-    // pageKey: "success", "error"
+    // The message over the form after sending. A key that messageData does not give comes from the success message.
     box.showMessage = function(messageData) {
 
-        if (!messageData) messageData = {
+        messageData = Object.assign({
             iconColor: "#3C8553",
-            iconFile: "assets/success.png",
+            iconFile: "data:image/svg+xml;utf8," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" preserveAspectRatio="none" fill="none" stroke="#141414" stroke-width="8"><path d="M24 63L50 89L104 35"/></svg>'), // a check mark (drawn inverted: white)
             messageText: "Data sent successfully.",
             buttonText: "OKAY",
             backgroundColor: "rgba(255,255,255,0.85)",
             onClose: function() {},
-        };
+        }, messageData);
 
         // GROUP: Sent Message
         const messageBox = VGroup({

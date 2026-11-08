@@ -71,8 +71,8 @@ const LoginPageDefaults = {
     onLoginClick: function() {},
     onSignupClick: function() {},
     showPasswordIconInvert: 1,
-    showPasswordIconFile: "../../comp/password-field/show-btn.png",
-    hidePasswordIconFile: "../../comp/password-field/hide-btn.png",
+    showPasswordIconFile: "", // "": the eye of PasswordField
+    hidePasswordIconFile: "", // "": the crossed eye of PasswordField
     waitingCoverColor: "rgba(0, 0, 0, 0.6)", // The cover of box.waiting (LoadingScreen)
     waitingClock: "ozden", // The clock of box.waiting: "ozden" (a white face) or "ozdenDark" (LoadingScreen.clocks)
     signupPasswordParams: {
@@ -229,8 +229,8 @@ const LoginPage = function(params = {}) {
                             maxLength: 60,
                             showShowPasswordButton: 1,
                             required: 0,
-                            showPasswordIconFile: box.showPasswordIconFile,
-                            hidePasswordIconFile: box.hidePasswordIconFile,
+                            showPasswordIconFile: box.showPasswordIconFile || PasswordFieldDefaults.showPasswordIconFile,
+                            hidePasswordIconFile: box.hidePasswordIconFile || PasswordFieldDefaults.hidePasswordIconFile,
                             value: "",
                             minLength: 0,
                             mustUseNumber: 0,
@@ -309,8 +309,8 @@ const LoginPage = function(params = {}) {
                             titleText: "PASSWORD",
                             placeholder: "Create a password",
                             maxLength: 60,
-                            showPasswordIconFile: box.showPasswordIconFile,
-                            hidePasswordIconFile: box.hidePasswordIconFile,
+                            showPasswordIconFile: box.showPasswordIconFile || PasswordFieldDefaults.showPasswordIconFile,
+                            hidePasswordIconFile: box.hidePasswordIconFile || PasswordFieldDefaults.hidePasswordIconFile,
                             showShowPasswordButton: 1,
                             ...box.signupPasswordParams,
                             invertIconColor: box.showPasswordIconInvert,
@@ -325,8 +325,8 @@ const LoginPage = function(params = {}) {
                             titleText: "CONFIRM PASSWORD",
                             placeholder: "Re-enter password",
                             maxLength: 60,
-                            showPasswordIconFile: box.showPasswordIconFile,
-                            hidePasswordIconFile: box.hidePasswordIconFile,
+                            showPasswordIconFile: box.showPasswordIconFile || PasswordFieldDefaults.showPasswordIconFile,
+                            hidePasswordIconFile: box.hidePasswordIconFile || PasswordFieldDefaults.hidePasswordIconFile,
                             showShowPasswordButton: 1,
                             ...box.signupPasswordParams,
                             invertIconColor: box.showPasswordIconInvert,
