@@ -10,6 +10,8 @@ RUN TESTS: the self-checking test pages from the terminal, one after the other.
     node test/run-tests.js behavior --commit HEAD       the page as it is in a commit, with the basic/ and comp/ of that commit
 
 It prints the title of every page ("... - ALL PASS" or "... - 2 FAILED") and the lines of what failed or warned.
+Then the catalog (not with --commit): every sample of 02-comp-examples is a sample in index/catalog.js, and every
+sample named there is a file.
 The exit code is 1 when a page failed or did not finish, 2 when the tool itself could not run.
 It needs Chrome and puppeteer-core, like compare-pages.js (CHROME_PATH for another place of Chrome).
 WHY one page at a time: the pages measure sizes and times; two pages side by side made each other slow.
@@ -19,6 +21,8 @@ while the commits had a test without its first lines, and their page did not ope
 
 "use strict";
 
+const fs = require("fs");
+const path = require("path");
 const chrome = require("./_chrome.js");
 
 const PAGES = {
@@ -80,6 +84,35 @@ const readOptions = function (args) {
     return options;
 };
 
+// *** THE CATALOG:
+
+const CATALOG_FILE = "index/catalog.js";
+const CATALOG_SAMPLE = /"(02-comp-examples\/[\w.-]+\.htm)"/g;
+
+// The samples of the folder that the catalog does not name, and the ones it names that are not files.
+// WHY: a new or renamed sample was left out of the catalog again and again (tabs-2, form, text-field-6 / 7...).
+const checkCatalog = function () {
+    const catalog = fs.readFileSync(path.join(chrome.ROOT, CATALOG_FILE), "utf8");
+    const named = new Set(Array.from(catalog.matchAll(CATALOG_SAMPLE), function (match) { return match[1]; }));
+    const samples = chrome.listSamples();
+    const notNamed = samples.filter(function (page) { return !named.has(page); });
+    const notFiles = [...named].filter(function (page) { return !samples.includes(page); });
+    return { notNamed, notFiles };
+};
+
+const printCatalog = function () {
+    const result = checkCatalog();
+    const problemCount = result.notNamed.length + result.notFiles.length;
+    if (problemCount === 0) {
+        console.log("Catalog: every sample is in " + CATALOG_FILE + " - ALL PASS");
+        return true;
+    }
+    console.log("Catalog: " + problemCount + " FAILED");
+    result.notNamed.forEach(function (page) { console.log("  ✗ not in " + CATALOG_FILE + ": " + page); });
+    result.notFiles.forEach(function (page) { console.log("  ✗ in " + CATALOG_FILE + ", no such file: " + page); });
+    return false;
+};
+
 const main = async function () {
     const options = readOptions(process.argv.slice(2));
     if (options.isHelp) {
@@ -108,6 +141,8 @@ const main = async function () {
         server.close();
     }
 
+    // WHY not with --commit: the catalog of the folder, not of the commit
+    if (!options.commit && !printCatalog()) isAllPassed = false;
     return (isAllPassed) ? 0 : 1;
 };
 
