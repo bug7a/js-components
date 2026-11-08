@@ -155,7 +155,7 @@
         const bad = [];
         Object.keys(window.AUD).forEach(function (name) {
             const o = window.AUD[name];
-            const items = flat(BD.propertySections(BD.readProps(o)).flatMap(function (sec) { return sec.items; }));
+            const items = flat(BD.propertySections(BD.readProps(o), o).flatMap(function (sec) { return sec.items; }));
             items.forEach(function (i) {
                 const f = window.TRUTH[i.key];
                 if (!f) return;
@@ -200,7 +200,7 @@
         const names = only || Object.keys(window.AUD);
         for (const name of names) {
             const o = window.AUD[name];
-            const keys = flat(BD.propertySections(BD.readProps(o)).flatMap(function (sec) { return sec.items; }))
+            const keys = flat(BD.propertySections(BD.readProps(o), o).flatMap(function (sec) { return sec.items; }))
                 .map(function (i) { return i.key; })
                 .filter(function (k) { return k[0] !== "_" && VALUES[k] !== undefined; });
             for (const key of keys) {
@@ -365,6 +365,47 @@
             const o = BD.objectOfKey(String(A.checkPlain.__bd.id)) || A.checkPlain;
             BD.applyParam(o, ["labelText"], "Changed", "Check me");
         }, function () { return same(textOfCheck(), "Changed"); }, /labelText/, function () { return same(textOfCheck(), "Check me"); });
+
+        // 9. CSS with no prop of basic.js: the prompt writes it as that.css
+        await check("css letterSpacing", async function () {
+            BD.select(A.labelGiven); await sleep(30);
+            BD.onPropertyChange({ kind: "value", key: "css:letterSpacing", value: "3px" });
+        }, function () { return same(A.labelGiven.elem.style.letterSpacing, "3px"); },
+        /that\.css = \{ letterSpacing: "3px" \};/, function () { return same(A.labelGiven.elem.style.letterSpacing, ""); });
+
+        // 10. A row from the menu: it is in the panel at once (empty), then a value sets it
+        await check("css row from the menu", async function () {
+            BD.select(A.boxGiven); await sleep(30);
+            BD.onPropertyChange({ kind: "value", key: "__cssPick", value: "textTransform" });
+            await sleep(30);
+            if (BD.ui.panel.getValue("css:textTransform") !== "") throw new Error("the menu made no empty row");
+            BD.onPropertyChange({ kind: "value", key: "css:textTransform", value: "uppercase" });
+        }, function () { return same(A.boxGiven.elem.style.textTransform, "uppercase"); },
+        /that\.css = \{ textTransform: "uppercase" \};/, function () { return same(A.boxGiven.elem.style.textTransform, ""); });
+
+        // 11. The motion: setMotion at once, written as code
+        await check("motion", async function () {
+            BD.select(A.boxGiven); await sleep(30);
+            BD.onPropertyChange({ kind: "value", key: "motion", value: "opacity 0.2s" });
+        }, function () { return same(BD.motionOf(A.boxGiven) + " | " + A.boxGiven.elem.style.transition, "opacity 0.2s | opacity 0.2s"); },
+        /that\.setMotion\("opacity 0\.2s"\);/, function () { return same(BD.motionOf(A.boxGiven), ""); });
+
+        // 12. ✕ of a CSS row: the value, its change and the row go
+        try {
+            BD.discardSession();
+            BD.select(A.labelPlain); await sleep(30);
+            BD.onPropertyChange({ kind: "value", key: "css:textDecoration", value: "underline" });
+            const isSet = (A.labelPlain.elem.style.textDecoration.indexOf("underline") !== -1);
+            BD.onPropertyChange({ kind: "action", key: "__cssRemove:textDecoration" });
+            await sleep(30);
+            const isGone = (A.labelPlain.elem.style.textDecoration === "" && !BD.state.changes.has(A.labelPlain.__bd.id + ":css:textDecoration") && BD.ui.panel.getValue("css:textDecoration") === undefined);
+            if (isSet && isGone) R.passed.push("css row removed");
+            else R.fails.push("css row removed: set " + isSet + ", gone " + isGone);
+            BD.revertAll();
+            await sleep(100);
+        } catch (error) {
+            R.fails.push("css row removed: ERROR " + error.message);
+        }
 
         R.done = true;
         return R;
@@ -905,7 +946,7 @@
             return (BD.buildPrompt() || "").split("\n").find(function (l) { return l.indexOf("- " + key + ": ") !== -1; }) || "";
         };
         const fieldItemOf = function (o, key) {
-            const items = flat(BD.propertySections(BD.readProps(o)).flatMap(function (sec) { return sec.items; }));
+            const items = flat(BD.propertySections(BD.readProps(o), o).flatMap(function (sec) { return sec.items; }));
             return items.find(function (i) { return i.key === key; }) || {};
         };
         // [object, key, the typed text]: from a number to a list, and from a list (boxLists, groupLists) to another value

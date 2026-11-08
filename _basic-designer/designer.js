@@ -128,6 +128,7 @@ BasicDesigner.state = {
     paramFilter: "", // PARAMETERS: the text of the search
     paramOnlyChanged: false, // PARAMETERS: only the values that are not the default
     notes: new Map(), // id -> text
+    cssPending: { id: null, names: [] }, // CSS: the rows added to the selected object that have no value yet
     names: new Map(), // id -> a name given in the designer (a new name of an object of the code, or of an added one)
     pageChanges: new Map(), // the changes of the page object (page.color...): key -> { from, to }
     scriptChanges: new Map(), // the component files of the page changed in the Components panel: repo path -> "add" | "remove"
@@ -1773,17 +1774,39 @@ BasicDesigner.BOX_EDITORS = {
     lineHeight: { icon: "sliders", title: "Line height", hint: "A slider and the usual values (px)", isPixels: true, open: function (view) { BasicDesigner.openParamNumber(view); } },
     rotate: { icon: "sliders", title: "Rotate", hint: "A slider and the usual values", open: function (view) { BasicDesigner.openParamNumber(view); } },
     text: { icon: "expand", title: "Text", hint: "A bigger field", open: function (view) { BasicDesigner.openParamText(view); } },
+    motion: { icon: "motion", title: "Motion", hint: "What moves, how long, the curve", open: function (view) { BasicDesigner.openParamMotion(view); } },
+};
+
+// The window of a field of the Box view: one of BOX_EDITORS, or the usual values of a CSS property. null: none.
+BasicDesigner.boxEditorOf = function (key) {
+    if (BasicDesigner.BOX_EDITORS[key]) return BasicDesigner.BOX_EDITORS[key];
+    const prop = BasicDesigner.cssPropOf(BasicDesigner.cssNameOf(key));
+    if (!prop) return null;
+    return {
+        icon: "chevron",
+        title: prop.name,
+        hint: "The usual values",
+        // WHY openParamList, not openParamFixedList: that one writes a parameter of a component; this is the Box view.
+        open: function (view) {
+            BasicDesigner.openParamList({
+                rect: view.field.elem.getBoundingClientRect(),
+                items: prop.values.map(function (value) { return { value: value, text: value }; }),
+                current: view.row.value,
+                onPick: function (value) { view.edit.set(value); },
+            });
+        },
+    };
 };
 
 // The button of a field that opens its window (PropertyPanel: item.button).
 BasicDesigner.editorButton = function (key) {
-    const editor = BasicDesigner.BOX_EDITORS[key];
+    const editor = BasicDesigner.boxEditorOf(key);
     return { icon: BasicDesigner.paramIcon(editor.icon, 14), hint: editor.hint + " · Alt+Down" };
 };
 
 // field: the field of the panel (the window opens at its height).
 BasicDesigner.openBoxEditor = function (obj, key, field) {
-    const editor = BasicDesigner.BOX_EDITORS[key];
+    const editor = BasicDesigner.boxEditorOf(key);
     const pathText = "box:" + key;
     const popover = BasicDesigner.paramPopover;
     const isOpenHere = !!(popover && popover.pathText === pathText);
@@ -2178,8 +2201,178 @@ BasicDesigner.scrollSection = function (p) {
     ] };
 };
 
+// *** CSS AND MOTION: the CSS of an object that basic.js has no prop for (that.css = {...}) and its motion
+// (that.setMotion). The key of a CSS row is "css:" and the name (css:letterSpacing). A change goes the way of a field:
+// Changes, the prompt (as code), undo / redo, the session, "All N from this line".
+
+BasicDesigner.CSS_PREFIX = "css:";
+BasicDesigner.CSS_REMOVE_PREFIX = "__cssRemove:";
+
+// The CSS properties of the menu and their usual values (the window of a row).
+// WHY not fontWeight, fontStyle, pointerEvents, transform, cursor: basic.js sets them with bold, italic, clickable,
+// rotate, cursor (the panel has those).
+BasicDesigner.CSS_PROPS = [
+    { name: "letterSpacing", values: ["-0.01em", "0.02em", "0.05em", "0.08em", "0.1em", "1px", "2px"] },
+    { name: "textTransform", values: ["none", "uppercase", "lowercase", "capitalize"] },
+    { name: "textDecoration", values: ["none", "underline", "line-through", "underline dotted"] },
+    { name: "textShadow", values: ["0 1px 2px rgba(0, 0, 0, 0.25)", "0 2px 6px rgba(0, 0, 0, 0.3)", "none"] },
+    { name: "wordBreak", values: ["normal", "break-word", "break-all", "keep-all"] },
+    { name: "textIndent", values: ["0px", "1em", "2em"] },
+    { name: "filter", values: ["blur(4px)", "grayscale(1)", "brightness(0.9)", "contrast(1.2)", "invert(1)", "drop-shadow(0 2px 4px rgba(0, 0, 0, 0.25))", "none"] },
+    { name: "backdropFilter", values: ["blur(8px)", "blur(16px)", "saturate(1.5) blur(12px)", "none"] },
+    { name: "mixBlendMode", values: ["normal", "multiply", "screen", "overlay", "darken", "lighten", "difference"] },
+    { name: "outline", values: ["1px solid rgba(0, 0, 0, 0.2)", "2px dashed #3871E0", "none"] },
+    { name: "outlineOffset", values: ["0px", "2px", "4px", "-2px"] },
+    { name: "transformOrigin", values: ["center", "left top", "right top", "left bottom", "right bottom"] },
+    { name: "scale", values: ["0.9", "0.95", "1.05", "1.1", "1.2"] },
+    { name: "translate", values: ["4px 0px", "0px 4px", "0px -4px", "-4px 0px"] },
+    { name: "aspectRatio", values: ["1 / 1", "4 / 3", "16 / 9", "3 / 4"] },
+];
+
+// "css:letterSpacing" -> "letterSpacing"; "" for any other key.
+BasicDesigner.cssNameOf = function (key) {
+    const isCss = (typeof key === "string" && key.indexOf(BasicDesigner.CSS_PREFIX) === 0);
+    return (isCss) ? key.slice(BasicDesigner.CSS_PREFIX.length) : "";
+};
+
+BasicDesigner.cssPropOf = function (name) {
+    return BasicDesigner.CSS_PROPS.find(function (prop) { return prop.name === name; }) || null;
+};
+
+// A key that the prompt writes as code: a CSS property or the motion.
+BasicDesigner.isCodeKey = function (key) {
+    return BasicDesigner.cssNameOf(key) !== "" || key === "motion";
+};
+
+// WHY "none" is "": basic.js starts every object with the motion "none"; the panel shows no motion as an empty field.
+BasicDesigner.motionOf = function (obj) {
+    const motion = (typeof obj.getMotion === "function") ? (obj.getMotion() || "") : "";
+    return (motion === "none") ? "" : motion;
+};
+
+// The value of a key on an object: a CSS property (as that.css wrote it), the motion, or a prop of basic.js.
+BasicDesigner.valueOf = function (obj, key) {
+    const cssName = BasicDesigner.cssNameOf(key);
+    if (cssName) return obj.elem.style[cssName] || "";
+    if (key === "motion") return BasicDesigner.motionOf(obj);
+    return BasicDesigner.readProps(obj)[key];
+};
+
+// Sets a key on an object. An empty CSS value removes the property.
+// WHY setMotionNow: setMotion waits a moment, and an undo in that moment was undone by it.
+BasicDesigner.setValueOf = function (obj, key, value) {
+    const cssName = BasicDesigner.cssNameOf(key);
+    const text = (value === null || value === undefined) ? "" : String(value);
+    if (cssName) {
+        const css = {};
+        css[cssName] = text;
+        obj.css = css;
+        return;
+    }
+    if (key === "motion") {
+        obj.setMotionNow(text || "none");
+        return;
+    }
+    obj[key] = value;
+};
+
+// The CSS rows of an object: the usual properties it has, the ones changed here and the ones just added (no value yet).
+BasicDesigner.cssRowNames = function (obj) {
+    const s = BasicDesigner.state;
+    const names = [];
+    const add = function (name) { if (name && names.indexOf(name) === -1) names.push(name); };
+    BasicDesigner.CSS_PROPS.forEach(function (prop) { if (obj.elem.style[prop.name]) add(prop.name); });
+    s.changes.forEach(function (c) { if (c.obj === obj) add(BasicDesigner.cssNameOf(c.key)); });
+    if (s.cssPending.id === obj.__bd.id) s.cssPending.names.forEach(add);
+    return names;
+};
+
+// CSS AND MOTION: a row for each CSS property (its value, ✕), a menu and a field to add one, the motion.
+BasicDesigner.cssSection = function (obj) {
+    const names = BasicDesigner.cssRowNames(obj);
+    const items = names.map(function (name) {
+        const key = BasicDesigner.CSS_PREFIX + name;
+        const prop = BasicDesigner.cssPropOf(name);
+        const field = { key: key, type: "text", label: name, value: BasicDesigner.valueOf(obj, key), span: 2, placeholder: (prop) ? "Ex: " + prop.values[0] : "" };
+        if (prop) field.button = BasicDesigner.editorButton(key);
+        const remove = { key: BasicDesigner.CSS_REMOVE_PREFIX + name, type: "iconButton", icon: BasicDesigner.paramIcon("close", 14), hint: "Remove " + name, toggle: 0 };
+        return [field, remove];
+    });
+    const unused = BasicDesigner.CSS_PROPS.filter(function (prop) { return names.indexOf(prop.name) === -1; });
+    const options = [{ value: "", text: "Add…" }].concat(unused.map(function (prop) { return { value: prop.name, text: prop.name }; }));
+    items.push([
+        { key: "__cssPick", type: "select", label: "CSS", value: "", options: options },
+        { key: "__cssName", type: "text", label: "Another one", value: "", placeholder: "Ex: hyphens" },
+    ]);
+    items.push({ key: "motion", type: "text", label: "Motion (setMotion)", value: BasicDesigner.motionOf(obj), span: "full", placeholder: "Ex: opacity 0.2s, left 0.3s", button: BasicDesigner.editorButton("motion") });
+    return { key: "css", title: "CSS and motion", items: items };
+};
+
+// A new CSS row: a name from the menu, or written (letterSpacing or letter-spacing). It stays empty until a value
+// is written: nothing changes on the page before that.
+BasicDesigner.addCssRow = function (obj, typed) {
+    const s = BasicDesigner.state;
+    const name = String(typed || "").trim().replace(/-([a-z])/g, function (all, letter) { return letter.toUpperCase(); });
+    if (!name) return;
+    // WHY cssText: it is in the style too, and it would replace every inline style of the object.
+    const isProperty = (name !== "cssText" && typeof obj.elem.style[name] === "string");
+    if (!isProperty) {
+        BasicDesigner.setStatus("\"" + typed + "\" is not a CSS property.", "error");
+        BasicDesigner.showProperties(obj);
+        return;
+    }
+    if (s.cssPending.id !== obj.__bd.id) s.cssPending = { id: obj.__bd.id, names: [] };
+    if (s.cssPending.names.indexOf(name) === -1) s.cssPending.names.push(name);
+    BasicDesigner.showProperties(obj);
+};
+
+// ✕ of a CSS row: the property goes (as an empty value), and the row.
+BasicDesigner.removeCssRow = function (obj, name) {
+    const s = BasicDesigner.state;
+    const key = BasicDesigner.CSS_PREFIX + name;
+    if (s.cssPending.id === obj.__bd.id) s.cssPending.names = s.cssPending.names.filter(function (n) { return n !== name; });
+    if (BasicDesigner.valueOf(obj, key) !== "") BasicDesigner.onPropertyChange({ kind: "value", key: key, value: "" });
+    BasicDesigner.showProperties(obj);
+};
+
+// The prompt lines of the CSS and the motion of an object, as code. isAdded: an object added in the designer.
+BasicDesigner.codePromptLines = function (obj, isAdded) {
+    const s = BasicDesigner.state;
+    const lead = (isAdded) ? "   - then " : "   - ";
+    const set = [];
+    const before = [];
+    const removed = [];
+    const lines = [];
+    let count = 1;
+    s.changes.forEach(function (c) {
+        const name = BasicDesigner.cssNameOf(c.key);
+        if (c.obj !== obj || c.kind || !name) return;
+        count = Math.max(count, c.count);
+        if (c.to === "") {
+            removed.push(name + " (it was " + BasicDesigner.fmt(c.from) + ")");
+            return;
+        }
+        set.push(name + ": " + BasicDesigner.fmt(c.to));
+        before.push(name + " " + BasicDesigner.fmt(c.from));
+    });
+    if (set.length) {
+        let line = lead + "that.css = { " + set.join(", ") + " };";
+        if (!isAdded) line += "   (CSS with no prop of basic.js: after the line that makes it, or in its own css; before: " + before.join(", ") + ")";
+        lines.push(line);
+    }
+    if (removed.length) lines.push(lead + "remove from its css: " + removed.join(", "));
+    const motion = s.changes.get(obj.__bd.id + ":motion");
+    if (motion && motion.obj === obj) {
+        count = Math.max(count, motion.count);
+        if (motion.to === "") lines.push(lead + "remove its setMotion (it was " + BasicDesigner.fmt(motion.from) + ")");
+        else lines.push(lead + "that.setMotion(" + BasicDesigner.fmt(motion.to) + ");" + ((isAdded) ? "" : "   (before: " + (motion.from ? BasicDesigner.fmt(motion.from) : "none") + ")"));
+    }
+    if (lines.length && count > 1) lines[lines.length - 1] += "   (seen on all " + count + " objects of this line)";
+    return lines;
+};
+
 // The sections of an object, the most changed first.
-BasicDesigner.propertySections = function (p) {
+BasicDesigner.propertySections = function (p, obj) {
     const sections = [];
     if (p.isText) sections.push(BasicDesigner.textSection(p));
     if (p.isInput) sections.push(BasicDesigner.inputSection(p));
@@ -2190,6 +2383,7 @@ BasicDesigner.propertySections = function (p) {
     sections.push(BasicDesigner.fillSection(p));
     if (p.isGroup || p.isBox) sections.push(BasicDesigner.scrollSection(p));
     sections.push(BasicDesigner.behaviorSection(p));
+    sections.push(BasicDesigner.cssSection(obj));
     return sections;
 };
 
@@ -2270,6 +2464,9 @@ BasicDesigner.showProperties = function (obj) {
     const p = BasicDesigner.readProps(obj);
     const t = BasicDesigner.title(obj);
     const sections = [];
+    const s = BasicDesigner.state;
+    // WHY: a CSS row added with no value belongs to the object it was added to.
+    if (s.cssPending.id !== obj.__bd.id) s.cssPending = { id: obj.__bd.id, names: [] };
 
     // PARAMETERS | BOX: the two views of a component, at the top of the panel (not in its header: the name had no room)
     if (isComponent) sections.push({ key: "inspect", items: [BasicDesigner.inspectSwitchItem("box")] });
@@ -2286,7 +2483,7 @@ BasicDesigner.showProperties = function (obj) {
     }
 
     sections.push({ key: "name", items: [BasicDesigner.nameItem(obj)] });
-    BasicDesigner.propertySections(p).forEach(function (section) { sections.push(section); });
+    BasicDesigner.propertySections(p, obj).forEach(function (section) { sections.push(section); });
 
     const data = { headerTitle: (t.name ? t.name + " · " : "") + t.type, sections: sections };
     data.headerItem = BasicDesigner.openCodeItem();
@@ -2335,8 +2532,12 @@ BasicDesigner.onPropertyChange = function (change) {
         BasicDesigner.openInEditor(BasicDesigner.nameFrame(obj));
         return;
     }
-    if (obj && change.kind === "action" && change.value === "button" && BasicDesigner.BOX_EDITORS[change.key]) {
+    if (obj && change.kind === "action" && change.value === "button" && BasicDesigner.boxEditorOf(change.key)) {
         BasicDesigner.openBoxEditor(obj, change.key, change.field);
+        return;
+    }
+    if (obj && change.kind === "action" && String(change.key).indexOf(BasicDesigner.CSS_REMOVE_PREFIX) === 0) {
+        BasicDesigner.removeCssRow(obj, change.key.slice(BasicDesigner.CSS_REMOVE_PREFIX.length));
         return;
     }
     if (obj && change.kind === "tab") {
@@ -2399,6 +2600,11 @@ BasicDesigner.onPropertyChange = function (change) {
         return;
     }
 
+    if (key === "__cssPick" || key === "__cssName") {
+        BasicDesigner.addCssRow(obj, change.value);
+        return;
+    }
+
     let value = change.value;
     if (typeof value === "boolean") value = (value) ? 1 : 0; // A toggle (bold, italic, wrap...): basic.js props take 1 / 0
     if (key === "maxLength" && value === 0) value = ""; // WHY: 0 is "No limit" in the panel; maxLength 0 would block typing.
@@ -2425,6 +2631,8 @@ BasicDesigner.onPropertyChange = function (change) {
     if (BasicDesigner.LIST_PROPS[key] && isFourValuesChanged) BasicDesigner.showProperties(obj);
     // WHY: minimal changes the border (0 / 1) and the look: the panel shows the new values.
     if (key === "minimal") BasicDesigner.showProperties(obj);
+    // WHY: an emptied CSS row that is no change any more goes away (cssRowNames).
+    if (BasicDesigner.cssNameOf(key) && value === "") BasicDesigner.showProperties(obj);
 
 };
 
@@ -2433,19 +2641,19 @@ BasicDesigner.applyValue = function (obj, key, value, targets = [obj]) {
 
     const s = BasicDesigner.state;
     const id = obj.__bd.id + ":" + key;
-    const entry = s.changes.get(id) || { obj: obj, key: key, from: BasicDesigner.readProps(obj)[key], targets: new Map() };
+    const entry = s.changes.get(id) || { obj: obj, key: key, from: BasicDesigner.valueOf(obj, key), targets: new Map() };
 
     try {
         targets.forEach(function (o) {
             // WHY: Revert all puts back the value each object had (they can differ: an active tab, a hover).
             if (!entry.targets.has(o)) {
-                entry.targets.set(o, BasicDesigner.readProps(o)[key]);
+                entry.targets.set(o, BasicDesigner.valueOf(o, key));
                 if (BasicDesigner.RAW_VALUES[key]) {
                     entry.rawValues = entry.rawValues || new Map();
                     entry.rawValues.set(o, BasicDesigner.rawValueOf(o, key));
                 }
             }
-            o[key] = value;
+            BasicDesigner.setValueOf(o, key, value);
         });
     } catch (error) {
         BasicDesigner.setStatus("Could not set " + key + ": " + error.message, "error");
@@ -2698,7 +2906,7 @@ BasicDesigner.carryChanges = function (old, fresh) {
         if (c.obj !== fresh) return;
         if (c.kind === "sides") BasicDesigner.writeSides(fresh, c.to);
         if (!c.kind) {
-            try { fresh[c.key] = c.to; } catch (error) { }
+            try { BasicDesigner.setValueOf(fresh, c.key, c.to); } catch (error) { }
         }
     });
 };
@@ -2962,7 +3170,9 @@ BasicDesigner.changeLinesOf = function (obj) {
             });
         } else {
             const times = (c.count > 1) ? "  (×" + c.count + ")" : "";
-            lines.push(BasicDesigner.esc(c.key + ": " + BasicDesigner.fmtValue(c.key, c.from) + " → " + BasicDesigner.fmtValue(c.key, c.to) + times));
+            const cssName = BasicDesigner.cssNameOf(c.key);
+            const label = (cssName) ? "css " + cssName : c.key;
+            lines.push(BasicDesigner.esc(label + ": " + BasicDesigner.fmtValue(c.key, c.from) + " → " + BasicDesigner.fmtValue(c.key, c.to) + times));
         }
     });
     if (s.names.has(obj.__bd.id)) lines.push(BasicDesigner.esc("name: " + (BasicDesigner.baseNameOf(obj) || "(none)") + " → " + s.names.get(obj.__bd.id)));
@@ -3059,7 +3269,7 @@ BasicDesigner.putBackValue = function (c) {
             BasicDesigner.restoreRawValue(o, c.key, c.rawValues.get(o));
             return;
         }
-        try { o[c.key] = from; } catch (error) { }
+        try { BasicDesigner.setValueOf(o, c.key, from); } catch (error) { }
     });
 };
 
@@ -3134,12 +3344,14 @@ BasicDesigner.buildPrompt = function () {
             BasicDesigner.addedPromptLines(obj).forEach(function (line) { out.push(line); });
             s.changes.forEach(function (c) {
                 if (c.obj !== obj || c.kind === "add") return;
+                if (BasicDesigner.isCodeKey(c.key)) return; // (written as code below)
                 if (c.kind === "sides") {
                     BasicDesigner.sidesDiff(c.from, c.to).forEach(function (d) { out.push("   - then " + d.key + ": " + d.to); });
                     return;
                 }
                 out.push("   - then " + c.key + ": " + BasicDesigner.fmtValue(c.key, c.to));
             });
+            BasicDesigner.codePromptLines(obj, true).forEach(function (line) { out.push(line); });
             if (s.notes.has(obj.__bd.id)) out.push("   - note: " + s.notes.get(obj.__bd.id));
             out.push("");
             return;
@@ -3168,6 +3380,7 @@ BasicDesigner.buildPrompt = function () {
         if (hasParams) out.push("   (param: change it in the params of this call; when every " + t.type + " should change, in " + t.type + "Defaults and the style packages " + t.type + ".styles)");
         s.changes.forEach(function (c) {
             if (c.obj !== obj) return;
+            if (!c.kind && BasicDesigner.isCodeKey(c.key)) return; // (written as code below)
             if (c.kind === "move") {
                 out.push("   - move it: now " + BasicDesigner.describePlace(obj) + "   (it was " + c.oldDescription + ")");
                 return;
@@ -3187,6 +3400,7 @@ BasicDesigner.buildPrompt = function () {
             if (c.count > 1) line += "   (seen on all " + c.count + " objects of this line)";
             out.push(line);
         });
+        BasicDesigner.codePromptLines(obj, false).forEach(function (line) { out.push(line); });
         if (s.notes.has(obj.__bd.id)) out.push("   - note: " + s.notes.get(obj.__bd.id));
         out.push("");
     });
