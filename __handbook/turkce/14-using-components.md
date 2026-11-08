@@ -129,7 +129,7 @@ const selLanguage = SelectBox({
 });
 ```
 
-- **`onChange` değer değişince çağrılır.** Bileşen oluşturulurken ve `silent: 1` ile çalışan bir setter'da çağrılmaz. Düz bir `setValue()`'nun onu çağırıp çağırmadığı dosyanın başında yazar (`TextField`: hiç çağırmaz).
+- **`onChange` değer değişince çağrılır**, düz bir `setValue()` ile de. Bileşen oluşturulurken ve `silent: 1` ile çalışan bir setter'da çağrılmaz. Üç eski bileşen onu `setValue()`'dan hiç çağırmaz ve bunu `onChange` açıklamasında söyler: `TextField` (ve ondan yapılan alanlar), `Slider` ve `JsonEditor`.
 - Bir olay sonradan da verilebilir: `btnSave.onClick = function (self) { ... };`
 
 ---

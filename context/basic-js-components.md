@@ -87,7 +87,7 @@ MyComp.styles = {
 - Colors of themes the user picks at run time (`Toast`, `GraphBox`): `X.THEMES` + `basic.resolveTheme(X.THEMES, name)`; `style` keeps only the shapes.
 
 ## Events and state
-- **`onChange` is not called at create time, by `setItems()` / `setOptions()`, or with `silent: 1`**, and not when the value did not change.
+- **`onChange` is not called at create time, by `setItems()` / `setOptions()`, or with `silent: 1`**, and not when the value did not change. A plain `setValue()` calls it. (Three older components never call it from `setValue()` and say so in the comment of their `onChange`: TextField and its fields, Slider, JsonEditor.)
 - The state is decided in one place (`getState()` or `getLook()`): normal, hover, selected, disabled. `paint()` draws it, without measuring.
 - Drawing functions named by their job: `createItems()` (from the data; one item: `createItem()`), `applyContent()`, `paint()`, `refreshLayout()` (what depends on the sizes), `drawAll()`. A setter calls only the one it needs.
 - Keyboard: `box.role`, `box.aria = {...}`, `box.tabIndex`, Enter / Space like a click, `box.setFocusRing(color)` (only for the keyboard). In a list only one row is in the Tab order.

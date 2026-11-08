@@ -129,7 +129,7 @@ const selLanguage = SelectBox({
 });
 ```
 
-- **`onChange` is called when the value changes.** It is not called while the component is made, nor by a setter with `silent: 1`. Whether a plain `setValue()` calls it is written at the top of the file (`TextField`: never).
+- **`onChange` is called when the value changes**, also by a plain `setValue()`. It is not called while the component is made, nor by a setter with `silent: 1`. Three older components never call it from `setValue()` and say so in the comment of their `onChange`: `TextField` (and the fields made from it), `Slider` and `JsonEditor`.
 - An event can also be given later: `btnSave.onClick = function (self) { ... };`
 
 ---

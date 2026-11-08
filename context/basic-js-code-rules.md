@@ -90,7 +90,7 @@ Bir bileşenin parametreleri kitin geri kalanındaki adları taşır: bir sayfay
 | Uzunluk sınırı | `maxLength`, `minLength` (HTML'in adları, aynı anlamla: en çok, en az) | `maxChar`, `minChar` |
 | Kalın yazı | `...Bold: 1` (`titleBold`, `labelBold`) | `labelBoldFont` |
 | Bir durumun rengi (düz parametrelerde) | durum önde: `hover...`, `focus...` (yazarken, klavyeyle), `pressed...`, `selected...` (seçilmiş bir öğe) | yazarken için `selected...` |
-| Değer değişti | `onChange(self)`: oluşturulurken, `setValue()` ile ve `silent` ile çağrılmaz | `onEdit`, `onValueChange` |
+| Değer değişti | `onChange(self)`: değer gerçekten değişince, düz bir `setValue()` ile de (`_component-template.js`). Oluşturulurken ve `silent: 1` ile çağrılmaz. Onu `setValue()`'dan hiç çağırmayan üç eski bileşen (TextField ve ondan yapılan alanlar, Slider, JsonEditor) bunu `onChange` açıklamasında söyler | `onEdit`, `onValueChange` |
 | Bir olay | `onXxx(self, ...)`: ilk argüman `self` | |
 | Görünüş | `styleName` + `style` (`Comp.styles`). Renkleri `"auto"` ile sistemi izleyenler (GraphBox, Toast): `theme` (`basic.resolveTheme`) | |
 | Sonradan değiştirmek | `setX()`, parametrenin tam adıyla: `setValue`, `setRequired`, `setMaxLength`, `setTitleText`, `setLabelText` (bir resmin setter'ı `set...Icon()`) | `setInputValue`, `titleText` için `setTitle`, `labelText` için `setText` |
