@@ -156,13 +156,13 @@ App.addPage({
 
         const SEARCH_AREA_HEIGHT = 90;
         const FILES = [
-            { key: "components", title: "Components", iconFile: "assets/files/folder.png" },
-            { key: "fonts", title: "Fonts", iconFile: "assets/files/folder.png" },
-            { key: "images", title: "Images", iconFile: "assets/files/folder.png" },
-            { key: "book", title: "Book", iconFile: "assets/files/doc.png" },
-            { key: "book-2", title: "Book 2", iconFile: "assets/files/doc.png" },
-            { key: "tables", title: "Tables", iconFile: "assets/files/xls.png" },
-            { key: "notes", title: "Notes", iconFile: "assets/files/txt.png" },
+            { key: "components", text: "Components", iconFile: "assets/files/folder.png" },
+            { key: "fonts", text: "Fonts", iconFile: "assets/files/folder.png" },
+            { key: "images", text: "Images", iconFile: "assets/files/folder.png" },
+            { key: "book", text: "Book", iconFile: "assets/files/doc.png" },
+            { key: "book-2", text: "Book 2", iconFile: "assets/files/doc.png" },
+            { key: "tables", text: "Tables", iconFile: "assets/files/xls.png" },
+            { key: "notes", text: "Notes", iconFile: "assets/files/txt.png" },
         ];
 
         let fileList;

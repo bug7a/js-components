@@ -38,11 +38,12 @@ const AppSettings = {
         { pageId: "settings", text: "Settings", iconFile: "assets/tabs/settings.png", selectedIconFile: "assets/tabs/settingss.png" },
     ],
 
-    // The side menu (the button at the top left of a tab page). A tab page opens as a tab, others over it.
+    // The side menu (the button at the top left of a tab page): { pageId, text, description, iconFile }. A tab page opens
+    // as a tab, others over it.
     menu: [
-        { pageId: "home", title: "Home", desc: "The first tab" },
-        { pageId: "about", title: "About", desc: "An HTML page in the app" },
-        { pageId: "website", title: "Website", desc: "A web page from the internet" },
+        { pageId: "home", text: "Home", description: "The first tab" },
+        { pageId: "about", text: "About", description: "An HTML page in the app" },
+        { pageId: "website", text: "Website", description: "A web page from the internet" },
     ],
 
     // The colors of the app. The pages take their colors from here (App.colors).

@@ -982,7 +982,7 @@
                         HGroup({ width: "auto", height: "auto", align: "left center", gap: 8 });
                             Label({ text: "Target", fontSize: 13, textColor: Ink(0.5) });
                             targetSelect = TinySelect({
-                                list: TARGET_SOC_LIST.map(function (v) { return { id: String(v), label: v + "%" }; }),
+                                list: TARGET_SOC_LIST.map(function (v) { return { value: String(v), label: v + "%" }; }),
                                 selectedIndex: TARGET_SOC_LIST.indexOf(system.ev.targetSoc),
                                 height: 34,
                                 fontSize: 14,
@@ -1001,7 +1001,7 @@
                                 listBackgroundColor: FIELD_COLOR,
                                 listBorderColor: Ink(0.15),
                                 onChange: function (self) {
-                                    const id = self.getSelectedItem().id;
+                                    const id = self.getSelectedItem().value;
                                     if (!isReady || isRendering || Number(id) == system.ev.targetSoc) return;
                                     system.ev.targetSoc = Number(id);
                                     addEvent("Info", "EV target charge set to " + id + "%");

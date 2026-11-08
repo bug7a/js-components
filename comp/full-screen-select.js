@@ -24,13 +24,13 @@ A select field that opens its list on the whole screen: a search box at the top,
 USAGE:
 const fruits = FullScreenSelect({
     width: 320,
-    items: [{ key: "banana", title: "Banana" }, { key: "peach", title: "Peach" }, "Kiwi"],
+    items: [{ key: "banana", text: "Banana" }, { key: "peach", text: "Peach" }, "Kiwi"],
     selectedKey: "banana",
     onChange: function (self) { println(self.selectedKey); },
 });
 fruits.setSelectedKey("peach");      // onChange runs (silent: fruits.setSelectedKey("peach", 1))
 fruits.setItems(otherItems);
-fruits.getSelectedItem();            // { key, title } or null
+fruits.getSelectedItem();            // { key, text } or null
 fruits.open(); fruits.close();
 FullScreenSelect({ styleName: "dark", ... });
 
@@ -49,7 +49,7 @@ SPDX-License-Identifier: Apache-2.0
 const FullScreenSelectDefaults = {
     width: 200,
     height: 50,
-    items: [], // [{ key, title }] or ["Text"] (the text is its key). ({ id, name } is read too.)
+    items: [], // [{ key, text }] or ["Text"] (the text is its key)
     selectedKey: null, // null: the first item
     placeholder: "Search",
     emptyText: "No results",
@@ -128,8 +128,8 @@ const FullScreenSelect = function (params = {}) {
 
     const applyContent = function () {
         const item = findItem(box.selectedKey);
-        box.lblText.plainText = item ? item.title : "";
-        box.aria = { label: box.ariaLabel || (item ? item.title : ""), expanded: !!box.isOpen };
+        box.lblText.plainText = item ? item.text : "";
+        box.aria = { label: box.ariaLabel || (item ? item.text : ""), expanded: !!box.isOpen };
     };
 
     const fitAutoWidth = function () {
@@ -336,7 +336,7 @@ const FullScreenSelect = function (params = {}) {
             row.lblText = Label({
                 left: itemStyle.textLeft,
                 width: "calc(100% - " + (itemStyle.textLeft * 2) + "px)",
-                plainText: item.title,
+                plainText: item.text,
                 fontSize: itemStyle.fontSize,
                 textColor: itemStyle.textColor,
                 ellipsis: 1,
@@ -384,7 +384,7 @@ const FullScreenSelect = function (params = {}) {
         if (newSearchText === searchText) return;
         searchText = newSearchText;
         box.panel.rows.forEach(function (row) {
-            const isShown = (searchText == "") || FullScreenSelect.toSearchText(row.item.title).includes(searchText);
+            const isShown = (searchText == "") || FullScreenSelect.toSearchText(row.item.text).includes(searchText);
             row.visible = isShown ? 1 : 0;
         });
         box.panel.lblEmpty.visible = (getShownRows().length == 0) ? 1 : 0;
@@ -567,14 +567,13 @@ const FullScreenSelect = function (params = {}) {
 
 FullScreenSelect.openedSelect = null; // The select whose list is open
 
-// [{ key, title }] from items: objects ({ key, title } or { id, name }) or texts
+// [{ key, text }] from items: objects { key, text } or texts
 FullScreenSelect.toItems = function (items) {
     if (!Array.isArray(items)) return [];
     return items.map(function (item) {
-        if (item === null || typeof item !== "object") return { key: String(item), title: String(item) };
-        const key = (item.key !== undefined) ? item.key : item.id;
-        const title = (item.title !== undefined) ? item.title : item.name;
-        return { key: key, title: (title === undefined || title === null) ? String(key) : String(title) };
+        if (item === null || typeof item !== "object") return { key: String(item), text: String(item) };
+        const text = (item.text === undefined || item.text === null) ? String(item.key) : String(item.text);
+        return { key: item.key, text: text };
     });
 };
 

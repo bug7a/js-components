@@ -331,13 +331,13 @@ const OrdersPage = function(params = {}) {
                 that.position = "relative";
 
                 rangeSelect = OrdersPage.createTinySelect(
-                    RANGES.map(function(range) { return { id: range.id, label: range.label }; }),
+                    RANGES.map(function(range) { return { value: range.id, label: range.label }; }),
                     function(id) { filter.rangeId = id; render(); },
                     1 // Selected: "Last 30 days"
                 );
 
                 paymentSelect = OrdersPage.createTinySelect(
-                    [{ id: "", label: "All payments" }].concat(OrdersPage.PAYMENTS.map(function(name) { return { id: name, label: name }; })),
+                    [{ value: "", label: "All payments" }].concat(OrdersPage.PAYMENTS.map(function(name) { return { value: name, label: name }; })),
                     function(id) { filter.payment = id; render(); }
                 );
 
@@ -606,7 +606,7 @@ const OrderDetails = function(params = {}) {
                             VGroup({ width: "auto", height: "auto", align: "left top", gap: 6 });
                                 Label({ text: "CARRIER", fontSize: 11, textColor: Ink(0.45) });
                                 that.elem.style.letterSpacing = "1px";
-                                OrdersPage.createTinySelect(OrdersPage.CARRIERS.map(function(name) { return { id: name, label: name }; }), function(id) { carrierId = id; });
+                                OrdersPage.createTinySelect(OrdersPage.CARRIERS.map(function(name) { return { value: name, label: name }; }), function(id) { carrierId = id; });
                             endGroup();
 
                             const trackingInput = createDarkInput({
@@ -924,7 +924,7 @@ OrdersPage.createTinySelect = function(list, onSelect, selectedIndex = 0) {
         listBackgroundColor: S.FIELD_COLOR,
         listBorderColor: Ink(0.15),
         onChange: function(self) {
-            const id = self.getSelectedItem().id;
+            const id = self.getSelectedItem().value;
             if (isReady) onSelect(id);
         },
     });

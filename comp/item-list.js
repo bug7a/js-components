@@ -18,19 +18,20 @@ UI COMPONENT TEMPLATE
   onChange(self, selectedItems) is NOT called at create time, by setItems() or with silent: 1.
 - Search box: showSearch: 1 puts a SearchInput (comp/search-input.js, load it first) over the list;
   its look is style.search, more params in searchParams (Ex: the icon paths for your page). box.searchInput.
-- Search: search(text) shows only the matching items (title, desc and searchText; Turkish letters are
+- Search: search(text) shows only the matching items (text, description and searchText; Turkish letters are
   matched without their marks: "isik" finds "Işık"). It returns the count of the shown items.
 - Keyboard (a listbox): the arrow keys move the focus (Up / Down in a list, Left / Right in a row, all four in a
-  grid), Home / End, PageUp / PageDown (a page of rows), letters (type-ahead: the next item whose title starts with
+  grid), Home / End, PageUp / PageDown (a page of rows), letters (type-ahead: the next item whose text starts with
   them). Enter or Space is a click (onItemClick and the selection). Only one row is in the Tab order: the focused
   one, or the first selected one, or the first one. multiple: Shift + a move, Shift + Space and Shift + click select
   the rows from the last clicked one; Ctrl / Cmd + A selects all the shown items (again: none). With a search box:
   the arrow down goes from it into the list, the arrow up from the first line back to it, Escape clears it.
 - A combobox whose keyboard stays in its field (SelectBox) shows its active row with setActiveKey(key): the look of
   the mouse (style.hover), also on a selected row, and only on that row. null: none.
-- Items: strings or objects { key, title, desc, iconFile, searchText, disabled }. Any other keys stay on the
-  item for your createItemView. An item without a key gets its index as its key.
-- Sections: an item { type: "section", title: "VIEWS" } is a title row between the items (style.section). It is
+- Items: strings or objects { key, text, description, iconFile, searchText, enabled }. Any other keys stay on the
+  item for your createItemView. An item without a key gets its index as its key. style.title and style.desc are the
+  look of its text and its description.
+- Sections: an item { type: "section", text: "VIEWS" } is a title row between the items (style.section). It is
   never selected, focused, hovered or clicked, the arrow keys skip it, and getSelected(), search() and the empty
   text count only the items. It is shown while at least one item under it (until the next section) is shown: in
   a search, only the sections with a match (a section without items is hidden too).
@@ -55,15 +56,15 @@ const list = ItemList({
     width: 360,
     height: 400,
     items: [
-        { key: "broccoli", title: "Broccoli", desc: "Vegetable", iconFile: "assets/fruids/brokoli.png" },
-        { key: "strawberry", title: "Strawberry", desc: "Fruit", iconFile: "assets/fruids/cilek.png" },
+        { key: "broccoli", text: "Broccoli", description: "Vegetable", iconFile: "assets/fruids/brokoli.png" },
+        { key: "strawberry", text: "Strawberry", description: "Fruit", iconFile: "assets/fruids/cilek.png" },
     ],
     onChange: function (self, selectedItems) { println(self.getSelectedKeys()); },
 });
 list.search("fruit");                       // 1 (the count of the shown items)
 list.setSelected(["broccoli"], 1);          // silent: onChange is not called
-list.addItem({ key: "tomato", title: "Tomato", desc: "Vegetable" });
-list.updateItem("tomato", { desc: "Fruit, really" });
+list.addItem({ key: "tomato", text: "Tomato", description: "Vegetable" });
+list.updateItem("tomato", { description: "Fruit, really" });
 list.setLayout("grid");
 ItemList({ selection: "multiple", styleName: "modern" });
 ItemList({ layout: "horizontal", height: 200, styleName: "dark" });
@@ -71,10 +72,10 @@ ItemList({ showSearch: 1, searchParams: { placeholder: "Ara" } });
 ItemList({
     style: { row: { height: "auto" } },
     createItemView: function (item, row, self) {     // Objects created here go into the row.
-        Label({ plainText: item.title, fontSize: 18 });
+        Label({ plainText: item.text, fontSize: 18 });
     },
 });
-ItemList({ items: [{ type: "section", title: "FRUITS" }, "Apple", "Banana", { type: "section", title: "VEGETABLES" }, "Carrot"] });
+ItemList({ items: [{ type: "section", text: "FRUITS" }, "Apple", "Banana", { type: "section", text: "VEGETABLES" }, "Carrot"] });
 ItemList({ style: { hover: {} } }); // No look under the mouse
 ItemList({ selection: "none", style: { pressed: { color: Black(0.2) }, row: { motion: "background-color 0.3s" } } });
 const animatedList = ItemList({ animated: 1, items: ["A", "B", "C"] });
@@ -96,7 +97,7 @@ const ItemListDefaults = {
     key: "0", // Your name for this object: read it in a callback (self.key)
     width: 600,
     height: 400, // "auto": grows with the rows (no scrolling)
-    items: [], // Strings or { key, title, desc, iconFile, searchText, disabled }. A title row: { type: "section", title: "VIEWS" }
+    items: [], // Strings or { key, text, description, iconFile, searchText, enabled }. A title row: { type: "section", text: "VIEWS" }
     layout: "vertical", // "vertical", "horizontal", "grid"
     selection: "single", // "single", "multiple", "none"
     selectedKeys: [], // The keys selected at create time
@@ -163,7 +164,7 @@ const ItemListDefaults = {
             selectedIconFilter: "grayscale(30%)",
             selectedFontFamily: "opensans-bold", // "": the font does not change
         },
-        // A section: an item { type: "section", title: "VIEWS" }, a title between the items
+        // A section: an item { type: "section", text: "VIEWS" }, a title between the items
         section: {
             height: "auto",
             padding: [20, 8],
@@ -277,7 +278,7 @@ const ItemList = function (params = {}) {
     };
 
     const toItemObject = function (item) {
-        if (typeof item === "string") return { title: item };
+        if (typeof item === "string") return { text: item };
         return item || {};
     };
 
@@ -305,7 +306,7 @@ const ItemList = function (params = {}) {
     };
 
     const isEntryEnabled = function (entry) {
-        return box.enabled == 1 && !basic.isOn(entry.data.disabled);
+        return box.enabled == 1 && (entry.data.enabled === undefined || basic.isOn(entry.data.enabled));
     };
 
     // single, style.selected.canSelectAgain: 0 (ozden): the selected row can not be chosen again.
@@ -344,7 +345,7 @@ const ItemList = function (params = {}) {
 
     const getSearchableText = function (entry) {
         const data = entry.data;
-        return normalizeText([data.title, data.desc, data.searchText].join(" "));
+        return normalizeText([data.text, data.description, data.searchText].join(" "));
     };
 
     const isMatch = function (entry) {
@@ -498,11 +499,11 @@ const ItemList = function (params = {}) {
         row.texts = VGroup({ width: isTile ? "100%" : "auto", height: "auto", align: isTile ? "center top" : "left center", gap: 0 });
         row.texts.css = { flex: isTile ? "" : "1 1 0", minWidth: "0", alignItems: "stretch" };
 
-            row.lblTitle = Label({ plainText: entry.data.title || "", width: "100%", fontSize: _s.title.fontSize, ellipsis: 1 });
+            row.lblTitle = Label({ plainText: entry.data.text || "", width: "100%", fontSize: _s.title.fontSize, ellipsis: 1 });
             if (_s.title.fontFamily) row.lblTitle.fontFamily = _s.title.fontFamily;
 
-            if (entry.data.desc) {
-                row.lblDesc = Label({ plainText: entry.data.desc, width: "100%", fontSize: _s.desc.fontSize, textColor: _s.desc.textColor, ellipsis: 1 });
+            if (entry.data.description) {
+                row.lblDesc = Label({ plainText: entry.data.description, width: "100%", fontSize: _s.desc.fontSize, textColor: _s.desc.textColor, ellipsis: 1 });
                 row.lblDesc.css.marginTop = (_s.desc.marginTop || 0) + "px";
             }
 
@@ -562,7 +563,7 @@ const ItemList = function (params = {}) {
         if (_s.row.boxShadow) row.boxShadow = _s.row.boxShadow;
         setStartMotion(row, entry);
         row.role = "option";
-        row.aria = { label: entry.data.title || entry.key };
+        row.aria = { label: entry.data.text || entry.key };
         row.setFocusRing(_s.focus.ringColor);
 
             createRowContent(row, entry, isTile);
@@ -589,7 +590,7 @@ const ItemList = function (params = {}) {
             if (typeof box.createSectionView === "function") {
                 box.createSectionView(entry.item, row, box);
             } else {
-                row.lblTitle = Label({ plainText: entry.data.title || "", width: width, fontSize: section.fontSize, textColor: section.textColor, ellipsis: 1 });
+                row.lblTitle = Label({ plainText: entry.data.text || "", width: width, fontSize: section.fontSize, textColor: section.textColor, ellipsis: 1 });
                 if (section.fontFamily) row.lblTitle.fontFamily = section.fontFamily;
             }
 
@@ -1152,7 +1153,7 @@ const ItemList = function (params = {}) {
         return event.key.length === 1 && !event.ctrlKey && !event.metaKey && !event.altKey;
     };
 
-    // Type-ahead: the letters typed one after the other move the focus to the next item whose title starts with them
+    // Type-ahead: the letters typed one after the other move the focus to the next item whose text starts with them
     // (Turkish letters without their marks). The same letter again goes on to the next item with that letter.
     const typeAhead = function (entry, letter, shown) {
         if (cancelTypedText) cancelTypedText();
@@ -1166,7 +1167,7 @@ const ItemList = function (params = {}) {
         // WHY: One letter starts after the focused row (the same letter goes on); a word may stay on it.
         const start = shown.indexOf(entry) + (isOneLetter ? 1 : 0);
         const ordered = shown.slice(start).concat(shown.slice(0, start));
-        const target = ordered.find(function (e) { return normalizeText(e.data.title).startsWith(word); });
+        const target = ordered.find(function (e) { return normalizeText(e.data.text).startsWith(word); });
         if (target) focusEntry(target);
     };
 
@@ -1260,7 +1261,7 @@ const ItemList = function (params = {}) {
         forgetAnchor();
         createRows();
     };
-    // USAGE: list.setItems([{ key: "a", title: "A" }, "B"]) // onChange is not called. Selected keys that are still there stay selected.
+    // USAGE: list.setItems([{ key: "a", text: "A" }, "B"]) // onChange is not called. Selected keys that are still there stay selected.
 
     box.getItems = function () {
         return entries.map(function (e) { return e.item; });
@@ -1303,7 +1304,7 @@ const ItemList = function (params = {}) {
             applySearch(isMotionOn());
         });
     };
-    // USAGE: list.addItem({ key: "x", title: "X" }) or list.addItem({ key: "y", title: "Y" }, 0)
+    // USAGE: list.addItem({ key: "x", text: "X" }) or list.addItem({ key: "y", text: "Y" }, 0)
 
     // silent: 1 -> onChange is not called (when the removed item was selected). Returns the removed item.
     // animated: 1 -> its row fades out, then it leaves and the rows under it move up. (The data changes at once.)
@@ -1337,7 +1338,7 @@ const ItemList = function (params = {}) {
         oldRow.remove();
         applySearch();
     };
-    // USAGE: list.updateItem("tomato", { desc: "Fruit", iconFile: "tomato.png" })
+    // USAGE: list.updateItem("tomato", { description: "Fruit", iconFile: "tomato.png" })
 
     box.getSelectedKeys = function () {
         return selectedKeys.slice();

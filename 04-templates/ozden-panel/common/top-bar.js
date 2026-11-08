@@ -63,11 +63,11 @@ const TopBar = function(params = {}) {
     const SHOW_SHORTCUTS_BUTTON = 0;
 
     // Panels of the select box on the left. Write the URL of the other panel to switch to it.
-    // USAGE: { id: "b", label: "B", url: "../other-panel/index.htm" }
+    // USAGE: { value: "b", label: "B", url: "../other-panel/index.htm" }
     const PANELS = [
-        { id: "a", label: "A", url: "" },
-        { id: "b", label: "B", url: "" },
-        { id: "c", label: "C", url: "" },
+        { value: "a", label: "A", url: "" },
+        { value: "b", label: "B", url: "" },
+        { value: "c", label: "C", url: "" },
     ];
 
     // Width of the search input by the page width. The first matching line is used.
@@ -151,7 +151,7 @@ const TopBar = function(params = {}) {
         addGroup("Pages", searchPages.filter(function(item) { return item.type == "button" && has(item.text); }).map(function(item) {
             return {
                 text: item.text,
-                desc: "Page",
+                description: "Page",
                 open: function() {
                     if (!item.dontSelect) leftMenu.setSelectedItem(item.key);
                     openPageByKey(item.key);
@@ -165,7 +165,7 @@ const TopBar = function(params = {}) {
             addGroup("Users", data.users.filter(function(user) { return has(user.name) || has(user.email); }).map(function(user) {
                 return {
                     text: user.name,
-                    desc: user.email + " · " + UserListPage.getRoleName(data, user.roleId),
+                    description: user.email + " · " + UserListPage.getRoleName(data, user.roleId),
                     open: function() { openMainPage(UserListPage.KEY, function() { UserListPage({ openUserId: user.id }); }); },
                 };
             }));
@@ -176,7 +176,7 @@ const TopBar = function(params = {}) {
             addGroup("Customers", CustomersPage.getCustomers().filter(function(c) { return has(c.name) || has(c.email); }).map(function(c) {
                 return {
                     text: c.name,
-                    desc: c.email + " · " + c.orderCount + " orders · " + OrdersPage.formatMoney(c.totalSpent),
+                    description: c.email + " · " + c.orderCount + " orders · " + OrdersPage.formatMoney(c.totalSpent),
                     open: function() { openMainPage(CustomersPage.KEY, function() { CustomersPage({ openCustomerId: c.id }); }); },
                 };
             }));
@@ -187,7 +187,7 @@ const TopBar = function(params = {}) {
             addGroup("Orders", OrdersPage.getOrders().filter(function(order) { return has(order.id) || has(order.customer.name); }).map(function(order) {
                 return {
                     text: order.id + " · " + order.customer.name,
-                    desc: OrdersPage.formatMoney(order.total) + " · " + OrdersPage.STATUSES[order.status].label + " · " + OrdersPage.formatDateTime(order.time),
+                    description: OrdersPage.formatMoney(order.total) + " · " + OrdersPage.STATUSES[order.status].label + " · " + OrdersPage.formatDateTime(order.time),
                     open: function() { openMainPage(OrdersPage.KEY, function() { OrdersPage({ openOrderId: order.id }); }); },
                 };
             }));
@@ -198,7 +198,7 @@ const TopBar = function(params = {}) {
             addGroup("Contents", ContentsPage.getContents().filter(function(content) { return has(content.title) || has(content.slug); }).map(function(content) {
                 return {
                     text: content.title,
-                    desc: ContentsPage.TYPES[content.type].label + " · " + ContentsPage.STATUSES[content.status].label + " · " + ContentsPage.TYPES[content.type].path + content.slug,
+                    description: ContentsPage.TYPES[content.type].label + " · " + ContentsPage.STATUSES[content.status].label + " · " + ContentsPage.TYPES[content.type].path + content.slug,
                     open: function() { openMainPage(ContentsPage.KEY, function() { ContentsPage({ openContentId: content.id }); }); },
                 };
             }));
@@ -209,7 +209,7 @@ const TopBar = function(params = {}) {
             addGroup("Products", ProductsPage.getProducts().filter(function(product) { return has(product.name) || has(product.sku); }).map(function(product) {
                 return {
                     text: product.name,
-                    desc: product.sku + " · " + ProductsPage.formatMoney(product.price),
+                    description: product.sku + " · " + ProductsPage.formatMoney(product.price),
                     open: function() { openMainPage(ProductsPage.KEY, function() { ProductsPage({ openProductId: product.id }); }); },
                 };
             }));

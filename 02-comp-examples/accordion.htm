@@ -47,9 +47,9 @@
             },
         };
         const QUESTIONS = [
-            { key: "install", title: "How do I install it?", answer: "Copy the files of the library next to your page. There is nothing to build.", opened: 1 },
-            { key: "internet", title: "Does it need the internet?", answer: "No. The library and its components are files of your page." },
-            { key: "long", title: "A long question stays on one line, and the end of it is cut with an ellipsis", answer: "The whole question is the title of the section." },
+            { key: "install", text: "How do I install it?", answer: "Copy the files of the library next to your page. There is nothing to build.", opened: 1 },
+            { key: "internet", text: "Does it need the internet?", answer: "No. The library and its components are files of your page." },
+            { key: "long", text: "A long question stays on one line, and the end of it is cut with an ellipsis", answer: "The whole question is the title of the section." },
         ];
 
         let accordions = [];
@@ -136,9 +136,9 @@
             const settings = Accordion({
                 styleName: styleName,
                 sections: [
-                    { key: "account", title: "Account", icon: USER_ICON, opened: 1 },
-                    { key: "notifications", title: "Notifications", icon: BELL_ICON, note: "2 on" },
-                    { key: "locked", title: "Only for admins", disabled: 1 },
+                    { key: "account", text: "Account", icon: USER_ICON, opened: 1 },
+                    { key: "notifications", text: "Notifications", icon: BELL_ICON, description: "2 on" },
+                    { key: "locked", text: "Only for admins", enabled: 0 },
                 ],
                 onToggle: function (self, section) { println(styleName + ": " + section.key + " " + section.opened); },
             });

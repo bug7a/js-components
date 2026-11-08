@@ -174,8 +174,8 @@ const JsonView = function (params = {}) {
             key: JsonView.pathText(path),
             text: String(label),
             textColor: (typeof label === "number") ? _s.kinds.index : _s.kinds.key,
-            note: JsonView.valueText(value, kind),
-            noteColor: _s.kinds[kind],
+            description: JsonView.valueText(value, kind),
+            descriptionColor: _s.kinds[kind],
             data: { kind: kind, path: path, value: value },
         };
         if (kind !== "object" && kind !== "array") return node;

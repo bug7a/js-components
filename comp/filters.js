@@ -22,11 +22,11 @@ UI COMPONENT
 USAGE:
 const filters = Filters({
     sections: [
-        { key: "type", titleText: "Type", opened: 1, options: [
-            { key: "car", labelText: "Car" },
-            { key: "truck", labelText: "Truck", checked: 1 },
+        { key: "type", text: "Type", opened: 1, options: [
+            { key: "car", text: "Car" },
+            { key: "truck", text: "Truck", checked: 1 },
         ] },
-        { key: "status", titleText: "Status", opened: 0, options: ["Online", "Offline"] }, // a text: its key is the text
+        { key: "status", text: "Status", opened: 0, options: ["Online", "Offline"] }, // a text: its key is the text
     ],
     onChange: function (self) { println(JSON.stringify(self.getSelected())); }, // { type: ["truck"], status: [] }
 });
@@ -69,7 +69,7 @@ const FiltersDefaults = {
     selectedText: "Selected",
     clearText: "Clear all",
     noResultText: "No results",
-    // [{ key, titleText, opened, options: [{ key, labelText, checked }] or ["text"] }]
+    // [{ key, text, opened, options: [{ key, text, checked }] or ["text"] }]
     sections: [],
     animated: 0, // 1: the panel and an opened section come in, the arrows turn (box.setAnimated(0/1))
     // The search field: the params of its SearchInput (comp/search-input.js). Its
@@ -175,7 +175,7 @@ const Filters = function (params = {}) {
 
     const matchesSearch = function (option) {
         if (!searchText) return true;
-        return option.labelText.toLocaleLowerCase().indexOf(searchText) !== -1;
+        return option.text.toLocaleLowerCase().indexOf(searchText) !== -1;
     };
 
     // *** MOTION
@@ -283,7 +283,7 @@ const Filters = function (params = {}) {
         const checkBox = CheckBox(Object.assign({}, box.checkBoxParams, {
             width: "100%",
             height: _s.row.height,
-            labelText: basic.escapeHtml(option.labelText), // WHY: the label of a CheckBox is HTML
+            labelText: basic.escapeHtml(option.text), // WHY: the label of a CheckBox is HTML
             checked: option.checked ? 1 : 0,
             animated: (box.checkBoxParams.animated !== undefined) ? box.checkBoxParams.animated : box.animated,
             style: checkBoxStyle,
@@ -312,7 +312,7 @@ const Filters = function (params = {}) {
             check.shrink = 0;
                 const mark = createIcon(Filters.icon("check", MARK_SIZE, 3), _s.check.markColor);
             endGroup();
-            Label({ plainText: option.labelText, fontSize: _s.fontSize, textColor: _s.textColor });
+            Label({ plainText: option.text, fontSize: _s.fontSize, textColor: _s.textColor });
         endGroup();
         const rowView = { option: option, row: row, check: check, mark: mark };
         row.onHoverChange(function (self, isOver) { row.color = (isOver) ? _s.row.hoverColor : _s.row.color; });
@@ -338,7 +338,7 @@ const Filters = function (params = {}) {
         view.header.cursor = "pointer";
         view.header.role = "button";
         view.header.tabIndex = 0;
-            Label({ plainText: section.titleText, fontSize: _s.fontSize, textColor: _s.softTextColor });
+            Label({ plainText: section.text, fontSize: _s.fontSize, textColor: _s.softTextColor });
             view.lblCount = createBadge();
             createSpace();
             view.lblArrow = createIcon("", _s.textColor);
@@ -748,14 +748,14 @@ const Filters = function (params = {}) {
 
 // *** STATIC FUNCTIONS:
 
-// The sections with every value filled: keys as texts, opened / checked as 1 / 0, a text option -> { key, labelText }.
+// The sections with every value filled: keys as texts, opened / checked as 1 / 0, a text option -> { key, text }.
 Filters.normalizeSections = function (sections) {
     return (Array.isArray(sections) ? sections : []).map(function (section, index) {
         const options = (Array.isArray(section.options) ? section.options : []).map(function (option) {
-            if (typeof option !== "object") return { key: String(option), labelText: String(option), checked: 0 };
-            return { key: String(option.key !== undefined ? option.key : option.labelText), labelText: String(option.labelText || ""), checked: option.checked ? 1 : 0 };
+            if (typeof option !== "object") return { key: String(option), text: String(option), checked: 0 };
+            return { key: String(option.key !== undefined ? option.key : option.text), text: String(option.text || ""), checked: option.checked ? 1 : 0 };
         });
-        return { key: String(section.key !== undefined ? section.key : index), titleText: String(section.titleText || ""), opened: section.opened ? 1 : 0, options: options };
+        return { key: String(section.key !== undefined ? section.key : index), text: String(section.text || ""), opened: section.opened ? 1 : 0, options: options };
     });
 };
 

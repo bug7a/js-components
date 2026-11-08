@@ -7,7 +7,7 @@ StepBar - v26.11
 UI COMPONENT
 - The steps of a job in a row: a cart, an address, a payment, done. A step that is behind has a check mark, the step of
   now is filled, the next ones are empty; a line joins them.
-- A step: a text, or { key, title, note }. Its title is plain text.
+- A step: a text, or { key, text, description }. Plain texts (never HTML). style.title and style.note are their look.
 - canGoBack: 1: a click (or Enter) on a step that is behind calls onStepClick(self, index); the page decides to go
   back with setStep(index). A step that is not reached yet can not be clicked.
 - A narrow screen: the titles get thinner and wrap; showTitles: 0 leaves only the circles.
@@ -18,7 +18,7 @@ UI COMPONENT
 USAGE:
 const steps = StepBar({
     width: "100%",
-    steps: ["Cart", "Address", { title: "Payment", note: "Card or cash" }, "Done"],
+    steps: ["Cart", "Address", { text: "Payment", description: "Card or cash" }, "Done"],
     currentStep: 1,
     onStepClick: function (self, index) { self.setStep(index); },
 });
@@ -45,7 +45,7 @@ const StepBarDefaults = {
     top: 0,
     width: "100%",
     height: "auto",
-    steps: [], // [STEP]: a text or { key, title, note }
+    steps: [], // [STEP]: a text or { key, text, description }
     currentStep: 0, // The step of now, from 0. steps.length: every step is done.
     canGoBack: 1, // 1: a step that is behind can be clicked (onStepClick)
     showTitles: 1,
@@ -102,8 +102,8 @@ const StepBar = function (params = {}) {
     };
 
     const toStep = function (step, index) {
-        if (typeof step != "object" || step === null) return { key: String(index), title: String(step), note: "" };
-        return { key: (step.key === undefined) ? String(index) : String(step.key), title: String(step.title || ""), note: String(step.note || "") };
+        if (typeof step != "object" || step === null) return { key: String(index), text: String(step), description: "" };
+        return { key: (step.key === undefined) ? String(index) : String(step.key), text: String(step.text || ""), description: String(step.description || "") };
     };
 
     const stateOf = function (index) {
@@ -133,7 +133,7 @@ const StepBar = function (params = {}) {
         part.column.cursor = canClick(index) ? "pointer" : "default";
         part.column.tabIndex = canClick(index) ? 0 : -1;
         part.column.role = canClick(index) ? "button" : "listitem";
-        part.column.aria = { current: (state === "current") ? "step" : null, label: (index + 1) + ". " + part.step.title };
+        part.column.aria = { current: (state === "current") ? "step" : null, label: (index + 1) + ". " + part.step.text };
     };
 
     const paintParts = function () {
@@ -160,7 +160,7 @@ const StepBar = function (params = {}) {
         part.lineAfter.visible = (index < parts.length - 1) ? 1 : 0;
         part.lblTitle.props({ fontSize: _s.title.fontSize, visible: box.showTitles });
         part.lblTitle.css.marginTop = _s.title.space + "px";
-        part.lblNote.props({ fontSize: _s.note.fontSize, textColor: _s.colors.note, visible: (box.showTitles == 1 && part.step.note !== "") ? 1 : 0 });
+        part.lblNote.props({ fontSize: _s.note.fontSize, textColor: _s.colors.note, visible: (box.showTitles == 1 && part.step.description !== "") ? 1 : 0 });
         applyFocusRing(part);
     };
 
@@ -178,7 +178,7 @@ const StepBar = function (params = {}) {
 
     const createPart = function (step, index) {
         const part = { step: step, isHovered: 0 };
-        // GROUP: A step: its circle, its title and its note
+        // GROUP: A step: its circle, its text and its description
         part.column = VGroup({ width: "auto", height: "auto", align: "center top", position: "relative", clipContent: 0, css: { flex: "1 1 0", minWidth: "0" } });
             // BOX: The lines to the steps before and after. WHY two halves: each step draws its own part of the line.
             // WHY absolute: in a group a box takes its place in the flow and pushes the circle down.
@@ -187,9 +187,9 @@ const StepBar = function (params = {}) {
             part.circle = Label({ text: "", textAlign: "center", css: { display: "flex", alignItems: "center", justifyContent: "center", boxSizing: "border-box", flexShrink: "0" } });
             part.circle.elem.classList.add("step-bar-circle");
             part.lblTitle = Label({ width: "100%", textAlign: "center", css: { overflowWrap: "break-word", padding: "0 4px", boxSizing: "border-box" } });
-            part.lblTitle.plainText = step.title;
+            part.lblTitle.plainText = step.text;
             part.lblNote = Label({ width: "100%", textAlign: "center", css: { overflowWrap: "break-word", padding: "0 4px", boxSizing: "border-box", marginTop: "2px" } });
-            part.lblNote.plainText = step.note;
+            part.lblNote.plainText = step.description;
         endGroup();
         part.column.on("click", function () { onPartClick(index); });
         part.column.on("keydown", function (self, event) {

@@ -99,7 +99,7 @@ App.addPage({
         productList = ItemList({
             width: "100%",
             height: "calc(100% - " + SEARCH_AREA_HEIGHT + "px)",
-            items: ProductData.map((product) => ({ key: product.key, title: product.title, desc: product.type, product: product })),
+            items: ProductData.map((product) => ({ key: product.key, text: product.title, description: product.type, product: product })),
             selection: "single",
             scrollToSelected: 0,
             style: {

@@ -389,7 +389,7 @@
 
                     boardSelect = TinySelect({
                         titleText: "Board",
-                        list: BOARDS.map(function (b) { return { id: b.id, label: b.name }; }),
+                        list: BOARDS.map(function (b) { return { value: b.id, label: b.name }; }),
                         height: 40, fontSize: 15, color: CARD_COLOR, border: 1, borderColor: CARD_BORDER_COLOR, round: 8,
                         labelTextColor: Ink(0.95),
                         arrowIconFile: LIB_PATH + "comp/tiny-select/arrow.svg", arrowSize: 20, invertIconColor: T.invertIcon,

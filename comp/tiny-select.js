@@ -22,8 +22,8 @@ SPDX-License-Identifier: Apache-2.0
 // Default values
 const TinySelectDefaults = {
     titleText: "",
-    list: [], // [{ id: "1", label: "(none)" },]
-    onChange: function(self) {}, // Another item is chosen: self.selectedIndex, self.getSelectedItem() ({ id, label }). Not at create time; setSelectedIndex(index) calls it, setSelectedIndex(index, 1) does not.
+    list: [], // [{ value: "1", label: "(none)" },]
+    onChange: function(self) {}, // Another item is chosen: self.selectedIndex, self.getSelectedItem() ({ value, label }). Not at create time; setSelectedIndex(index) calls it, setSelectedIndex(index, 1) does not.
     selectedIndex: 0,
     fontSize: 20,
     border: 0,
@@ -70,10 +70,10 @@ const TinySelect = function(params = {}) {
     /*
         - the list again, and the item of the given index selected
 
-        list: [{ id: "1", label: "(none)" },]
+        list: [{ value: "1", label: "(none)" },]
         selectedIndex: 0
 
-        object.setList([{ id: "1", label: "(none)" },], 0);
+        object.setList([{ value: "1", label: "(none)" },], 0);
 
     */
     box.setList = function(list, selectedIndex = 0) {
@@ -117,15 +117,16 @@ const TinySelect = function(params = {}) {
     };
     // USAGE: tinySelect.setEnabled(0)
 
-    // The chosen item ({ id, label }), or null
+    // The chosen item ({ value, label }), or null
     box.getSelectedItem = function() {
         return box.list[box.selectedIndex] || null;
     };
     // USAGE: const item = tinySelect.getSelectedItem();
 
-    box.getIndexById = function(id) {
-        return box.list.findIndex(item => item.id === id);
+    box.getIndexByValue = function(value) {
+        return box.list.findIndex(item => item.value === value);
     };
+    // USAGE: tinySelect.setSelectedIndex(tinySelect.getIndexByValue("tr"))
 
     box.setColor = function(color) {
         box.color = color;

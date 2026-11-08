@@ -455,7 +455,7 @@ App.createMenu = function () {
         ItemList({
             width: "100%",
             height: "auto",
-            items: AppSettings.menu.map((item) => ({ key: item.pageId, title: item.title, desc: item.desc, iconFile: item.iconFile })),
+            items: AppSettings.menu.map((item) => ({ key: item.pageId, text: item.text, description: item.description, iconFile: item.iconFile })),
             selection: "none",
             styleName: "modern",
             style: { box: { border: 0 } },

@@ -6,7 +6,7 @@ TreeView - v26.10
 
 UI COMPONENT TEMPLATE
 - A tree of nested items: a file explorer, a category tree, the menu of an admin panel, the layers of a design tool.
-- One row is one Label (an arrow, an optional icon, the text, a tag and a soft note in it), so a tree of
+- One row is one Label (an arrow, an optional icon, the text, a tag and a soft description in it), so a tree of
   thousands of rows stays light.
 - Only the changed branch is drawn again: the children of a closed item are created the first time it opens,
   closing only hides them. updateNode() paints one row, setChildren() draws one branch.
@@ -23,10 +23,11 @@ UI COMPONENT TEMPLATE
 - Style packages: "light" (default; the old name "classic" works too), "modern", "dark", "minimal", "minimalDark". Select with styleName. (TreeView.styles)
 - Everything is drawn with code (no image files needed).
 
-NODE: { key, text, iconFile, tag, tagColor, note, noteColor, textColor, children, expanded, hasChildren, disabled, data }
+NODE: { key, text, iconFile, tag, tagColor, description, descriptionColor, textColor, children, expanded, hasChildren, enabled, data }
 - text: Plain text (never read as HTML).
 - tag: A short second text after the text, in the accent color (Ex: the type of a layer). tagColor: its own color.
-- note: A soft text at the end (Ex: a size, a count, a preview). noteColor: its own color.
+- description: A soft text at the end (Ex: a size, a count, a preview). descriptionColor: its own color. style.note is
+  its look. enabled: 0 -> it can not be selected or opened.
 - iconFile: An image (a file or a data:image/svg+xml URI).
 - children: [NODE]. expanded: 1 -> open. hasChildren: 1 -> an arrow without children (lazy, see onLoadChildren).
 - data: Anything of yours. It is kept by reference.
@@ -38,7 +39,7 @@ const tree = TreeView({
     height: 400,
     items: [
         { key: "src", text: "src", expanded: 1, children: [
-            { key: "src/app.js", text: "app.js", note: "4 KB" },
+            { key: "src/app.js", text: "app.js", description: "4 KB" },
             { key: "src/lib", text: "lib", children: ["a.js", "b.js"] },
         ] },
         { key: "readme", text: "readme.md" },
@@ -48,7 +49,7 @@ const tree = TreeView({
     onActivate: function (self, node) { println("open " + node.key); },
 });
 tree.setValue("readme");                         // onSelect is called
-tree.updateNode("readme", { note: "changed" });  // paints one row
+tree.updateNode("readme", { description: "changed" });  // paints one row
 tree.setChildren("src/lib", ["c.js"]);           // draws one branch
 tree.addNode("src", { key: "src/new.js", text: "new.js" });
 tree.removeNode("readme");
@@ -99,7 +100,7 @@ const TreeViewDefaults = {
             indent: 16, // Per level
             paddingLeft: 4,
             paddingRight: 8,
-            gap: 6, // Between the arrow, the icon, the text, the tag and the note
+            gap: 6, // Between the arrow, the icon, the text, the tag and the description
             round: 5,
             border: 0, // px: an edge around every row (its color: borderColor, rowHover / rowSelected.borderColor). 0: none
             borderColor: "transparent",
@@ -196,6 +197,11 @@ const TreeView = function (params = {}) {
         return value !== undefined && value !== null && value !== "";
     };
 
+    // enabled: 0 -> the node can not be selected or opened (a node without it is enabled)
+    const isNodeDisabled = function (node) {
+        return node.enabled !== undefined && !basic.isOn(node.enabled);
+    };
+
     // A <span> with inline styles. styles: ["flex:0 0 auto", "color:red"]
     const span = function (styles, content, attributes = "") {
         return "<span" + attributes + ' style="' + styles.join(";") + '">' + content + "</span>";
@@ -279,20 +285,20 @@ const TreeView = function (params = {}) {
         return span(styles, escapeText(node.tag));
     };
 
-    const getNoteHtml = function (node) {
+    const getDescriptionHtml = function (node) {
         const styles = [
             "margin-left:" + _s.row.gap + "px",
             "flex:0 1 auto",
             "min-width:0",
             "overflow:hidden",
             "text-overflow:ellipsis",
-            "color:" + escapeText(node.noteColor || _s.note.textColor),
+            "color:" + escapeText(node.descriptionColor || _s.note.textColor),
             "font-size:" + _s.note.fontSize + "px",
         ];
-        return span(styles, escapeText(node.note));
+        return span(styles, escapeText(node.description));
     };
 
-    // The inside of a row: arrow, icon, text, tag, note.
+    // The inside of a row: arrow, icon, text, tag, description.
     // WHY: One Label with HTML, not one object for each part: a tree of thousands of rows stays light.
     const getRowHtml = function (rec) {
         const node = rec.node;
@@ -300,7 +306,7 @@ const TreeView = function (params = {}) {
         if (node.iconFile) html += getIconHtml(node);
         html += getTextHtml(node);
         if (isFilled(node.tag)) html += getTagHtml(node);
-        if (isFilled(node.note)) html += getNoteHtml(node);
+        if (isFilled(node.description)) html += getDescriptionHtml(node);
         return html;
     };
 
@@ -324,17 +330,17 @@ const TreeView = function (params = {}) {
         const node = rec.node;
         const row = rec.row;
         const isSelected = (node.key === box.value);
-        const isHover = (rec === hoverRec) && !isSelected && !node.disabled;
+        const isHover = (rec === hoverRec) && !isSelected && !isNodeDisabled(node);
 
         row.color = getRowColor(isSelected, isHover);
         if (_s.row.border) row.borderColor = getRowEdge(isSelected, isHover);
         row.textColor = (isSelected) ? _s.rowSelected.textColor : _s.row.textColor;
-        row.opacity = (node.disabled) ? _s.disabled.opacity : 1;
+        row.opacity = (isNodeDisabled(node)) ? _s.disabled.opacity : 1;
         row.boxShadow = (isSelected && hasFocus && isKeyFocus) ? "inset 0 0 0 1px " + _s.rowFocus.outlineColor : "none";
 
         row.aria = {
             selected: isSelected,
-            disabled: (node.disabled) ? true : false,
+            disabled: (isNodeDisabled(node)) ? true : false,
             expanded: (canExpand(rec)) ? isOpen(rec) : null, // null: a leaf has no aria-expanded
         };
 
@@ -501,7 +507,7 @@ const TreeView = function (params = {}) {
     };
 
     const getEnabledVisibleRecs = function () {
-        return getVisibleRecs().filter(function (rec) { return !rec.node.disabled; });
+        return getVisibleRecs().filter(function (rec) { return !isNodeDisabled(rec.node); });
     };
 
     const scrollRowIntoView = function (rec) {
@@ -567,7 +573,7 @@ const TreeView = function (params = {}) {
 
     // fromUser: onSelect is called. (Not for silent.)
     const selectRec = function (rec, fromUser) {
-        if (!rec || rec.node.disabled) return;
+        if (!rec || isNodeDisabled(rec.node)) return;
         if (rec.node.key === box.value) return;
         const oldRec = recs.get(box.value);
         box.previousValue = box.value;
@@ -580,7 +586,7 @@ const TreeView = function (params = {}) {
     };
 
     const activateRec = function (rec, event) {
-        if (!rec || rec.node.disabled) return;
+        if (!rec || isNodeDisabled(rec.node)) return;
         box.onActivate(box, rec.node, event);
     };
 
@@ -610,7 +616,7 @@ const TreeView = function (params = {}) {
             return;
         }
         if (!isOpen(current) || !current.children) return;
-        const firstChild = current.children.find(function (child) { return !child.node.disabled; });
+        const firstChild = current.children.find(function (child) { return !isNodeDisabled(child.node); });
         selectRec(firstChild, 1);
     };
 
@@ -1050,7 +1056,7 @@ const TreeView = function (params = {}) {
     box.listArea.on("dblclick", function (self, event) {
         if (box.enabled != 1) return;
         const rec = getRecOfEvent(event);
-        if (!rec || isArrowEvent(event) || rec.node.disabled) return;
+        if (!rec || isArrowEvent(event) || isNodeDisabled(rec.node)) return;
         if (canExpand(rec) && box.toggleOnDoubleClick == 1) setExpanded(rec, !isOpen(rec), 1);
         activateRec(rec, event);
     });

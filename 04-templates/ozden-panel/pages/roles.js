@@ -464,7 +464,7 @@ const RolesPage = function(params = {}) {
         // Add member: users that are not in the draft
         const others = data.users.filter(function(user) { return !draft.memberIds.includes(user.id); });
         isRendering = 1;
-        addMemberSelect.setList([{ id: "", label: "Add a member..." }].concat(others.map(function(user) {
+        addMemberSelect.setList([{ value: "", label: "Add a member..." }].concat(others.map(function(user) {
             const role = getRole(user.roleId);
             return { id: String(user.id), label: escapeHtml(user.name + " (" + ((role) ? role.name : "—") + ")") };
         })), 0);
@@ -883,7 +883,7 @@ const RolesPage = function(params = {}) {
                 endGroup();
 
                 addMemberSelect = TinySelect({
-                    list: [{ id: "", label: "Add a member..." }],
+                    list: [{ value: "", label: "Add a member..." }],
                     height: 40,
                     fontSize: 14,
                     color: FIELD_COLOR,
@@ -901,7 +901,7 @@ const RolesPage = function(params = {}) {
                     listBackgroundColor: FIELD_COLOR,
                     listBorderColor: Ink(0.15),
                     onChange: function(self) {
-                        const id = self.getSelectedItem().id;
+                        const id = self.getSelectedItem().value;
                         if (isRendering || !id || !draft) return;
                         draft.memberIds.push(Number(id));
                         renderMembers();

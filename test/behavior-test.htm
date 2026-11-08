@@ -355,7 +355,7 @@
         });
 
         test("SortableList: a drag puts a row at the very top and at the very bottom (also a taller row)", async function () {
-            const list = SortableList({ width: 300, height: "auto", dragBy: "row", items: ["One", { key: "Two", text: "Two", desc: "A taller row" }, "Three", "Four"] });
+            const list = SortableList({ width: 300, height: "auto", dragBy: "row", items: ["One", { key: "Two", text: "Two", description: "A taller row" }, "Three", "Four"] });
             await wait(50);
             // The pointer goes far past the edge of the list: the row stops at the edge.
             const dragRow = async function (text, distance) {
@@ -2307,8 +2307,8 @@
 
         test("ItemList: a section is shown while one of its items matches", async function () {
             const list = ItemList({ width: 300, height: 400, items: [
-                { type: "section", key: "fruits", title: "FRUITS" }, "Apple", "Banana",
-                { type: "section", key: "vegetables", title: "VEGETABLES" }, "Carrot",
+                { type: "section", key: "fruits", text: "FRUITS" }, "Apple", "Banana",
+                { type: "section", key: "vegetables", text: "VEGETABLES" }, "Carrot",
             ] });
             const count = list.search("carr"); // the count of the items (the sections are not counted)
             const fruits = list.getRow("fruits").visible;
@@ -2592,8 +2592,8 @@
         // *** TOGGLE (comp/toggle.js)
 
         const FILTER_SECTIONS = [
-            { key: "type", titleText: "Type", opened: 1, options: [{ key: "car", labelText: "Car" }, { key: "bus", labelText: "Bus", checked: 1 }] },
-            { key: "fleet", titleText: "Fleet", opened: 0, options: ["North", "South"] },
+            { key: "type", text: "Type", opened: 1, options: [{ key: "car", text: "Car" }, { key: "bus", text: "Bus", checked: 1 }] },
+            { key: "fleet", text: "Fleet", opened: 0, options: ["North", "South"] },
         ];
 
         test("Filters: the selection, onChange, silent and Clear all", async function () {
@@ -3334,8 +3334,8 @@
             });
             const list = ItemList({
                 width: 300, height: 200, style: { row: { height: "auto" } },
-                items: [{ key: "a", title: "Apple" }],
-                createItemView: function (item) { fields.push(Input({ width: 200, height: 32, text: item.title, position: "relative" })); },
+                items: [{ key: "a", text: "Apple" }],
+                createItemView: function (item) { fields.push(Input({ width: 200, height: 32, text: item.text, position: "relative" })); },
             });
             await wait(50);
             key(fields[0].inputElement, "keydown", "Backspace");
@@ -3559,7 +3559,7 @@
         test("SearchResults: under a field low on the screen the list stays on the screen", async function () {
             const field = SearchInput({ left: 20, top: page.height - 90, width: 360 });
             const items = [];
-            for (let i = 1; i <= 8; i++) items.push({ text: "Result " + i, desc: "description " + i });
+            for (let i = 1; i <= 8; i++) items.push({ text: "Result " + i, description: "description " + i });
             const results = SearchResults({ anchor: field, anchorAlign: "left" });
             results.setItems(items, "res");
             results.open();
@@ -3587,7 +3587,7 @@
         });
 
         test("TinySelect: the list of a field near the bottom of the page is on the page", async function () {
-            const select = TinySelect({ left: 100, top: page.height - 50, list: [1, 2, 3, 4, 5].map(function (n) { return { id: String(n), label: "Item " + n }; }) });
+            const select = TinySelect({ left: 100, top: page.height - 50, list: [1, 2, 3, 4, 5].map(function (n) { return { value: String(n), label: "Item " + n }; }) });
             TinySelect.createList(select);
             const last = Array.from(document.querySelectorAll("div")).find(function (el) { return el.childElementCount === 0 && el.textContent === "Item 5"; });
             const bottom = last.getBoundingClientRect().bottom;
@@ -6573,7 +6573,7 @@
             await wait(30);
             const texts = ["name", "age", "ok", "none", "list", "list[0]", "list[1]", "empty", "emptyList", "sub", "sub.deep", '["odd key"]'].map(function (key) { return jsonRowText(view, key); }).join("|");
             const expected = 'name"Ada"|age36|oktrue|nonenull|list[2]|01|1"b"|empty{0}|emptyList[0]|sub{1}|deep{1}|odd key1';
-            const colorOf = function (key) { return view.tree.getNode(key).noteColor; };
+            const colorOf = function (key) { return view.tree.getNode(key).descriptionColor; };
             const colors = [colorOf("name"), colorOf("age"), colorOf("ok"), colorOf("none")].join();
             const style = view.style.kinds;
             const isLazy = (view.tree.getNode("sub.deep.deeper") === null);
@@ -6777,7 +6777,7 @@
             view.setTheme("dark");
             const replaced = [oldTree.isRemoved, oldMenu.isRemoved, view.menu.styleName].join();
             const stays = [view.tree.getRowElem("a.b") === null || view.tree.getRowElem("a.b").getClientRects().length === 0, jsonRowText(view, "c.d"), view.getSelectedPathText(), view.tree.listArea.elem.scrollTop].join();
-            const colors = [view.elem.style.backgroundColor !== lightGround, view.tree.getNode("c").textColor === JsonView.styles.dark.kinds.key, view.tree.getNode("c.d").noteColor].join();
+            const colors = [view.elem.style.backgroundColor !== lightGround, view.tree.getNode("c").textColor === JsonView.styles.dark.kinds.key, view.tree.getNode("c.d").descriptionColor].join();
             const font = getComputedStyle(view.tree.getRowElem("c")).fontFamily.includes("monospace");
             mouseClick(view.tree.getRowElem("c"));
             const stillWorks = view.getSelectedPathText();
@@ -6875,13 +6875,13 @@
             check("TreeView: the text of an empty tree stands inside the tree, also the error of a JsonView", empty && error, [empty, error].join(" | "));
         });
 
-        test("TreeView: noteColor paints a note, getNodeOfEvent() finds the row of an event", async function () {
-            const tree = TreeView({ left: 0, top: 0, width: 300, height: 200, items: [{ key: "a", text: "A", note: "n", noteColor: "red" }, { key: "b", text: "B", note: "m" }] });
+        test("TreeView: descriptionColor paints a description, getNodeOfEvent() finds the row of an event", async function () {
+            const tree = TreeView({ left: 0, top: 0, width: 300, height: 200, items: [{ key: "a", text: "A", description: "n", descriptionColor: "red" }, { key: "b", text: "B", description: "m" }] });
             await wait(20);
             const noteOf = function (key) { return tree.getRowElem(key).lastElementChild; };
             const colored = noteOf("a").style.color;
             const plainColor = noteOf("b").style.color;
-            tree.updateNode("b", { noteColor: "blue" });
+            tree.updateNode("b", { descriptionColor: "blue" });
             const updated = noteOf("b").style.color;
             let found = null;
             tree.listArea.on("mousemove", function (self, event) { found = tree.getNodeOfEvent(event); });
@@ -6889,7 +6889,7 @@
             const onRow = (found) ? found.key : "";
             tree.listArea.elem.dispatchEvent(new MouseEvent("mousemove", { bubbles: true }));
             const onEmpty = found;
-            check("TreeView: noteColor paints a note, getNodeOfEvent() finds the row of an event",
+            check("TreeView: descriptionColor paints a description, getNodeOfEvent() finds the row of an event",
                 colored === "red" && plainColor !== "red" && updated === "blue" && onRow === "b" && onEmpty === null,
                 [colored, plainColor, updated, onRow, onEmpty].join(" | "));
             tree.remove();
@@ -7551,7 +7551,7 @@
         // *** STEP BAR (comp/step-bar.js)
 
         test("StepBar: behind, now and not reached; the lines join the circles; setStep(), next(), previous() stay in range", async function () {
-            const bar = StepBar({ left: 0, top: 0, width: 400, steps: ["Cart", { key: "a", title: "<b>Address</b>", note: "Street" }, "Pay", "Done"], currentStep: 1 });
+            const bar = StepBar({ left: 0, top: 0, width: 400, steps: ["Cart", { key: "a", text: "<b>Address</b>", description: "Street" }, "Pay", "Done"], currentStep: 1 });
             await wait(20);
             const columns = Array.from(bar.row.elem.children);
             const circleText = function (index) { return columns[index].querySelector("svg") ? "check" : columns[index].children[2].textContent; };
@@ -7640,21 +7640,21 @@
             [plain, minimal, own].forEach(function (line) { line.remove(); });
         });
 
-        test("TimeLine: a text item has only its title, at the top as in an object item (an empty time label and its gap moved it 2 px down)", async function () {
-            const line = TimeLine({ width: 300, items: ["A text item", { title: "An object item" }] });
+        test("TimeLine: a text item has only its text, at the top as in an object item (an empty time label and its gap moved it 2 px down)", async function () {
+            const line = TimeLine({ width: 300, items: ["A text item", { text: "An object item" }] });
             await basic.nextFrame();
             const textsOf = function (index) { return line.content.elem.children[index].children[1]; };
             const titleTopOf = function (index) { return textsOf(index).firstElementChild.getBoundingClientRect().top - textsOf(index).getBoundingClientRect().top; };
             const labelCounts = [textsOf(0).children.length, textsOf(1).children.length].join();
             const titleTops = [titleTopOf(0), titleTopOf(1)].join();
-            check("TimeLine: a text item has only its title, at the top as in an object item", labelCounts === "1,1" && titleTops === "0,0", labelCounts + " | " + titleTops);
+            check("TimeLine: a text item has only its text, at the top as in an object item", labelCounts === "1,1" && titleTops === "0,0", labelCounts + " | " + titleTops);
             line.remove();
         });
 
         // *** ITEM LIST: the gallery packages (comp/item-list.js)
 
         test("ItemList gallery: a photo fills its square with no filter, the selected one does not grow, two tiles in a row on a phone", async function () {
-            const ITEMS = [{ key: "a", title: "A", iconFile: "../assets/cards/olives.png" }, { key: "b", title: "B", iconFile: "../assets/cards/dill.png" }];
+            const ITEMS = [{ key: "a", text: "A", iconFile: "../assets/cards/olives.png" }, { key: "b", text: "B", iconFile: "../assets/cards/dill.png" }];
             const lookOf = function (styleName) {
                 const list = ItemList({ left: 0, top: 0, width: 300, height: 300, layout: "grid", styleName: styleName, items: ITEMS, selectedKeys: ["b"] });
                 const pictures = [...list.elem.querySelectorAll("img")];
@@ -7939,7 +7939,7 @@
             const toggled = [];
             const one = Accordion({
                 left: 0, top: 0, width: 300,
-                sections: [{ key: "a", title: "A" }, { key: "b", title: "B", opened: 1 }, { key: "c", title: "C", disabled: 1 }],
+                sections: [{ key: "a", text: "A" }, { key: "b", text: "B", opened: 1 }, { key: "c", text: "C", enabled: 0 }],
                 onToggle: function (self, section) { toggled.push(section.key + section.opened); },
             });
             const rows = one.elem.querySelectorAll('[role="button"]');
@@ -7974,7 +7974,7 @@
             const toggled = [];
             const one = Accordion({
                 left: 0, top: 0, width: 300, multiple: 0,
-                sections: [{ key: "a", title: "A", opened: 1 }, { key: "b", title: "B", opened: 1 }, "C"],
+                sections: [{ key: "a", text: "A", opened: 1 }, { key: "b", text: "B", opened: 1 }, "C"],
                 onToggle: function (self, section) { toggled.push(section.key + section.opened); },
             });
             const atStart = one.getOpenKeys().join();
@@ -8022,12 +8022,12 @@
             const isRight = content.contains(inGroup.elem) && content.contains(afterGroup.elem)
                 && inGroup.elem.parentElement !== afterGroup.elem.parentElement
                 && !one.elem.contains(outside.elem) && outside.elem.parentElement === holder.elem
-                && one.getSection("New").title === "New" && one.getContent("New").elem.contains(made.elem);
+                && one.getSection("New").text === "New" && one.getContent("New").elem.contains(made.elem);
             check("Accordion: startSection / endSection: a group in it goes back to the section, and the page goes on where it was", isRight, String(isRight));
             holder.remove();
         });
 
-        test("Accordion: a section is added, changed and removed; a title is never HTML; a line only between the sections", async function () {
+        test("Accordion: a section is added, changed and removed; its text is never HTML; a line only between the sections", async function () {
             const warn = console.warn;
             let warnings = 0;
             console.warn = function () { warnings++; };
@@ -8038,25 +8038,25 @@
             const atStart = lineShown();
             const twin = one.addSection("B");
             console.warn = warn;
-            one.addSection({ key: "c", title: "C <b>bold</b>", note: "5 <i>files</i>" });
+            one.addSection({ key: "c", text: "C <b>bold</b>", description: "5 <i>files</i>" });
             const text = one.list.elem.innerText;
             const isPlain = text.includes("C <b>bold</b>") && text.includes("5 <i>files</i>");
-            one.setSectionTitle("c", "New title");
-            one.setSectionNote("c", "");
+            one.setSectionText("c", "New title");
+            one.setSectionDescription("c", "");
             const changed = one.list.elem.innerText.includes("New title") && !one.list.elem.innerText.includes("files");
             one.removeSection("A");
             const afterRemove = lineShown();
-            one.setSections([{ key: "x", title: "X", opened: 1 }]);
+            one.setSections([{ key: "x", text: "X", opened: 1 }]);
             const isRight = atStart === "01" && twin === null && warnings === 1 && isPlain && changed && afterRemove === "01"
                 && one.getOpenKeys().join() === "x" && one.sections.length === 1;
-            check("Accordion: a section is added, changed and removed; a title is never HTML; a line only between the sections", isRight,
+            check("Accordion: a section is added, changed and removed; its text is never HTML; a line only between the sections", isRight,
                 [atStart, twin, warnings, isPlain, changed, afterRemove, one.getOpenKeys().join()].join(" | "));
             one.remove();
         });
 
         test("Accordion: setTheme changes the look, and the open sections, their objects and a style of the page stay", async function () {
             const groundOf = (obj) => getComputedStyle(obj.elem).backgroundColor;
-            const one = Accordion({ left: 0, top: 0, width: 300, sections: [{ key: "a", title: "A", opened: 1 }] });
+            const one = Accordion({ left: 0, top: 0, width: 300, sections: [{ key: "a", text: "A", opened: 1 }] });
             const own = Accordion({ left: 0, top: 0, width: 300, sections: ["A"], style: { box: { color: "rgb(1, 2, 3)" } } });
             const field = createIn(one.getContent("a"), function () { return Label({ text: "Stays" }); });
             const light = groundOf(one);

@@ -290,7 +290,7 @@ const UserListPage = function(params = {}) {
 
                 const roles = UserListPage.load().roles;
                 roleSelect = UserListPage.createTinySelect(
-                    [{ id: "", label: "All roles" }].concat(roles.map(function(role) { return { id: role.id, label: role.name }; })),
+                    [{ value: "", label: "All roles" }].concat(roles.map(function(role) { return { value: role.id, label: role.name }; })),
                     function(id) { filter.roleId = id; render(); }
                 );
 
@@ -632,7 +632,7 @@ const UserListDetails = function(params = {}) {
                         Label({ text: "ROLE", fontSize: 11, textColor: Ink(0.45) });
                         that.elem.style.letterSpacing = "1px";
                         UserListPage.createTinySelect(
-                            data.roles.map(function(role) { return { id: role.id, label: role.name }; }),
+                            data.roles.map(function(role) { return { value: role.id, label: role.name }; }),
                             function(id) { roleId = id; },
                             Math.max(0, data.roles.findIndex(function(role) { return role.id == roleId; }))
                         );
@@ -692,7 +692,7 @@ const UserListDetails = function(params = {}) {
                     HGroup({ width: "100%", height: "auto", align: "left center", gap: 10 });
 
                         const selRole = UserListPage.createTinySelect(
-                            data.roles.map(function(r) { return { id: r.id, label: r.name }; }),
+                            data.roles.map(function(r) { return { value: r.id, label: r.name }; }),
                             function(id) {
                                 if (id == user.roleId) return;
                                 saveChange(function(fresh, freshUser) {
@@ -981,7 +981,7 @@ UserListPage.createTinySelect = function(list, onSelect, selectedIndex = 0) {
         listBackgroundColor: S.FIELD_COLOR,
         listBorderColor: Ink(0.15),
         onChange: function(self) {
-            const id = self.getSelectedItem().id;
+            const id = self.getSelectedItem().value;
             if (isReady) onSelect(id);
         },
     });

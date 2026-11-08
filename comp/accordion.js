@@ -17,17 +17,18 @@ UI COMPONENT
 - Style packages: "light" (default), "dark", "minimal", "minimalDark". Select with styleName (Accordion.styles), or later
   with setTheme().
 
-A SECTION: { key, title, note, iconFile, icon, opened, disabled, data }
-- A text is also accepted: "General" -> { key: "General", title: "General" }. Without a key: its title is its key.
-- title, note: plain text (never read as HTML). note: a soft text at the end of the row (Ex: "3 files").
+A SECTION: { key, text, description, iconFile, icon, opened, enabled, data }
+- A text is also accepted: "General" -> { key: "General", text: "General" }. Without a key: its text is its key.
+- text, description: plain text (never read as HTML). description: a soft text at the end of the row (Ex: "3 files").
+  style.title and style.note are their look.
 - icon: an SVG text (your own code, not a user text): it takes the color of style.icon (use stroke="currentColor" or
   fill="currentColor"). iconFile: an image file.
-- opened: 1 -> open at the start. disabled: 1 -> it does not open or close with the mouse and the keyboard.
+- opened: 1 -> open at the start. enabled: 0 -> it does not open or close with the mouse and the keyboard.
 - data: anything of yours.
 
 USAGE:
 const settings = Accordion({
-    sections: [{ key: "general", title: "General", opened: 1 }, { key: "advanced", title: "Advanced", note: "2 items" }],
+    sections: [{ key: "general", text: "General", opened: 1 }, { key: "advanced", text: "Advanced", description: "2 items" }],
     onToggle: function (self, section) { println(section.key + ": " + section.opened); },
 });
 settings.startSection("general");
@@ -39,8 +40,8 @@ settings.close("advanced", 1);         // silent
 settings.toggle("general");
 settings.isOpen("general");
 settings.getOpenKeys();                // ["general"]
-settings.addSection({ key: "more", title: "More" });
-settings.setSectionNote("more", "New");
+settings.addSection({ key: "more", text: "More" });
+settings.setSectionDescription("more", "New");
 settings.setTheme("dark");
 Accordion({ multiple: 0, sections: ["One", "Two"], styleName: "dark", animated: 1 });
 
@@ -135,18 +136,18 @@ const Accordion = function (params = {}) {
     };
 
     const isSectionEnabled = function (section) {
-        return (box.enabled == 1 && section.disabled !== 1);
+        return (box.enabled == 1 && section.enabled === 1);
     };
 
     // A section from the page, as a plain object of its own (a text too).
     const toSection = function (given) {
         const isObject = (typeof given === "object" && given !== null);
-        const section = Object.assign({}, (isObject) ? given : { title: String(given) });
-        if (section.key === undefined || section.key === null) section.key = section.title;
-        if (section.title === undefined || section.title === null) section.title = String(section.key);
-        section.note = (section.note === undefined || section.note === null) ? "" : section.note;
+        const section = Object.assign({}, (isObject) ? given : { text: String(given) });
+        if (section.key === undefined || section.key === null) section.key = section.text;
+        if (section.text === undefined || section.text === null) section.text = String(section.key);
+        section.description = (section.description === undefined || section.description === null) ? "" : section.description;
         section.opened = basic.isOn(section.opened) ? 1 : 0;
-        section.disabled = basic.isOn(section.disabled) ? 1 : 0;
+        section.enabled = (section.enabled === undefined || basic.isOn(section.enabled)) ? 1 : 0;
         if (box.multiple != 1 && hasOpenSection()) section.opened = 0;
         return section;
     };
@@ -175,10 +176,10 @@ const Accordion = function (params = {}) {
     // The texts of a row. WHY plainText: a title can be a text of a user.
     const applyContent = function (section) {
         const parts = partsOf.get(section);
-        parts.title.plainText = section.title;
-        parts.note.plainText = section.note;
-        parts.note.visible = (section.note === "") ? 0 : 1;
-        parts.frame.aria = { label: section.title };
+        parts.title.plainText = section.text;
+        parts.note.plainText = section.description;
+        parts.note.visible = (section.description === "") ? 0 : 1;
+        parts.frame.aria = { label: section.text };
     };
 
     // The look of a section that comes from the style (the first drawing and setTheme).
@@ -500,7 +501,7 @@ const Accordion = function (params = {}) {
     box.addSection = function (section) {
         return addSectionToList(section);
     };
-    // USAGE: settings.addSection({ key: "more", title: "More", opened: 1 })
+    // USAGE: settings.addSection({ key: "more", text: "More", opened: 1 })
 
     box.removeSection = function (key) {
         const section = findSection(key);
@@ -517,24 +518,24 @@ const Accordion = function (params = {}) {
         refreshScroll();
     };
 
-    box.setSectionTitle = function (key, text) {
+    box.setSectionText = function (key, text) {
         const section = findSection(key);
         if (!section) return;
-        section.title = text;
+        section.text = text;
         applyContent(section);
     };
 
-    box.setSectionNote = function (key, text) {
+    box.setSectionDescription = function (key, text) {
         const section = findSection(key);
         if (!section) return;
-        section.note = text;
+        section.description = text;
         applyContent(section);
     };
 
     box.setSectionEnabled = function (key, value) {
         const section = findSection(key);
         if (!section) return;
-        section.disabled = basic.isOn(value) ? 0 : 1;
+        section.enabled = basic.isOn(value) ? 1 : 0;
         paintRow(section);
     };
 

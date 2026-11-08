@@ -6,7 +6,7 @@ Search Results - v26.09
 
 UI COMPONENT
 - The result list that opens under a search input. (Command palette / autocomplete.)
-- The items are plain objects: { text, desc, group }. Anything else you put in them comes back
+- The items are plain objects: { text, description, group }. Anything else you put in them comes back
   to you in onSelect, so the page decides what "opening a result" means.
 - Group headers: the items are shown in the order they are given, and a new "group" value starts
   a new header. (Ex: "Pages", "Users", "Orders")
@@ -238,9 +238,9 @@ const SearchResults = function (params = {}) {
                         ellipsis: 1,
                     });
 
-                    if (item.desc) {
+                    if (item.description) {
                         Label({
-                            plainText: item.desc,
+                            plainText: item.description,
                             fontSize: _s.itemDesc.fontSize,
                             textColor: _s.itemDesc.textColor,
                             ellipsis: 1,
@@ -331,7 +331,7 @@ const SearchResults = function (params = {}) {
 
     // *** PUBLIC FUNCTIONS:
 
-    // items: [{ text, desc, group, ... }]. The list opens by itself when there is something to show.
+    // items: [{ text, description, group, ... }]. The list opens by itself when there is something to show.
     box.setItems = function (newItems, searchedText = "") {
 
         // WHY: the same text again keeps the active row (it went back to the first one), and a list closed with Escape

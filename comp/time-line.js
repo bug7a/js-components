@@ -6,7 +6,7 @@ Time Line - v26.09
 
 UI COMPONENT TEMPLATE
 - A simple vertical time line: a dot for every item and a line between the dots.
-- An item has a time, a title and a text. All of them are optional.
+- An item has a time, a text and a description. All of them are optional.
 - The component grows with its items (height is always "auto"). Put it in a scrolling
   Box or in a VGroup for a long list.
 - Every color, size and space is in the style object. Nothing else is needed: no image
@@ -15,8 +15,8 @@ UI COMPONENT TEMPLATE
 - Style packages: "light" (default), "dark", "minimal", "minimalDark". Select with styleName (TimeLine.styles), or
   later with setTheme(). minimal and minimalDark also give the sizes (dotSize, lineWidth, itemGap) the page does not give.
 
-ITEM: { time, title, text, color, key, data }
-- A string is also accepted: "Order created" -> { title: "Order created" }
+ITEM: { time, text, description, color, key, data } (style.title and style.description are the look of the two texts)
+- A string is also accepted: "Order created" -> { text: "Order created" }
 - color: The color of the dot of that item. (Empty: style.dot.color)
 - key and data are not shown. They come back in onClick.
 
@@ -24,13 +24,13 @@ USAGE:
 const timeLine = TimeLine({
     width: 320,
     items: [
-        { time: "09:30", title: "Order created", text: "Order #1024 was created." },
-        { time: "11:00", title: "Packed", color: "#E0A038" },
+        { time: "09:30", text: "Order created", description: "Order #1024 was created." },
+        { time: "11:00", text: "Packed", color: "#E0A038" },
     ],
     clickableItems: 1,
-    onClick: function (self, item, index) { println(item.title); },
+    onClick: function (self, item, index) { println(item.text); },
 });
-timeLine.addItem({ time: "14:20", title: "Sent" });
+timeLine.addItem({ time: "14:20", text: "Sent" });
 timeLine.setItems([]);
 TimeLine({ styleName: "dark", items: ["Order created", "Packed"] }); // On a dark page
 timeLine.setTheme("minimal");
@@ -50,7 +50,7 @@ SPDX-License-Identifier: Apache-2.0
 const TimeLineDefaults = {
     key: "0",
     width: 320, // A number or "100%". (The height always grows with the items.)
-    items: [], // [{ time, title, text, color, key, data }] or ["Order created"]
+    items: [], // [{ time, text, description, color, key, data }] or ["Order created"]
     itemGap: 20, // Space between two items. (The line is drawn in it.)
     dotSize: 12,
     lineWidth: 2,
@@ -81,7 +81,7 @@ const TimeLineDefaults = {
             textColor: Black(0.85),
             bold: 1,
         },
-        text: {
+        description: {
             fontSize: 14,
             textColor: Black(0.55),
             lineHeight: "1.45",
@@ -113,12 +113,12 @@ const TimeLine = function (params = {}) {
 
     // *** PRIVATE VARIABLES:
     let _s = box.style;
-    const TEXT_GAP = 2; // Space between the time, the title and the text
+    const TEXT_GAP = 2; // Space between the time, the text and the description
     const HOVER_MOTION = "opacity 0.15s";
     let rows = []; // Created item rows
 
     // *** PUBLIC VARIABLES:
-    // [var] Items: [{ time, title, text, color, key, data }]
+    // [var] Items: [{ time, text, description, color, key, data }]
     box.items = [];
 
     // *** PRIVATE FUNCTIONS:
@@ -133,9 +133,9 @@ const TimeLine = function (params = {}) {
 
     const normalizeItem = function (item) {
         if (typeof item == "string" || typeof item == "number") {
-            return { time: "", title: String(item), text: "" }; // WHY: an undefined time made an empty label; its gap moved the title.
+            return { time: "", text: String(item), description: "" }; // WHY: an undefined time made an empty label; its gap moved the text.
         }
-        return Object.assign({ time: "", title: "", text: "" }, item);
+        return Object.assign({ time: "", text: "", description: "" }, item);
     };
 
     // A row: the rail (dot + line) and the texts next to it.
@@ -210,24 +210,24 @@ const TimeLine = function (params = {}) {
                 }
 
                 // LABEL: Title
-                if (item.title !== "") {
+                if (item.text !== "") {
                     row.lblTitle = Label({
                         width: "100%",
-                        plainText: item.title,
+                        plainText: item.text,
                         fontSize: _s.title.fontSize,
                         textColor: _s.title.textColor,
                         bold: _s.title.bold,
                     });
                 }
 
-                // LABEL: Text
-                if (item.text !== "") {
+                // LABEL: Description
+                if (item.description !== "") {
                     row.lblText = Label({ // WHY: not row.text. Box.text writes innerHTML.
                         width: "100%",
-                        plainText: item.text,
-                        fontSize: _s.text.fontSize,
-                        textColor: _s.text.textColor,
-                        lineHeight: _s.text.lineHeight,
+                        plainText: item.description,
+                        fontSize: _s.description.fontSize,
+                        textColor: _s.description.textColor,
+                        lineHeight: _s.description.lineHeight,
                     });
                 }
 
@@ -291,7 +291,7 @@ const TimeLine = function (params = {}) {
         box.items = (items || []).map(normalizeItem);
         drawAll();
     };
-    // USAGE: timeLine.setItems([{ time: "09:30", title: "Order created" }, "Packed"])
+    // USAGE: timeLine.setItems([{ time: "09:30", text: "Order created" }, "Packed"])
 
     box.getItems = function () {
         return box.items.slice();
@@ -302,7 +302,7 @@ const TimeLine = function (params = {}) {
         box.items.push(normalizeItem(item));
         drawAll();
     };
-    // USAGE: timeLine.addItem({ time: "14:20", title: "Sent" })
+    // USAGE: timeLine.addItem({ time: "14:20", text: "Sent" })
 
     box.clear = function () {
         box.setItems([]);
@@ -370,7 +370,7 @@ TimeLine.styles = {
         line: { color: White(0.16) },
         time: { textColor: White(0.5) },
         title: { textColor: White(0.88) },
-        text: { textColor: White(0.6) },
+        description: { textColor: White(0.6) },
     },
 
 };
@@ -388,7 +388,7 @@ TimeLine.createMinimalStyle = function (palette) {
             line: { color: palette.line },
             time: { fontSize: 11, textColor: palette.softText },
             title: { fontSize: 13, textColor: palette.text, bold: 0 },
-            text: { fontSize: 12, textColor: palette.softText },
+            description: { fontSize: 12, textColor: palette.softText },
         },
     };
 };

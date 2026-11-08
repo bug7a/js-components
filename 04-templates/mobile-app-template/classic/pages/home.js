@@ -12,15 +12,15 @@ const HomePage = {};
 HomePage.GITHUB_URL = "https://github.com/bug7a/javascript-mobile-app-template";
 
 HomePage.categories = [
-    { key: "coffee", title: "Coffee", iconFile: "assets/categories/coffee.png", searchText: "Hot" },
-    { key: "coffee-cup", title: "Coffee Cup", iconFile: "assets/categories/coffee-cup.png", searchText: "Hot" },
-    { key: "iced-coffee", title: "Iced Coffee", iconFile: "assets/categories/iced-caffee.png", searchText: "Cold" },
-    { key: "milkshake", title: "Milkshake", iconFile: "assets/categories/milkshake.png", searchText: "Cold" },
-    { key: "chocolate", title: "Chocolate", iconFile: "assets/categories/chocolate-milk.png", searchText: "Cold" },
-    { key: "cappuccino", title: "Cappuccino", iconFile: "assets/categories/cappuccino.png", searchText: "Hot" },
-    { key: "tea", title: "Tea", iconFile: "assets/categories/tea.png", searchText: "Hot" },
-    { key: "frappe", title: "Frappe", iconFile: "assets/categories/frappe.png", searchText: "Cold" },
-    { key: "orange-juice", title: "Orange Juice", iconFile: "assets/categories/orange-juice.png", searchText: "Cold" },
+    { key: "coffee", text: "Coffee", iconFile: "assets/categories/coffee.png", searchText: "Hot" },
+    { key: "coffee-cup", text: "Coffee Cup", iconFile: "assets/categories/coffee-cup.png", searchText: "Hot" },
+    { key: "iced-coffee", text: "Iced Coffee", iconFile: "assets/categories/iced-caffee.png", searchText: "Cold" },
+    { key: "milkshake", text: "Milkshake", iconFile: "assets/categories/milkshake.png", searchText: "Cold" },
+    { key: "chocolate", text: "Chocolate", iconFile: "assets/categories/chocolate-milk.png", searchText: "Cold" },
+    { key: "cappuccino", text: "Cappuccino", iconFile: "assets/categories/cappuccino.png", searchText: "Hot" },
+    { key: "tea", text: "Tea", iconFile: "assets/categories/tea.png", searchText: "Hot" },
+    { key: "frappe", text: "Frappe", iconFile: "assets/categories/frappe.png", searchText: "Cold" },
+    { key: "orange-juice", text: "Orange Juice", iconFile: "assets/categories/orange-juice.png", searchText: "Cold" },
 ];
 
 // categories: the keys of the categories the card is in

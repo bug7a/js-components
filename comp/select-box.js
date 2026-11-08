@@ -603,10 +603,10 @@ const SelectBox = function (params = {}) {
     const toListItem = function (option, index) {
         return {
             key: String(index),
-            title: option.label,
-            desc: option.description,
+            text: option.label,
+            description: option.description,
             searchText: [option.group, option.searchText || ""].join(" "),
-            disabled: option.disabled,
+            enabled: basic.isOn(option.disabled) ? 0 : 1,
             option: option,
         };
     };

@@ -46,18 +46,18 @@ const MediaPage = function(params = {}) {
     const STORAGE_QUOTA = 5 * 1024 * 1024 * 1024; // 5 GB
 
     const TYPE_FILTERS = [
-        { id: "", label: "All types" },
-        { id: "image", label: "Images" },
-        { id: "document", label: "Documents" },
-        { id: "video", label: "Videos" },
-        { id: "audio", label: "Audio" },
-        { id: "archive", label: "Archives" },
+        { value: "", label: "All types" },
+        { value: "image", label: "Images" },
+        { value: "document", label: "Documents" },
+        { value: "video", label: "Videos" },
+        { value: "audio", label: "Audio" },
+        { value: "archive", label: "Archives" },
     ];
 
     const SORTS = [
-        { id: "newest", label: "Newest first" },
-        { id: "name", label: "Name (A-Z)" },
-        { id: "size", label: "Largest first" },
+        { value: "newest", label: "Newest first" },
+        { value: "name", label: "Name (A-Z)" },
+        { value: "size", label: "Largest first" },
     ];
 
     // Current view
@@ -606,14 +606,14 @@ const MediaPage = function(params = {}) {
                 Label({ text: "Upload to", fontSize: 14, textColor: Ink(0.6) });
 
                 uploadFolderSelect = MediaPage.createTinySelect(
-                    MediaPage.FOLDERS.map(function(folder) { return { id: folder, label: folder }; }),
+                    MediaPage.FOLDERS.map(function(folder) { return { value: folder, label: folder }; }),
                     function() { }
                 );
 
                 btnStartUpload = MediaPage.createButton("Upload 0 files", "", function() {
                     const files = uploadFile.getFiles();
                     if (!files.length) return;
-                    const folder = uploadFolderSelect.list[uploadFolderSelect.selectedIndex].id;
+                    const folder = uploadFolderSelect.list[uploadFolderSelect.selectedIndex].value;
                     uploadFiles(files, folder, function() {
                         if (!box) return;
                         uploadFile.clear();
@@ -800,7 +800,7 @@ const MediaPage = function(params = {}) {
             endGroup();
 
             moveSelect = MediaPage.createTinySelect(
-                [{ id: "", label: "Move to..." }].concat(MediaPage.FOLDERS.map(function(folder) { return { id: folder, label: folder }; })),
+                [{ value: "", label: "Move to..." }].concat(MediaPage.FOLDERS.map(function(folder) { return { value: folder, label: folder }; })),
                 function(index, id) {
                     if (!id || !box || !lblEmpty) return;
                     moveItems(Array.from(selectedIds), id);
@@ -1096,7 +1096,7 @@ const MediaDetails = function(params = {}) {
                 Label({ text: "FOLDER", fontSize: 11, textColor: Ink(0.45) });
                 that.elem.style.letterSpacing = "1px";
                 folderSelect = MediaPage.createTinySelect(
-                    box.folders.map(function(folder) { return { id: folder, label: folder }; }),
+                    box.folders.map(function(folder) { return { value: folder, label: folder }; }),
                     function() { }
                 );
                 folderSelect.setSelectedIndex(Math.max(0, box.folders.indexOf(item.folder)));
@@ -1181,7 +1181,7 @@ const MediaDetails = function(params = {}) {
                 name: name,
                 extension: MediaPage.getExtension(name) || item.extension,
                 alt: (inputAlt) ? inputAlt.getValue().trim() : item.alt,
-                folder: folderSelect.list[folderSelect.selectedIndex].id,
+                folder: folderSelect.list[folderSelect.selectedIndex].value,
             });
         }, { primary: 1 });
 
@@ -1286,7 +1286,7 @@ MediaPage.createTinySelect = function(list, onSelect) {
         listOverTextColor: S.ACCENT_COLOR,
         listBackgroundColor: S.FIELD_COLOR,
         listBorderColor: Ink(0.15),
-        onChange: function (self) { onSelect(self.selectedIndex, self.getSelectedItem().id); },
+        onChange: function (self) { onSelect(self.selectedIndex, self.getSelectedItem().value); },
     });
 };
 

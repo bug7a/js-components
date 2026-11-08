@@ -299,12 +299,12 @@ const ContentsPage = function(params = {}) {
                 that.position = "relative";
 
                 ContentsPage.createTinySelect(
-                    [{ id: "", label: "All statuses" }].concat(Object.keys(STATUSES).map(function(id) { return { id: id, label: STATUSES[id].label }; })),
+                    [{ value: "", label: "All statuses" }].concat(Object.keys(STATUSES).map(function(id) { return { value: id, label: STATUSES[id].label }; })),
                     function(id) { filter.status = id; render(); }
                 );
 
                 ContentsPage.createTinySelect(
-                    [{ id: "", label: "All authors" }].concat(ContentsPage.getAuthors().map(function(name) { return { id: name, label: name }; })),
+                    [{ value: "", label: "All authors" }].concat(ContentsPage.getAuthors().map(function(name) { return { value: name, label: name }; })),
                     function(id) { filter.author = id; render(); }
                 );
 
@@ -860,7 +860,7 @@ const ContentEditor = function(params = {}) {
                             createFieldTitle("CATEGORY");
                             that.elem.style.marginTop = "4px";
                             ContentsPage.createTinySelect(
-                                ContentsPage.CATEGORIES.map(function(name) { return { id: name, label: name }; }),
+                                ContentsPage.CATEGORIES.map(function(name) { return { value: name, label: name }; }),
                                 function(id) { draft.category = id; },
                                 Math.max(0, ContentsPage.CATEGORIES.indexOf(draft.category))
                             );
@@ -900,7 +900,7 @@ const ContentEditor = function(params = {}) {
                             createFieldTitle("PLACEMENT");
                             that.elem.style.marginTop = "4px";
                             ContentsPage.createTinySelect(
-                                ContentsPage.PLACEMENTS.map(function(name) { return { id: name, label: name }; }),
+                                ContentsPage.PLACEMENTS.map(function(name) { return { value: name, label: name }; }),
                                 function(id) { draft.placement = id; },
                                 Math.max(0, ContentsPage.PLACEMENTS.indexOf(draft.placement))
                             );
@@ -982,7 +982,7 @@ const ContentEditor = function(params = {}) {
                     const authors = ContentsPage.getAuthors();
                     if (!authors.includes(draft.author)) authors.push(draft.author);
                     ContentsPage.createTinySelect(
-                        authors.map(function(name) { return { id: name, label: name }; }),
+                        authors.map(function(name) { return { value: name, label: name }; }),
                         function(id) { draft.author = id; },
                         Math.max(0, authors.indexOf(draft.author))
                     );
@@ -1298,7 +1298,7 @@ ContentsPage.createTinySelect = function(list, onSelect, selectedIndex = 0) {
         listBackgroundColor: S.FIELD_COLOR,
         listBorderColor: Ink(0.15),
         onChange: function(self) {
-            const id = self.getSelectedItem().id;
+            const id = self.getSelectedItem().value;
             if (isReady) onSelect(id);
         },
     });

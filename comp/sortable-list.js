@@ -6,7 +6,7 @@ SortableList - v26.10
 
 UI COMPONENT TEMPLATE
 - A list whose order can be changed.
-- Items: strings or objects { key, text, desc, locked }. getItems() / getKeys() give the new order.
+- Items: strings or objects { key, text, description, locked }. getItems() / getKeys() give the new order.
 - Mouse and touch: drag the handle (dragBy: "handle", default) or the whole row (dragBy: "row").
   The other rows slide out of the way. Near the top / bottom edge the list scrolls by itself.
 - Keyboard: ArrowUp / ArrowDown move the focus. Space or Enter grabs the row, the arrow keys move it,
@@ -31,7 +31,7 @@ const list = SortableList({
 });
 list.getItems();                          // Items in the new order (the same objects / strings you gave)
 list.moveItem(0, 2);                      // onChange is called
-list.addItem({ key: "hr", text: "Staff", desc: "Headcount by department" });
+list.addItem({ key: "hr", text: "Staff", description: "Headcount by department" });
 list.removeItem(1);
 SortableList({ items: [{ key: "home", text: "Home", locked: 1 }, "Orders", "Reports"], showButtons: 1, removable: 1 });
 SortableList({ height: "auto", dragBy: "row", showNumbers: 0, styleName: "modern" });
@@ -52,7 +52,7 @@ const SortableListDefaults = {
     key: "0",
     width: 340,
     height: 320, // "auto": grows with the rows (no scrolling)
-    items: [], // Strings or { key, text, desc, locked }
+    items: [], // Strings or { key, text, description, locked } (style.desc is the look of the description)
     dragBy: "handle", // "handle": drag by the grip at the left, "row": drag by the whole row (touch: the list then scrolls only by the scroll bar)
     showHandle: 1, // The grip at the left. (dragBy: "row" can hide it)
     showNumbers: 1, // Position numbers
@@ -191,7 +191,7 @@ const SortableList = function (params = {}) {
     const AUTO_SCROLL_EDGE = 48; // px: the edge (top / bottom) where the list scrolls by itself
     const AUTO_SCROLL_SLOWDOWN = 3; // The speed is the depth into the edge divided by this.
     const AUTO_SCROLL_MAX_SPEED = 18; // px per frame
-    let entries = []; // { item, key, text, desc, locked, row, ... } in the current order
+    let entries = []; // { item, key, text, description, locked, row, ... } in the current order
     let drag = null; // Pointer drag state
     let grab = null; // Keyboard grab state: { entry, startIndex }
     let isSettling = 0; // The dropped row is sliding to its place
@@ -206,7 +206,7 @@ const SortableList = function (params = {}) {
 
     // *** PRIVATE FUNCTIONS:
 
-    // "Sales" or { key, text, desc, locked } -> entry
+    // "Sales" or { key, text, description, locked } -> entry
     const toEntry = function (item) {
         const isObject = (item !== null && typeof item === "object");
         const text = isObject ? String(item.text ?? item.key ?? "") : String(item ?? "");
@@ -214,7 +214,7 @@ const SortableList = function (params = {}) {
             item: item,
             key: isObject ? String(item.key ?? text) : text,
             text: text,
-            desc: isObject ? String(item.desc ?? "") : "",
+            description: isObject ? String(item.description ?? "") : "",
             locked: (isObject && basic.isOn(item.locked)) ? 1 : 0,
             row: null,
         };
@@ -726,7 +726,7 @@ const SortableList = function (params = {}) {
     // "Sales, Monthly totals, Locked"
     const getRowLabel = function (entry) {
         let label = entry.text;
-        if (entry.desc) label += ", " + entry.desc;
+        if (entry.description) label += ", " + entry.description;
         if (entry.locked) label += ", " + box.texts.locked;
         return label;
     };
@@ -867,9 +867,9 @@ const SortableList = function (params = {}) {
                         ellipsis: 1,
                     });
                     if (_s.text.fontFamily) row.lblText.css.fontFamily = _s.text.fontFamily;
-                    if (entry.desc) {
+                    if (entry.description) {
                         row.lblDesc = Label({
-                            plainText: entry.desc,
+                            plainText: entry.description,
                             width: "100%",
                             fontSize: _s.desc.fontSize,
                             textColor: _s.desc.textColor,
@@ -959,7 +959,7 @@ const SortableList = function (params = {}) {
         entries = (Array.isArray(items) ? items : []).map(toEntry);
         render();
     };
-    // USAGE: list.setItems(["A", "B", { key: "c", text: "C", desc: "Third", locked: 1 }]) // onChange is not called.
+    // USAGE: list.setItems(["A", "B", { key: "c", text: "C", description: "Third", locked: 1 }]) // onChange is not called.
 
     box.getItems = function () {
         return entries.map(function (e) { return e.item; });

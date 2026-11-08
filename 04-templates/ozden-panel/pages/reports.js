@@ -53,9 +53,9 @@ const ReportsPage = function(params = {}) {
     const HIGH_REFUND_RATE = 8; // %: Shown in red in the table
 
     const GROUPS = [
-        { id: "day", label: "Day" },
-        { id: "week", label: "Week" },
-        { id: "month", label: "Month" },
+        { value: "day", label: "Day" },
+        { value: "week", label: "Week" },
+        { value: "month", label: "Month" },
     ];
 
     const QUICK_RANGES = [
@@ -239,7 +239,7 @@ const ReportsPage = function(params = {}) {
     const renderReport = function(report, previous, previousFrom, previousTo) {
 
         const regionText = (filter.regionIndex < 0) ? "All regions" : REGIONS[filter.regionIndex].name;
-        const groupText = GROUPS.find(function(g) { return g.id == filter.group; }).label;
+        const groupText = GROUPS.find(function(g) { return g.value == filter.group; }).label;
         lblSubtitle.text = formatDate(filter.from) + " – " + formatDate(filter.to) + " · " + regionText + " · by " + groupText.toLowerCase();
 
         // SUMMARY
@@ -490,7 +490,7 @@ const ReportsPage = function(params = {}) {
             listOverTextColor: ACCENT_COLOR,
             listBackgroundColor: FIELD_COLOR,
             listBorderColor: Ink(0.15),
-            onChange: function (self) { onSelect(self.selectedIndex, self.getSelectedItem().id); },
+            onChange: function (self) { onSelect(self.selectedIndex, self.getSelectedItem().value); },
         });
 
         return select;
@@ -663,7 +663,7 @@ const ReportsPage = function(params = {}) {
                 startField("Region");
 
                     regionSelect = createTinySelect(
-                        [{ id: "-1", label: "All regions" }].concat(REGIONS.map(function(region, i) { return { id: String(i), label: region.name }; })),
+                        [{ value: "-1", label: "All regions" }].concat(REGIONS.map(function(region, i) { return { value: String(i), label: region.name }; })),
                         function(index, id) {
                             filter.regionIndex = Number(id);
                             scheduleReport();
@@ -675,7 +675,7 @@ const ReportsPage = function(params = {}) {
                 startField("Group by");
 
                     groupSelect = createTinySelect(
-                        GROUPS.map(function(group) { return { id: group.id, label: group.label }; }),
+                        GROUPS.map(function(group) { return { value: group.value, label: group.label }; }),
                         function(index, id) {
                             filter.group = id;
                             scheduleReport();

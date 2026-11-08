@@ -467,7 +467,7 @@
                 listBorderColor: Ink(0.15),
                 onChange: function (self) {
                     const index = self.selectedIndex;
-                    const id = self.getSelectedItem().id;
+                    const id = self.getSelectedItem().value;
                     if (isReady && !isRendering) onSelect(index, id);
                 },
             });
@@ -492,7 +492,7 @@
 
                 endGroup();
 
-                printerSelect = createSelect(PRINTERS.map(function (p) { return { id: p.id, label: p.name }; }), function (index) {
+                printerSelect = createSelect(PRINTERS.map(function (p) { return { value: p.id, label: p.name }; }), function (index) {
                     selectPrinter(index);
                 }, 40);
                 printerSelect.elem.style.alignSelf = "stretch";
@@ -590,7 +590,7 @@
 
                 startSpaceBetween();
                     createSmallTitle("Preset");
-                    presetSelect = createSelect(PRESETS.map(function (preset) { return { id: preset.id, label: preset.label }; }), function (index) {
+                    presetSelect = createSelect(PRESETS.map(function (preset) { return { value: preset.id, label: preset.label }; }), function (index) {
                         const preset = PRESETS[index];
                         // WHY: "Cool down" during a print went on printing with a cold nozzle: the print is paused first
                         const isPrinting = (printer.status == "printing" || printer.status == "heating");

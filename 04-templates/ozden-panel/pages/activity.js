@@ -237,7 +237,7 @@ const ActivityPage = function(params = {}) {
     };
 
     const setUserFilter = function(userId) {
-        const index = userSelect.getIndexById(String(userId));
+        const index = userSelect.getIndexByValue(String(userId));
         if (index >= 0) userSelect.setSelectedIndex(index); // onSelect renders the table
     };
 
@@ -302,7 +302,7 @@ const ActivityPage = function(params = {}) {
             listBackgroundColor: S.FIELD_COLOR,
             listBorderColor: Ink(0.15),
             onChange: function(self) {
-                const id = self.getSelectedItem().id;
+                const id = self.getSelectedItem().value;
                 if (isRendering || !smartTable) return; // Called on create
                 onSelect(id);
             },
@@ -391,7 +391,7 @@ const ActivityPage = function(params = {}) {
 
             ActivityPage.createButton("Show Events", "", function() {
                 setUserFilter(alertBox.userId);
-                const index = actionSelect.getIndexById("login_failed");
+                const index = actionSelect.getIndexByValue("login_failed");
                 if (index >= 0) actionSelect.setSelectedIndex(index);
             });
 
@@ -441,22 +441,22 @@ const ActivityPage = function(params = {}) {
                 that.position = "relative";
 
                 userSelect = createTinySelect(
-                    [{ id: "", label: "All users" }].concat(ActivityPage.getUsers().map(function(user) {
-                        return { id: String(user.id), label: ActivityPage.escapeHtml(user.name) };
+                    [{ value: "", label: "All users" }].concat(ActivityPage.getUsers().map(function(user) {
+                        return { value: String(user.id), label: ActivityPage.escapeHtml(user.name) };
                     })),
                     function(id) { filter.userId = id; renderTable(); }
                 );
 
                 actionSelect = createTinySelect(
-                    [{ id: "", label: "All actions" }].concat(Object.keys(ActivityPage.ACTIONS).map(function(id) {
-                        return { id: id, label: ActivityPage.ACTIONS[id].label };
+                    [{ value: "", label: "All actions" }].concat(Object.keys(ActivityPage.ACTIONS).map(function(id) {
+                        return { value: id, label: ActivityPage.ACTIONS[id].label };
                     })),
                     function(id) { filter.action = id; renderTable(); }
                 );
 
                 moduleSelect = createTinySelect(
-                    [{ id: "", label: "All modules" }].concat(ActivityPage.MODULES.map(function(name) {
-                        return { id: name, label: name };
+                    [{ value: "", label: "All modules" }].concat(ActivityPage.MODULES.map(function(name) {
+                        return { value: name, label: name };
                     })),
                     function(id) { filter.module = id; renderTable(); }
                 );

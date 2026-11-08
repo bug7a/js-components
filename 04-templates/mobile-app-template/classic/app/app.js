@@ -525,7 +525,7 @@ App.createMenu = function () {
         App.menuList = ItemList({
             width: "100%",
             height: "auto",
-            items: AppSettings.menu.map((item, index) => ({ key: String(index), title: item.title, menuItem: item })),
+            items: AppSettings.menu.map((item, index) => ({ key: String(index), text: item.text, menuItem: item })),
             selectedKeys: ["0"],
             styleName: "ozden",
             style: {
@@ -557,7 +557,7 @@ App.createMenuRow = function (item) {
         that.load(menuItem.iconFile);
         that.css = { filter: "grayscale(50%)" };
     }
-    Label({ text: menuItem.title, fontSize: 26, textColor: App.colors.text, grow: 1 });
+    Label({ text: menuItem.text, fontSize: 26, textColor: App.colors.text, grow: 1 });
     if (menuItem.count !== undefined) {
         Label({ text: String(menuItem.count), fontSize: 20, padding: [14, 6], round: 13, color: Black(0.05), textColor: App.colors.text, css: { marginRight: "26px" } });
     }

@@ -105,7 +105,7 @@
         { key: "right", icon: "alignRight", hint: "Right", group: "align" },
     ];
     const FILES = [
-        { key: "src", text: "src", expanded: 1, children: [{ key: "app", text: "app.js", note: "4 KB" }, { key: "lib", text: "lib", children: ["a.js", "b.js"] }] },
+        { key: "src", text: "src", expanded: 1, children: [{ key: "app", text: "app.js", description: "4 KB" }, { key: "lib", text: "lib", children: ["a.js", "b.js"] }] },
         { key: "readme", text: "README.md", tag: "new" },
     ];
     const PEOPLE_COLUMNS = [
@@ -125,13 +125,13 @@
     ];
     const TAGS = ["audio", "fitness", "guide", "travel"];
     const SECTIONS = [
-        { key: "general", title: "General", note: "3 settings", opened: 1 },
-        { key: "advanced", title: "Advanced" },
-        { key: "locked", title: "Locked", disabled: 1 },
+        { key: "general", text: "General", description: "3 settings", opened: 1 },
+        { key: "advanced", text: "Advanced" },
+        { key: "locked", text: "Locked", enabled: 0 },
     ];
     const HISTORY = [
-        { time: "Today, 14:02", title: "Saved", text: "report.md, 2.4 KB" },
-        { time: "Yesterday", title: "Created" },
+        { time: "Today, 14:02", text: "Saved", description: "report.md, 2.4 KB" },
+        { time: "Yesterday", text: "Created" },
     ];
     const MONTHS = ["Jun", "Jul", "Aug", "Sep", "Oct", "Nov"];
     const VISITS = [
@@ -205,9 +205,9 @@
 
                     Label({ text: "LIST", fontSize: 11, bold: 1, textColor: LIGHT_CAPTION_COLOR });
                     ItemList({ styleName: "minimal", width: 260, height: "auto", selectedKeys: ["1"], items: [
-                        { title: "Projects", iconFile: ICON_FOLDER },
-                        { title: "Designs", iconFile: ICON_FOLDER },
-                        { title: "Archive", iconFile: ICON_FOLDER },
+                        { text: "Projects", iconFile: ICON_FOLDER },
+                        { text: "Designs", iconFile: ICON_FOLDER },
+                        { text: "Archive", iconFile: ICON_FOLDER },
                     ] });
 
                     Label({ text: "SLIDER, PROGRESS", fontSize: 11, bold: 1, textColor: LIGHT_CAPTION_COLOR });
@@ -325,9 +325,9 @@
 
                     Label({ text: "LIST", fontSize: 11, bold: 1, textColor: DARK_CAPTION_COLOR });
                     ItemList({ styleName: "minimalDark", width: 260, height: "auto", selectedKeys: ["1"], items: [
-                        { title: "Projects", iconFile: ICON_FOLDER_DARK },
-                        { title: "Designs", iconFile: ICON_FOLDER_DARK },
-                        { title: "Archive", iconFile: ICON_FOLDER_DARK },
+                        { text: "Projects", iconFile: ICON_FOLDER_DARK },
+                        { text: "Designs", iconFile: ICON_FOLDER_DARK },
+                        { text: "Archive", iconFile: ICON_FOLDER_DARK },
                     ] });
 
                     Label({ text: "SLIDER, PROGRESS", fontSize: 11, bold: 1, textColor: DARK_CAPTION_COLOR });

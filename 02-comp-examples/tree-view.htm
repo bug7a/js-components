@@ -46,7 +46,7 @@
         };
         const file = function (key, text, note) {
             const isImage = /\.(png|jpg|svg)$/.test(text);
-            return { key: key, text: text, iconFile: isImage ? ICON_IMAGE : ICON_FILE, note: note };
+            return { key: key, text: text, iconFile: isImage ? ICON_IMAGE : ICON_FILE, description: note };
         };
 
         const start = function () {
@@ -104,7 +104,7 @@
                                     file("docs/api.md", "api.md", "9 KB"),
                                 ]),
                                 file("readme", "readme.md", "1 KB"),
-                                { key: "secret", text: ".env (disabled)", iconFile: ICON_FILE, disabled: 1 },
+                                { key: "secret", text: ".env (disabled)", iconFile: ICON_FILE, enabled: 0 },
                             ],
                             value: "src/app.js",
                             onSelect: function (self, node) {
@@ -147,12 +147,12 @@
                             width: "100%",
                             height: "auto", // Grows with its rows.
                             items: [
-                                { key: "eu", text: "Europe", hasChildren: 1, note: "click to load" },
-                                { key: "as", text: "Asia", hasChildren: 1, note: "click to load" },
-                                { key: "am", text: "Americas", hasChildren: 1, note: "click to load" },
+                                { key: "eu", text: "Europe", hasChildren: 1, description: "click to load" },
+                                { key: "as", text: "Asia", hasChildren: 1, description: "click to load" },
+                                { key: "am", text: "Americas", hasChildren: 1, description: "click to load" },
                             ],
                             onLoadChildren: function (self, node) {
-                                self.updateNode(node.key, { note: "loading…" });
+                                self.updateNode(node.key, { description: "loading…" });
                                 lblLazy.plainText = "Loading " + node.text + " …";
                                 setTimeout(function () {
                                     const countries = COUNTRIES[node.key];
@@ -160,7 +160,7 @@
                                         return { key: node.key + "/" + name, text: name };
                                     });
                                     self.setChildren(node.key, children);
-                                    self.updateNode(node.key, { note: countries.length + " countries" });
+                                    self.updateNode(node.key, { description: countries.length + " countries" });
                                     lblLazy.plainText = node.text + " loaded.";
                                 }, LOAD_TIME);
                             },
@@ -173,7 +173,7 @@
                     // SAMPLE 3: Dark style, tags (the layers of a design tool)
                     startCard(
                         "3. Layers (dark)",
-                        "tag: a second text in the accent color (tagColor per node). note: a soft text. textColor per node."
+                        "tag: a second text in the accent color (tagColor per node). description: a soft text. textColor per node."
                     );
 
                         TreeView({
@@ -183,16 +183,16 @@
                             items: [
                                 { key: "page", text: "page", tag: "Box", expanded: 1, children: [
                                     { key: "layout", text: "layout", tag: "VGroup", expanded: 1, children: [
-                                        { key: "title", text: "lblTitle", tag: "Label", note: '"Tabs"' },
+                                        { key: "title", text: "lblTitle", tag: "Label", description: '"Tabs"' },
                                         { key: "tabs", text: "tabsBasic", tag: "Tabs", tagColor: "#C792EA", hasChildren: 0, children: [
                                             { key: "strip", text: "box.strip", tag: "Box" },
                                             { key: "ind", text: "box.indicator", tag: "Box" },
                                         ] },
                                         { key: "buttons", text: "buttons", tag: "HGroup", children: [
-                                            { key: "b1", text: "btn", tag: "Button", note: '"Orders +1"' },
-                                            { key: "b2", text: "btn", tag: "Button", note: '"Badge"' },
+                                            { key: "b1", text: "btn", tag: "Button", description: '"Orders +1"' },
+                                            { key: "b2", text: "btn", tag: "Button", description: '"Badge"' },
                                         ] },
-                                        { key: "info", text: "lblInfo", tag: "Label", note: "✎ a note", textColor: "#F5C04A" },
+                                        { key: "info", text: "lblInfo", tag: "Label", description: "✎ a note", textColor: "#F5C04A" },
                                     ] },
                                 ] },
                             ],
@@ -259,9 +259,9 @@
             for (let g = 1; g <= 100; g++) {
                 const children = [];
                 for (let i = 1; i <= 100; i++) {
-                    children.push({ key: g + "-" + i, text: "Item " + g + "." + i, note: "#" + ((g - 1) * 100 + i) });
+                    children.push({ key: g + "-" + i, text: "Item " + g + "." + i, description: "#" + ((g - 1) * 100 + i) });
                 }
-                items.push({ key: "g" + g, text: "Group " + g, children: children, note: "100" });
+                items.push({ key: "g" + g, text: "Group " + g, children: children, description: "100" });
             }
             return items;
         };

@@ -775,7 +775,7 @@ BasicDesigner.treeNodeOf = function (obj) {
         textColor: BasicDesigner.isHidden(obj) ? C.dim : ((!t.name && isComponent) ? C.component : undefined),
         tag: t.name ? t.type : "",
         tagColor: isComponent ? C.component : undefined,
-        note: note,
+        description: note,
     };
 };
 

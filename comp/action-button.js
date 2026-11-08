@@ -21,8 +21,8 @@ UI COMPONENT
 USAGE:
 const fab = ActionButton({
     items: [
-        { key: "photo", labelText: "Take a Photo" },
-        { key: "gallery", labelText: "Add from Gallery" },
+        { key: "photo", text: "Take a Photo" },
+        { key: "gallery", text: "Add from Gallery" },
         "Add from URL", // a text: its key is the text
     ],
     onAction: function (self, key) { println("Action: " + key); },
@@ -53,7 +53,7 @@ const ActionButtonDefaults = {
     top: 0,
     width: "100%",
     height: "100%",
-    items: [], // [{ key, labelText }] or ["text"]
+    items: [], // [{ key, text }] or ["text"]
     iconFile: "data:image/svg+xml;utf8," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" preserveAspectRatio="none" fill="#000000"><path d="M231 0H281V512H231ZM0 231H512V281H0Z"/></svg>'), // a plus (a page can give its own picture)
     openIconFile: "", // "": iconFile. The icon while the menu is open.
     iconSize: 30,
@@ -165,7 +165,7 @@ const ActionButton = function (params = {}) {
     const createItemButton = function (item) {
         const btn = Button({ width: "100%", height: _s.item.height, minimal: 1, color: _s.item.color });
         btn.shrink = 0;
-        btn.plainText = item.labelText;
+        btn.plainText = item.text;
         if (_s.item.textColor) btn.textColor = _s.item.textColor;
         if (_s.item.fontSize) btn.fontSize = _s.item.fontSize;
         btn.on("click", function () { chooseAction(item.key); });
@@ -468,13 +468,12 @@ const ActionButton = function (params = {}) {
 
 // *** STATIC FUNCTIONS:
 
-// The items with every value filled: a text -> { key: text, labelText: text }; id is a key too.
+// The items with every value filled: a text -> { key: text, text: text }; without a key, its text is its key.
 ActionButton.normalizeItems = function (items) {
     return (Array.isArray(items) ? items : []).map(function (item) {
-        if (typeof item !== "object" || item === null) return { key: String(item), labelText: String(item) };
-        const key = (item.key !== undefined) ? item.key : item.id;
-        const labelText = (item.labelText !== undefined) ? item.labelText : item.text;
-        return { key: String(key !== undefined ? key : labelText), labelText: String(labelText || "") };
+        if (typeof item !== "object" || item === null) return { key: String(item), text: String(item) };
+        const text = String(item.text || "");
+        return { key: String((item.key !== undefined) ? item.key : text), text: text };
     });
 };
 

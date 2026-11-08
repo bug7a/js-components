@@ -33,10 +33,10 @@ const UrlFieldDefaults = {
     tinySelectParams: {
         titleText: "",
         list: [
-            { id: "1", label: "http://" },
-            { id: "2", label: "https://" },
-            { id: "3", label: "http://www." },
-            { id: "4", label: "https://www." },
+            { value: "1", label: "http://" },
+            { value: "2", label: "https://" },
+            { value: "3", label: "http://www." },
+            { value: "4", label: "https://www." },
         ],
         selectedIndex: 3,
         paddingX: 0,

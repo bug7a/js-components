@@ -94,7 +94,10 @@ Bir bileşenin parametreleri kitin geri kalanındaki adları taşır: bir sayfay
 | Bir olay | `onXxx(self, ...)`: ilk argüman `self` | |
 | Görünüş | `styleName` + `style` (`Comp.styles`). Renkleri `"auto"` ile sistemi izleyenler (GraphBox, Toast): `theme` (`basic.resolveTheme`) | |
 | Sonradan değiştirmek | `setX()`, parametrenin adıyla: `setValue`, `setRequired`, `setMaxLength` | `setInputValue` |
+| Bir listenin öğesi (items, sections, steps, nodes, options) | `key` (kimliği), `text` (görünen metni), `description` (ikinci, küçük metni), `iconFile`, `enabled: 0` (seçilemez, açılamaz) | `title`, `label`, `labelText`, `titleText`, `desc`, `note`, `id`, `disabled` |
+| Bir form denetiminin seçeneği (SelectBox, TinySelect) | HTML'in `<option>` adları: `value`, `label`, `disabled` | `id` |
 
+- Bir parçanın görünüşü parçanın adıyla kalır (`style.title`, `style.desc`, `style.note`): öğenin verisinin adı değişse de. Tablo sütunları (`title`), grafik serileri (`label`) ve PropertyPanel alanları (`label`, `value`) kendi alanlarının yerleşik adlarını kullanır.
 - Bir parametre bir basic.js setter'ının adını almaz (`text`, `color`, `html`, `title`, `visible`, `zoom`...: CLAUDE.md). Kutunun kendisi alan olan bir bileşen (SearchInput) `color`, `border`, `round`'u bilerek kutuya verir.
 
 **Bir ad değişince:**

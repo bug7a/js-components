@@ -36,8 +36,8 @@ App.addPage({
             height: "100%",
             items: ProductData.map((product) => ({
                 key: product.key,
-                title: product.title,
-                desc: product.type + " · $" + product.price,
+                text: product.title,
+                description: product.type + " · $" + product.price,
                 iconFile: product.iconFile,
                 searchText: product.type,
                 product: product,

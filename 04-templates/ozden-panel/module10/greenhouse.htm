@@ -611,7 +611,7 @@
 
                     zoneSelect = TinySelect({
                         titleText: "Zone",
-                        list: ZONES.map(function (z) { return { id: z.id, label: z.name }; }),
+                        list: ZONES.map(function (z) { return { value: z.id, label: z.name }; }),
                         height: 40, fontSize: 15, color: CARD_COLOR, border: 1, borderColor: CARD_BORDER_COLOR, round: 8,
                         labelTextColor: Ink(0.95),
                         arrowIconFile: LIB_PATH + "comp/tiny-select/arrow.svg", arrowSize: 20, invertIconColor: T.invertIcon,

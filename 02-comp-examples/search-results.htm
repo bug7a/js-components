@@ -32,31 +32,31 @@
 
         // DATA: Some rows to search in.
         const DATA = [
-            { group: "Pages", text: "Dashboard", desc: "Page" },
-            { group: "Pages", text: "Products", desc: "Page" },
-            { group: "Pages", text: "Orders", desc: "Page" },
-            { group: "Pages", text: "Settings", desc: "Page" },
-            { group: "Users", text: "Ada Lovelace", desc: "ada@example.com · Admin" },
-            { group: "Users", text: "Grace Hopper", desc: "grace@example.com · Editor" },
-            { group: "Users", text: "Alan Turing", desc: "alan@example.com · Viewer" },
-            { group: "Users", text: "Katherine Johnson", desc: "katherine@example.com · Admin" },
-            { group: "Orders", text: "#1042 · Ada Lovelace", desc: "$248.00 · Paid" },
-            { group: "Orders", text: "#1043 · Alan Turing", desc: "$92.50 · Shipped" },
-            { group: "Orders", text: "#1044 · Grace Hopper", desc: "$1,120.00 · Pending" },
-            { group: "Products", text: "Aluminium Frame 40x40", desc: "SKU-1001 · $12.40" },
-            { group: "Products", text: "Steel Bracket", desc: "SKU-1002 · $3.10" },
-            { group: "Products", text: "Rubber Gasket <M8>", desc: "SKU-1003 · $0.80" },
-            { group: "Products", text: "Ball Bearing 6202", desc: "SKU-1004 · $2.25" },
-            { group: "Products", text: "Linear Rail 500mm", desc: "SKU-1005 · $48.00" },
-            { group: "Products", text: "Timing Belt GT2", desc: "SKU-1006 · $6.90" },
-            { group: "Products", text: "Stepper Motor NEMA17", desc: "SKU-1007 · $18.50" },
+            { group: "Pages", text: "Dashboard", description: "Page" },
+            { group: "Pages", text: "Products", description: "Page" },
+            { group: "Pages", text: "Orders", description: "Page" },
+            { group: "Pages", text: "Settings", description: "Page" },
+            { group: "Users", text: "Ada Lovelace", description: "ada@example.com · Admin" },
+            { group: "Users", text: "Grace Hopper", description: "grace@example.com · Editor" },
+            { group: "Users", text: "Alan Turing", description: "alan@example.com · Viewer" },
+            { group: "Users", text: "Katherine Johnson", description: "katherine@example.com · Admin" },
+            { group: "Orders", text: "#1042 · Ada Lovelace", description: "$248.00 · Paid" },
+            { group: "Orders", text: "#1043 · Alan Turing", description: "$92.50 · Shipped" },
+            { group: "Orders", text: "#1044 · Grace Hopper", description: "$1,120.00 · Pending" },
+            { group: "Products", text: "Aluminium Frame 40x40", description: "SKU-1001 · $12.40" },
+            { group: "Products", text: "Steel Bracket", description: "SKU-1002 · $3.10" },
+            { group: "Products", text: "Rubber Gasket <M8>", description: "SKU-1003 · $0.80" },
+            { group: "Products", text: "Ball Bearing 6202", description: "SKU-1004 · $2.25" },
+            { group: "Products", text: "Linear Rail 500mm", description: "SKU-1005 · $48.00" },
+            { group: "Products", text: "Timing Belt GT2", description: "SKU-1006 · $6.90" },
+            { group: "Products", text: "Stepper Motor NEMA17", description: "SKU-1007 · $18.50" },
         ];
 
         const findResults = function (text) {
             const query = text.trim().toLowerCase();
             if (!query) return [];
             return DATA.filter(function (row) {
-                return (row.text + " " + row.desc).toLowerCase().includes(query);
+                return (row.text + " " + row.description).toLowerCase().includes(query);
             });
         };
 

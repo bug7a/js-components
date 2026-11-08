@@ -55,39 +55,39 @@ const SettingsPage = function(params = {}) {
     const currentThemeName = Theme.load(); // The theme of the panel now (Settings > Appearance)
 
     const LANGUAGES = [
-        { id: "en", label: "English" },
-        { id: "tr", label: "Türkçe" },
-        { id: "de", label: "Deutsch" },
+        { value: "en", label: "English" },
+        { value: "tr", label: "Türkçe" },
+        { value: "de", label: "Deutsch" },
     ];
 
     const TIME_ZONES = [
-        { id: "Europe/Istanbul", label: "(GMT+03:00) Istanbul" },
-        { id: "Europe/London", label: "(GMT+00:00) London" },
-        { id: "Europe/Berlin", label: "(GMT+01:00) Berlin" },
-        { id: "America/New_York", label: "(GMT-05:00) New York" },
-        { id: "Asia/Tokyo", label: "(GMT+09:00) Tokyo" },
+        { value: "Europe/Istanbul", label: "(GMT+03:00) Istanbul" },
+        { value: "Europe/London", label: "(GMT+00:00) London" },
+        { value: "Europe/Berlin", label: "(GMT+01:00) Berlin" },
+        { value: "America/New_York", label: "(GMT-05:00) New York" },
+        { value: "Asia/Tokyo", label: "(GMT+09:00) Tokyo" },
     ];
 
     const DATE_FORMATS = ["DD.MM.YYYY", "MM/DD/YYYY", "YYYY-MM-DD"];
 
     const START_PAGES = [
-        { id: HomePage.KEY, label: "Home" },
-        { id: ReportsPage.KEY, label: "Reports" },
-        { id: OrdersPage.KEY, label: "Orders" },
-        { id: ProductsPage.KEY, label: "Products" },
-        { id: UsersPage.KEY, label: "Users" },
-        { id: UserListPage.KEY, label: "User List" },
-        { id: CustomersPage.KEY, label: "Customers" },
-        { id: ContentsPage.KEY, label: "Contents" },
-        { id: MediaPage.KEY, label: "Media Library" },
-        { id: RolesPage.KEY, label: "Roles & Permissions" },
-        { id: ActivityPage.KEY, label: "Activity Log" },
+        { value: HomePage.KEY, label: "Home" },
+        { value: ReportsPage.KEY, label: "Reports" },
+        { value: OrdersPage.KEY, label: "Orders" },
+        { value: ProductsPage.KEY, label: "Products" },
+        { value: UsersPage.KEY, label: "Users" },
+        { value: UserListPage.KEY, label: "User List" },
+        { value: CustomersPage.KEY, label: "Customers" },
+        { value: ContentsPage.KEY, label: "Contents" },
+        { value: MediaPage.KEY, label: "Media Library" },
+        { value: RolesPage.KEY, label: "Roles & Permissions" },
+        { value: ActivityPage.KEY, label: "Activity Log" },
     ];
 
     const WEEK_DAYS = [
-        { id: "mon", label: "Monday" },
-        { id: "fri", label: "Friday" },
-        { id: "sun", label: "Sunday" },
+        { value: "mon", label: "Monday" },
+        { value: "fri", label: "Friday" },
+        { value: "sun", label: "Sunday" },
     ];
 
     const NOTIFY_EVENTS = [
@@ -160,7 +160,7 @@ const SettingsPage = function(params = {}) {
     };
 
     const selectById = function(select, id) {
-        const index = select.getIndexById(id);
+        const index = select.getIndexByValue(id);
         if (index >= 0 && index != select.selectedIndex) select.setSelectedIndex(index);
     };
 
@@ -466,7 +466,7 @@ const SettingsPage = function(params = {}) {
             listOverTextColor: ACCENT_COLOR,
             listBackgroundColor: FIELD_COLOR,
             listBorderColor: Ink(0.15),
-            onChange: function (self) { onSelect(self.selectedIndex, self.getSelectedItem().id); },
+            onChange: function (self) { onSelect(self.selectedIndex, self.getSelectedItem().value); },
         });
     };
 

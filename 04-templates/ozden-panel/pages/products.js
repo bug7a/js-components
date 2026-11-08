@@ -45,10 +45,10 @@ const ProductsPage = function(params = {}) {
     const STATUS_TABS = ["", "active", "draft", "archived"]; // "": All
 
     const STOCK_FILTERS = [
-        { id: "", label: "All stock" },
-        { id: "in", label: "In stock" },
-        { id: "low", label: "Low stock" },
-        { id: "out", label: "Out of stock" },
+        { value: "", label: "All stock" },
+        { value: "in", label: "In stock" },
+        { value: "low", label: "Low stock" },
+        { value: "out", label: "Out of stock" },
     ];
 
     const filter = {
@@ -147,7 +147,7 @@ const ProductsPage = function(params = {}) {
     };
 
     const setStockFilter = function(id) {
-        const index = stockSelect.getIndexById(id);
+        const index = stockSelect.getIndexByValue(id);
         if (index >= 0) stockSelect.setSelectedIndex(index); // onSelect renders
     };
 
@@ -346,7 +346,7 @@ const ProductsPage = function(params = {}) {
                 that.position = "relative";
 
                 ProductsPage.createTinySelect(
-                    [{ id: "", label: "All categories" }].concat(ProductsPage.CATEGORIES.map(function(category) { return { id: category.name, label: category.name }; })),
+                    [{ value: "", label: "All categories" }].concat(ProductsPage.CATEGORIES.map(function(category) { return { value: category.name, label: category.name }; })),
                     function(id) { filter.category = id; render(); }
                 );
 
@@ -743,7 +743,7 @@ const ProductEditor = function(params = {}) {
                         that.elem.style.letterSpacing = "1px";
                         that.elem.style.marginTop = "4px";
                         categorySelect = ProductsPage.createTinySelect(
-                            ProductsPage.CATEGORIES.map(function(category) { return { id: category.name, label: category.name }; }),
+                            ProductsPage.CATEGORIES.map(function(category) { return { value: category.name, label: category.name }; }),
                             function(id) { draft.category = id; },
                             Math.max(0, ProductsPage.CATEGORIES.findIndex(function(category) { return category.name == draft.category; }))
                         );
@@ -1107,7 +1107,7 @@ ProductsPage.createTinySelect = function(list, onSelect, selectedIndex = 0) {
         listBackgroundColor: S.FIELD_COLOR,
         listBorderColor: Ink(0.15),
         onChange: function(self) {
-            const id = self.getSelectedItem().id;
+            const id = self.getSelectedItem().value;
             if (isReady) onSelect(id);
         },
     });

@@ -47,10 +47,10 @@ const CustomersPage = function(params = {}) {
     const TABS = ["", "vip", "regular", "new", "risk", "lead"]; // "": All
 
     const SORTS = [
-        { id: "spent", label: "Highest spending" },
-        { id: "recent", label: "Most recent order" },
-        { id: "orders", label: "Most orders" },
-        { id: "name", label: "Name A-Z" },
+        { value: "spent", label: "Highest spending" },
+        { value: "recent", label: "Most recent order" },
+        { value: "orders", label: "Most orders" },
+        { value: "name", label: "Name A-Z" },
     ];
 
     const filter = {
@@ -320,7 +320,7 @@ const CustomersPage = function(params = {}) {
                 });
 
                 CustomersPage.createTinySelect(
-                    [{ id: "", label: "Everyone" }, { id: "yes", label: "Marketing: opted in" }, { id: "no", label: "Marketing: opted out" }, { id: "blocked", label: "Blocked" }],
+                    [{ value: "", label: "Everyone" }, { value: "yes", label: "Marketing: opted in" }, { value: "no", label: "Marketing: opted out" }, { value: "blocked", label: "Blocked" }],
                     function(id) { filter.consent = id; render(); }
                 );
 
@@ -988,7 +988,7 @@ CustomersPage.createTinySelect = function(list, onSelect, selectedIndex = 0) {
         listBackgroundColor: S.FIELD_COLOR,
         listBorderColor: Ink(0.15),
         onChange: function(self) {
-            const id = self.getSelectedItem().id;
+            const id = self.getSelectedItem().value;
             if (isReady) onSelect(id);
         },
     });

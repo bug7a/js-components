@@ -88,11 +88,11 @@
                             removable: 1,
                             showNumbers: 0,
                             items: [
-                                { key: "home", text: "Home", desc: "Always the first page", locked: 1 },
-                                { key: "orders", text: "Orders", desc: "New and open orders" },
-                                { key: "reports", text: "Reports", desc: "Sales, stock and collections" },
-                                { key: "customers", text: "Customers", desc: "Accounts and contacts" },
-                                { key: "settings", text: "Settings", desc: "Users, roles and theme" },
+                                { key: "home", text: "Home", description: "Always the first page", locked: 1 },
+                                { key: "orders", text: "Orders", description: "New and open orders" },
+                                { key: "reports", text: "Reports", description: "Sales, stock and collections" },
+                                { key: "customers", text: "Customers", description: "Accounts and contacts" },
+                                { key: "settings", text: "Settings", description: "Users, roles and theme" },
                             ],
                             onChange: function (self) { lblMenu.text = "Keys: " + self.getKeys().join(", "); },
                             onRemove: function (self, item) {

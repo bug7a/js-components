@@ -59,10 +59,10 @@
                         TimeLine({
                             width: "100%",
                             items: [
-                                { time: "09:30", title: "Order created", text: "Order #1024 was created by Ayşe Yılmaz." },
-                                { time: "10:05", title: "Payment received", text: "1.240,00 TL, credit card." },
-                                { time: "13:40", title: "Packed" },
-                                { time: "17:15", title: "Sent", text: "Cargo no: 7712 4455 90" },
+                                { time: "09:30", text: "Order created", description: "Order #1024 was created by Ayşe Yılmaz." },
+                                { time: "10:05", text: "Payment received", description: "1.240,00 TL, credit card." },
+                                { time: "13:40", text: "Packed" },
+                                { time: "17:15", text: "Sent", description: "Cargo no: 7712 4455 90" },
                             ],
                         });
 
@@ -76,10 +76,10 @@
                         TimeLine({
                             width: "100%",
                             items: [
-                                { title: "Opened", text: "The ticket is waiting for an answer.", color: "#5DB182" },
-                                { title: "Answered", text: "Support wrote an answer.", color: "#3871E0" },
-                                { title: "Waiting", text: "The customer was asked for the invoice.", color: "#E0A038" },
-                                { title: "Closed", color: Black(0.3) },
+                                { text: "Opened", description: "The ticket is waiting for an answer.", color: "#5DB182" },
+                                { text: "Answered", description: "Support wrote an answer.", color: "#3871E0" },
+                                { text: "Waiting", description: "The customer was asked for the invoice.", color: "#E0A038" },
+                                { text: "Closed", color: Black(0.3) },
                             ],
                         });
 
@@ -95,12 +95,12 @@
                             lineWidth: 3,
                             clickableItems: 1,
                             items: [
-                                { time: "Mon", title: "Design", text: "Screens of the new panel.", key: "design" },
-                                { time: "Tue", title: "Coding", text: "Components and the pages.", key: "code" },
-                                { time: "Wed", title: "Test", text: "Click an item.", key: "test" },
+                                { time: "Mon", text: "Design", description: "Screens of the new panel.", key: "design" },
+                                { time: "Tue", text: "Coding", description: "Components and the pages.", key: "code" },
+                                { time: "Wed", text: "Test", description: "Click an item.", key: "test" },
                             ],
                             onClick: function (self, item, index) {
-                                lblDefault.text = "Clicked: <b>" + item.title + "</b> (index: " + index + ", key: \"" + item.key + "\")";
+                                lblDefault.text = "Clicked: <b>" + item.text + "</b> (index: " + index + ", key: \"" + item.key + "\")";
                             },
                             style: {
                                 row: { gap: 16 },
@@ -119,7 +119,7 @@
                         lineLive = TimeLine({
                             width: "100%",
                             items: [
-                                { time: nowText(), title: "Page opened" },
+                                { time: nowText(), text: "Page opened" },
                             ],
                         });
 
@@ -130,8 +130,8 @@
                                 liveCount++;
                                 lineLive.addItem({
                                     time: nowText(),
-                                    title: "Event " + liveCount,
-                                    text: "This item was added with addItem().",
+                                    text: "Event " + liveCount,
+                                    description: "This item was added with addItem().",
                                 });
                                 refreshLive();
                             });
@@ -139,7 +139,7 @@
                             smallButton("setItems([...])", function () {
                                 liveCount = 0;
                                 lineLive.setItems([
-                                    { time: nowText(), title: "New list", text: "setItems() writes the items again." },
+                                    { time: nowText(), text: "New list", description: "setItems() writes the items again." },
                                     "A text is also an item.",
                                 ]);
                                 refreshLive();
@@ -175,10 +175,10 @@
                             styleName: "dark",
                             width: "100%",
                             items: [
-                                { time: "09:30", title: "Order created", text: "Order #1024 was created by Ayşe Yılmaz." },
-                                { time: "10:05", title: "Payment received", text: "1.240,00 TL, credit card." },
-                                { time: "13:40", title: "Packed" },
-                                { time: "17:15", title: "Sent", text: "Cargo no: 7712 4455 90" },
+                                { time: "09:30", text: "Order created", description: "Order #1024 was created by Ayşe Yılmaz." },
+                                { time: "10:05", text: "Payment received", description: "1.240,00 TL, credit card." },
+                                { time: "13:40", text: "Packed" },
+                                { time: "17:15", text: "Sent", description: "Cargo no: 7712 4455 90" },
                             ],
                         });
 
@@ -191,9 +191,9 @@
                             styleName: "minimal",
                             width: "100%",
                             items: [
-                                { time: "Today, 14:02", title: "Saved", text: "report.md, 2.4 KB" },
-                                { time: "Today, 11:30", title: "Renamed", text: "notes.md is report.md now." },
-                                { time: "Yesterday", title: "Created" },
+                                { time: "Today, 14:02", text: "Saved", description: "report.md, 2.4 KB" },
+                                { time: "Today, 11:30", text: "Renamed", description: "notes.md is report.md now." },
+                                { time: "Yesterday", text: "Created" },
                             ],
                         });
 
@@ -206,9 +206,9 @@
                             styleName: "minimalDark",
                             width: "100%",
                             items: [
-                                { time: "Today, 14:02", title: "Saved", text: "report.md, 2.4 KB" },
-                                { time: "Today, 11:30", title: "Renamed", text: "notes.md is report.md now." },
-                                { time: "Yesterday", title: "Created" },
+                                { time: "Today, 14:02", text: "Saved", description: "report.md, 2.4 KB" },
+                                { time: "Today, 11:30", text: "Renamed", description: "notes.md is report.md now." },
+                                { time: "Yesterday", text: "Created" },
                             ],
                         });
 
