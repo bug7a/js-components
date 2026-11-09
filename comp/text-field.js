@@ -9,7 +9,7 @@ UI COMPONENT TEMPLATE
 - NEW PROJECTS: use styleName "ozden" on a light page and "ozdenDark" on a dark page (the
   look of 02-comp-examples/text-field.htm), unless the user asks for another one. The fields made from TextField
   (EmailField, PhoneField, PasswordField, UrlField, NumberField, CurrencyField, TextAreaField) take the same
-  packages: give them the same styleName. The default (classic) stays for the pages made before.
+  packages: give them the same styleName. The default is light; the pages made before name modern.
 - comp/tooltip.js, loaded before this file, shows the hint of the warning ball in a bubble; without it the ball
   has no bubble.
 
@@ -63,7 +63,10 @@ SPDX-License-Identifier: Apache-2.0
 -- hintColor: the bubble of a button of the field (the show password button of PasswordField) when color is "".
 -- The tooltip of the warning ball. color "": requiredColor / warningColor.
 
-- styleName: "light" (default; "classic": its old name) | "dark" | "ozden" | "ozdenDark" | "minimal" | "minimalDark"  (TextField.styles)
+- styleName: "light" (default) | "dark" | "modern" | "modernDark" | "ozden" | "ozdenDark" | "minimal" | "minimalDark"  (TextField.styles)
+-- light / dark (_designs/text-field.htm): the light and dark look of the kit: the title over a 44 px field with one
+   thin line and round 8, the accent while typing, the marks as icons, the hint in a white (dark: gray) bubble.
+-- modern / modernDark: the first look, a line under the field ("classic": the old name of modern).
 -- minimal / minimalDark (_designs/minimal-theme.htm): the title over a 28 px field of a line (titlePosition "above").
 - The sizes: titleFontSize, inputFontSize, inputHeight, fieldPadding, descriptionFontSize (the defaults: 16, 20, 40, 14, 14).
 - titlePosition: "inside" (default: the title in the field) | "above" (the title over the field, titleGap under it).
@@ -78,7 +81,7 @@ SPDX-License-Identifier: Apache-2.0
    "style" key): any param can be in it, also an image (requiredIconFile, warningIconFile).
    Order: your params > the package > TextFieldDefaults.
 -- TextField({ styleName: "dark" })
--- TextField({ styleName: "dark", focusLineColor: "#588ABE" })   // one param of the package changed
+-- TextField({ styleName: "dark", focusBackBorderColor: "#588ABE" })   // one param of the package changed
 -- TextField.styles.myStyle = { style: {}, backgroundColor: "#FFF8E8", requiredIconFile: "icons/star.svg" };
    (style: {} marks a package of params; without it the keys would go into params.style)
 
@@ -90,7 +93,7 @@ SPDX-License-Identifier: Apache-2.0
 const TextFieldDefaults = {
 
     key: "0",
-    styleName: "light", // "light" ("classic": its old name), "dark", "ozden", "ozdenDark", "minimal", "minimalDark" or a name added to TextField.styles
+    styleName: "light", // "light", "dark", "modern" ("classic": its old name), "modernDark", "ozden", "ozdenDark", "minimal", "minimalDark" or a name added to TextField.styles
     type: "text",
     width: 350,
     height: "auto",
@@ -740,43 +743,118 @@ TextField.setPlaceholderColor = function(inputElement, color) {
 //      that were not given. Without the key they would go into params.style and change nothing.
 TextField.styles = {
 
-    // The default look (TextFieldDefaults): a light field with a line under it.
-    light: { style: {} },
+    // The light look of the kit (_designs/text-field.htm), the default: the title over a 44 px white field with one
+    // thin line and round 8, no line under it; a stronger edge under the mouse, the accent while typing; the marks
+    // are icons (required: a small gray one), the hint in a white bubble.
+    light: {
+        style: {},
+        leftPadding: 15, // WHY 15 and 45: the draft has 14 and 44 inside the 1 px line of the field
+        rightPadding: 45, // the room of the mark
+        titleFontSize: 13,
+        inputFontSize: 15,
+        inputHeight: 44,
+        descriptionFontSize: 13,
+        titlePosition: "above",
+        titleGap: 6,
+        backgroundColor: "#FFFFFF",
+        focusBackgroundColor: "#FFFFFF",
+        hoverBackgroundColor: "",
+        lineColor: "transparent",
+        focusLineColor: "transparent",
+        backBorderColor: Black(0.12),
+        focusBackBorderColor: "#3D7A6B", // the accent of the kit
+        hoverBackBorderColor: Black(0.3),
+        backBorderTopRound: 8,
+        backBorderBottomRound: 8,
+        titleTextColor: Black(0.65),
+        titleBold: 1,
+        inputTextColor: Black(0.88),
+        placeholderColor: Black(0.38),
+        descriptionTextColor: Black(0.55),
+        warningBallType: "icon",
+        warningIconSize: 20,
+        warningColor: "#E5885E",
+        warningBorderColor: "#E5885E",
+        requiredIconColor: Black(0.35),
+        tooltipStyle: { color: "#FFFFFF", hintColor: "#FFFFFF", textColor: Black(0.88), border: 1, borderColor: Black(0.15), round: 6, fontSize: 13 },
+        unitStyle: { padding: [10, 3], color: "#F2F3F0", textColor: Black(0.7), round: 6, fontSize: 13 },
+        selectStyle: { color: Black(0.04), invertIconColor: 0, listBackgroundColor: "#FFFFFF", listTextColor: Black(0.88), listOverTextColor: "#3D7A6B", listBorderColor: Black(0.12) },
+    },
 
-    // The dark theme of classic: the same shape (a line under the field, no border, the warning as a colored
-    // ball), each color of classic turned to its dark side. (The rounded, bordered dark fields are ozdenDark.)
+    // The dark look of the kit: the same shapes on the dark surface.
     dark: {
         style: {},
-        backgroundColor: "#232322", // classic #F6F6F6
-        focusBackgroundColor: "#2A2C27", // classic #F3F4E0: the same soft green tint, on dark
-        lineColor: White(0.75), // classic #373836: the strong line under the field
+        leftPadding: 15, // WHY 15 and 45: the draft has 14 and 44 inside the 1 px line of the field
+        rightPadding: 45, // the room of the mark
+        titleFontSize: 13,
+        inputFontSize: 15,
+        inputHeight: 44,
+        descriptionFontSize: 13,
+        titlePosition: "above",
+        titleGap: 6,
+        backgroundColor: "#232322",
+        focusBackgroundColor: "#232322",
+        hoverBackgroundColor: "",
+        lineColor: "transparent",
+        focusLineColor: "transparent",
+        backBorderColor: White(0.12),
+        focusBackBorderColor: "#65A293", // the accent of the kit on a dark page
+        hoverBackBorderColor: White(0.32),
+        backBorderTopRound: 8,
+        backBorderBottomRound: 8,
+        titleTextColor: White(0.65),
+        titleBold: 1,
+        inputTextColor: White(0.9),
+        inputColorScheme: "dark",
+        placeholderColor: White(0.35),
+        descriptionTextColor: White(0.5),
+        warningBallType: "icon",
+        warningIconSize: 20,
+        warningColor: "#F0A07A",
+        warningBorderColor: "#F0A07A",
+        requiredIconColor: White(0.35),
+        tooltipStyle: { color: "#2C2C2B", hintColor: "#2C2C2B", textColor: White(0.9), border: 1, borderColor: White(0.2), round: 6, fontSize: 13 },
+        unitStyle: { padding: [10, 3], color: White(0.1), textColor: White(0.85), round: 6, fontSize: 13 },
+        selectStyle: { color: White(0.06), invertIconColor: 1, listBackgroundColor: "#2C2C2B", listTextColor: White(0.9), listOverTextColor: "#65A293", listBorderColor: White(0.12) },
+    },
+
+    // The first look (TextFieldDefaults): a light field with a line under it.
+    modern: { style: {} },
+
+    // The dark theme of modern: the same shape (a line under the field, no border, the warning as a colored
+    // ball), each color of modern turned to its dark side. (The rounded, bordered dark fields are ozdenDark.)
+    modernDark: {
+        style: {},
+        backgroundColor: "#232322", // modern #F6F6F6
+        focusBackgroundColor: "#2A2C27", // modern #F3F4E0: the same soft green tint, on dark
+        lineColor: White(0.75), // modern #373836: the strong line under the field
         focusLineColor: "#65A293", // the same accent
         backBorderColor: Black(0),
         focusBackBorderColor: Black(0),
 
-        titleTextColor: White(0.6), // classic #555555
-        inputTextColor: White(0.9), // classic #373836
+        titleTextColor: White(0.6), // modern #555555
+        inputTextColor: White(0.9), // modern #373836
         placeholderColor: White(0.3),
-        descriptionTextColor: White(0.4), // classic #999999
-        warningBallBorderColor: White(0.75), // classic #373836: the color of the line
+        descriptionTextColor: White(0.4), // modern #999999
+        warningBallBorderColor: White(0.75), // modern #373836: the color of the line
 
-        requiredColor: "#141414", // classic white: the ball takes the color of the page under it
-        requiredIconColor: White(0.75), // classic #373836
-        warningColor: "indianred", // classic #E5885E
+        requiredColor: "#141414", // modern white: the ball takes the color of the page under it
+        requiredIconColor: White(0.75), // modern #373836
+        warningColor: "indianred", // modern #E5885E
 
         tooltipStyle: {
             hintColor: "#262624", // the show password button: a dark bubble
-            textColor: White(0.9), // classic #141414 on a white ball
-            borderColor: White(0.75), // classic #141414
+            textColor: White(0.9), // modern #141414 on a white ball
+            borderColor: White(0.75), // modern #141414
         },
 
         unitStyle: {
-            color: White(0.85), // classic #373836: a light pill on the dark field
-            textColor: "#1A1A19", // classic white
+            color: White(0.85), // modern #373836: a light pill on the dark field
+            textColor: "#1A1A19", // modern white
         },
 
         selectStyle: {
-            color: White(0.06), // classic rgba(0,0,0,0.05)
+            color: White(0.06), // modern rgba(0,0,0,0.05)
             invertIconColor: 1,
             listBackgroundColor: "#232322",
             listTextColor: White(0.85),
@@ -860,7 +938,7 @@ TextField.styles = {
     },
 
 };
-TextField.styles.classic = TextField.styles.light; // the old name of light: the pages made with it keep their look
+TextField.styles.classic = TextField.styles.modern; // the old name of modern: the pages made with it keep their look
 
 // The minimal theme (_designs/minimal-theme.htm): the title (12 px) over the field, a 28 px field of a line with a
 // 13 px text, no fill; the line gets darker under the mouse and turns ink while typing. minimalDark: the same on a

@@ -505,6 +505,7 @@ const OrderDetails = function(params = {}) {
 
     const createDarkInput = function(params) {
         const input = TextField({
+            styleName: "modern", // the first look of TextField: the colors below are for it
             width: "100%",
             leftPadding: 14,
             rightPadding: 36,

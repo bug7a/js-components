@@ -23,7 +23,7 @@ SPDX-License-Identifier: Apache-2.0
 test("Form: a press that is not a click does not send; a click sends once", async function () {
     let sends = 0;
     const form = Form({ onSendClick: function () { sends++; } });
-    const input = TextField({ titleText: "Name", required: 1 });
+    const input = TextField({ styleName: "modern", titleText: "Name", required: 1 });
     form.addInput(input);
     input.setValue("Ali");
     input.input.inputElement.dispatchEvent(new Event("input", { bubbles: true }));
@@ -40,9 +40,9 @@ test("Form: a press that is not a click does not send; a click sends once", asyn
 
 test("Form: the hint of the passive send button is as round as the list of the missing entries (and the hints of the fields)", async function () {
     const form = Form({});
-    const input = TextField({ titleText: "Name", required: 1 });
+    const input = TextField({ styleName: "modern", titleText: "Name", required: 1 });
     form.addInput(input);
-    const password = PasswordField({ titleText: "Password" });
+    const password = PasswordField({ styleName: "modern", titleText: "Password" });
     await wait(50);
     form.btnSendCover.elem.dispatchEvent(new MouseEvent("mouseover"));
     const hintRadius = window.lblHint ? getComputedStyle(window.lblHint.elem).borderTopLeftRadius : "(no hint)";
@@ -59,7 +59,7 @@ test("Form: the hint of the passive send button is as round as the list of the m
 test("Form: onChange(self, input) on an edit", async function () {
     let changed = [];
     const form = Form({ onChange: function (self, input) { changed = [self, input]; } });
-    const input = TextField({ titleText: "Name" });
+    const input = TextField({ styleName: "modern", titleText: "Name" });
     form.addInput(input);
     input.input.inputElement.value = "A";
     input.input.inputElement.dispatchEvent(new Event("input", { bubbles: true }));

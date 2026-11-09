@@ -420,6 +420,7 @@ const SettingsPage = function(params = {}) {
 
     // Dark style for the TextField family
     const INPUT_PARAMS = {
+        styleName: "modern", // the first look of TextField: the colors below are for it
         width: "100%",
         leftPadding: 14,
         rightPadding: 36,

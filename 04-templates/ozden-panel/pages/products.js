@@ -633,6 +633,7 @@ const ProductEditor = function(params = {}) {
     // Dark style for TextField and NumberField
     const createInput = function(Component, params) {
         const input = Component({
+            styleName: "modern", // the first look of TextField: the colors below are for it
             width: "100%",
             leftPadding: 14,
             rightPadding: 36,

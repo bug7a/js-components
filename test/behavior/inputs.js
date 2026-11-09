@@ -538,7 +538,7 @@ test("NumericKeyboard: a held Enter calls onEnter once", async function () {
 // *** TEXT FIELD (comp/text-field.js)
 
 test("EmailField: a fast typing that ends valid leaves no warning ball", async function () {
-    const email = EmailField({ titleText: "Email", animatedWarningBall: 1 });
+    const email = EmailField({ styleName: "modern", titleText: "Email", animatedWarningBall: 1 });
     const inputElement = email.input.inputElement;
     // WHY: the letters come faster than the delay of withMotion() (a paste or a fast typist)
     for (const letter of "a@b.co") {
@@ -554,7 +554,7 @@ test("EmailField: a fast typing that ends valid leaves no warning ball", async f
 // *** PHONE FIELD (comp/phone-field.js)
 
 test("PhoneField: a pasted number keeps all its digits", async function () {
-    const phone = PhoneField({ titleText: "Phone" });
+    const phone = PhoneField({ styleName: "modern", titleText: "Phone" });
     const el = phone.input.inputElement;
     const results = [];
     ["555 123 45 67", "(555) 123-4567", "0555 123 45 67", "+90 555 123 45 67"].forEach(function (text) {
@@ -573,7 +573,7 @@ test("PhoneField: a pasted number keeps all its digits", async function () {
 // *** URL FIELD (comp/url-field.js)
 
 test("UrlField: a path with an 's' is valid, an empty required field is not sent", async function () {
-    const url = UrlField({ titleText: "Site", required: 1 });
+    const url = UrlField({ styleName: "modern", titleText: "Site", required: 1 });
     const results = [];
     ["example.com/news", "example.com/a b"].forEach(function (text) {
         url.input.text = text;
@@ -588,7 +588,7 @@ test("UrlField: a path with an 's' is valid, an empty required field is not sent
 // *** TEXT AREA FIELD (comp/text-area-field.js)
 
 test("TextAreaField: setPlaceholder and setMaxLength change its textarea", async function () {
-    const area = TextAreaField({ titleText: "Note" });
+    const area = TextAreaField({ styleName: "modern", titleText: "Note" });
     let error = "";
     try {
         area.setPlaceholder("Write a note");

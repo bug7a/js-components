@@ -59,6 +59,7 @@ const EditUser = function(params = {}) {
     const initEditForm = function () {
 
         const inputStyle = {
+            styleName: "modern", // the first look of TextField: the colors below are for it
             width: "100%",
             height: "auto",
             leftPadding: 20,

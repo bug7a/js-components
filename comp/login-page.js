@@ -210,6 +210,7 @@ const LoginPage = function(params = {}) {
                             rightPadding: 16,
                             styleName: box.inputStyleName,
                         } : {
+                            styleName: "modern", // the first look of TextField: the input_ colors are for it
                             width: "100%",
                             leftPadding: 16,
                             rightPadding: 16,

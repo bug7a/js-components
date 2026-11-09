@@ -128,9 +128,13 @@ const PasswordField = function(params = {}) {
     box.input.inputElement.type = "password";
 
     // GROUP: btnShowPassword (in the left box of TextField)
+    // WHY: over a field under its title an icon mark stands in the middle of the right padding (TextField light, dark):
+    //      the eye stands left of that padding, so the mark does not cover it.
+    const isMarkInRightPadding = (box.titlePosition === "above" && box.warningBallType === "icon");
+    const LEFT_BOX_PADDING = 20; // (the padding of the left box of TextField)
     AutoLayout({
         align: "right center",
-        padding: [10, 0],
+        padding: isMarkInRightPadding ? [0, 0, box.rightPadding - LEFT_BOX_PADDING, 0] : [10, 0],
     });
     box.leftBox.add(that);
 

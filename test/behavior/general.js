@@ -363,11 +363,11 @@ test("SmartButton: the second click of a double click does not answer the ask; a
 });
 
 test("EmailField: setRequired() and the start value keep the warning of an invalid e-mail", async function () {
-    const typed = EmailField({ width: 300 });
+    const typed = EmailField({ styleName: "modern", width: 300 });
     typed.setValue("abc");
     const beforeRequired = typed.status;
     typed.setRequired(1);
-    const started = EmailField({ width: 300, value: "not-an-email" });
+    const started = EmailField({ styleName: "modern", width: 300, value: "not-an-email" });
     check("EmailField: setRequired() and the start value keep the warning of an invalid e-mail", beforeRequired === 2 && typed.status === 2 && started.status === 2, "typed: " + beforeRequired + " -> " + typed.status + ", start value: " + started.status);
     typed.remove();
     started.remove();
@@ -412,13 +412,13 @@ test("PasswordField: the eye is white on a dark field", async function () {
     check("PasswordField: the eye is white on a dark field", filters.join() === ",,invert(100%),invert(100%)", filters.join());
 });
 
-test("PasswordField: the show password hint takes the hint look of the field (white on classic, dark on ozdenDark and dark)", async function () {
-    const fields = ["classic", "ozdenDark", "dark"].map(function (styleName) {
+test("PasswordField: the show password hint takes the hint look of the field (white on classic, dark on ozdenDark and modernDark)", async function () {
+    const fields = ["classic", "ozdenDark", "modernDark"].map(function (styleName) {
         return PasswordField({ titleText: "Password", styleName: styleName });
     });
     const colors = fields.map(function (field) { return field.btnShowPassword.tooltip.lbl_color; });
     const textColors = fields.map(function (field) { return field.btnShowPassword.tooltip.lbl_textColor; });
-    check("PasswordField: the show password hint takes the hint look of the field (white on classic, dark on ozdenDark and dark)",
+    check("PasswordField: the show password hint takes the hint look of the field (white on classic, dark on ozdenDark and modernDark)",
         colors[0] === "white" && textColors[0] === "#141414" && colors[1] === "#262624" && colors[2] === "#262624",
         "bubbles: " + colors.join(", ") + " | texts: " + textColors.join(", "));
     fields.forEach(function (field) { field.remove(); });
@@ -444,10 +444,10 @@ test("PageControl: a disabled control does not change the page from its dots", a
 });
 
 test("UrlField: the value it gives can be put back, also as the start value", async function () {
-    const url = UrlField({ width: 360 });
+    const url = UrlField({ styleName: "modern", width: 360 });
     url.setValue("https://www.example.com/news");
     url.setValue(url.getValue());
-    const started = UrlField({ width: 360, value: "https://www.example.com" });
+    const started = UrlField({ styleName: "modern", width: 360, value: "https://www.example.com" });
     check("UrlField: the value it gives can be put back, also as the start value", url.getValue() === "https://www.example.com/news" && url.status === 0 && started.getValue() === "https://www.example.com" && started.status === 0, url.getValue() + " (" + url.status + "), " + started.getValue() + " (" + started.status + ")");
     url.remove();
     started.remove();
@@ -470,7 +470,7 @@ test("Slider: made in a hidden group it keeps its value, also one set while hidd
 
 test("TextAreaField: filled while hidden, it is as tall as its field when shown", async function () {
     const group = VGroup({ width: 400, height: 200, visible: 0 });
-        const note = TextAreaField({ width: 360, height: 140, titleText: "Note" });
+        const note = TextAreaField({ styleName: "modern", width: 360, height: 140, titleText: "Note" });
     endGroup();
     note.setValue("A saved note.");
     group.visible = 1;
@@ -702,8 +702,8 @@ test("NumberField and CurrencyField: a second decimal separator typed in the num
     const typeText = function (field, text) {
         for (const letter of text) insertAt(field, field.input.inputElement.value.length, letter);
     };
-    const number = NumberField({ titleText: "Number" });
-    const currency = CurrencyField({ titleText: "Price" });
+    const number = NumberField({ styleName: "modern", titleText: "Number" });
+    const currency = CurrencyField({ styleName: "modern", titleText: "Price" });
     typeText(number, "12.5");
     typeText(currency, "12.5");
     const numberValue = insertAt(number, 1, "."); // the point moved: "1.25"
@@ -771,7 +771,7 @@ test("Texts: a component shows its texts as they are written, also after its set
         SmartButton: SmartButton({ labelText: TYPED }),
         CheckBox: CheckBox({ labelText: TYPED }),
         RadioButton: RadioButton({ labelText: TYPED, group: "texts-test", value: "a" }),
-        TextField: TextField({ titleText: TYPED, showDescription: 1, descriptionText: TYPED, showRightBox: 1, showUnit: 1, unitText: TYPED }),
+        TextField: TextField({ styleName: "modern", titleText: TYPED, showDescription: 1, descriptionText: TYPED, showRightBox: 1, showUnit: 1, unitText: TYPED }),
         ProgressBar: ProgressBar({ titleText: TYPED }),
         FilePicker: FilePicker({ titleText: TYPED, descriptionText: TYPED }),
         SmartTable: SmartTable({ titleDataList: [{ name: TYPED, dataTitle: "a", width: 200 }], itemDataList: [{ a: TYPED }] }),
@@ -805,7 +805,7 @@ test("Texts: a component shows its texts as they are written, also after its set
     loading.remove();
 
     const htmlButton = SmartButton({ labelText: TYPED, allowHtml: 1 });
-    const htmlField = TextField({ titleText: TYPED, allowHtml: 1 });
+    const htmlField = TextField({ styleName: "modern", titleText: TYPED, allowHtml: 1 });
     const htmlLoading = LoadingScreen({ messageText: "Wait.<br><b>Now</b>", allowHtml: 1 });
     await wait(30);
     const htmlWorks = isHtml(htmlButton) && isHtml(htmlField) && isHtml(htmlLoading);

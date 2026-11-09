@@ -18,7 +18,8 @@
 
         <script>
 
-        // TextField (comp/text-field.js) in its default look: every param of the look written out, and an icon in its left box.
+        // TextField (comp/text-field.js) with styleName "modern", its first look: every param of the look written out, and an
+        // icon in its left box. The light and dark look of the kit (the default): text-field-8-light-dark.htm.
 
         const start = function () {
 
@@ -29,6 +30,7 @@
 
                 // INPUT: #1
                 const myInput = TextField({
+                    styleName: "modern",
                     key: "1",
                     width: 350,
                     height: "auto",

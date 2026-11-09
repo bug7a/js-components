@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>TextField: light and dark</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- LIBRARY FILES -->
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Bold.ttf" as="font" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="../basic/basic.css">
+    <script src="../basic/basic.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../basic/scroll-bar.js" type="text/javascript" charset="utf-8"></script>
+
+    <!-- COMPONENT FILES -->
+    <script src="../comp/tooltip.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/text-field.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/email-field.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/password-field.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/scroll-area.js" type="text/javascript" charset="utf-8"></script>
+
+    <script>
+
+        /* Bismillah */
+
+        // TextField with styleName "light" (the default) and "dark": the light and dark look of the kit
+        // (_designs/text-field.htm): the title over a 44 px field with one thin line, the accent while typing, the marks
+        // as icons. The look comes only from the package: the fields give no look params.
+
+        // *** THE COLORS AND SIZES OF THE PAGE
+        const PAGE_COLOR = "#F4F5F2";
+        const LIGHT_CARD = { color: "#FFFFFF", line: Black(0.1), text: Black(0.5) };
+        const DARK_CARD = { color: "#1A1A19", line: White(0.1), text: White(0.5) };
+        const CARD_WIDTH = 420;
+
+        const start = function () {
+
+            page.color = PAGE_COLOR;
+
+            // BOX: Scrolling page
+            ScrollArea({ align: "center top", gap: 24, padding: [16, 40] });
+
+                Label({ text: "TextField: light and dark", fontSize: 24, bold: 1, textColor: Black(0.8) });
+
+                // CARD: light
+                startCard(LIGHT_CARD, "styleName: \"light\" (the default)");
+
+                    TextField({
+                        styleName: "light",
+                        width: "100%",
+                        titleText: "Name",
+                        placeholder: "Your name",
+                    });
+
+                    EmailField({
+                        styleName: "light",
+                        width: "100%",
+                        titleText: "E-mail",
+                        placeholder: "name@mail.com",
+                        required: 1,
+                    });
+
+                    TextField({
+                        styleName: "light",
+                        width: "100%",
+                        titleText: "Weight",
+                        value: "72",
+                        showRightBox: 1,
+                        showUnit: 1,
+                        unitText: "kg",
+                        showDescription: 1,
+                        descriptionText: "Between 30 and 200.",
+                    });
+
+                    PasswordField({
+                        styleName: "light",
+                        width: "100%",
+                        titleText: "Password",
+                        value: "blue whale 42",
+                    });
+
+                endCard();
+
+                // CARD: dark
+                startCard(DARK_CARD, "styleName: \"dark\"");
+
+                    TextField({
+                        styleName: "dark",
+                        width: "100%",
+                        titleText: "Name",
+                        placeholder: "Your name",
+                    });
+
+                    EmailField({
+                        styleName: "dark",
+                        width: "100%",
+                        titleText: "E-mail",
+                        value: "bugra@",
+                    });
+
+                    TextField({
+                        styleName: "dark",
+                        width: "100%",
+                        titleText: "Weight",
+                        value: "72",
+                        showRightBox: 1,
+                        showUnit: 1,
+                        unitText: "kg",
+                        showDescription: 1,
+                        descriptionText: "Between 30 and 200.",
+                    });
+
+                    PasswordField({
+                        styleName: "dark",
+                        width: "100%",
+                        titleText: "Password",
+                        value: "blue whale 42",
+                    });
+
+                endCard();
+
+            endGroup();
+
+        };
+
+        // *** OTHER FUNCTIONS:
+
+        // GROUP: A card in the colors of its page, with its title
+        const startCard = function (card, title) {
+            VGroup({
+                width: "100%",
+                height: "auto",
+                align: "left top",
+                gap: 18,
+                padding: 24,
+                color: card.color,
+                round: 10,
+                border: 1,
+                borderColor: card.line,
+                clipContent: 0, // WHY: the hint bubble of a mark goes out of the field
+                css: { maxWidth: CARD_WIDTH + "px", alignItems: "stretch" },
+            });
+            Label({ text: title, fontSize: 13, bold: 1, textColor: card.text });
+        };
+
+        const endCard = function () {
+            endGroup();
+        };
+
+    </script>
+
+</head>
+
+<body>
+</body>
+
+</html>

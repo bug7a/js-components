@@ -224,7 +224,7 @@ test("CheckBox, RadioButton, Toggle minimal: a 14 px mark, a 28 x 16 toggle", as
 
 test("TextField minimal: the title over a 28 px field, its edge darker under the mouse; the default field is as before", async function () {
     const minimal = TextField({ styleName: "minimal", titleText: "E-mail" });
-    const plain = TextField({ titleText: "E-mail" });
+    const plain = TextField({ styleName: "modern", titleText: "E-mail" });
     await basic.nextFrame();
     const fieldHeight = minimal.background.elem.offsetHeight;
     const isFieldUnderTitle = (minimal.background.elem.offsetTop >= minimal.title.elem.offsetHeight);
@@ -252,7 +252,7 @@ test("ItemList, SelectBox, SmartButton minimalDanger: 28 px rows and fields", as
 
 test("TextField minimal: a warning colors the edge of the field; a package wins over the defaults of TextAreaField; ink colors the edge", async function () {
     const field = EmailField({ styleName: "minimal", titleText: "E-mail", value: "bugra@" });
-    const plain = EmailField({ titleText: "E-mail", value: "bugra@" });
+    const plain = EmailField({ styleName: "modern", titleText: "E-mail", value: "bugra@" });
     const note = TextAreaField({ styleName: "minimal", titleText: "Note" });
     const send = SmartButton({ styleName: "minimal", tone: "ink", labelText: "Send" });
     await basic.nextFrame();
