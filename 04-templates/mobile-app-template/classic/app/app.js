@@ -303,6 +303,8 @@ App.createPageView = function (appPage, params, kind) {
 
     endBox();
 
+    if (appPage.scroll !== 0 && typeof ScrollBar !== "undefined") ScrollBar({ scrollableBox: view.body });
+
     return view;
 
 };

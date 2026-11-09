@@ -266,6 +266,7 @@ App.createPageView = function (appPage, params, isTab) {
     };
     view.onResize(refreshLayout);
     refreshLayout();
+    if (appPage.scroll !== 0 && typeof ScrollBar !== "undefined") ScrollBar({ scrollableBox: view.body });
 
     return view;
 
