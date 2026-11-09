@@ -164,10 +164,10 @@ const TextFieldDefaults = {
     },
 
     // The select inside the field (the protocol of UrlField, a TinySelect) and its open list
-    // WHY no color under it: the protocol is a part of the address in the field (a gray box with no space in it
-    //     looked like the select of the browser); its arrow says that it opens.
+    // WHY a ground a little darker than the field (in every package but minimal): it shows that there is something to
+    //     choose, and the space at the start of the select sits right on it (with no ground it looked pushed in).
     selectStyle: {
-        color: "transparent",
+        color: "rgba(0,0,0,0.05)",
         invertIconColor: 0, // 1: a white arrow (on a dark field)
         listBackgroundColor: "whitesmoke",
         listTextColor: "rgba(0, 0, 0, 0.8)",
@@ -780,7 +780,7 @@ TextField.styles = {
         requiredIconColor: Black(0.35),
         tooltipStyle: { color: "#FFFFFF", hintColor: "#FFFFFF", textColor: Black(0.88), border: 1, borderColor: Black(0.15), round: 6, fontSize: 13 },
         unitStyle: { padding: [10, 3], color: "#F2F3F0", textColor: Black(0.7), round: 6, fontSize: 13 },
-        selectStyle: { color: "transparent", invertIconColor: 0, listBackgroundColor: "#FFFFFF", listTextColor: Black(0.88), listOverTextColor: "#3D7A6B", listBorderColor: Black(0.12) },
+        selectStyle: { color: Black(0.04), invertIconColor: 0, listBackgroundColor: "#FFFFFF", listTextColor: Black(0.88), listOverTextColor: "#3D7A6B", listBorderColor: Black(0.12) },
     },
 
     // The dark look of the kit: the same shapes on the dark surface.
@@ -817,7 +817,7 @@ TextField.styles = {
         requiredIconColor: White(0.35),
         tooltipStyle: { color: "#2C2C2B", hintColor: "#2C2C2B", textColor: White(0.9), border: 1, borderColor: White(0.2), round: 6, fontSize: 13 },
         unitStyle: { padding: [10, 3], color: White(0.1), textColor: White(0.85), round: 6, fontSize: 13 },
-        selectStyle: { color: "transparent", invertIconColor: 1, listBackgroundColor: "#2C2C2B", listTextColor: White(0.9), listOverTextColor: "#65A293", listBorderColor: White(0.12) },
+        selectStyle: { color: White(0.06), invertIconColor: 1, listBackgroundColor: "#2C2C2B", listTextColor: White(0.9), listOverTextColor: "#65A293", listBorderColor: White(0.12) },
     },
 
     // The first look (TextFieldDefaults): a light field with a line under it.
@@ -856,7 +856,7 @@ TextField.styles = {
         },
 
         selectStyle: {
-            color: "transparent",
+            color: White(0.06), // modern rgba(0,0,0,0.05)
             invertIconColor: 1,
             listBackgroundColor: "#232322",
             listTextColor: White(0.85),
@@ -931,7 +931,7 @@ TextField.styles = {
         },
 
         selectStyle: {
-            color: "transparent",
+            color: "rgba(255, 255, 255, 0.07)", // FIELD_BG_SELECTED
             invertIconColor: 1,
             listBackgroundColor: "#262624", // as the tooltip
             listTextColor: "rgba(255, 255, 255, 0.94)", // SITE.ON_DARK
