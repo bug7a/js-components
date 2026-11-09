@@ -86,6 +86,18 @@ const PhoneField = function(params = {}) {
         });
     };
 
+    // The text without the country code at its start: the one in the field, or the new one (the longest).
+    // WHY: the first countryCode.length characters went without a look: "+90 (555) 123-4567" became
+    //      "+1 (055) 512-3456" after setCountryCode("+1") (a valid wrong number), and a number autofilled
+    //      without its code lost its first digits
+    const withoutCountryCode = function(text) {
+        const codes = [codeInField, box.countryCode].filter(function(code) {
+            return typeof code === "string" && code.length > 0 && text.indexOf(code) === 0;
+        });
+        codes.sort(function(a, b) { return b.length - a.length; });
+        return (codes.length) ? text.substring(codes[0].length) : text;
+    };
+
     const makeRandomPhoneNumber = function() {
         return box.phoneMask.replace(/_/g, () => Math.floor(Math.random() * 10));
     };
@@ -156,20 +168,14 @@ const PhoneField = function(params = {}) {
 
     // *** PUBLIC FUNCTIONS:
 
+    const superSetValue = box.setValue; // TextField: the text as it is (the mask is made here)
+
     // The typed number in the form of box.phoneMask.
     box.applyFormattedValueToInput = function() { // OVERRIDE
 
-        let value = inputElem.value; // WHY: The field itself, also when it holds only the mask. (getValue() is "" then.)
-
-        // 1. The country code at the start of the field goes: the one in the field, or the new one (the longest).
-        // WHY: the first countryCode.length characters went without a look: "+90 (555) 123-4567" became
-        //      "+1 (055) 512-3456" after setCountryCode("+1") (a valid wrong number), and a number autofilled
-        //      without its code lost its first digits
-        const codes = [codeInField, box.countryCode].filter(function(code) {
-            return typeof code === "string" && code.length > 0 && value.indexOf(code) === 0;
-        });
-        codes.sort(function(a, b) { return b.length - a.length; });
-        if (codes.length) value = value.substring(codes[0].length);
+        // 1. The country code at the start of the field goes.
+        // WHY the field itself: also when it holds only the mask (getValue() is "" then)
+        const value = withoutCountryCode(inputElem.value);
 
         // 2. Only the digits stay (the characters of the mask go too)
         let digits = value.replace(/[^0-9]/g, "");
@@ -179,10 +185,22 @@ const PhoneField = function(params = {}) {
         digits = digits.substring(0, maxDigits);
 
         // 3. Fill countryCode + phoneMask with them
-        box.setValue(fillMaskWithDigits(getFullMask(), digits));
+        superSetValue(fillMaskWithDigits(getFullMask(), digits));
         codeInField = box.countryCode;
         setCursorToFirstUnderscore();
 
+    };
+
+    // WHY: a number given in code (or as the start value) was written as it is: "5551234567" was not in the mask, and
+    //      isValid() said 1. It goes into the mask as a pasted number does ("0555 123 45 67": the same digits).
+    box.setValue = function(value) { // OVERRIDE
+        const text = String(value ?? "");
+        if (text === "") {
+            superSetValue("");
+            return;
+        }
+        superSetValue(fillMaskWithDigits(getFullMask(), getPastedDigits(withoutCountryCode(text))));
+        codeInField = box.countryCode;
     };
 
     box.setPhoneMask = function(mask) {
@@ -281,7 +299,7 @@ const PhoneField = function(params = {}) {
             const text = (event.clipboardData) ? event.clipboardData.getData("text") : "";
             if (!text) return;
             event.preventDefault();
-            box.setValue(fillMaskWithDigits(getFullMask(), getPastedDigits(text)));
+            superSetValue(fillMaskWithDigits(getFullMask(), getPastedDigits(text)));
             setCursorToFirstUnderscore();
             box.checkIfInputIsRequiredAndEmpty();
             box.showWarningIfNotValid(box.isValid());
@@ -296,6 +314,7 @@ const PhoneField = function(params = {}) {
 
     }
 
+    if (inputElem.value !== "") box.setValue(inputElem.value); // WHY: a start value goes into the mask too (setValue)
     box.checkInputValue(); // WHY: TextField checked the start value before this isValid()
 
     return endExtendedObject(box);

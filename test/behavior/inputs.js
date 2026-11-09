@@ -551,6 +551,22 @@ test("EmailField: a fast typing that ends valid leaves no warning ball", async f
     email.remove();
 });
 
+// *** CURRENCY FIELD (comp/currency-field.js)
+
+test("CurrencyField: a number given in code or at the start is written in groups", async function () {
+    const started = CurrencyField({ styleName: "modern", value: "1234567.5" });
+    const comma = CurrencyField({ styleName: "modern", decimalSeparator: ",", groupSeparator: "." });
+    comma.setValue("9876543,215");
+    const negative = CurrencyField({ styleName: "modern" });
+    negative.setValue(-1234);
+    const values = [started.getValue(), started.getValueAsNumber(), comma.getValue(), negative.getValue()];
+    check("CurrencyField: a number given in code or at the start is written in groups",
+        values.join(" | ") === "1,234,567.5 | 1234567.5 | 9.876.543,21 | -1,234", values.join(" | "));
+    started.remove();
+    comma.remove();
+    negative.remove();
+});
+
 // *** PHONE FIELD (comp/phone-field.js)
 
 test("PhoneField: a pasted number keeps all its digits", async function () {
@@ -570,6 +586,22 @@ test("PhoneField: a pasted number keeps all its digits", async function () {
     phone.remove();
 });
 
+test("PhoneField: a number given in code or at the start goes into the mask", async function () {
+    const started = PhoneField({ styleName: "modern", value: "5551234567" });
+    const phone = PhoneField({ styleName: "modern" });
+    const values = [started.getValue(), started.isValid()];
+    ["0555 987 65 43", "+90 (555) 12_-____", "+90 (555) 123-4567"].forEach(function (text) {
+        phone.setValue(text);
+        values.push(phone.getValue());
+    });
+    phone.setValue("");
+    values.push("\"" + phone.getValue() + "\"");
+    check("PhoneField: a number given in code or at the start goes into the mask",
+        values.join(" | ") === "+90 (555) 123-4567 | 1 | +90 (555) 987-6543 | +90 (555) 12_-____ | +90 (555) 123-4567 | \"\"", values.join(" | "));
+    started.remove();
+    phone.remove();
+});
+
 // *** URL FIELD (comp/url-field.js)
 
 test("UrlField: a path with an 's' is valid, an empty required field is not sent", async function () {
@@ -583,6 +615,20 @@ test("UrlField: a path with an 's' is valid, an empty required field is not sent
     check("UrlField: a path with an 's' is valid and a path with a space is not", results[0] === 1 && results[1] === 0, results.join(", "));
     check("UrlField: an empty field gives an empty value (not the protocol alone)", url.getValue() === "", "\"" + url.getValue() + "\"");
     url.remove();
+});
+
+test("UrlField: another protocol calls onChange (not in an empty field)", async function () {
+    const changes = [];
+    const chosen = [];
+    const url = UrlField({ styleName: "modern", value: "example.com", tinySelectParams: { onChange: function (select) { chosen.push(select.selectedIndex); } },
+        onChange: function (self) { changes.push(self.getValue()); } });
+    url.tinySelect.setSelectedIndex(0);
+    const empty = UrlField({ styleName: "modern", onChange: function (self) { changes.push("empty: " + self.getValue()); } });
+    empty.tinySelect.setSelectedIndex(1);
+    check("UrlField: another protocol calls onChange (not in an empty field)",
+        changes.join(", ") === "http://example.com" && chosen.join(", ") === "0", changes.join(", ") + " / the page's own onChange: " + chosen.join(", "));
+    url.remove();
+    empty.remove();
 });
 
 // *** TEXT AREA FIELD (comp/text-area-field.js)

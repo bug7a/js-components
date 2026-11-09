@@ -77,7 +77,14 @@ const UrlField = function(params = {}) {
             listOverTextColor: selectStyle.listOverTextColor,
             listBorderColor: selectStyle.listBorderColor,
         };
-        return Object.assign(colorParams, box.tinySelectParams);
+        const tinySelectParams = Object.assign(colorParams, box.tinySelectParams);
+        const pageOnChange = tinySelectParams.onChange;
+        // WHY: another protocol is another value, and onChange was not called: a form that listens to it missed it
+        tinySelectParams.onChange = function(select) {
+            if (pageOnChange) pageOnChange(select);
+            if (box.input.text !== "") box.onChange(box);
+        };
+        return tinySelectParams;
     };
 
     // *** PUBLIC FUNCTIONS:

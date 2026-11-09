@@ -125,16 +125,10 @@ const CurrencyField = function(params = {}) {
 
     }
 
-    // *** PUBLIC FUNCTIONS:
-    box.getValueAsNumber = function() {
-        return clearGroupFormat(box.getValue());
-    }
+    // The text of a number as this field writes it: only the characters it allows, the groups of three.
+    const formatText = function(text) {
 
-    box.applyFormattedValueToInput = function() { // OVERRIDE
-
-        rememberCursorPosition();
-
-        let value = clearGroupFormat(box.getValue());
+        let value = clearGroupFormat(text);
 
         // 1. The characters that may be typed
         let allowedChars = "0-9";
@@ -180,10 +174,26 @@ const CurrencyField = function(params = {}) {
             value = "-0" + box.decimalSeparator;
         }
 
-        value = formatWithGrouping(value);
-        box.setValue(value); // Put back formatted value.
-        restoreCursorPosition();
+        return formatWithGrouping(value);
 
+    };
+
+    // *** PUBLIC FUNCTIONS:
+    box.getValueAsNumber = function() {
+        return clearGroupFormat(box.getValue());
+    }
+
+    const superSetValue = box.setValue; // TextField: the text as it is
+
+    box.applyFormattedValueToInput = function() { // OVERRIDE
+        rememberCursorPosition();
+        superSetValue(formatText(box.getValue()));
+        restoreCursorPosition();
+    };
+
+    // WHY: a number given in code (or as the start value) was written as it is: "1234567.5", not "1,234,567.5"
+    box.setValue = function(value) { // OVERRIDE
+        superSetValue(formatText(String(value ?? "")));
     };
 
     // *** OBJECT INIT CODE:
@@ -192,6 +202,8 @@ const CurrencyField = function(params = {}) {
     if (box.placeholder == "(auto)") {
         box.setPlaceholder(makeExamplePlaceholder());
     }
+
+    if (inputElem.value !== "") box.setValue(inputElem.value); // WHY: a start value is written in groups too (setValue)
 
     return endExtendedObject(box);
 };
