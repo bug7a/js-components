@@ -10,6 +10,8 @@ SCREENSHOT: one picture of a page (or of a part of it) for a report, in one comm
     node test/screenshot.js tabs.htm --before                the page of the last commit left, the page now right
     node test/screenshot.js tabs.htm --before HEAD~2 --name tabs-fix
     node test/screenshot.js stepper.htm --print "document.title" --print "page.width" --no-picture
+    node test/screenshot.js stepper.htm --width 390 --cut --no-picture
+                                                             is anything cut on a phone? (the texts; exit code 1)
     node test/screenshot.js item-list.htm --clip-text 'styleName: "light"' --clip-text 'styleName: "dark" ·'
                                                              the two cards with these titles (lower on the page too)
     node test/screenshot.js "03-webpages/webpage-handbook/index.htm#/box" --click "Run" --click "Copy"
@@ -40,6 +42,10 @@ Options:
     --print "expr"    writes the value of a JavaScript expression of the page in the terminal, after --run (await
                       works; more than one --print: each one): a check without reading a picture
     --no-picture      only the --print values and the errors: no picture is saved
+    --cut             the texts cut at this width, after --run: by the left edge of the window or of a box of the
+                      page (a card narrower than what is in it): they can not be reached, so exit code 1; and the ones
+                      that go out on the right of the window (a note: a carousel or a bar of tabs does it on purpose).
+                      A text in a part that scrolls to the side is not counted
 
 It prints the file, and the errors of the page (exit code 1 when the page throws, or --clip or --click finds nothing).
 When another tool with Chrome runs at the same time (another session), it says so at the end (a NOTE).
@@ -65,6 +71,7 @@ const DEFAULT_WAIT = 600; // ms: the first animations of a page, the motion of a
 const DEFAULT_MARGIN = 12; // px around a clipped part
 const LOAD_TIMEOUT = 30000; // ms
 const OLD_PICTURE_AGE = 48 * 60 * 60 * 1000; // ms
+const CUT_TEXTS_SHOWN = 4; // texts written under a --cut line
 
 // *** FILES:
 
@@ -254,6 +261,70 @@ const readPrints = async function (page, expressions, log) {
     return prints;
 };
 
+// Runs in the page (--cut): the texts cut by the left edge of a box of the page (a card narrower than what is in it)
+// or of the window, and the ones that go out on the right of the window. A text in a part that scrolls to the side
+// is not counted: it can be reached.
+const findCutTexts = function () {
+    const width = window.innerWidth;
+    const EDGE = 2; // px over an edge that are not counted (a rounding)
+    const SEEN = 8; // px of a text that must be on the other side of the edge: one all out is not seen, not cut
+    const isScrollingX = function (elem) {
+        return ["auto", "scroll"].includes(getComputedStyle(elem).overflowX) && elem.scrollWidth > elem.clientWidth + 1;
+    };
+    const ownTextOf = function (elem) {
+        return [...elem.childNodes]
+            .filter(function (node) { return node.nodeType === Node.TEXT_NODE; })
+            .map(function (node) { return node.textContent.trim(); })
+            .join(" ").trim();
+    };
+    const found = { windowLeft: [], boxLeft: [], right: [] };
+    document.querySelectorAll("body *").forEach(function (elem) {
+        const text = ownTextOf(elem);
+        if (!text) return;
+        const rect = elem.getBoundingClientRect();
+        if (rect.width < 1 || rect.height < 1 || rect.bottom < 0) return;
+        const style = getComputedStyle(elem);
+        if (style.visibility === "hidden" || Number(style.opacity) === 0) return;
+        // The boxes that cut what goes out of them, the nearest first
+        const boxes = [];
+        for (let parent = elem.parentElement; parent && parent !== document.body; parent = parent.parentElement) {
+            if (getComputedStyle(parent).overflowX === "visible") continue;
+            if (isScrollingX(parent)) return;
+            boxes.push(parent.getBoundingClientRect());
+        }
+        const nearest = boxes[0] || { left: 0, right: width };
+        const shortText = text.slice(0, 30);
+        const isCutByABox = boxes.some(function (box) {
+            return box.left > 0.5 && rect.left < box.left - EDGE && rect.right > box.left + SEEN;
+        });
+        if (isCutByABox) found.boxLeft.push(shortText);
+        else if (rect.left < -EDGE && rect.right > SEEN && nearest.left <= 0.5) found.windowLeft.push(shortText);
+        const isOutOnTheRight = (rect.right > width + EDGE && rect.left < width - SEEN && nearest.right >= width - 0.5);
+        if (isOutOnTheRight) found.right.push(shortText);
+    });
+    return found;
+};
+
+// The --cut lines of the log: a text cut on the left is an error (it can not be reached), one on the right a note.
+const describeCut = function (cut, width) {
+    const listOf = function (texts) {
+        const shown = texts.slice(0, CUT_TEXTS_SHOWN).map(function (text) { return JSON.stringify(text); }).join(", ");
+        const otherCount = texts.length - CUT_TEXTS_SHOWN;
+        return (otherCount > 0) ? shown + " and " + otherCount + " more" : shown;
+    };
+    const lines = [];
+    const add = function (texts, where, isError) {
+        if (texts.length === 0) return;
+        const title = (isError) ? "CUT: " : "CUT (a note): ";
+        lines.push({ isError: isError, text: title + texts.length + " texts " + where + ": " + listOf(texts) });
+    };
+    add(cut.windowLeft, "by the left edge of the window", true);
+    add(cut.boxLeft, "by the left edge of a box", true);
+    add(cut.right, "go out on the right", false);
+    if (lines.length === 0) lines.push({ isError: false, text: "CUT: no text is cut at " + width + " px" });
+    return lines;
+};
+
 const nameOfClip = function (clip) {
     return (typeof clip === "string") ? clip : "the text \"" + clip.text + "\"";
 };
@@ -304,6 +375,7 @@ const takePicture = async function (browser, url, options) {
         }
 
         const prints = await readPrints(page, options.prints, log);
+        if (options.isCut) log.push(...describeCut(await page.evaluate(findCutTexts), options.width));
         if (options.isNoPicture) return { picture: null, log, prints };
         if (!options.clips.length) return { picture: await page.screenshot(), log, prints };
 
@@ -381,6 +453,7 @@ const readOptions = function (args) {
         else if (arg === "--clip-text") options.clips.push({ text: args[++i] });
         else if (arg === "--print") options.prints.push(args[++i]);
         else if (arg === "--no-picture") options.isNoPicture = true;
+        else if (arg === "--cut") options.isCut = true;
         else if (arg === "--name") options.name = args[++i];
         else if (arg === "--width") options.width = Number(args[++i]);
         else if (arg === "--height") options.height = Number(args[++i]);
