@@ -65,8 +65,8 @@
 
             page.color = "#F4F5F2";
 
-            // BOX: Full screen scrollable container
-            // WHY: page does not scroll. Scrollable content must be inside a Box with scrollY: 1.
+            // SCROLL AREA: The page (comp/scroll-area.js)
+            // WHY: page does not scroll. A ScrollArea fills the window; its content scrolls when it is taller.
             ScrollArea({ align: "center top", gap: 30, padding: [PAGE_SIDE_PADDING, 50], useScrollBar: 0 });
 
                 Label({ text: "Search Results", fontSize: 26, fontFamily: "opensans-bold" });

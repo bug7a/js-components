@@ -11,12 +11,14 @@
     <link rel="preload" href="../basic/font/open-sans/OpenSans-Bold.ttf" as="font" crossorigin="anonymous">
     <link rel="stylesheet" type="text/css" href="../basic/basic.css">
     <script src="../basic/basic.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../basic/scroll-bar.js" type="text/javascript" charset="utf-8"></script>
 
     <script src="../comp/smart-button.js" type="text/javascript" charset="utf-8"></script>
     <script src="../comp/app-bar.js" type="text/javascript" charset="utf-8"></script>
     <script src="../comp/toggle.js" type="text/javascript" charset="utf-8"></script>
     <script src="../comp/stepper.js" type="text/javascript" charset="utf-8"></script>
     <script src="../comp/settings-row.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/scroll-area.js" type="text/javascript" charset="utf-8"></script>
 
     <script>
 
@@ -162,63 +164,59 @@
             onMenu: function () { showResult("onMenu"); },
         });
 
-        // BOX: The list under the bar (it scrolls)
-        startBox(0, bar.height, "100%", "calc(100% - " + bar.height + "px)", { color: "white", scrollY: 1 });
+        // SCROLL AREA: The list under the bar (comp/scroll-area.js)
+        ScrollArea({ top: bar.height, height: "calc(100% - " + bar.height + "px)", color: "white" });
 
-            VGroup({ width: "100%", height: "auto", align: "left top", gap: 0 });
+            SettingsRow.createSection("APPEARANCE");
+            SettingsRow({
+                titleText: "Dark Mode",
+                descriptionText: "Use interface colors inverted.",
+                control: function () { return createToggle(1); },
+            });
+            SettingsRow({ titleText: "Theme", control: createThemeText, arrow: 1, onClick: showNextTheme });
+            SettingsRow({
+                titleText: "Menu Style",
+                descriptionText: "Choose how your navigation menu appears.",
+                arrow: 1,
+                onClick: showClick,
+            });
+            SettingsRow({
+                titleText: "Primary Color",
+                descriptionText: "Choose a color for the colored interface buttons.",
+                control: createColorSquare,
+            });
 
-                SettingsRow.createSection("APPEARANCE");
-                SettingsRow({
-                    titleText: "Dark Mode",
-                    descriptionText: "Use interface colors inverted.",
-                    control: function () { return createToggle(1); },
-                });
-                SettingsRow({ titleText: "Theme", control: createThemeText, arrow: 1, onClick: showNextTheme });
-                SettingsRow({
-                    titleText: "Menu Style",
-                    descriptionText: "Choose how your navigation menu appears.",
-                    arrow: 1,
-                    onClick: showClick,
-                });
-                SettingsRow({
-                    titleText: "Primary Color",
-                    descriptionText: "Choose a color for the colored interface buttons.",
-                    control: createColorSquare,
-                });
+            SettingsRow.createSection("SYSTEM");
+            SettingsRow({
+                titleText: "Only When Charging",
+                descriptionText: "The app only updates when plugged in.",
+                control: function () { return createToggle(1); },
+            });
+            SettingsRow({ titleText: "Font Size", control: createFontSizeStepper });
+            SettingsRow({
+                titleText: "Video Quality",
+                descriptionText: VIDEO_QUALITIES[2].descriptionText,
+                control: createQualityButton,
+            });
 
-                SettingsRow.createSection("SYSTEM");
-                SettingsRow({
-                    titleText: "Only When Charging",
-                    descriptionText: "The app only updates when plugged in.",
-                    control: function () { return createToggle(1); },
-                });
-                SettingsRow({ titleText: "Font Size", control: createFontSizeStepper });
-                SettingsRow({
-                    titleText: "Video Quality",
-                    descriptionText: VIDEO_QUALITIES[2].descriptionText,
-                    control: createQualityButton,
-                });
+            SettingsRow.createSection("DOWNLOADS");
+            SettingsRow({ titleText: "Download Over Wi-Fi Only", control: function () { return createToggle(1, RED); } });
+            SettingsRow({
+                titleText: "Delete All Downloads",
+                descriptionText: "Nothing will be deleted. It is a demo.",
+                titleColor: "orangered",
+                arrow: 1,
+                onClick: showClick,
+            });
 
-                SettingsRow.createSection("DOWNLOADS");
-                SettingsRow({ titleText: "Download Over Wi-Fi Only", control: function () { return createToggle(1, RED); } });
-                SettingsRow({
-                    titleText: "Delete All Downloads",
-                    descriptionText: "Nothing will be deleted. It is a demo.",
-                    titleColor: "orangered",
-                    arrow: 1,
-                    onClick: showClick,
-                });
+            SettingsRow.createSection("OTHERS");
+            SettingsRow({ titleText: "Security", arrow: 1, onClick: showClick });
+            SettingsRow({ titleText: "Privacy Policy and Terms of Use", arrow: 1, onClick: showClick });
 
-                SettingsRow.createSection("OTHERS");
-                SettingsRow({ titleText: "Security", arrow: 1, onClick: showClick });
-                SettingsRow({ titleText: "Privacy Policy and Terms of Use", arrow: 1, onClick: showClick });
+            // BOX: The empty band at the end
+            Box({ width: "100%", height: END_SPACE, color: "whitesmoke" });
 
-                // BOX: The empty band at the end
-                Box({ width: "100%", height: END_SPACE, color: "whitesmoke" });
-
-            endGroup();
-
-        endBox();
+        endGroup(); // END SCROLL AREA
 
         // LABEL: The last click (over the list, at the bottom)
         lblResult = Label({

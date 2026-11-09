@@ -11,9 +11,11 @@
     <link rel="preload" href="../basic/font/open-sans/OpenSans-Bold.ttf" as="font" crossorigin="anonymous">
     <link rel="stylesheet" type="text/css" href="../basic/basic.css">
     <script src="../basic/basic.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../basic/scroll-bar.js" type="text/javascript" charset="utf-8"></script>
 
     <script src="../comp/smart-button.js" type="text/javascript" charset="utf-8"></script>
     <script src="../comp/side-panel.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/scroll-area.js" type="text/javascript" charset="utf-8"></script>
 
     <script>
 
@@ -95,25 +97,14 @@
 
                 createTopBar();
 
-                // BOX: The content scrolls. The column does not: the panels cover it.
-                startBox({ width: "100%", height: "auto", grow: 1, color: "transparent", scrollY: 1 });
+                // SCROLL AREA: The content scrolls in the height the bar leaves. The column does not: the panels cover
+                // it. (comp/scroll-area.js)
+                ScrollArea({ gap: 12, padding: BAR_SPACE });
 
-                    VGroup({
-                        width: "100%",
-                        height: "auto",
-                        align: "left top",
-                        gap: 12,
-                        padding: BAR_SPACE,
-                        color: "transparent",
-                        css: { alignItems: "stretch" },
-                    });
+                    createInfoCard();
+                    MESSAGES.forEach(createMessageRow);
 
-                        createInfoCard();
-                        MESSAGES.forEach(createMessageRow);
-
-                    endGroup();
-
-                endBox();
+                endGroup(); // END SCROLL AREA
 
             endGroup();
 
