@@ -723,3 +723,28 @@ test("ItemList gallery: a photo fills its square with no filter, the selected on
         ozden.fit !== "cover,cover" && ozden.filter !== "none,none" && ozden.grows,
         JSON.stringify({ light: light, dark: dark, ozden: ozden }));
 });
+
+// *** TINY SELECT (comp/tiny-select.js)
+
+test("TinySelect: an index that is not in the list shows emptyText (no error, no onChange), getSelectedItem() is null", async function () {
+    const changes = [];
+    const select = TinySelect({
+        list: [{ value: "a", label: "A" }, { value: "b", label: "B" }],
+        emptyText: "None",
+        onChange: function (self) { changes.push(self.selectedIndex); },
+    });
+    const shown = [];
+    let errorText = "";
+    [select.getIndexByValue("missing"), 2, 0.5, null].forEach(function (index) {
+        try {
+            select.setSelectedIndex(index);
+            shown.push(select.lblLabel.elem.textContent + ":" + select.getSelectedItem());
+        } catch (error) { errorText = error.message; }
+    });
+    select.setSelectedIndex(select.getIndexByValue("b"));
+    const chosen = select.lblLabel.elem.textContent;
+    select.remove();
+    check("TinySelect: an index that is not in the list shows emptyText (no error, no onChange), getSelectedItem() is null",
+        errorText === "" && shown.join() === "None:null,None:null,None:null,None:null" && chosen === "B" && changes.join() === "1",
+        "error: " + errorText + " | shown: " + shown.join() + " | then b: " + chosen + " | onChange: " + changes.join());
+});

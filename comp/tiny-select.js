@@ -92,13 +92,15 @@ const TinySelect = function(params = {}) {
 
     };
 
-    // Chooses the item at index. silent: 1 -> onChange is not called.
+    // Chooses the item at index; an index that is not in the list shows emptyText. silent: 1 -> onChange is not called.
     box.setSelectedIndex = function(index, silent = 0) {
 
         box.selectedIndex = index;
 
-        if (box.list.length > box.selectedIndex) {
-            setText(box.lblLabel, box.list[box.selectedIndex].label);
+        // WHY not list.length > index: -1 (getIndexByValue of a value not in the list) passed it and threw.
+        const item = box.getSelectedItem();
+        if (item) {
+            setText(box.lblLabel, item.label);
             if (!silent) box.onChange(box);
         } else {
             setText(box.lblLabel, box.emptyText);
