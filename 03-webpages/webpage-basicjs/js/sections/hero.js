@@ -27,12 +27,12 @@ const HeroSection = function (params = {}) {
     strip.elem.style.paddingTop = (L.headerH + (L.mobile ? 44 : 90)) + "px";
     strip.elem.style.paddingBottom = (L.mobile ? 60 : 100) + "px";
     // Hafif bir ışık: başlığın arkasında amber bir parıltı
-    strip.elem.style.backgroundImage = "radial-gradient(ellipse 60% 45% at 50% 0%, rgba(35, 172, 207, 0.16), rgba(35, 172, 207, 0) 70%)";
+    strip.elem.style.backgroundImage = "radial-gradient(ellipse 60% 45% at 50% 0%, rgba(25, 181, 170, 0.16), rgba(25, 181, 170, 0) 70%)";
 
         // GROUP: Sürüm hapı
-        HGroup({ width: "auto", height: "auto", align: "left center", gap: 8, padding: [14, 7], color: "rgba(35, 172, 207, 0.12)", round: 100 });
+        HGroup({ width: "auto", height: "auto", align: "left center", gap: 8, padding: [14, 7], color: "rgba(25, 181, 170, 0.12)", round: 100 });
         that.border = 1;
-        that.borderColor = "rgba(35, 172, 207, 0.3)";
+        that.borderColor = "rgba(25, 181, 170, 0.3)";
 
             Box({ width: 7, height: 7, round: 4, color: SITE.ACCENT });
             SITE.label(TEXTS.fill(T.heroEyebrow), { fontSize: 13, textColor: SITE.ACCENT });
