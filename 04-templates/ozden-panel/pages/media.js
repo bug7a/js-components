@@ -913,44 +913,31 @@ const MediaPage = function(params = {}) {
 
     initItemMenu();
 
-    // BOX: Scrollable container
-    // WHY: page does not scroll. Scrollable content must be inside a Box with scrollY: 1.
-    startBox(0, 0, "100%", "100%", {
-        color: "transparent",
-        scrollY: 1,
-    });
+    // SCROLL AREA: The page (comp/scroll-area.js)
+    // WHY: page does not scroll. A ScrollArea fills the window; its content scrolls when it is taller.
+    ScrollArea({ gap: 16, padding: 24, style: Theme.scrollAreaStyle() });
 
-        VGroup({
-            width: "100%",
-            height: "auto", // Grows with content, so the Box can scroll.
-            align: "left top",
-            gap: 16,
-            padding: 24,
-        });
+        initHeader();
+        initUploadCard();
 
-            initHeader();
-            initUploadCard();
+        HGroup({ width: "100%", height: "auto", align: "left top", gap: 16 });
+        that.elem.style.flexWrap = "wrap";
 
-            HGroup({ width: "100%", height: "auto", align: "left top", gap: 16 });
-            that.elem.style.flexWrap = "wrap";
+            initSidebar();
 
-                initSidebar();
+            // MAIN
+            const main = VGroup({ width: "auto", height: "auto", align: "left top", gap: 14 });
+            setFlex(main, "1 1 520px");
 
-                // MAIN
-                const main = VGroup({ width: "auto", height: "auto", align: "left top", gap: 14 });
-                setFlex(main, "1 1 520px");
-
-                    initToolbar();
-                    initSelectionBar();
-                    initContent();
-
-                endGroup();
+                initToolbar();
+                initSelectionBar();
+                initContent();
 
             endGroup();
 
         endGroup();
 
-    endBox();
+    endGroup(); // END SCROLL AREA
 
     // WHY: Hidden after the content is created. Objects created in a hidden (display: none) group are not flex items.
     uploadCard.visible = 0;
@@ -1036,126 +1023,122 @@ const MediaDetails = function(params = {}) {
     // Left line
     Box(0, 0, 1, "100%", { color: Ink(0.12) });
 
-    // GROUP: Scrollable content
-    startBox(0, 0, "100%", "calc(100% - 76px)", { color: "transparent", scrollY: 1 });
+    // SCROLL AREA: The content over the buttons (comp/scroll-area.js)
+    ScrollArea({ height: "calc(100% - 76px)", gap: 16, padding: 20, style: Theme.scrollAreaStyle() });
 
-        VGroup({ width: "100%", height: "auto", align: "left top", gap: 16, padding: 20 });
+        // Title
+        HGroup({ width: "100%", height: "auto", align: "left center", gap: 8 });
+        that.elem.style.justifyContent = "space-between";
 
-            // Title
-            HGroup({ width: "100%", height: "auto", align: "left center", gap: 8 });
-            that.elem.style.justifyContent = "space-between";
+            Label({ text: "File Details", fontSize: 18, textColor: Ink(0.95) });
+            that.elem.style.fontFamily = "opensans-bold";
 
-                Label({ text: "File Details", fontSize: 18, textColor: Ink(0.95) });
+            Icon({ width: 28, height: 28, clickable: 1 });
+            that.load("assets/close.png");
+            that.elem.style.filter = T.iconFilter;
+            that.elem.style.cursor = "pointer";
+            that.opacity = 0.6;
+            that.on("click", function() {
+                rightView.hide();
+                rightView.clean();
+            });
+
+        endGroup();
+
+        // Preview
+        HGroup({ width: "100%", height: 220, align: "center center", color: MediaPage.alpha(typeInfo.color, 0.12), round: 10, clipContent: 1 });
+
+            if (item.url) {
+                Icon({ width: "100%", height: "100%" });
+                that.load(item.url);
+                that.elem.style.objectFit = "contain";
+                that.elem.alt = item.alt || item.name;
+            } else {
+                Label({ text: item.extension.toUpperCase(), fontSize: 34, textColor: typeInfo.color, padding: [18, 8], border: 2, borderColor: MediaPage.alpha(typeInfo.color, 0.5), round: 10 });
                 that.elem.style.fontFamily = "opensans-bold";
-
-                Icon({ width: 28, height: 28, clickable: 1 });
-                that.load("assets/close.png");
-                that.elem.style.filter = T.iconFilter;
-                that.elem.style.cursor = "pointer";
-                that.opacity = 0.6;
-                that.on("click", function() {
-                    rightView.hide();
-                    rightView.clean();
-                });
-
-            endGroup();
-
-            // Preview
-            HGroup({ width: "100%", height: 220, align: "center center", color: MediaPage.alpha(typeInfo.color, 0.12), round: 10, clipContent: 1 });
-
-                if (item.url) {
-                    Icon({ width: "100%", height: "100%" });
-                    that.load(item.url);
-                    that.elem.style.objectFit = "contain";
-                    that.elem.alt = item.alt || item.name;
-                } else {
-                    Label({ text: item.extension.toUpperCase(), fontSize: 34, textColor: typeInfo.color, padding: [18, 8], border: 2, borderColor: MediaPage.alpha(typeInfo.color, 0.5), round: 10 });
-                    that.elem.style.fontFamily = "opensans-bold";
-                }
-
-            endGroup();
-
-            // Fields
-            inputName = styleInput(TextField({
-                ...INPUT_PARAMS,
-                titleText: "FILE NAME",
-                value: item.name, // WHY: Created with the value, so the required warning ball is not shown.
-                required: 1,
-                requiredText: "File name is required",
-                maxLength: 80,
-            }));
-
-            if (item.type == "image") {
-                inputAlt = styleInput(TextField({
-                    ...INPUT_PARAMS,
-                    titleText: "ALT TEXT",
-                    value: item.alt,
-                    placeholder: "Describe the image (for accessibility and SEO)",
-                    maxLength: 140,
-                }));
             }
 
-            VGroup({ width: "100%", height: "auto", align: "left top", gap: 8 });
-                Label({ text: "FOLDER", fontSize: 11, textColor: Ink(0.45) });
-                that.elem.style.letterSpacing = "1px";
-                folderSelect = MediaPage.createTinySelect(
-                    box.folders.map(function(folder) { return { value: folder, label: folder }; }),
-                    function() { }
-                );
-                folderSelect.setSelectedIndex(Math.max(0, box.folders.indexOf(item.folder)));
-            endGroup();
+        endGroup();
 
-            // Information
-            const INFO = [
-                ["Type", typeInfo.label + " (." + item.extension + ")"],
-                ["Size", MediaPage.formatSize(item.size)],
-                ["Dimensions", (item.width) ? item.width + " × " + item.height + " px" : "—"],
-                ["Uploaded", new Date(item.uploadedAt).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" })],
-                ["Uploaded by", item.uploadedBy],
-            ];
+        // Fields
+        inputName = styleInput(TextField({
+            ...INPUT_PARAMS,
+            titleText: "FILE NAME",
+            value: item.name, // WHY: Created with the value, so the required warning ball is not shown.
+            required: 1,
+            requiredText: "File name is required",
+            maxLength: 80,
+        }));
 
-            VGroup({ width: "100%", height: "auto", align: "left top", gap: 0 });
+        if (item.type == "image") {
+            inputAlt = styleInput(TextField({
+                ...INPUT_PARAMS,
+                titleText: "ALT TEXT",
+                value: item.alt,
+                placeholder: "Describe the image (for accessibility and SEO)",
+                maxLength: 140,
+            }));
+        }
 
-                INFO.forEach(function(info, index) {
-                    HGroup({ width: "100%", height: "auto", align: "left center", padding: [0, 8] });
-                    that.elem.style.justifyContent = "space-between";
-                    if (index > 0) that.elem.style.borderTop = "1px solid " + Ink(0.06);
-                        Label({ text: info[0], fontSize: 13, textColor: Ink(0.5) });
-                        Label({ text: info[1], fontSize: 13, textColor: Ink(0.9) });
-                    endGroup();
-                });
+        VGroup({ width: "100%", height: "auto", align: "left top", gap: 8 });
+            Label({ text: "FOLDER", fontSize: 11, textColor: Ink(0.45) });
+            that.elem.style.letterSpacing = "1px";
+            folderSelect = MediaPage.createTinySelect(
+                box.folders.map(function(folder) { return { value: folder, label: folder }; }),
+                function() { }
+            );
+            folderSelect.setSelectedIndex(Math.max(0, box.folders.indexOf(item.folder)));
+        endGroup();
 
-            endGroup();
+        // Information
+        const INFO = [
+            ["Type", typeInfo.label + " (." + item.extension + ")"],
+            ["Size", MediaPage.formatSize(item.size)],
+            ["Dimensions", (item.width) ? item.width + " × " + item.height + " px" : "—"],
+            ["Uploaded", new Date(item.uploadedAt).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" })],
+            ["Uploaded by", item.uploadedBy],
+        ];
 
-            // URL
-            VGroup({ width: "100%", height: "auto", align: "left top", gap: 8 });
+        VGroup({ width: "100%", height: "auto", align: "left top", gap: 0 });
 
-                Label({ text: "PUBLIC URL", fontSize: 11, textColor: Ink(0.45) });
-                that.elem.style.letterSpacing = "1px";
-
-                HGroup({ width: "100%", height: "auto", align: "left center", gap: 8 });
-
-                    Label({ text: item.publicUrl, fontSize: 12, textColor: Ink(0.75), color: S.FIELD_COLOR, round: 8, padding: [10, 10], border: 1, borderColor: S.CARD_BORDER_COLOR });
-                    that.elem.style.fontFamily = "monospace";
-                    that.elem.style.whiteSpace = "nowrap";
-                    that.elem.style.overflow = "hidden";
-                    that.elem.style.textOverflow = "ellipsis";
-                    that.elem.style.flex = "1 1 auto";
-                    that.elem.style.minWidth = "0";
-
-                    const btnCopy = MediaPage.createButton("Copy", "", function() {
-                        box.onCopyUrl(item);
-                        btnCopy.setLabelText("Copied");
-                        setTimeout(function() { if (box) btnCopy.setLabelText("Copy"); }, 1500);
-                    });
-
+            INFO.forEach(function(info, index) {
+                HGroup({ width: "100%", height: "auto", align: "left center", padding: [0, 8] });
+                that.elem.style.justifyContent = "space-between";
+                if (index > 0) that.elem.style.borderTop = "1px solid " + Ink(0.06);
+                    Label({ text: info[0], fontSize: 13, textColor: Ink(0.5) });
+                    Label({ text: info[1], fontSize: 13, textColor: Ink(0.9) });
                 endGroup();
+            });
+
+        endGroup();
+
+        // URL
+        VGroup({ width: "100%", height: "auto", align: "left top", gap: 8 });
+
+            Label({ text: "PUBLIC URL", fontSize: 11, textColor: Ink(0.45) });
+            that.elem.style.letterSpacing = "1px";
+
+            HGroup({ width: "100%", height: "auto", align: "left center", gap: 8 });
+
+                Label({ text: item.publicUrl, fontSize: 12, textColor: Ink(0.75), color: S.FIELD_COLOR, round: 8, padding: [10, 10], border: 1, borderColor: S.CARD_BORDER_COLOR });
+                that.elem.style.fontFamily = "monospace";
+                that.elem.style.whiteSpace = "nowrap";
+                that.elem.style.overflow = "hidden";
+                that.elem.style.textOverflow = "ellipsis";
+                that.elem.style.flex = "1 1 auto";
+                that.elem.style.minWidth = "0";
+
+                const btnCopy = MediaPage.createButton("Copy", "", function() {
+                    box.onCopyUrl(item);
+                    btnCopy.setLabelText("Copied");
+                    setTimeout(function() { if (box) btnCopy.setLabelText("Copy"); }, 1500);
+                });
 
             endGroup();
 
         endGroup();
 
-    endBox();
+    endGroup(); // END SCROLL AREA
 
     // GROUP: Buttons (bottom)
     HGroup({ left: 0, bottom: 0, width: "100%", height: 76, align: "left center", gap: 8, padding: [20, 0] });

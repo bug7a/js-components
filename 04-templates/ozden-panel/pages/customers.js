@@ -381,29 +381,16 @@ const CustomersPage = function(params = {}) {
 
     // *** PAGE INIT CODE:
 
-    // BOX: Scrollable container
-    // WHY: page does not scroll. Scrollable content must be inside a Box with scrollY: 1.
-    startBox(0, 0, "100%", "100%", {
-        color: "transparent",
-        scrollY: 1,
-    });
+    // SCROLL AREA: The page (comp/scroll-area.js)
+    // WHY: page does not scroll. A ScrollArea fills the window; its content scrolls when it is taller.
+    ScrollArea({ gap: 16, padding: 24, style: Theme.scrollAreaStyle() });
 
-        VGroup({
-            width: "100%",
-            height: "auto", // Grows with content, so the Box can scroll.
-            align: "left top",
-            gap: 16,
-            padding: 24,
-        });
+        initHeader();
+        initSummary();
+        initToolbar();
+        initTable();
 
-            initHeader();
-            initSummary();
-            initToolbar();
-            initTable();
-
-        endGroup();
-
-    endBox();
+    endGroup(); // END SCROLL AREA
 
     render();
 
@@ -560,253 +547,249 @@ const CustomerDetails = function(params = {}) {
     // Left line
     Box(0, 0, 1, "100%", { color: Ink(0.12) });
 
-    // GROUP: Scrollable content
-    startBox(0, 0, "100%", "calc(100% - 76px)", { color: "transparent", scrollY: 1 });
+    // SCROLL AREA: The content over the buttons (comp/scroll-area.js)
+    ScrollArea({ height: "calc(100% - 76px)", gap: 14, padding: 20, style: Theme.scrollAreaStyle() });
 
-        VGroup({ width: "100%", height: "auto", align: "left top", gap: 14, padding: 20 });
+        // TITLE
+        HGroup({ width: "100%", height: "auto", align: "left center", gap: 12 });
 
-            // TITLE
-            HGroup({ width: "100%", height: "auto", align: "left center", gap: 12 });
+            HGroup({ width: 48, height: 48, align: "center center", round: 100, color: CustomersPage.getAvatarColor(customer.id) });
+            that.elem.style.flexShrink = "0";
+                Label({ text: CustomersPage.getInitials(customer.name), fontSize: 17, textColor: Theme.textOn(CustomersPage.getAvatarColor(customer.id)) });
+            endGroup();
 
-                HGroup({ width: 48, height: 48, align: "center center", round: 100, color: CustomersPage.getAvatarColor(customer.id) });
-                that.elem.style.flexShrink = "0";
-                    Label({ text: CustomersPage.getInitials(customer.name), fontSize: 17, textColor: Theme.textOn(CustomersPage.getAvatarColor(customer.id)) });
-                endGroup();
-
-                VGroup({ width: "auto", height: "auto", align: "left top", gap: 2 });
-                that.elem.style.flex = "1 1 auto";
-                that.elem.style.minWidth = "0";
-                    HGroup({ width: "auto", height: "auto", align: "left center", gap: 10 });
-                        Label({ text: escape(customer.name), fontSize: 20, textColor: Ink(0.95) });
-                        that.elem.style.fontFamily = "opensans-bold";
-                        Label({ text: segment.label.toUpperCase(), fontSize: 11, textColor: segment.color, color: OrdersPage.alpha(segment.color, 0.15), round: 6, padding: [8, 3] });
+            VGroup({ width: "auto", height: "auto", align: "left top", gap: 2 });
+            that.elem.style.flex = "1 1 auto";
+            that.elem.style.minWidth = "0";
+                HGroup({ width: "auto", height: "auto", align: "left center", gap: 10 });
+                    Label({ text: escape(customer.name), fontSize: 20, textColor: Ink(0.95) });
+                    that.elem.style.fontFamily = "opensans-bold";
+                    Label({ text: segment.label.toUpperCase(), fontSize: 11, textColor: segment.color, color: OrdersPage.alpha(segment.color, 0.15), round: 6, padding: [8, 3] });
+                    that.elem.style.letterSpacing = "1px";
+                    if (customer.blocked) {
+                        Label({ text: "BLOCKED", fontSize: 11, textColor: S.ERROR_COLOR, color: OrdersPage.alpha(S.ERROR_COLOR, 0.15), round: 6, padding: [8, 3] });
                         that.elem.style.letterSpacing = "1px";
-                        if (customer.blocked) {
-                            Label({ text: "BLOCKED", fontSize: 11, textColor: S.ERROR_COLOR, color: OrdersPage.alpha(S.ERROR_COLOR, 0.15), round: 6, padding: [8, 3] });
-                            that.elem.style.letterSpacing = "1px";
-                        }
-                    endGroup();
-                    Label({ text: "Customer since " + new Date(customer.registeredAt).toLocaleDateString("en-GB", { dateStyle: "medium" }) + " · " + escape(customer.city), fontSize: 13, textColor: Ink(0.5) });
+                    }
                 endGroup();
-
-                Icon({ width: 28, height: 28, clickable: 1 });
-                that.load("assets/close.png");
-                that.elem.style.filter = T.iconFilter;
-                that.elem.style.cursor = "pointer";
-                that.opacity = 0.6;
-                that.on("click", function() {
-                    rightView.hide();
-                    rightView.clean();
-                });
-
+                Label({ text: "Customer since " + new Date(customer.registeredAt).toLocaleDateString("en-GB", { dateStyle: "medium" }) + " · " + escape(customer.city), fontSize: 13, textColor: Ink(0.5) });
             endGroup();
 
-            // NOTICE
-            grpNotice = HGroup({ width: "100%", height: "auto", align: "left center", padding: [12, 10], round: 8, border: 1 });
-                lblNotice = Label({ text: "", fontSize: 14, width: "100%" });
-            endGroup();
-            showNotice(box.notice);
+            Icon({ width: 28, height: 28, clickable: 1 });
+            that.load("assets/close.png");
+            that.elem.style.filter = T.iconFilter;
+            that.elem.style.cursor = "pointer";
+            that.opacity = 0.6;
+            that.on("click", function() {
+                rightView.hide();
+                rightView.clean();
+            });
 
-            // STATS
+        endGroup();
+
+        // NOTICE
+        grpNotice = HGroup({ width: "100%", height: "auto", align: "left center", padding: [12, 10], round: 8, border: 1 });
+            lblNotice = Label({ text: "", fontSize: 14, width: "100%" });
+        endGroup();
+        showNotice(box.notice);
+
+        // STATS
+        HGroup({ width: "100%", height: "auto", align: "left top", gap: 10 });
+        that.elem.style.flexWrap = "wrap";
+            [
+                ["Spent", OrdersPage.formatMoney(customer.totalSpent)],
+                ["Orders", String(customer.orderCount)],
+                ["Avg. order", (customer.orderCount) ? OrdersPage.formatMoney(customer.totalSpent / customer.orderCount) : "—"],
+                ["Last order", (customer.lastOrderAt) ? CustomersPage.formatRelative(customer.lastOrderAt) : "Never"],
+            ].forEach(function(item) {
+                VGroup({ width: "auto", height: "auto", align: "left top", gap: 2, padding: [12, 10], color: S.CARD_COLOR, border: 1, borderColor: S.CARD_BORDER_COLOR, round: 10 });
+                that.elem.style.flex = "1 1 100px";
+                that.elem.style.minWidth = "0";
+                    Label({ text: item[0], fontSize: 12, textColor: Ink(0.5) });
+                    Label({ text: item[1], fontSize: 17, textColor: Ink(0.95) });
+                    that.elem.style.whiteSpace = "nowrap";
+                endGroup();
+            });
+        endGroup();
+
+        // CONTACT
+        startSection("Contact");
+
+            let updateContactButton = function() {};
+
+            const inputName = createDarkInput({ titleText: "NAME", value: customer.name, maxLength: 60, onChange: function() { updateContactButton(); } });
+            const inputEmail = createDarkInput({ titleText: "E-MAIL", value: customer.email, maxLength: 120, warningText: "E-mail is not valid", onChange: function() { updateContactButton(); } });
+
             HGroup({ width: "100%", height: "auto", align: "left top", gap: 10 });
+                const inputPhone = createDarkInput({ titleText: "PHONE", value: customer.phone, maxLength: 30, onChange: function() { updateContactButton(); } });
+                inputPhone.elem.style.flex = "1 1 0";
+                const inputCity = createDarkInput({ titleText: "CITY", value: customer.city, maxLength: 40, onChange: function() { updateContactButton(); } });
+                inputCity.elem.style.flex = "1 1 0";
+            endGroup();
+
+            const inputAddress = createDarkInput({ titleText: "ADDRESS", value: customer.address, maxLength: 160, onChange: function() { updateContactButton(); } });
+
+            HGroup({ width: "100%", height: "auto", align: "left center", gap: 8 });
             that.elem.style.flexWrap = "wrap";
-                [
-                    ["Spent", OrdersPage.formatMoney(customer.totalSpent)],
-                    ["Orders", String(customer.orderCount)],
-                    ["Avg. order", (customer.orderCount) ? OrdersPage.formatMoney(customer.totalSpent / customer.orderCount) : "—"],
-                    ["Last order", (customer.lastOrderAt) ? CustomersPage.formatRelative(customer.lastOrderAt) : "Never"],
-                ].forEach(function(item) {
-                    VGroup({ width: "auto", height: "auto", align: "left top", gap: 2, padding: [12, 10], color: S.CARD_COLOR, border: 1, borderColor: S.CARD_BORDER_COLOR, round: 10 });
-                    that.elem.style.flex = "1 1 100px";
-                    that.elem.style.minWidth = "0";
-                        Label({ text: item[0], fontSize: 12, textColor: Ink(0.5) });
-                        Label({ text: item[1], fontSize: 17, textColor: Ink(0.95) });
-                        that.elem.style.whiteSpace = "nowrap";
-                    endGroup();
+
+                const btnSave = CustomersPage.createButton("Save Changes", "", function() {
+                    const name = inputName.getValue().trim(), email = inputEmail.getValue().trim();
+                    if (name.length < 2) { showNotice("Name must be at least 2 letters.", true); return; }
+                    if (!CustomersPage.isEmail(email)) { showNotice("E-mail is not valid.", true); return; }
+                    const used = CustomersPage.getCustomers().some(function(c) { return c.id != customer.id && c.email.toLowerCase() == email.toLowerCase(); });
+                    if (used) { showNotice("This e-mail belongs to another customer.", true); return; }
+                    saveChange(function(c) {
+                        c.name = name; c.email = email; c.phone = inputPhone.getValue().trim();
+                        c.city = inputCity.getValue().trim(); c.address = inputAddress.getValue().trim();
+                        return "";
+                    }, "Contact details are saved.");
+                }, { primary: 1 });
+
+                CustomersPage.createButton("E-mail Customer", "", function() {
+                    window.location.href = "mailto:" + encodeURIComponent(customer.email);
                 });
-            endGroup();
-
-            // CONTACT
-            startSection("Contact");
-
-                let updateContactButton = function() {};
-
-                const inputName = createDarkInput({ titleText: "NAME", value: customer.name, maxLength: 60, onChange: function() { updateContactButton(); } });
-                const inputEmail = createDarkInput({ titleText: "E-MAIL", value: customer.email, maxLength: 120, warningText: "E-mail is not valid", onChange: function() { updateContactButton(); } });
-
-                HGroup({ width: "100%", height: "auto", align: "left top", gap: 10 });
-                    const inputPhone = createDarkInput({ titleText: "PHONE", value: customer.phone, maxLength: 30, onChange: function() { updateContactButton(); } });
-                    inputPhone.elem.style.flex = "1 1 0";
-                    const inputCity = createDarkInput({ titleText: "CITY", value: customer.city, maxLength: 40, onChange: function() { updateContactButton(); } });
-                    inputCity.elem.style.flex = "1 1 0";
-                endGroup();
-
-                const inputAddress = createDarkInput({ titleText: "ADDRESS", value: customer.address, maxLength: 160, onChange: function() { updateContactButton(); } });
-
-                HGroup({ width: "100%", height: "auto", align: "left center", gap: 8 });
-                that.elem.style.flexWrap = "wrap";
-
-                    const btnSave = CustomersPage.createButton("Save Changes", "", function() {
-                        const name = inputName.getValue().trim(), email = inputEmail.getValue().trim();
-                        if (name.length < 2) { showNotice("Name must be at least 2 letters.", true); return; }
-                        if (!CustomersPage.isEmail(email)) { showNotice("E-mail is not valid.", true); return; }
-                        const used = CustomersPage.getCustomers().some(function(c) { return c.id != customer.id && c.email.toLowerCase() == email.toLowerCase(); });
-                        if (used) { showNotice("This e-mail belongs to another customer.", true); return; }
-                        saveChange(function(c) {
-                            c.name = name; c.email = email; c.phone = inputPhone.getValue().trim();
-                            c.city = inputCity.getValue().trim(); c.address = inputAddress.getValue().trim();
-                            return "";
-                        }, "Contact details are saved.");
-                    }, { primary: 1 });
-
-                    CustomersPage.createButton("E-mail Customer", "", function() {
-                        window.location.href = "mailto:" + encodeURIComponent(customer.email);
-                    });
-
-                endGroup();
-
-                updateContactButton = function() {
-                    const changed = inputName.getValue().trim() != customer.name || inputEmail.getValue().trim() != customer.email ||
-                        inputPhone.getValue().trim() != customer.phone || inputCity.getValue().trim() != customer.city || inputAddress.getValue().trim() != customer.address;
-                    inputEmail.showWarningIfNotValid(CustomersPage.isEmail(inputEmail.getValue().trim()));
-                    setInteractive(btnSave, changed);
-                };
-                updateContactButton();
 
             endGroup();
 
-            // TAGS & MARKETING
-            startSection("Tags & marketing");
+            updateContactButton = function() {
+                const changed = inputName.getValue().trim() != customer.name || inputEmail.getValue().trim() != customer.email ||
+                    inputPhone.getValue().trim() != customer.phone || inputCity.getValue().trim() != customer.city || inputAddress.getValue().trim() != customer.address;
+                inputEmail.showWarningIfNotValid(CustomersPage.isEmail(inputEmail.getValue().trim()));
+                setInteractive(btnSave, changed);
+            };
+            updateContactButton();
 
-                HGroup({ width: "100%", height: "auto", align: "left center", gap: 6 });
-                that.elem.style.flexWrap = "wrap";
+        endGroup();
 
-                    customer.tags.forEach(function(tag) {
-                        HGroup({ width: "auto", height: 28, align: "left center", gap: 6, padding: [10, 0], round: 100, color: S.FIELD_COLOR, border: 1, borderColor: S.CARD_BORDER_COLOR });
-                            Label({ text: escape(tag), fontSize: 13, textColor: Ink(0.85) });
-                            const btnRemove = Label({ text: "✕", fontSize: 12, textColor: Ink(0.45), clickable: 1 });
-                            btnRemove.elem.style.cursor = "pointer";
-                            btnRemove.elem.title = "Remove the tag";
-                            btnRemove.on("click", function() {
-                                saveChange(function(c) { c.tags = c.tags.filter(function(t) { return t != tag; }); return ""; }, "Tag removed.");
-                            });
-                        endGroup();
-                    });
+        // TAGS & MARKETING
+        startSection("Tags & marketing");
 
-                    if (!customer.tags.length) Label({ text: "No tags yet.", fontSize: 13, textColor: Ink(0.45) });
+            HGroup({ width: "100%", height: "auto", align: "left center", gap: 6 });
+            that.elem.style.flexWrap = "wrap";
 
-                endGroup();
-
-                HGroup({ width: "100%", height: "auto", align: "left bottom", gap: 8 });
-                    const inputTag = createDarkInput({ titleText: "ADD A TAG", placeholder: "wholesale, newsletter, complaint...", maxLength: 24 });
-                    inputTag.elem.style.flex = "1 1 0";
-                    inputTag.elem.style.minWidth = "0";
-                    CustomersPage.createButton("Add", "", function() {
-                        const tag = inputTag.getValue().trim().toLowerCase();
-                        if (!tag) return;
-                        if (customer.tags.includes(tag)) { showNotice("This tag is already on the customer.", true); return; }
-                        saveChange(function(c) { c.tags.push(tag); return ""; }, "Tag \"" + tag + "\" added.");
-                    });
-                    that.elem.style.flexShrink = "0"; // WHY: The input takes the rest, the button keeps its width.
-                endGroup();
-
-                HGroup({ width: "100%", height: "auto", align: "left center", gap: 12 });
-                that.elem.style.justifyContent = "space-between";
-                that.elem.style.marginTop = "6px";
-                    VGroup({ width: "auto", height: "auto", align: "left top", gap: 0 });
-                        Label({ text: "Marketing e-mails", fontSize: 14, textColor: Ink(0.9) });
-                        Label({ text: (customer.consent) ? "Opted in on " + new Date(customer.consentAt).toLocaleDateString("en-GB", { dateStyle: "medium" }) : "Not opted in. Do not send campaigns.", fontSize: 12, textColor: Ink(0.45) });
-                    endGroup();
-                    Toggle({
-                        width: 52, height: 30, spacing: 3, value: (customer.consent) ? 1 : 0,
-                        backgroundStyle: { color: T.surface3, selectedColor: S.PRIMARY_COLOR, border: 1, borderColor: S.CARD_BORDER_COLOR },
-                        buttonStyle: { color: Ink(0.35), selectedColor: Ink(0.95) },
-                        onChange: function(self) {
-                            if (self.value == ((customer.consent) ? 1 : 0)) return;
-                            saveChange(function(c) { c.consent = self.value; c.consentAt = Date.now(); return ""; }, (self.value) ? "Marketing consent is on." : "Marketing consent is off.");
-                        },
-                    });
-                endGroup();
-
-            endGroup();
-
-            // ORDERS
-            const orders = customer.orders.slice(0, 8);
-            startSection("Orders" + ((customer.orderCount > orders.length) ? " · last " + orders.length + " of " + customer.orderCount : ""));
-
-                if (!orders.length) {
-                    Label({ text: "No orders yet. This customer registered but did not buy anything.", fontSize: 13, textColor: Ink(0.5), width: "100%" });
-                } else {
-                    const table = TinyTable({
-                        columns: Theme.tableColumns(["ORDER", "DATE", "TOTAL", "STATUS"], ["30%", "30%", "18%", "20%"], ["left", "left", "right", "left"]),
-                        rows: orders.map(function(order) {
-                            return [escape(order.id), OrdersPage.formatDateTime(order.time).slice(0, 10), OrdersPage.formatMoney(order.total), OrdersPage.STATUSES[order.status].label];
-                        }),
-                        allowHtml: 1, // (the texts are made by the panel, user texts are escaped)
-                        style: Theme.tableStyle({ headerColor: S.FIELD_COLOR, bodyColor: S.CARD_COLOR, borderColor: S.CARD_BORDER_COLOR, textColor: Ink(0.85) }),
-                        onCellCreate: function(cell) {
-                            const order = orders[cell.rowIndex];
-                            if (cell.columnIndex == 3) cell.label.textColor = OrdersPage.STATUSES[order.status].color;
-                            if (cell.columnIndex == 0) cell.label.textColor = S.ACCENT_COLOR;
-                        },
-                        // Open the order on the Orders page
-                        onRowClick: function(self, rowIndex) {
-                            rightView.hide();
-                            rightView.clean();
-                            leftMenu.setSelectedItem(OrdersPage.KEY);
-                            OrdersPage({ openOrderId: orders[rowIndex].id });
-                        },
-                    });
-                    Theme.fillTableWidth(table);
-                    Label({ text: "Click an order to open it on the Orders page.", fontSize: 12, textColor: Ink(0.4) });
-                }
-
-            endGroup();
-
-            // NOTES
-            startSection("Notes");
-
-                customer.notes.slice().reverse().forEach(function(note, index, list) {
-                    HGroup({ width: "100%", height: "auto", align: "left top", gap: 12 });
-                        VGroup({ width: 12, height: "auto", align: "center top", gap: 0 });
-                        that.elem.style.alignSelf = "stretch";
-                            Box({ width: 10, height: 10, round: 100, color: S.ACCENT_COLOR });
-                            that.elem.style.marginTop = "5px";
-                            if (index < list.length - 1) {
-                                Box({ width: 2, height: "auto", color: Ink(0.1) });
-                                that.elem.style.flex = "1 1 auto";
-                                that.elem.style.minHeight = "16px";
-                            }
-                        endGroup();
-                        VGroup({ width: "auto", height: "auto", align: "left top", gap: 0 });
-                        that.elem.style.flex = "1 1 auto";
-                        that.elem.style.minWidth = "0";
-                        that.elem.style.paddingBottom = "10px";
-                            Label({ text: escape(note.text), fontSize: 14, textColor: Ink(0.9), width: "100%" });
-                            Label({ text: new Date(note.time).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" }) + " · " + escape(note.by), fontSize: 12, textColor: Ink(0.45) });
-                        endGroup();
+                customer.tags.forEach(function(tag) {
+                    HGroup({ width: "auto", height: 28, align: "left center", gap: 6, padding: [10, 0], round: 100, color: S.FIELD_COLOR, border: 1, borderColor: S.CARD_BORDER_COLOR });
+                        Label({ text: escape(tag), fontSize: 13, textColor: Ink(0.85) });
+                        const btnRemove = Label({ text: "✕", fontSize: 12, textColor: Ink(0.45), clickable: 1 });
+                        btnRemove.elem.style.cursor = "pointer";
+                        btnRemove.elem.title = "Remove the tag";
+                        btnRemove.on("click", function() {
+                            saveChange(function(c) { c.tags = c.tags.filter(function(t) { return t != tag; }); return ""; }, "Tag removed.");
+                        });
                     endGroup();
                 });
 
-                if (!customer.notes.length) Label({ text: "No notes yet.", fontSize: 13, textColor: Ink(0.45) });
+                if (!customer.tags.length) Label({ text: "No tags yet.", fontSize: 13, textColor: Ink(0.45) });
 
-                HGroup({ width: "100%", height: "auto", align: "left bottom", gap: 8 });
-                    const inputNote = createDarkInput({ titleText: "ADD A NOTE", placeholder: "Only the team can see it", maxLength: 200 });
-                    inputNote.elem.style.flex = "1 1 0";
-                    inputNote.elem.style.minWidth = "0";
-                    CustomersPage.createButton("Add", "", function() {
-                        const text = inputNote.getValue().trim();
-                        if (!text) return;
-                        saveChange(function(c) { c.notes.push({ time: Date.now(), text: text, by: CustomersPage.getCurrentUserName() }); return ""; }, "Note added.");
-                    });
-                    that.elem.style.flexShrink = "0";
+            endGroup();
+
+            HGroup({ width: "100%", height: "auto", align: "left bottom", gap: 8 });
+                const inputTag = createDarkInput({ titleText: "ADD A TAG", placeholder: "wholesale, newsletter, complaint...", maxLength: 24 });
+                inputTag.elem.style.flex = "1 1 0";
+                inputTag.elem.style.minWidth = "0";
+                CustomersPage.createButton("Add", "", function() {
+                    const tag = inputTag.getValue().trim().toLowerCase();
+                    if (!tag) return;
+                    if (customer.tags.includes(tag)) { showNotice("This tag is already on the customer.", true); return; }
+                    saveChange(function(c) { c.tags.push(tag); return ""; }, "Tag \"" + tag + "\" added.");
+                });
+                that.elem.style.flexShrink = "0"; // WHY: The input takes the rest, the button keeps its width.
+            endGroup();
+
+            HGroup({ width: "100%", height: "auto", align: "left center", gap: 12 });
+            that.elem.style.justifyContent = "space-between";
+            that.elem.style.marginTop = "6px";
+                VGroup({ width: "auto", height: "auto", align: "left top", gap: 0 });
+                    Label({ text: "Marketing e-mails", fontSize: 14, textColor: Ink(0.9) });
+                    Label({ text: (customer.consent) ? "Opted in on " + new Date(customer.consentAt).toLocaleDateString("en-GB", { dateStyle: "medium" }) : "Not opted in. Do not send campaigns.", fontSize: 12, textColor: Ink(0.45) });
                 endGroup();
-
+                Toggle({
+                    width: 52, height: 30, spacing: 3, value: (customer.consent) ? 1 : 0,
+                    backgroundStyle: { color: T.surface3, selectedColor: S.PRIMARY_COLOR, border: 1, borderColor: S.CARD_BORDER_COLOR },
+                    buttonStyle: { color: Ink(0.35), selectedColor: Ink(0.95) },
+                    onChange: function(self) {
+                        if (self.value == ((customer.consent) ? 1 : 0)) return;
+                        saveChange(function(c) { c.consent = self.value; c.consentAt = Date.now(); return ""; }, (self.value) ? "Marketing consent is on." : "Marketing consent is off.");
+                    },
+                });
             endGroup();
 
         endGroup();
 
-    endBox();
+        // ORDERS
+        const orders = customer.orders.slice(0, 8);
+        startSection("Orders" + ((customer.orderCount > orders.length) ? " · last " + orders.length + " of " + customer.orderCount : ""));
+
+            if (!orders.length) {
+                Label({ text: "No orders yet. This customer registered but did not buy anything.", fontSize: 13, textColor: Ink(0.5), width: "100%" });
+            } else {
+                const table = TinyTable({
+                    columns: Theme.tableColumns(["ORDER", "DATE", "TOTAL", "STATUS"], ["30%", "30%", "18%", "20%"], ["left", "left", "right", "left"]),
+                    rows: orders.map(function(order) {
+                        return [escape(order.id), OrdersPage.formatDateTime(order.time).slice(0, 10), OrdersPage.formatMoney(order.total), OrdersPage.STATUSES[order.status].label];
+                    }),
+                    allowHtml: 1, // (the texts are made by the panel, user texts are escaped)
+                    style: Theme.tableStyle({ headerColor: S.FIELD_COLOR, bodyColor: S.CARD_COLOR, borderColor: S.CARD_BORDER_COLOR, textColor: Ink(0.85) }),
+                    onCellCreate: function(cell) {
+                        const order = orders[cell.rowIndex];
+                        if (cell.columnIndex == 3) cell.label.textColor = OrdersPage.STATUSES[order.status].color;
+                        if (cell.columnIndex == 0) cell.label.textColor = S.ACCENT_COLOR;
+                    },
+                    // Open the order on the Orders page
+                    onRowClick: function(self, rowIndex) {
+                        rightView.hide();
+                        rightView.clean();
+                        leftMenu.setSelectedItem(OrdersPage.KEY);
+                        OrdersPage({ openOrderId: orders[rowIndex].id });
+                    },
+                });
+                Theme.fillTableWidth(table);
+                Label({ text: "Click an order to open it on the Orders page.", fontSize: 12, textColor: Ink(0.4) });
+            }
+
+        endGroup();
+
+        // NOTES
+        startSection("Notes");
+
+            customer.notes.slice().reverse().forEach(function(note, index, list) {
+                HGroup({ width: "100%", height: "auto", align: "left top", gap: 12 });
+                    VGroup({ width: 12, height: "auto", align: "center top", gap: 0 });
+                    that.elem.style.alignSelf = "stretch";
+                        Box({ width: 10, height: 10, round: 100, color: S.ACCENT_COLOR });
+                        that.elem.style.marginTop = "5px";
+                        if (index < list.length - 1) {
+                            Box({ width: 2, height: "auto", color: Ink(0.1) });
+                            that.elem.style.flex = "1 1 auto";
+                            that.elem.style.minHeight = "16px";
+                        }
+                    endGroup();
+                    VGroup({ width: "auto", height: "auto", align: "left top", gap: 0 });
+                    that.elem.style.flex = "1 1 auto";
+                    that.elem.style.minWidth = "0";
+                    that.elem.style.paddingBottom = "10px";
+                        Label({ text: escape(note.text), fontSize: 14, textColor: Ink(0.9), width: "100%" });
+                        Label({ text: new Date(note.time).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" }) + " · " + escape(note.by), fontSize: 12, textColor: Ink(0.45) });
+                    endGroup();
+                endGroup();
+            });
+
+            if (!customer.notes.length) Label({ text: "No notes yet.", fontSize: 13, textColor: Ink(0.45) });
+
+            HGroup({ width: "100%", height: "auto", align: "left bottom", gap: 8 });
+                const inputNote = createDarkInput({ titleText: "ADD A NOTE", placeholder: "Only the team can see it", maxLength: 200 });
+                inputNote.elem.style.flex = "1 1 0";
+                inputNote.elem.style.minWidth = "0";
+                CustomersPage.createButton("Add", "", function() {
+                    const text = inputNote.getValue().trim();
+                    if (!text) return;
+                    saveChange(function(c) { c.notes.push({ time: Date.now(), text: text, by: CustomersPage.getCurrentUserName() }); return ""; }, "Note added.");
+                });
+                that.elem.style.flexShrink = "0";
+            endGroup();
+
+        endGroup();
+
+    endGroup(); // END SCROLL AREA
 
     // GROUP: Buttons (bottom)
     HGroup({ left: 0, bottom: 0, width: "100%", height: 76, align: "left center", gap: 8, padding: [20, 0] });

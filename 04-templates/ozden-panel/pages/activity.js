@@ -562,30 +562,17 @@ const ActivityPage = function(params = {}) {
 
     // *** PAGE INIT CODE:
 
-    // BOX: Scrollable container
-    // WHY: page does not scroll. Scrollable content must be inside a Box with scrollY: 1.
-    startBox(0, 0, "100%", "100%", {
-        color: "transparent",
-        scrollY: 1,
-    });
+    // SCROLL AREA: The page (comp/scroll-area.js)
+    // WHY: page does not scroll. A ScrollArea fills the window; its content scrolls when it is taller.
+    ScrollArea({ gap: 16, padding: 24, style: Theme.scrollAreaStyle() });
 
-        VGroup({
-            width: "100%",
-            height: "auto", // Grows with content, so the Box can scroll.
-            align: "left top",
-            gap: 16,
-            padding: 24,
-        });
+        initHeader();
+        initSecurityAlert();
+        initSummary();
+        initFilters();
+        initTable();
 
-            initHeader();
-            initSecurityAlert();
-            initSummary();
-            initFilters();
-            initTable();
-
-        endGroup();
-
-    endBox();
+    endGroup(); // END SCROLL AREA
 
     rangeTabs.setValue(filter.rangeIndex, 1);
     setLive(0);
@@ -634,111 +621,107 @@ const ActivityDetails = function(params = {}) {
     // Left line
     Box(0, 0, 1, "100%", { color: Ink(0.12) });
 
-    // GROUP: Scrollable content
-    startBox(0, 0, "100%", "calc(100% - 76px)", { color: "transparent", scrollY: 1 });
+    // SCROLL AREA: The content over the buttons (comp/scroll-area.js)
+    ScrollArea({ height: "calc(100% - 76px)", gap: 16, padding: 20, style: Theme.scrollAreaStyle() });
 
-        VGroup({ width: "100%", height: "auto", align: "left top", gap: 16, padding: 20 });
+        // Title
+        HGroup({ width: "100%", height: "auto", align: "left center", gap: 8 });
+        that.elem.style.justifyContent = "space-between";
 
-            // Title
-            HGroup({ width: "100%", height: "auto", align: "left center", gap: 8 });
-            that.elem.style.justifyContent = "space-between";
+            Label({ text: "Event Details", fontSize: 18, textColor: Ink(0.95) });
+            that.elem.style.fontFamily = "opensans-bold";
 
-                Label({ text: "Event Details", fontSize: 18, textColor: Ink(0.95) });
-                that.elem.style.fontFamily = "opensans-bold";
-
-                Icon({ width: 28, height: 28, clickable: 1 });
-                that.load("assets/close.png");
-                that.elem.style.filter = T.iconFilter;
-                that.elem.style.cursor = "pointer";
-                that.opacity = 0.6;
-                that.on("click", function() {
-                    rightView.hide();
-                    rightView.clean();
-                });
-
-            endGroup();
-
-            // Summary sentence
-            VGroup({ width: "100%", height: "auto", align: "left top", gap: 8, padding: [16, 14], color: S.CARD_COLOR, border: 1, borderColor: S.CARD_BORDER_COLOR, round: 10 });
-
-                Label({
-                    text: action.label.toUpperCase(),
-                    fontSize: 11,
-                    textColor: action.color,
-                    color: ActivityPage.alpha(action.color, 0.14),
-                    round: 6,
-                    padding: [8, 3],
-                });
-                that.elem.style.letterSpacing = "1px";
-
-                Label({
-                    text: "<b>" + escape(event.userName) + "</b> " + action.label.toLowerCase() + " <b>" + escape(event.target) + "</b>",
-                    fontSize: 16,
-                    textColor: Ink(0.9),
-                    width: "100%",
-                });
-
-                Label({
-                    text: ActivityPage.formatRelative(event.time) + " · " + new Date(event.time).toLocaleString("en-GB", { dateStyle: "full", timeStyle: "medium" }),
-                    fontSize: 13,
-                    textColor: Ink(0.5),
-                    width: "100%",
-                });
-
-            endGroup();
-
-            // Information
-            const INFO = [
-                ["Module", event.module],
-                ["User", event.userName + " (" + event.userEmail + ")"],
-                ["IP address", event.ip],
-                ["Location", event.location],
-                ["Device", event.device],
-                ["Request ID", event.requestId],
-            ];
-
-            VGroup({ width: "100%", height: "auto", align: "left top", gap: 0 });
-
-                INFO.forEach(function(info, index) {
-                    HGroup({ width: "100%", height: "auto", align: "left center", gap: 16, padding: [0, 9] });
-                    that.elem.style.justifyContent = "space-between";
-                    if (index > 0) that.elem.style.borderTop = "1px solid " + Ink(0.06);
-                        Label({ text: info[0], fontSize: 13, textColor: Ink(0.5) });
-                        that.elem.style.flexShrink = "0";
-                        Label({ text: escape(info[1]), fontSize: 13, textColor: Ink(0.9), textAlign: "right" });
-                    endGroup();
-                });
-
-            endGroup();
-
-            // Changes
-            if (event.changes && event.changes.length) {
-
-                Label({ text: "CHANGES", fontSize: 11, textColor: Ink(0.45) });
-                that.elem.style.letterSpacing = "1px";
-
-                const table = TinyTable({
-                    columns: Theme.tableColumns(["FIELD", "BEFORE", "AFTER"], ["28%", "35%", "36%"]),
-                    rows: event.changes.map(function(change) {
-                        return [escape(change.field), escape(change.before), escape(change.after)];
-                    }),
-                    allowHtml: 1, // (the texts are made by the panel, user texts are escaped)
-                    style: Theme.tableStyle({ headerColor: S.FIELD_COLOR, bodyColor: S.CARD_COLOR, borderColor: S.CARD_BORDER_COLOR }),
-                    onCellCreate: function(cell) {
-                        if (cell.columnIndex == 1) {
-                            cell.label.textColor = Theme.readable("#E6A0A0"); // (the light theme: it was pale on white)
-                            cell.label.elem.style.textDecoration = "line-through";
-                        }
-                        if (cell.columnIndex == 2) cell.label.textColor = Theme.readable("#9FD3C4");
-                    },
-                });
-                Theme.fillTableWidth(table);
-
-            }
+            Icon({ width: 28, height: 28, clickable: 1 });
+            that.load("assets/close.png");
+            that.elem.style.filter = T.iconFilter;
+            that.elem.style.cursor = "pointer";
+            that.opacity = 0.6;
+            that.on("click", function() {
+                rightView.hide();
+                rightView.clean();
+            });
 
         endGroup();
 
-    endBox();
+        // Summary sentence
+        VGroup({ width: "100%", height: "auto", align: "left top", gap: 8, padding: [16, 14], color: S.CARD_COLOR, border: 1, borderColor: S.CARD_BORDER_COLOR, round: 10 });
+
+            Label({
+                text: action.label.toUpperCase(),
+                fontSize: 11,
+                textColor: action.color,
+                color: ActivityPage.alpha(action.color, 0.14),
+                round: 6,
+                padding: [8, 3],
+            });
+            that.elem.style.letterSpacing = "1px";
+
+            Label({
+                text: "<b>" + escape(event.userName) + "</b> " + action.label.toLowerCase() + " <b>" + escape(event.target) + "</b>",
+                fontSize: 16,
+                textColor: Ink(0.9),
+                width: "100%",
+            });
+
+            Label({
+                text: ActivityPage.formatRelative(event.time) + " · " + new Date(event.time).toLocaleString("en-GB", { dateStyle: "full", timeStyle: "medium" }),
+                fontSize: 13,
+                textColor: Ink(0.5),
+                width: "100%",
+            });
+
+        endGroup();
+
+        // Information
+        const INFO = [
+            ["Module", event.module],
+            ["User", event.userName + " (" + event.userEmail + ")"],
+            ["IP address", event.ip],
+            ["Location", event.location],
+            ["Device", event.device],
+            ["Request ID", event.requestId],
+        ];
+
+        VGroup({ width: "100%", height: "auto", align: "left top", gap: 0 });
+
+            INFO.forEach(function(info, index) {
+                HGroup({ width: "100%", height: "auto", align: "left center", gap: 16, padding: [0, 9] });
+                that.elem.style.justifyContent = "space-between";
+                if (index > 0) that.elem.style.borderTop = "1px solid " + Ink(0.06);
+                    Label({ text: info[0], fontSize: 13, textColor: Ink(0.5) });
+                    that.elem.style.flexShrink = "0";
+                    Label({ text: escape(info[1]), fontSize: 13, textColor: Ink(0.9), textAlign: "right" });
+                endGroup();
+            });
+
+        endGroup();
+
+        // Changes
+        if (event.changes && event.changes.length) {
+
+            Label({ text: "CHANGES", fontSize: 11, textColor: Ink(0.45) });
+            that.elem.style.letterSpacing = "1px";
+
+            const table = TinyTable({
+                columns: Theme.tableColumns(["FIELD", "BEFORE", "AFTER"], ["28%", "35%", "36%"]),
+                rows: event.changes.map(function(change) {
+                    return [escape(change.field), escape(change.before), escape(change.after)];
+                }),
+                allowHtml: 1, // (the texts are made by the panel, user texts are escaped)
+                style: Theme.tableStyle({ headerColor: S.FIELD_COLOR, bodyColor: S.CARD_COLOR, borderColor: S.CARD_BORDER_COLOR }),
+                onCellCreate: function(cell) {
+                    if (cell.columnIndex == 1) {
+                        cell.label.textColor = Theme.readable("#E6A0A0"); // (the light theme: it was pale on white)
+                        cell.label.elem.style.textDecoration = "line-through";
+                    }
+                    if (cell.columnIndex == 2) cell.label.textColor = Theme.readable("#9FD3C4");
+                },
+            });
+            Theme.fillTableWidth(table);
+
+        }
+
+    endGroup(); // END SCROLL AREA
 
     // GROUP: Buttons (bottom)
     HGroup({ left: 0, bottom: 0, width: "100%", height: 76, align: "right center", gap: 8, padding: [20, 0] });

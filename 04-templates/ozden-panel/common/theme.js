@@ -17,6 +17,7 @@ USAGE (in a page or a component):
     Tabs({ styleName: T.compStyle });                                   // Style package of a component
     Slider({ styleName: T.sliderStyle });                               // round, or roundDark on a dark theme
     Theme.confirm({ titleText: "Delete?", onAnswer: fn });            // Dialog, also Theme.tabsStyle(), tableStyle(), createWaiting()
+    ScrollArea({ gap: 16, padding: 24, style: Theme.scrollAreaStyle() }); // A page that scrolls (comp/scroll-area.js)
 
 NOTE: Ink(alpha) is white on the dark themes and black on the light one. It is the ink of texts,
       borders and hover layers over the page and the cards.
@@ -390,6 +391,15 @@ Theme.tableStyle = function(look = {}) {
         scrollBar: { neverHide: 0, showDots: 0, bar_color: T.scrollBar },
     };
 
+};
+
+// The ScrollArea of the panel (a page, the details of a row): the bar of its tables, thin, without the dots, in the
+// color of the theme; it shows while the content moves.
+// USAGE: ScrollArea({ gap: 16, padding: 24, style: Theme.scrollAreaStyle() }) ... endGroup();
+Theme.scrollAreaStyle = function() {
+    return {
+        scrollBar: { neverHide: 0, showDots: 0, bar_color: T.scrollBar, bar_mouseOverColor: T.scrollBar },
+    };
 };
 
 // ["NAME", "CITY"], ["60%", "39%"], ["left", "right"] -> the columns of TinyTable

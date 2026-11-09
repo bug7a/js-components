@@ -577,30 +577,17 @@ const HomePage = function(params = {}) {
 
     // *** PAGE INIT CODE:
 
-    // BOX: Scrollable container
-    // WHY: page does not scroll. Scrollable content must be inside a Box with scrollY: 1.
-    startBox(0, 0, "100%", "100%", {
-        color: "transparent",
-        scrollY: 1,
-    });
+    // SCROLL AREA: The page (comp/scroll-area.js)
+    // WHY: page does not scroll. A ScrollArea fills the window; its content scrolls when it is taller.
+    ScrollArea({ gap: 16, padding: 24, style: Theme.scrollAreaStyle() });
 
-        VGroup({
-            width: "100%",
-            height: "auto", // Grows with content, so the Box can scroll.
-            align: "left top",
-            gap: 16,
-            padding: 24,
-        });
+        initHeader();
+        initKpiRow();
+        initChartRow();
+        initTableRow();
+        initBottomRow();
 
-            initHeader();
-            initKpiRow();
-            initChartRow();
-            initTableRow();
-            initBottomRow();
-
-        endGroup();
-
-    endBox();
+    endGroup(); // END SCROLL AREA
 
     box.setPeriod(0);
 

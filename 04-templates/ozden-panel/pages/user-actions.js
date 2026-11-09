@@ -146,164 +146,160 @@ const UserActionsPage = function(params = {}) {
     // Left line
     Box(0, 0, 1, "100%", { color: Ink(0.12) });
 
-    // GROUP: Scrollable content
-    startBox(0, 0, "100%", "calc(100% - 72px)", { color: "transparent", scrollY: 1 });
+    // SCROLL AREA: The content over the bottom bar (comp/scroll-area.js)
+    ScrollArea({ height: "calc(100% - 72px)", gap: 18, padding: [16, 18], style: Theme.scrollAreaStyle() });
 
-        VGroup({ width: "100%", height: "auto", align: "left top", gap: 18, padding: [16, 18] });
+        // PROFILE
+        VGroup({ width: "100%", height: "auto", align: "left top", gap: 14, padding: 16, color: S.CARD_COLOR, border: 1, borderColor: S.CARD_BORDER_COLOR, round: 12 });
 
-            // PROFILE
-            VGroup({ width: "100%", height: "auto", align: "left top", gap: 14, padding: 16, color: S.CARD_COLOR, border: 1, borderColor: S.CARD_BORDER_COLOR, round: 12 });
+            HGroup({ width: "100%", height: "auto", align: "left center", gap: 12 });
 
-                HGroup({ width: "100%", height: "auto", align: "left center", gap: 12 });
+                // Avatar with the status dot
+                startBox({ width: 52, height: 52, color: "transparent" });
+                that.elem.style.flexShrink = "0";
+                that.clipContent = 0;
 
-                    // Avatar with the status dot
-                    startBox({ width: 52, height: 52, color: "transparent" });
-                    that.elem.style.flexShrink = "0";
-                    that.clipContent = 0;
+                    HGroup({ left: 0, top: 0, width: 52, height: 52, align: "center center", round: 100, color: user.avatarColor });
+                        Label({ text: UserActionsPage.getInitials(user.name), fontSize: 18, textColor: Theme.textOn(user.avatarColor) });
+                    endGroup();
 
-                        HGroup({ left: 0, top: 0, width: 52, height: 52, align: "center center", round: 100, color: user.avatarColor });
-                            Label({ text: UserActionsPage.getInitials(user.name), fontSize: 18, textColor: Theme.textOn(user.avatarColor) });
-                        endGroup();
+                    avatarDot = Box({ left: 38, top: 38, width: 14, height: 14, round: 100, border: 2, borderColor: S.CARD_COLOR });
 
-                        avatarDot = Box({ left: 38, top: 38, width: 14, height: 14, round: 100, border: 2, borderColor: S.CARD_COLOR });
+                endBox();
 
-                    endBox();
+                VGroup({ width: "auto", height: "auto", align: "left top", gap: 1 });
+                that.elem.style.flex = "1 1 auto";
+                that.elem.style.minWidth = "0";
 
-                    VGroup({ width: "auto", height: "auto", align: "left top", gap: 1 });
-                    that.elem.style.flex = "1 1 auto";
-                    that.elem.style.minWidth = "0";
+                    Label({ text: escape(user.name), fontSize: 17, textColor: Ink(0.95) });
+                    that.elem.style.fontFamily = "opensans-bold";
+                    that.elem.style.whiteSpace = "nowrap";
+                    that.elem.style.overflow = "hidden";
+                    that.elem.style.textOverflow = "ellipsis";
+                    that.width = "100%";
 
-                        Label({ text: escape(user.name), fontSize: 17, textColor: Ink(0.95) });
-                        that.elem.style.fontFamily = "opensans-bold";
+                    Label({ text: escape(user.email), fontSize: 13, textColor: Ink(0.5) });
+                    that.elem.style.whiteSpace = "nowrap";
+                    that.elem.style.overflow = "hidden";
+                    that.elem.style.textOverflow = "ellipsis";
+                    that.width = "100%";
+
+                    Label({ text: escape(user.roleName).toUpperCase(), fontSize: 10, textColor: S.ACCENT_COLOR, color: UserActionsPage.alpha(S.ACCENT_COLOR, 0.15), round: 6, padding: [7, 2] });
+                    that.elem.style.letterSpacing = "1px";
+                    that.elem.style.marginTop = "5px";
+
+                endGroup();
+
+            endGroup();
+
+            // Status
+            HGroup({ width: "100%", height: "auto", align: "left center", gap: 6 });
+
+                Object.keys(STATUSES).forEach(function(id) {
+
+                    const btn = HGroup({ width: "auto", height: 32, align: "center center", gap: 6, padding: [10, 0], round: 100, border: 1, borderColor: S.CARD_BORDER_COLOR, color: "transparent" });
+                    btn.elem.style.flex = "1 1 auto";
+                    btn.elem.style.cursor = "pointer";
+                    btn.setMotion("background-color 0.15s, border-color 0.15s");
+                    btn.on("click", function() {
+                        UserActionsPage.setStatus(id);
+                        updateStatusView();
+                    });
+
+                        Box({ width: 8, height: 8, round: 100, color: STATUSES[id].color });
+                        Label({ text: STATUSES[id].label, fontSize: 12, textColor: Ink(0.85) });
                         that.elem.style.whiteSpace = "nowrap";
-                        that.elem.style.overflow = "hidden";
-                        that.elem.style.textOverflow = "ellipsis";
-                        that.width = "100%";
-
-                        Label({ text: escape(user.email), fontSize: 13, textColor: Ink(0.5) });
-                        that.elem.style.whiteSpace = "nowrap";
-                        that.elem.style.overflow = "hidden";
-                        that.elem.style.textOverflow = "ellipsis";
-                        that.width = "100%";
-
-                        Label({ text: escape(user.roleName).toUpperCase(), fontSize: 10, textColor: S.ACCENT_COLOR, color: UserActionsPage.alpha(S.ACCENT_COLOR, 0.15), round: 6, padding: [7, 2] });
-                        that.elem.style.letterSpacing = "1px";
-                        that.elem.style.marginTop = "5px";
 
                     endGroup();
 
-                endGroup();
+                    statusButtons[id] = btn;
 
-                // Status
-                HGroup({ width: "100%", height: "auto", align: "left center", gap: 6 });
-
-                    Object.keys(STATUSES).forEach(function(id) {
-
-                        const btn = HGroup({ width: "auto", height: 32, align: "center center", gap: 6, padding: [10, 0], round: 100, border: 1, borderColor: S.CARD_BORDER_COLOR, color: "transparent" });
-                        btn.elem.style.flex = "1 1 auto";
-                        btn.elem.style.cursor = "pointer";
-                        btn.setMotion("background-color 0.15s, border-color 0.15s");
-                        btn.on("click", function() {
-                            UserActionsPage.setStatus(id);
-                            updateStatusView();
-                        });
-
-                            Box({ width: 8, height: 8, round: 100, color: STATUSES[id].color });
-                            Label({ text: STATUSES[id].label, fontSize: 12, textColor: Ink(0.85) });
-                            that.elem.style.whiteSpace = "nowrap";
-
-                        endGroup();
-
-                        statusButtons[id] = btn;
-
-                    });
-
-                endGroup();
-
-            endGroup();
-
-            // SHORTCUTS
-            startSection("");
-
-                createMenuItem("My Account", "Name, e-mail, password and 2FA", ASSETS + "top-bar/user.png", function() {
-                    openMainPage(SettingsPage.KEY, function() { SettingsPage({ sectionIndex: 1 }); });
                 });
-
-                const itemNotifications = createMenuItem("Notifications", "Orders, users and system messages", ASSETS + "top-bar/notification.png", function() {
-                    rightView.hide();
-                    rightView.clean(); // Destroys this page
-                    openPageByKey(NotificationsPage.KEY);
-                });
-                lblNotificationCount = itemNotifications.lblRight;
-
-                if (typeof UserListPage !== "undefined" && user.id !== null) {
-                    createMenuItem("My Details", "Your role and permissions", ASSETS + "left-menu/data-table.png", function() {
-                        openMainPage(UserListPage.KEY, function() { UserListPage({ openUserId: user.id }); });
-                    });
-                }
-
-                createMenuItem("Activity Log", "What was done in the panel", ASSETS + "top-bar/filter.png", function() {
-                    openMainPage(ActivityPage.KEY, function() { ActivityPage(); });
-                });
-
-                createMenuItem("Settings", "Panel, notifications and appearance", ASSETS + "left-menu/setting.png", function() {
-                    openMainPage(SettingsPage.KEY, function() { SettingsPage(); });
-                });
-
-                createMenuItem("Help & Support", escape(settings.supportEmail), ASSETS + "top-bar/comment.png", function() {
-                    window.location.href = "mailto:" + encodeURIComponent(settings.supportEmail) + "?subject=" + encodeURIComponent(settings.panelName + " help");
-                });
-
-            endGroup();
-
-            // PANEL COLOR
-            startSection("Panel color");
-
-                HGroup({ width: "100%", height: "auto", align: "left center", gap: 10, padding: [4, 0] });
-
-                    SettingsPage.PANEL_COLORS.forEach(function(item) {
-
-                        const swatch = Box({ width: 30, height: 30, round: 100, color: item.color, border: 2, borderColor: "transparent" });
-                        swatch.panelColor = item.color;
-                        swatch.elem.title = item.name;
-                        swatch.elem.style.cursor = "pointer";
-                        swatch.elem.style.boxShadow = "0 0 0 1px " + Ink(0.15) + " inset";
-                        swatch.on("click", function() {
-                            const saved = SettingsPage.load();
-                            saved.panelColor = item.color;
-                            SettingsPage.saveAndApply(saved); // WHY: Also updates the Settings page, if it is open.
-                            updateColorView();
-                        });
-                        colorSwatches.push(swatch);
-
-                    });
-
-                endGroup();
-
-            endGroup();
-
-            // SESSION
-            startSection("This session");
-
-                VGroup({ width: "100%", height: "auto", align: "left top", gap: 8, padding: [14, 12], color: S.CARD_COLOR, border: 1, borderColor: S.CARD_BORDER_COLOR, round: 10 });
-
-                    const sessionStart = UserActionsPage.getSessionStart();
-                    createInfoLine("Signed in", UserActionsPage.formatRelative(sessionStart));
-                    createInfoLine("Device", escape(UserActionsPage.getDeviceName()));
-                    createInfoLine("Auto sign out", "After " + settings.sessionTimeout + " min idle");
-                    createInfoLine("Two-factor", (settings.twoFactor) ? "On" : "Off", (settings.twoFactor) ? S.ACCENT_COLOR : T.warning);
-
-                    if (!settings.twoFactor) {
-                        Label({ text: "Turn on two-factor authentication in My Account to protect your account.", fontSize: 12, textColor: Ink(0.45), width: "100%" });
-                    }
-
-                endGroup();
 
             endGroup();
 
         endGroup();
 
-    endBox();
+        // SHORTCUTS
+        startSection("");
+
+            createMenuItem("My Account", "Name, e-mail, password and 2FA", ASSETS + "top-bar/user.png", function() {
+                openMainPage(SettingsPage.KEY, function() { SettingsPage({ sectionIndex: 1 }); });
+            });
+
+            const itemNotifications = createMenuItem("Notifications", "Orders, users and system messages", ASSETS + "top-bar/notification.png", function() {
+                rightView.hide();
+                rightView.clean(); // Destroys this page
+                openPageByKey(NotificationsPage.KEY);
+            });
+            lblNotificationCount = itemNotifications.lblRight;
+
+            if (typeof UserListPage !== "undefined" && user.id !== null) {
+                createMenuItem("My Details", "Your role and permissions", ASSETS + "left-menu/data-table.png", function() {
+                    openMainPage(UserListPage.KEY, function() { UserListPage({ openUserId: user.id }); });
+                });
+            }
+
+            createMenuItem("Activity Log", "What was done in the panel", ASSETS + "top-bar/filter.png", function() {
+                openMainPage(ActivityPage.KEY, function() { ActivityPage(); });
+            });
+
+            createMenuItem("Settings", "Panel, notifications and appearance", ASSETS + "left-menu/setting.png", function() {
+                openMainPage(SettingsPage.KEY, function() { SettingsPage(); });
+            });
+
+            createMenuItem("Help & Support", escape(settings.supportEmail), ASSETS + "top-bar/comment.png", function() {
+                window.location.href = "mailto:" + encodeURIComponent(settings.supportEmail) + "?subject=" + encodeURIComponent(settings.panelName + " help");
+            });
+
+        endGroup();
+
+        // PANEL COLOR
+        startSection("Panel color");
+
+            HGroup({ width: "100%", height: "auto", align: "left center", gap: 10, padding: [4, 0] });
+
+                SettingsPage.PANEL_COLORS.forEach(function(item) {
+
+                    const swatch = Box({ width: 30, height: 30, round: 100, color: item.color, border: 2, borderColor: "transparent" });
+                    swatch.panelColor = item.color;
+                    swatch.elem.title = item.name;
+                    swatch.elem.style.cursor = "pointer";
+                    swatch.elem.style.boxShadow = "0 0 0 1px " + Ink(0.15) + " inset";
+                    swatch.on("click", function() {
+                        const saved = SettingsPage.load();
+                        saved.panelColor = item.color;
+                        SettingsPage.saveAndApply(saved); // WHY: Also updates the Settings page, if it is open.
+                        updateColorView();
+                    });
+                    colorSwatches.push(swatch);
+
+                });
+
+            endGroup();
+
+        endGroup();
+
+        // SESSION
+        startSection("This session");
+
+            VGroup({ width: "100%", height: "auto", align: "left top", gap: 8, padding: [14, 12], color: S.CARD_COLOR, border: 1, borderColor: S.CARD_BORDER_COLOR, round: 10 });
+
+                const sessionStart = UserActionsPage.getSessionStart();
+                createInfoLine("Signed in", UserActionsPage.formatRelative(sessionStart));
+                createInfoLine("Device", escape(UserActionsPage.getDeviceName()));
+                createInfoLine("Auto sign out", "After " + settings.sessionTimeout + " min idle");
+                createInfoLine("Two-factor", (settings.twoFactor) ? "On" : "Off", (settings.twoFactor) ? S.ACCENT_COLOR : T.warning);
+
+                if (!settings.twoFactor) {
+                    Label({ text: "Turn on two-factor authentication in My Account to protect your account.", fontSize: 12, textColor: Ink(0.45), width: "100%" });
+                }
+
+            endGroup();
+
+        endGroup();
+
+    endGroup(); // END SCROLL AREA
 
     // GROUP: Bottom (sign out)
     HGroup({ left: 0, bottom: 0, width: "100%", height: 72, align: "left center", gap: 10, padding: [18, 0] });

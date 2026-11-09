@@ -354,29 +354,16 @@ const UserListPage = function(params = {}) {
 
     // *** PAGE INIT CODE:
 
-    // BOX: Scrollable container
-    // WHY: page does not scroll. Scrollable content must be inside a Box with scrollY: 1.
-    startBox(0, 0, "100%", "100%", {
-        color: "transparent",
-        scrollY: 1,
-    });
+    // SCROLL AREA: The page (comp/scroll-area.js)
+    // WHY: page does not scroll. A ScrollArea fills the window; its content scrolls when it is taller.
+    ScrollArea({ gap: 16, padding: 24, style: Theme.scrollAreaStyle() });
 
-        VGroup({
-            width: "100%",
-            height: "auto", // Grows with content, so the Box can scroll.
-            align: "left top",
-            gap: 16,
-            padding: 24,
-        });
+        initHeader();
+        initSummary();
+        initToolbar();
+        initTable();
 
-            initHeader();
-            initSummary();
-            initToolbar();
-            initTable();
-
-        endGroup();
-
-    endBox();
+    endGroup(); // END SCROLL AREA
 
     render();
 
@@ -552,235 +539,231 @@ const UserListDetails = function(params = {}) {
     // Left line
     Box(0, 0, 1, "100%", { color: Ink(0.12) });
 
-    // GROUP: Scrollable content
-    startBox(0, 0, "100%", "calc(100% - 76px)", { color: "transparent", scrollY: 1 });
+    // SCROLL AREA: The content over the buttons (comp/scroll-area.js)
+    ScrollArea({ height: "calc(100% - 76px)", gap: 14, padding: 20, style: Theme.scrollAreaStyle() });
 
-        VGroup({ width: "100%", height: "auto", align: "left top", gap: 14, padding: 20 });
+        // TITLE
+        HGroup({ width: "100%", height: "auto", align: "left center", gap: 12 });
 
-            // TITLE
-            HGroup({ width: "100%", height: "auto", align: "left center", gap: 12 });
-
-                // Avatar
-                HGroup({ width: 48, height: 48, align: "center center", round: 100, color: (isInvite) ? S.FIELD_COLOR : RolesPage.getAvatarColor(user.id) });
-                that.elem.style.flexShrink = "0";
-                    Label({ text: (isInvite) ? "+" : UserListPage.getInitials(user.name), fontSize: 17, textColor: (isInvite) ? Ink(0.95) : Theme.textOn(RolesPage.getAvatarColor(user.id)) });
-                endGroup();
-
-                VGroup({ width: "auto", height: "auto", align: "left top", gap: 2 });
-                that.elem.style.flex = "1 1 auto";
-                that.elem.style.minWidth = "0";
-
-                    if (isInvite) {
-                        Label({ text: "Invite User", fontSize: 20, textColor: Ink(0.95) });
-                        that.elem.style.fontFamily = "opensans-bold";
-                        Label({ text: "The user gets an e-mail to set a password.", fontSize: 13, textColor: Ink(0.5) });
-                    } else {
-                        const status = STATUSES[user.status];
-                        HGroup({ width: "auto", height: "auto", align: "left center", gap: 10 });
-                            Label({ text: escape(user.name), fontSize: 20, textColor: Ink(0.95) });
-                            that.elem.style.fontFamily = "opensans-bold";
-                            Label({ text: status.label.toUpperCase(), fontSize: 11, textColor: status.color, color: UserListPage.alpha(status.color, 0.15), round: 6, padding: [8, 3] });
-                            that.elem.style.letterSpacing = "1px";
-                        endGroup();
-                        Label({ text: escape(user.email) + " · " + escape(UserListPage.getRoleName(data, user.roleId)), fontSize: 13, textColor: Ink(0.5) });
-                    }
-
-                endGroup();
-
-                Icon({ width: 28, height: 28, clickable: 1 });
-                that.load("assets/close.png");
-                that.elem.style.filter = T.iconFilter;
-                that.elem.style.cursor = "pointer";
-                that.opacity = 0.6;
-                that.on("click", function() {
-                    rightView.hide();
-                    rightView.clean();
-                });
-
+            // Avatar
+            HGroup({ width: 48, height: 48, align: "center center", round: 100, color: (isInvite) ? S.FIELD_COLOR : RolesPage.getAvatarColor(user.id) });
+            that.elem.style.flexShrink = "0";
+                Label({ text: (isInvite) ? "+" : UserListPage.getInitials(user.name), fontSize: 17, textColor: (isInvite) ? Ink(0.95) : Theme.textOn(RolesPage.getAvatarColor(user.id)) });
             endGroup();
 
-            // NOTICE
-            grpNotice = HGroup({ width: "100%", height: "auto", align: "left center", padding: [12, 10], round: 8, border: 1 });
-                lblNotice = Label({ text: "", fontSize: 14, width: "100%" });
-            endGroup();
-            showNotice(box.notice);
-
-            // ACCOUNT (name, e-mail)
-            startSection((isInvite) ? "New user" : "Account");
-
-                // WHY: Inputs can call onChange while they are created. The function is set after the button is created.
-                let updateAccountButton = function() {};
-
-                const inputName = createDarkInput({
-                    titleText: "NAME",
-                    placeholder: "Name and surname",
-                    maxLength: 60,
-                    onChange: function() { updateAccountButton(); },
-                });
-
-                const inputEmail = createDarkInput({
-                    titleText: "E-MAIL",
-                    placeholder: "name@company.com",
-                    maxLength: 120,
-                    warningText: "E-mail is not valid",
-                    onChange: function() { updateAccountButton(); },
-                });
-
-                let roleId = (isInvite) ? RolesPage.DEFAULT_ROLE_ID : user.roleId;
+            VGroup({ width: "auto", height: "auto", align: "left top", gap: 2 });
+            that.elem.style.flex = "1 1 auto";
+            that.elem.style.minWidth = "0";
 
                 if (isInvite) {
-
-                    VGroup({ width: "auto", height: "auto", align: "left top", gap: 6 });
-                        Label({ text: "ROLE", fontSize: 11, textColor: Ink(0.45) });
+                    Label({ text: "Invite User", fontSize: 20, textColor: Ink(0.95) });
+                    that.elem.style.fontFamily = "opensans-bold";
+                    Label({ text: "The user gets an e-mail to set a password.", fontSize: 13, textColor: Ink(0.5) });
+                } else {
+                    const status = STATUSES[user.status];
+                    HGroup({ width: "auto", height: "auto", align: "left center", gap: 10 });
+                        Label({ text: escape(user.name), fontSize: 20, textColor: Ink(0.95) });
+                        that.elem.style.fontFamily = "opensans-bold";
+                        Label({ text: status.label.toUpperCase(), fontSize: 11, textColor: status.color, color: UserListPage.alpha(status.color, 0.15), round: 6, padding: [8, 3] });
                         that.elem.style.letterSpacing = "1px";
-                        UserListPage.createTinySelect(
-                            data.roles.map(function(role) { return { value: role.id, label: role.name }; }),
-                            function(id) { roleId = id; },
-                            Math.max(0, data.roles.findIndex(function(role) { return role.id == roleId; }))
-                        );
                     endGroup();
-
+                    Label({ text: escape(user.email) + " · " + escape(UserListPage.getRoleName(data, user.roleId)), fontSize: 13, textColor: Ink(0.5) });
                 }
-
-                const btnAccount = UserListPage.createButton((isInvite) ? "Send Invite" : "Save Changes", "", function() {
-
-                    const name = inputName.getValue().trim();
-                    const email = inputEmail.getValue().trim();
-                    const error = validateAccount(name, email, (user) ? user.id : null);
-                    if (error) { showNotice(error, true); return; }
-
-                    if (isInvite) {
-                        const newId = UserListPage.getNextId(data);
-                        saveChange(function(fresh) {
-                            fresh.users.push(UserListPage.createInvitedUser(newId, name, email, roleId));
-                            return "";
-                        }, "Invite is sent to " + email + ".", newId);
-                    } else {
-                        saveChange(function(fresh, freshUser) {
-                            if (!freshUser) return "User is not found.";
-                            freshUser.name = name;
-                            freshUser.email = email;
-                            return "";
-                        }, "Changes are saved.");
-                    }
-
-                }, { primary: 1 });
-
-                updateAccountButton = function() {
-                    const name = inputName.getValue().trim();
-                    const email = inputEmail.getValue().trim();
-                    const isChanged = isInvite || name != user.name || email != user.email;
-                    inputEmail.showWarningIfNotValid(UserListPage.isEmail(email));
-                    setInteractive(btnAccount, isChanged && name.length >= 2 && UserListPage.isEmail(email));
-                };
-
-                if (!isInvite) {
-                    inputName.setValue(user.name);
-                    inputEmail.setValue(user.email);
-                }
-                updateAccountButton();
 
             endGroup();
 
-            if (!isInvite) {
+            Icon({ width: 28, height: 28, clickable: 1 });
+            that.load("assets/close.png");
+            that.elem.style.filter = T.iconFilter;
+            that.elem.style.cursor = "pointer";
+            that.opacity = 0.6;
+            that.on("click", function() {
+                rightView.hide();
+                rightView.clean();
+            });
 
-                const role = data.roles.find(function(r) { return r.id == user.roleId; });
+        endGroup();
 
-                // ROLE AND PERMISSIONS
-                startSection("Role");
+        // NOTICE
+        grpNotice = HGroup({ width: "100%", height: "auto", align: "left center", padding: [12, 10], round: 8, border: 1 });
+            lblNotice = Label({ text: "", fontSize: 14, width: "100%" });
+        endGroup();
+        showNotice(box.notice);
 
-                    const lastAdmin = isLastActiveAdmin(data, user);
+        // ACCOUNT (name, e-mail)
+        startSection((isInvite) ? "New user" : "Account");
 
-                    HGroup({ width: "100%", height: "auto", align: "left center", gap: 10 });
+            // WHY: Inputs can call onChange while they are created. The function is set after the button is created.
+            let updateAccountButton = function() {};
 
-                        const selRole = UserListPage.createTinySelect(
-                            data.roles.map(function(r) { return { value: r.id, label: r.name }; }),
-                            function(id) {
-                                if (id == user.roleId) return;
-                                saveChange(function(fresh, freshUser) {
-                                    if (!freshUser) return "User is not found.";
-                                    if (isLastActiveAdmin(fresh, freshUser)) return "At least one active admin must stay.";
-                                    freshUser.roleId = id;
-                                    return "";
-                                }, "Role is changed to " + UserListPage.getRoleName(data, id) + ".");
-                            },
-                            Math.max(0, data.roles.findIndex(function(r) { return r.id == user.roleId; }))
-                        );
-                        if (lastAdmin) selRole.setEnabled(0);
+            const inputName = createDarkInput({
+                titleText: "NAME",
+                placeholder: "Name and surname",
+                maxLength: 60,
+                onChange: function() { updateAccountButton(); },
+            });
 
-                        Label({ text: (role) ? escape(role.description) : "", fontSize: 13, textColor: Ink(0.5) });
-                        that.elem.style.flex = "1 1 auto";
-                        that.elem.style.minWidth = "0";
+            const inputEmail = createDarkInput({
+                titleText: "E-MAIL",
+                placeholder: "name@company.com",
+                maxLength: 120,
+                warningText: "E-mail is not valid",
+                onChange: function() { updateAccountButton(); },
+            });
 
-                    endGroup();
+            let roleId = (isInvite) ? RolesPage.DEFAULT_ROLE_ID : user.roleId;
 
-                    if (lastAdmin) {
-                        Label({ text: "This is the last active admin. The role can not be changed.", fontSize: 13, textColor: T.warning, width: "100%" });
-                    }
+            if (isInvite) {
 
-                    // Permissions of the role (read only)
-                    VGroup({ width: "100%", height: "auto", align: "left top", gap: 4 });
-                    that.elem.style.marginTop = "6px";
-
-                        RolesPage.MODULES.forEach(function(module) {
-                            const actions = module.actions.filter(function(action) {
-                                return role && role.permissions.includes(module.id + "." + action);
-                            }).map(function(action) {
-                                return RolesPage.ACTIONS.find(function(a) { return a.id == action; }).name;
-                            });
-                            createInfoLine(module.name, (actions.length) ? actions.join(", ") : "No access", { textColor: (actions.length) ? Ink(0.9) : Ink(0.35) });
-                        });
-
-                    endGroup();
-
-                    Label({ text: "Permissions are changed on the Roles & Permissions page.", fontSize: 12, textColor: Ink(0.4), width: "100%" });
-
-                endGroup();
-
-                // SECURITY
-                startSection("Security");
-
-                    createInfoLine("Last login", (user.lastLogin) ? UserListPage.formatDateTime(user.lastLogin) + " <span style='color:" + Ink(0.45) + "'>(" + UserListPage.formatRelative(user.lastLogin) + ")</span>" : "Never");
-                    createInfoLine("Two-factor authentication", (user.twoFactor) ? "On" : "Off", { textColor: (user.twoFactor) ? S.ACCENT_COLOR : Ink(0.5) });
-                    createInfoLine((user.status == "invited") ? "Invited" : "Member since", UserListPage.formatDate((user.status == "invited") ? user.invitedAt : user.createdAt));
-                    if (user.passwordResetAt) createInfoLine("Password reset sent", UserListPage.formatRelative(user.passwordResetAt));
-
-                    HGroup({ width: "100%", height: "auto", align: "left center", gap: 8 });
-                    that.elem.style.marginTop = "6px";
-                    that.elem.style.flexWrap = "wrap";
-
-                        if (user.status == "invited") {
-                            UserListPage.createButton("Resend Invite", "", function() {
-                                saveChange(function(fresh, freshUser) {
-                                    if (!freshUser) return "User is not found.";
-                                    freshUser.invitedAt = Date.now();
-                                    return "";
-                                }, "Invite is sent again to " + user.email + ".");
-                            });
-                        } else {
-                            const btnReset = UserListPage.createButton("Send Password Reset", "", function() {
-                                saveChange(function(fresh, freshUser) {
-                                    if (!freshUser) return "User is not found.";
-                                    freshUser.passwordResetAt = Date.now();
-                                    return "";
-                                }, "Password reset e-mail is sent to " + user.email + ".");
-                            });
-                            setInteractive(btnReset, user.status == "active");
-                        }
-
-                        UserListPage.createButton("E-mail User", "", function() {
-                            window.location.href = "mailto:" + encodeURIComponent(user.email);
-                        });
-
-                    endGroup();
-
+                VGroup({ width: "auto", height: "auto", align: "left top", gap: 6 });
+                    Label({ text: "ROLE", fontSize: 11, textColor: Ink(0.45) });
+                    that.elem.style.letterSpacing = "1px";
+                    UserListPage.createTinySelect(
+                        data.roles.map(function(role) { return { value: role.id, label: role.name }; }),
+                        function(id) { roleId = id; },
+                        Math.max(0, data.roles.findIndex(function(role) { return role.id == roleId; }))
+                    );
                 endGroup();
 
             }
 
+            const btnAccount = UserListPage.createButton((isInvite) ? "Send Invite" : "Save Changes", "", function() {
+
+                const name = inputName.getValue().trim();
+                const email = inputEmail.getValue().trim();
+                const error = validateAccount(name, email, (user) ? user.id : null);
+                if (error) { showNotice(error, true); return; }
+
+                if (isInvite) {
+                    const newId = UserListPage.getNextId(data);
+                    saveChange(function(fresh) {
+                        fresh.users.push(UserListPage.createInvitedUser(newId, name, email, roleId));
+                        return "";
+                    }, "Invite is sent to " + email + ".", newId);
+                } else {
+                    saveChange(function(fresh, freshUser) {
+                        if (!freshUser) return "User is not found.";
+                        freshUser.name = name;
+                        freshUser.email = email;
+                        return "";
+                    }, "Changes are saved.");
+                }
+
+            }, { primary: 1 });
+
+            updateAccountButton = function() {
+                const name = inputName.getValue().trim();
+                const email = inputEmail.getValue().trim();
+                const isChanged = isInvite || name != user.name || email != user.email;
+                inputEmail.showWarningIfNotValid(UserListPage.isEmail(email));
+                setInteractive(btnAccount, isChanged && name.length >= 2 && UserListPage.isEmail(email));
+            };
+
+            if (!isInvite) {
+                inputName.setValue(user.name);
+                inputEmail.setValue(user.email);
+            }
+            updateAccountButton();
+
         endGroup();
 
-    endBox();
+        if (!isInvite) {
+
+            const role = data.roles.find(function(r) { return r.id == user.roleId; });
+
+            // ROLE AND PERMISSIONS
+            startSection("Role");
+
+                const lastAdmin = isLastActiveAdmin(data, user);
+
+                HGroup({ width: "100%", height: "auto", align: "left center", gap: 10 });
+
+                    const selRole = UserListPage.createTinySelect(
+                        data.roles.map(function(r) { return { value: r.id, label: r.name }; }),
+                        function(id) {
+                            if (id == user.roleId) return;
+                            saveChange(function(fresh, freshUser) {
+                                if (!freshUser) return "User is not found.";
+                                if (isLastActiveAdmin(fresh, freshUser)) return "At least one active admin must stay.";
+                                freshUser.roleId = id;
+                                return "";
+                            }, "Role is changed to " + UserListPage.getRoleName(data, id) + ".");
+                        },
+                        Math.max(0, data.roles.findIndex(function(r) { return r.id == user.roleId; }))
+                    );
+                    if (lastAdmin) selRole.setEnabled(0);
+
+                    Label({ text: (role) ? escape(role.description) : "", fontSize: 13, textColor: Ink(0.5) });
+                    that.elem.style.flex = "1 1 auto";
+                    that.elem.style.minWidth = "0";
+
+                endGroup();
+
+                if (lastAdmin) {
+                    Label({ text: "This is the last active admin. The role can not be changed.", fontSize: 13, textColor: T.warning, width: "100%" });
+                }
+
+                // Permissions of the role (read only)
+                VGroup({ width: "100%", height: "auto", align: "left top", gap: 4 });
+                that.elem.style.marginTop = "6px";
+
+                    RolesPage.MODULES.forEach(function(module) {
+                        const actions = module.actions.filter(function(action) {
+                            return role && role.permissions.includes(module.id + "." + action);
+                        }).map(function(action) {
+                            return RolesPage.ACTIONS.find(function(a) { return a.id == action; }).name;
+                        });
+                        createInfoLine(module.name, (actions.length) ? actions.join(", ") : "No access", { textColor: (actions.length) ? Ink(0.9) : Ink(0.35) });
+                    });
+
+                endGroup();
+
+                Label({ text: "Permissions are changed on the Roles & Permissions page.", fontSize: 12, textColor: Ink(0.4), width: "100%" });
+
+            endGroup();
+
+            // SECURITY
+            startSection("Security");
+
+                createInfoLine("Last login", (user.lastLogin) ? UserListPage.formatDateTime(user.lastLogin) + " <span style='color:" + Ink(0.45) + "'>(" + UserListPage.formatRelative(user.lastLogin) + ")</span>" : "Never");
+                createInfoLine("Two-factor authentication", (user.twoFactor) ? "On" : "Off", { textColor: (user.twoFactor) ? S.ACCENT_COLOR : Ink(0.5) });
+                createInfoLine((user.status == "invited") ? "Invited" : "Member since", UserListPage.formatDate((user.status == "invited") ? user.invitedAt : user.createdAt));
+                if (user.passwordResetAt) createInfoLine("Password reset sent", UserListPage.formatRelative(user.passwordResetAt));
+
+                HGroup({ width: "100%", height: "auto", align: "left center", gap: 8 });
+                that.elem.style.marginTop = "6px";
+                that.elem.style.flexWrap = "wrap";
+
+                    if (user.status == "invited") {
+                        UserListPage.createButton("Resend Invite", "", function() {
+                            saveChange(function(fresh, freshUser) {
+                                if (!freshUser) return "User is not found.";
+                                freshUser.invitedAt = Date.now();
+                                return "";
+                            }, "Invite is sent again to " + user.email + ".");
+                        });
+                    } else {
+                        const btnReset = UserListPage.createButton("Send Password Reset", "", function() {
+                            saveChange(function(fresh, freshUser) {
+                                if (!freshUser) return "User is not found.";
+                                freshUser.passwordResetAt = Date.now();
+                                return "";
+                            }, "Password reset e-mail is sent to " + user.email + ".");
+                        });
+                        setInteractive(btnReset, user.status == "active");
+                    }
+
+                    UserListPage.createButton("E-mail User", "", function() {
+                        window.location.href = "mailto:" + encodeURIComponent(user.email);
+                    });
+
+                endGroup();
+
+            endGroup();
+
+        }
+
+    endGroup(); // END SCROLL AREA
 
     // GROUP: Buttons (bottom)
     HGroup({ left: 0, bottom: 0, width: "100%", height: 76, align: "left center", gap: 8, padding: [20, 0] });

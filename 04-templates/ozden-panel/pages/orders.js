@@ -397,29 +397,16 @@ const OrdersPage = function(params = {}) {
 
     // *** PAGE INIT CODE:
 
-    // BOX: Scrollable container
-    // WHY: page does not scroll. Scrollable content must be inside a Box with scrollY: 1.
-    startBox(0, 0, "100%", "100%", {
-        color: "transparent",
-        scrollY: 1,
-    });
+    // SCROLL AREA: The page (comp/scroll-area.js)
+    // WHY: page does not scroll. A ScrollArea fills the window; its content scrolls when it is taller.
+    ScrollArea({ gap: 16, padding: 24, style: Theme.scrollAreaStyle() });
 
-        VGroup({
-            width: "100%",
-            height: "auto", // Grows with content, so the Box can scroll.
-            align: "left top",
-            gap: 16,
-            padding: 24,
-        });
+        initHeader();
+        initSummary();
+        initToolbar();
+        initTable();
 
-            initHeader();
-            initSummary();
-            initToolbar();
-            initTable();
-
-        endGroup();
-
-    endBox();
+    endGroup(); // END SCROLL AREA
 
     render();
 
@@ -551,215 +538,211 @@ const OrderDetails = function(params = {}) {
     // Left line
     Box(0, 0, 1, "100%", { color: Ink(0.12) });
 
-    // GROUP: Scrollable content
-    startBox(0, 0, "100%", "calc(100% - 76px)", { color: "transparent", scrollY: 1 });
+    // SCROLL AREA: The content over the buttons (comp/scroll-area.js)
+    ScrollArea({ height: "calc(100% - 76px)", gap: 14, padding: 20, style: Theme.scrollAreaStyle() });
 
-        VGroup({ width: "100%", height: "auto", align: "left top", gap: 14, padding: 20 });
+        // TITLE
+        HGroup({ width: "100%", height: "auto", align: "left center", gap: 10 });
 
-            // TITLE
-            HGroup({ width: "100%", height: "auto", align: "left center", gap: 10 });
+            VGroup({ width: "auto", height: "auto", align: "left top", gap: 2 });
+            that.elem.style.flex = "1 1 auto";
 
-                VGroup({ width: "auto", height: "auto", align: "left top", gap: 2 });
-                that.elem.style.flex = "1 1 auto";
-
-                    HGroup({ width: "auto", height: "auto", align: "left center", gap: 10 });
-                        Label({ text: order.id, fontSize: 20, textColor: Ink(0.95) });
-                        that.elem.style.fontFamily = "opensans-bold";
-                        Label({ text: status.label.toUpperCase(), fontSize: 11, textColor: status.color, color: OrdersPage.alpha(status.color, 0.15), round: 6, padding: [8, 3] });
-                        that.elem.style.letterSpacing = "1px";
-                    endGroup();
-
-                    Label({ text: new Date(order.time).toLocaleString("en-GB", { dateStyle: "long", timeStyle: "short" }) + " · " + escape(order.payment), fontSize: 13, textColor: Ink(0.5) });
-
+                HGroup({ width: "auto", height: "auto", align: "left center", gap: 10 });
+                    Label({ text: order.id, fontSize: 20, textColor: Ink(0.95) });
+                    that.elem.style.fontFamily = "opensans-bold";
+                    Label({ text: status.label.toUpperCase(), fontSize: 11, textColor: status.color, color: OrdersPage.alpha(status.color, 0.15), round: 6, padding: [8, 3] });
+                    that.elem.style.letterSpacing = "1px";
                 endGroup();
 
-                Icon({ width: 28, height: 28, clickable: 1 });
-                that.load("assets/close.png");
-                that.elem.style.filter = T.iconFilter;
-                that.elem.style.cursor = "pointer";
-                that.opacity = 0.6;
-                that.on("click", function() {
-                    rightView.hide();
-                    rightView.clean();
-                });
+                Label({ text: new Date(order.time).toLocaleString("en-GB", { dateStyle: "long", timeStyle: "short" }) + " · " + escape(order.payment), fontSize: 13, textColor: Ink(0.5) });
 
             endGroup();
 
-            // NEXT STEP
-            const initNextStep = function() {
+            Icon({ width: 28, height: 28, clickable: 1 });
+            that.load("assets/close.png");
+            that.elem.style.filter = T.iconFilter;
+            that.elem.style.cursor = "pointer";
+            that.opacity = 0.6;
+            that.on("click", function() {
+                rightView.hide();
+                rightView.clean();
+            });
 
-                if (order.status == "pending") {
-                    startSection("Next step");
-                        Label({ text: "A new order. Check the payment and start preparing it.", fontSize: 14, textColor: Ink(0.8), width: "100%" });
-                        OrdersPage.createButton("Start Processing", "", function() {
-                            updateOrder({ status: "processing" }, "Order is being prepared", "processing");
-                        }, { primary: 1 });
-                    endGroup();
-                }
+        endGroup();
 
-                if (order.status == "processing") {
+        // NEXT STEP
+        const initNextStep = function() {
 
-                    startSection("Ship the order");
+            if (order.status == "pending") {
+                startSection("Next step");
+                    Label({ text: "A new order. Check the payment and start preparing it.", fontSize: 14, textColor: Ink(0.8), width: "100%" });
+                    OrdersPage.createButton("Start Processing", "", function() {
+                        updateOrder({ status: "processing" }, "Order is being prepared", "processing");
+                    }, { primary: 1 });
+                endGroup();
+            }
 
-                        let carrierId = OrdersPage.CARRIERS[0];
+            if (order.status == "processing") {
 
-                        HGroup({ width: "100%", height: "auto", align: "left bottom", gap: 10 });
+                startSection("Ship the order");
 
-                            VGroup({ width: "auto", height: "auto", align: "left top", gap: 6 });
-                                Label({ text: "CARRIER", fontSize: 11, textColor: Ink(0.45) });
-                                that.elem.style.letterSpacing = "1px";
-                                OrdersPage.createTinySelect(OrdersPage.CARRIERS.map(function(name) { return { value: name, label: name }; }), function(id) { carrierId = id; });
-                            endGroup();
+                    let carrierId = OrdersPage.CARRIERS[0];
 
-                            const trackingInput = createDarkInput({
-                                titleText: "TRACKING NUMBER",
-                                placeholder: "At least 8 letters or numbers",
-                                maxLength: 30,
-                                warningText: "At least 8 letters or numbers",
-                                onChange: function() {
-                                    setInteractive(btnShip, trackingInput.isValid() == 1);
-                                },
-                            });
-                            trackingInput.isValid = function() {
-                                return /^[A-Za-z0-9-]{8,}$/.test(trackingInput.getValue().trim()) ? 1 : 0;
-                            };
-                            trackingInput.elem.style.flex = "1 1 auto";
+                    HGroup({ width: "100%", height: "auto", align: "left bottom", gap: 10 });
 
+                        VGroup({ width: "auto", height: "auto", align: "left top", gap: 6 });
+                            Label({ text: "CARRIER", fontSize: 11, textColor: Ink(0.45) });
+                            that.elem.style.letterSpacing = "1px";
+                            OrdersPage.createTinySelect(OrdersPage.CARRIERS.map(function(name) { return { value: name, label: name }; }), function(id) { carrierId = id; });
                         endGroup();
 
-                        const btnShip = OrdersPage.createButton("Mark as Shipped", "", function() {
-                            const tracking = trackingInput.getValue().trim().toUpperCase();
-                            updateOrder({ status: "shipped", carrier: carrierId, tracking: tracking }, "Shipped with " + carrierId + " (" + tracking + ")", "shipped");
-                        }, { primary: 1 });
-                        setInteractive(btnShip, false);
+                        const trackingInput = createDarkInput({
+                            titleText: "TRACKING NUMBER",
+                            placeholder: "At least 8 letters or numbers",
+                            maxLength: 30,
+                            warningText: "At least 8 letters or numbers",
+                            onChange: function() {
+                                setInteractive(btnShip, trackingInput.isValid() == 1);
+                            },
+                        });
+                        trackingInput.isValid = function() {
+                            return /^[A-Za-z0-9-]{8,}$/.test(trackingInput.getValue().trim()) ? 1 : 0;
+                        };
+                        trackingInput.elem.style.flex = "1 1 auto";
 
                     endGroup();
 
-                }
+                    const btnShip = OrdersPage.createButton("Mark as Shipped", "", function() {
+                        const tracking = trackingInput.getValue().trim().toUpperCase();
+                        updateOrder({ status: "shipped", carrier: carrierId, tracking: tracking }, "Shipped with " + carrierId + " (" + tracking + ")", "shipped");
+                    }, { primary: 1 });
+                    setInteractive(btnShip, false);
 
-                if (order.status == "shipped") {
-                    startSection("Next step");
-                        Label({ text: "Shipped with " + escape(order.carrier) + ". Tracking number: <b>" + escape(order.tracking) + "</b>", fontSize: 14, textColor: Ink(0.8), width: "100%" });
-                        OrdersPage.createButton("Mark as Delivered", "", function() {
-                            updateOrder({ status: "delivered" }, "Delivered to the customer", "delivered");
-                        }, { primary: 1 });
-                    endGroup();
-                }
-
-            };
-
-            initNextStep();
-
-            // ITEMS AND TOTALS
-            startSection("Items");
-
-                const table = TinyTable({
-                    columns: Theme.tableColumns(["PRODUCT", "QTY", "PRICE", "TOTAL"], ["46%", "12%", "20%", "20%"], ["left", "right", "right", "right"]),
-                    rows: order.items.map(function(item) {
-                        return [escape(item.name) + "<br><span style='font-size:12px; color:" + Ink(0.4) + "'>" + escape(item.sku) + "</span>", String(item.qty), OrdersPage.formatMoney(item.price), OrdersPage.formatMoney(item.qty * item.price)];
-                    }),
-                    allowHtml: 1, // (the texts are made by the panel, user texts are escaped)
-                    style: Theme.tableStyle({ headerColor: S.FIELD_COLOR, bodyColor: S.CARD_COLOR, borderColor: S.CARD_BORDER_COLOR, textColor: Ink(0.85) }),
-                    onCellCreate: function(cell) {
-                        if (cell.columnIndex == 0) cell.label.elem.style.whiteSpace = "normal"; // (the SKU under the name)
-                    },
-                });
-                Theme.fillTableWidth(table);
-                // WHY: The align of a column is only for its cells. Number columns get right aligned titles too.
-                table.titleList.forEach(function(title, index) {
-                    if (index > 0) title.label.textAlign = "right";
-                });
-
-                VGroup({ width: "100%", height: "auto", align: "left top", gap: 4 });
-                that.elem.style.marginTop = "6px";
-                    createInfoLine("Subtotal", OrdersPage.formatMoney(order.subtotal));
-                    createInfoLine("Shipping", (order.shipping) ? OrdersPage.formatMoney(order.shipping) : "Free");
-                    if (order.discount) createInfoLine("Discount", "−" + OrdersPage.formatMoney(order.discount), { textColor: S.ACCENT_COLOR });
-                    createInfoLine("<b>Total</b>", "<b>" + OrdersPage.formatMoney(order.total) + "</b>", { fontSize: 16 });
                 endGroup();
 
+            }
+
+            if (order.status == "shipped") {
+                startSection("Next step");
+                    Label({ text: "Shipped with " + escape(order.carrier) + ". Tracking number: <b>" + escape(order.tracking) + "</b>", fontSize: 14, textColor: Ink(0.8), width: "100%" });
+                    OrdersPage.createButton("Mark as Delivered", "", function() {
+                        updateOrder({ status: "delivered" }, "Delivered to the customer", "delivered");
+                    }, { primary: 1 });
+                endGroup();
+            }
+
+        };
+
+        initNextStep();
+
+        // ITEMS AND TOTALS
+        startSection("Items");
+
+            const table = TinyTable({
+                columns: Theme.tableColumns(["PRODUCT", "QTY", "PRICE", "TOTAL"], ["46%", "12%", "20%", "20%"], ["left", "right", "right", "right"]),
+                rows: order.items.map(function(item) {
+                    return [escape(item.name) + "<br><span style='font-size:12px; color:" + Ink(0.4) + "'>" + escape(item.sku) + "</span>", String(item.qty), OrdersPage.formatMoney(item.price), OrdersPage.formatMoney(item.qty * item.price)];
+                }),
+                allowHtml: 1, // (the texts are made by the panel, user texts are escaped)
+                style: Theme.tableStyle({ headerColor: S.FIELD_COLOR, bodyColor: S.CARD_COLOR, borderColor: S.CARD_BORDER_COLOR, textColor: Ink(0.85) }),
+                onCellCreate: function(cell) {
+                    if (cell.columnIndex == 0) cell.label.elem.style.whiteSpace = "normal"; // (the SKU under the name)
+                },
+            });
+            Theme.fillTableWidth(table);
+            // WHY: The align of a column is only for its cells. Number columns get right aligned titles too.
+            table.titleList.forEach(function(title, index) {
+                if (index > 0) title.label.textAlign = "right";
+            });
+
+            VGroup({ width: "100%", height: "auto", align: "left top", gap: 4 });
+            that.elem.style.marginTop = "6px";
+                createInfoLine("Subtotal", OrdersPage.formatMoney(order.subtotal));
+                createInfoLine("Shipping", (order.shipping) ? OrdersPage.formatMoney(order.shipping) : "Free");
+                if (order.discount) createInfoLine("Discount", "−" + OrdersPage.formatMoney(order.discount), { textColor: S.ACCENT_COLOR });
+                createInfoLine("<b>Total</b>", "<b>" + OrdersPage.formatMoney(order.total) + "</b>", { fontSize: 16 });
             endGroup();
 
-            // CUSTOMER
-            startSection("Customer");
+        endGroup();
 
-                Label({ text: escape(order.customer.name), fontSize: 16, textColor: Ink(0.95) });
-                Label({ text: escape(order.customer.email) + " · " + escape(order.customer.phone), fontSize: 13, textColor: Ink(0.55), width: "100%" });
+        // CUSTOMER
+        startSection("Customer");
 
-                Label({ text: "SHIPPING ADDRESS", fontSize: 11, textColor: Ink(0.45) });
-                that.elem.style.letterSpacing = "1px";
-                that.elem.style.marginTop = "6px";
-                Label({ text: escape(order.address), fontSize: 14, textColor: Ink(0.85), width: "100%" });
+            Label({ text: escape(order.customer.name), fontSize: 16, textColor: Ink(0.95) });
+            Label({ text: escape(order.customer.email) + " · " + escape(order.customer.phone), fontSize: 13, textColor: Ink(0.55), width: "100%" });
 
-                HGroup({ width: "100%", height: "auto", align: "left center", gap: 8 });
-                that.elem.style.marginTop = "4px";
-                    OrdersPage.createButton("E-mail Customer", "", function() {
-                        window.location.href = "mailto:" + encodeURIComponent(order.customer.email) + "?subject=" + encodeURIComponent("Your order " + order.id);
-                    });
-                    OrdersPage.createButton("Print Invoice", "", function() {
-                        OrdersPage.printInvoice(order);
-                    });
-                endGroup();
+            Label({ text: "SHIPPING ADDRESS", fontSize: 11, textColor: Ink(0.45) });
+            that.elem.style.letterSpacing = "1px";
+            that.elem.style.marginTop = "6px";
+            Label({ text: escape(order.address), fontSize: 14, textColor: Ink(0.85), width: "100%" });
 
+            HGroup({ width: "100%", height: "auto", align: "left center", gap: 8 });
+            that.elem.style.marginTop = "4px";
+                OrdersPage.createButton("E-mail Customer", "", function() {
+                    window.location.href = "mailto:" + encodeURIComponent(order.customer.email) + "?subject=" + encodeURIComponent("Your order " + order.id);
+                });
+                OrdersPage.createButton("Print Invoice", "", function() {
+                    OrdersPage.printInvoice(order);
+                });
             endGroup();
 
-            // TIMELINE
-            startSection("Timeline");
+        endGroup();
 
-                // Newest first
-                order.history.slice().reverse().forEach(function(entry, index, list) {
+        // TIMELINE
+        startSection("Timeline");
 
-                    const color = (OrdersPage.STATUSES[entry.type]) ? OrdersPage.STATUSES[entry.type].color : Ink(0.5);
+            // Newest first
+            order.history.slice().reverse().forEach(function(entry, index, list) {
 
-                    HGroup({ width: "100%", height: "auto", align: "left top", gap: 12 });
+                const color = (OrdersPage.STATUSES[entry.type]) ? OrdersPage.STATUSES[entry.type].color : Ink(0.5);
 
-                        // Dot and line
-                        VGroup({ width: 12, height: "auto", align: "center top", gap: 0 });
-                        that.elem.style.alignSelf = "stretch";
-                            Box({ width: 10, height: 10, round: 100, color: color });
-                            that.elem.style.marginTop = "5px";
-                            if (index < list.length - 1) {
-                                Box({ width: 2, height: "auto", color: Ink(0.1) });
-                                that.elem.style.flex = "1 1 auto";
-                                that.elem.style.minHeight = "20px";
-                            }
-                        endGroup();
+                HGroup({ width: "100%", height: "auto", align: "left top", gap: 12 });
 
-                        VGroup({ width: "auto", height: "auto", align: "left top", gap: 0 });
-                        that.elem.style.flex = "1 1 auto";
-                        that.elem.style.minWidth = "0";
-                        that.elem.style.paddingBottom = "12px";
-                            Label({ text: escape(entry.text), fontSize: 14, textColor: (entry.type == "note") ? Theme.readable("#E8D9A8") : Ink(0.9), width: "100%" });
-                            Label({ text: new Date(entry.time).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" }) + " · " + escape(entry.by), fontSize: 12, textColor: Ink(0.45) });
-                        endGroup();
-
+                    // Dot and line
+                    VGroup({ width: 12, height: "auto", align: "center top", gap: 0 });
+                    that.elem.style.alignSelf = "stretch";
+                        Box({ width: 10, height: 10, round: 100, color: color });
+                        that.elem.style.marginTop = "5px";
+                        if (index < list.length - 1) {
+                            Box({ width: 2, height: "auto", color: Ink(0.1) });
+                            that.elem.style.flex = "1 1 auto";
+                            that.elem.style.minHeight = "20px";
+                        }
                     endGroup();
 
-                });
-
-                // Internal note
-                HGroup({ width: "100%", height: "auto", align: "left bottom", gap: 8 });
-
-                    const noteInput = createDarkInput({
-                        titleText: "INTERNAL NOTE",
-                        placeholder: "Only the team can see it",
-                        maxLength: 200,
-                    });
-                    noteInput.elem.style.flex = "1 1 auto";
-
-                    OrdersPage.createButton("Add", "", function() {
-                        const text = noteInput.getValue().trim();
-                        if (!text) return;
-                        updateOrder({}, "Note: " + text, "note");
-                    });
+                    VGroup({ width: "auto", height: "auto", align: "left top", gap: 0 });
+                    that.elem.style.flex = "1 1 auto";
+                    that.elem.style.minWidth = "0";
+                    that.elem.style.paddingBottom = "12px";
+                        Label({ text: escape(entry.text), fontSize: 14, textColor: (entry.type == "note") ? Theme.readable("#E8D9A8") : Ink(0.9), width: "100%" });
+                        Label({ text: new Date(entry.time).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" }) + " · " + escape(entry.by), fontSize: 12, textColor: Ink(0.45) });
+                    endGroup();
 
                 endGroup();
+
+            });
+
+            // Internal note
+            HGroup({ width: "100%", height: "auto", align: "left bottom", gap: 8 });
+
+                const noteInput = createDarkInput({
+                    titleText: "INTERNAL NOTE",
+                    placeholder: "Only the team can see it",
+                    maxLength: 200,
+                });
+                noteInput.elem.style.flex = "1 1 auto";
+
+                OrdersPage.createButton("Add", "", function() {
+                    const text = noteInput.getValue().trim();
+                    if (!text) return;
+                    updateOrder({}, "Note: " + text, "note");
+                });
 
             endGroup();
 
         endGroup();
 
-    endBox();
+    endGroup(); // END SCROLL AREA
 
     // GROUP: Buttons (bottom)
     HGroup({ left: 0, bottom: 0, width: "100%", height: 76, align: "left center", gap: 8, padding: [20, 0] });

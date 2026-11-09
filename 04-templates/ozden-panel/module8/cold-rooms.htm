@@ -30,6 +30,7 @@
         <script src="../../../comp/context-menu.js" type="text/javascript" charset="utf-8"></script>
         <script src="../../../comp/time-picker.js" type="text/javascript" charset="utf-8"></script>
         <script src="../../../comp/date-picker.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../../comp/scroll-area.js" type="text/javascript" charset="utf-8"></script>
 
         <!--
 
@@ -155,30 +156,17 @@
 
             DEVICES.forEach(initDevice);
 
-            // BOX: Full screen scrollable container
-            // WHY: page does not scroll. Scrollable content must be inside a Box with scrollY: 1.
-            startBox(0, 0, "100%", "100%", {
-                color: "transparent",
-                scrollY: 1,
-            });
+            // SCROLL AREA: The page (comp/scroll-area.js)
+            // WHY: page does not scroll. A ScrollArea fills the window; its content scrolls when it is taller.
+            ScrollArea({ gap: 16, padding: 24, style: Theme.scrollAreaStyle() });
 
-                VGroup({
-                    width: "100%",
-                    height: "auto", // Grows with content, so the Box can scroll.
-                    align: "left top",
-                    gap: 16,
-                    padding: 24,
-                });
+                initHeader();
+                initKpiRow();
+                initChartRow();
+                initControlRow();
+                initLogRow();
 
-                    initHeader();
-                    initKpiRow();
-                    initChartRow();
-                    initControlRow();
-                    initLogRow();
-
-                endGroup();
-
-            endBox();
+            endGroup(); // END SCROLL AREA
 
             // WAITING: Restart, firmware update, connection (comp-m4 LoadingScreen, common/theme.js)
             waiting = Theme.createWaiting();

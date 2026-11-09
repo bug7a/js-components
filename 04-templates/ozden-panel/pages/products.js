@@ -437,30 +437,17 @@ const ProductsPage = function(params = {}) {
 
     // *** PAGE INIT CODE:
 
-    // BOX: Scrollable container
-    // WHY: page does not scroll. Scrollable content must be inside a Box with scrollY: 1.
-    startBox(0, 0, "100%", "100%", {
-        color: "transparent",
-        scrollY: 1,
-    });
+    // SCROLL AREA: The page (comp/scroll-area.js)
+    // WHY: page does not scroll. A ScrollArea fills the window; its content scrolls when it is taller.
+    ScrollArea({ gap: 16, padding: 24, style: Theme.scrollAreaStyle() });
 
-        VGroup({
-            width: "100%",
-            height: "auto", // Grows with content, so the Box can scroll.
-            align: "left top",
-            gap: 16,
-            padding: 24,
-        });
+        initHeader();
+        initSummary();
+        initAlert();
+        initToolbar();
+        initTable();
 
-            initHeader();
-            initSummary();
-            initAlert();
-            initToolbar();
-            initTable();
-
-        endGroup();
-
-    endBox();
+    endGroup(); // END SCROLL AREA
 
     render();
 
@@ -683,252 +670,248 @@ const ProductEditor = function(params = {}) {
     // Left line
     Box(0, 0, 1, "100%", { color: Ink(0.12) });
 
-    // GROUP: Scrollable content
-    startBox(0, 0, "100%", "calc(100% - 76px)", { color: "transparent", scrollY: 1 });
+    // SCROLL AREA: The content over the buttons (comp/scroll-area.js)
+    ScrollArea({ height: "calc(100% - 76px)", gap: 14, padding: 20, style: Theme.scrollAreaStyle() });
 
-        VGroup({ width: "100%", height: "auto", align: "left top", gap: 14, padding: 20 });
+        // TITLE
+        HGroup({ width: "100%", height: "auto", align: "left center", gap: 10 });
+        that.elem.style.justifyContent = "space-between";
 
-            // TITLE
-            HGroup({ width: "100%", height: "auto", align: "left center", gap: 10 });
-            that.elem.style.justifyContent = "space-between";
-
-                VGroup({ width: "auto", height: "auto", align: "left top", gap: 0 });
-                    Label({ text: (isNew) ? "New Product" : "Edit Product", fontSize: 20, textColor: Ink(0.95) });
-                    that.elem.style.fontFamily = "opensans-bold";
-                    if (!isNew) {
-                        Label({ text: "Last change: " + new Date(product.updatedAt).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" }), fontSize: 12, textColor: Ink(0.45) });
-                    }
-                endGroup();
-
-                Icon({ width: 28, height: 28, clickable: 1 });
-                that.load("assets/close.png");
-                that.elem.style.filter = T.iconFilter;
-                that.elem.style.cursor = "pointer";
-                that.opacity = 0.6;
-                that.on("click", function() {
-                    rightView.hide();
-                    rightView.clean();
-                });
-
-            endGroup();
-
-            // PRODUCT
-            startSection("Product");
-
-                inputName = createInput(TextField, {
-                    titleText: "NAME",
-                    value: draft.name, // WHY: Created with the value, so a required warning ball is not left on the screen.
-                    placeholder: "Ex: Wireless Headphones",
-                    maxLength: 80,
-                    onChange: function() { draft.name = inputName.getValue(); },
-                });
-
-                startRow();
-
-                    inputSku = createInput(TextField, {
-                        titleText: "SKU",
-                        value: draft.sku,
-                        placeholder: "HP-BLK-01",
-                        maxLength: 30,
-                        onChange: function() {
-                            // Capital letters, numbers and "-"
-                            const value = inputSku.getValue().toUpperCase().replace(/[^A-Z0-9-]/g, "");
-                            if (value != inputSku.getValue()) inputSku.setValue(value);
-                            draft.sku = value;
-                        },
-                    });
-                    flex(inputSku);
-
-                    VGroup({ width: "auto", height: "auto", align: "left top", gap: 6 });
-                    flex(that);
-                        Label({ text: "CATEGORY", fontSize: 11, textColor: Ink(0.45) });
-                        that.elem.style.letterSpacing = "1px";
-                        that.elem.style.marginTop = "4px";
-                        categorySelect = ProductsPage.createTinySelect(
-                            ProductsPage.CATEGORIES.map(function(category) { return { value: category.name, label: category.name }; }),
-                            function(id) { draft.category = id; },
-                            Math.max(0, ProductsPage.CATEGORIES.findIndex(function(category) { return category.name == draft.category; }))
-                        );
-                    endGroup();
-
-                endGroup();
-
-                inputDescription = createInput(TextField, {
-                    titleText: "SHORT DESCRIPTION",
-                    value: draft.description,
-                    placeholder: "One line for the product list (optional)",
-                    maxLength: 120,
-                    onChange: function() { draft.description = inputDescription.getValue(); },
-                });
-
-                Label({ text: "STATUS", fontSize: 11, textColor: Ink(0.45) });
-                that.elem.style.letterSpacing = "1px";
-
-                HGroup({ width: "100%", height: "auto", align: "left center", gap: 20 });
-                that.elem.style.flexWrap = "wrap";
-
-                    Object.keys(ProductsPage.STATUSES).forEach(function(status) {
-                        const radio = RadioButton({
-                            group: "productStatus",
-                            value: status,
-                            checked: (draft.status == status) ? 1 : 0,
-                            labelText: ProductsPage.STATUSES[status].label + " <span style='font-size:12px; color:" + Ink(0.4) + "'>" + ProductsPage.STATUSES[status].desc + "</span>",
-                            allowHtml: 1,
-                            style: {
-                                mark: { width: 20, height: 20, color: "transparent", borderColor: Ink(0.35) },
-                                checkedMark: { color: "transparent", borderColor: S.ACCENT_COLOR },
-                                hoverMark: { borderColor: Ink(0.7) },
-                                dot: { color: S.ACCENT_COLOR },
-                                label: { fontSize: 14, textColor: Ink(0.9) },
-                            },
-                            onChange: function(self) { draft.status = self.value; },
-                        });
-                        radioList.push(radio);
-                    });
-
-                endGroup();
-
-            endGroup();
-
-            // PRICING
-            startSection("Pricing");
-
-                startRow();
-
-                    inputPrice = createInput(NumberField, {
-                        titleText: "PRICE ($)",
-                        value: (draft.price) ? String(draft.price) : "",
-                        placeholder: "0.00",
-                        allowNegative: 0,
-                        onChange: function() { draft.price = toNumber(inputPrice) || 0; updatePriceInfo(); },
-                    });
-                    flex(inputPrice);
-
-                    inputCompare = createInput(NumberField, {
-                        titleText: "COMPARE-AT ($)",
-                        value: (draft.compareAtPrice !== null) ? String(draft.compareAtPrice) : "",
-                        placeholder: "Old price",
-                        allowNegative: 0,
-                        onChange: function() { draft.compareAtPrice = toNumber(inputCompare); updatePriceInfo(); },
-                    });
-                    flex(inputCompare);
-
-                    inputCost = createInput(NumberField, {
-                        titleText: "COST ($)",
-                        value: (draft.cost !== null) ? String(draft.cost) : "",
-                        placeholder: "Not shown",
-                        allowNegative: 0,
-                        onChange: function() { draft.cost = toNumber(inputCost); updatePriceInfo(); },
-                    });
-                    flex(inputCost);
-
-                endGroup();
-
-                lblPriceInfo = Label({ text: "", fontSize: 13, textColor: Ink(0.6), width: "100%" });
-
-            endGroup();
-
-            // INVENTORY
-            startSection("Inventory");
-
-                startRow();
-
-                    inputStock = createInput(NumberField, {
-                        titleText: "IN STOCK",
-                        value: String(draft.stock),
-                        placeholder: "0",
-                        allowNegative: 0,
-                        allowDecimal: 0,
-                        onChange: function() { draft.stock = toNumber(inputStock) || 0; updateStockInfo(); },
-                    });
-                    flex(inputStock);
-
-                    inputLowLimit = createInput(NumberField, {
-                        titleText: "LOW STOCK AT",
-                        value: String(draft.lowStockLimit),
-                        placeholder: "5",
-                        allowNegative: 0,
-                        allowDecimal: 0,
-                        onChange: function() { draft.lowStockLimit = toNumber(inputLowLimit) || 0; updateStockInfo(); },
-                    });
-                    flex(inputLowLimit);
-
-                endGroup();
-
-                HGroup({ width: "100%", height: "auto", align: "left center", gap: 8 });
-                that.elem.style.flexWrap = "wrap";
-
-                    Label({ text: "Restock:", fontSize: 13, textColor: Ink(0.55) });
-                    [10, 25, 50].forEach(function(amount) {
-                        ProductsPage.createButton("+" + amount, "", function() { setStock(draft.stock + amount); });
-                    });
-                    ProductsPage.createButton("Set to 0", "", function() { setStock(0); });
-
-                endGroup();
-
-                chkContinueSelling = CheckBox({
-                    labelText: "Continue selling when out of stock",
-                    checked: (draft.continueSelling) ? 1 : 0,
-                    style: {
-                        layout: { padding: [0, 2] },
-                        mark: { width: 20, height: 20, color: "transparent", borderColor: Ink(0.35) },
-                        checkedMark: { color: S.PRIMARY_COLOR, borderColor: S.PRIMARY_COLOR },
-                        hoverMark: { borderColor: Ink(0.7) },
-                        tick: { color: Ink(1) },
-                        label: { fontSize: 14, textColor: Ink(0.9) },
-                    },
-                    onChange: function(self) { draft.continueSelling = self.checked; updateStockInfo(); },
-                });
-
-                lblStockInfo = Label({ text: "", fontSize: 13, textColor: Ink(0.6), width: "100%" });
-
-            endGroup();
-
-            // IMAGES
-            startSection("Images");
-
-                if (draft.images.length) {
-                    HGroup({ width: "100%", height: "auto", align: "left center", gap: 8 });
-                    that.elem.style.flexWrap = "wrap";
-                        draft.images.forEach(function(url, index) {
-                            Icon({ width: 72, height: 72, round: 8, border: 1, borderColor: S.CARD_BORDER_COLOR });
-                            that.load(url);
-                            that.elem.style.objectFit = "cover";
-                            that.elem.alt = "Image " + (index + 1);
-                        });
-                    endGroup();
+            VGroup({ width: "auto", height: "auto", align: "left top", gap: 0 });
+                Label({ text: (isNew) ? "New Product" : "Edit Product", fontSize: 20, textColor: Ink(0.95) });
+                that.elem.style.fontFamily = "opensans-bold";
+                if (!isNew) {
+                    Label({ text: "Last change: " + new Date(product.updatedAt).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" }), fontSize: 12, textColor: Ink(0.45) });
                 }
+            endGroup();
 
-                imageFile = FilePicker({
-                    width: "100%",
-                    multiple: 1,
-                    maxFiles: 6,
-                    accept: "image/*",
-                    maxSize: 5 * 1024 * 1024,
-                    zoneHeight: 100,
-                    showIcon: 0,
-                    titleText: "Drop new images here",
-                    descriptionText: "or click to select (the first image is the main image)",
-                    style: {
-                        zone: { color: S.FIELD_COLOR, border: 2, borderColor: Ink(0.12), round: 10 },
-                        zoneHover: { color: T.surface3, borderColor: Ink(0.3) },
-                        zoneDragOver: { color: T.tableHighlight, borderColor: S.ACCENT_COLOR },
-                        title: { fontSize: 14, textColor: Ink(0.9) },
-                        desc: { fontSize: 13, textColor: Ink(0.5) },
-                        hint: { textColor: Ink(0.4) },
-                        item: { color: S.FIELD_COLOR, borderColor: Ink(0.1) },
-                        itemName: { textColor: Ink(0.85) },
-                        itemSize: { textColor: Ink(0.45) },
-                        badge: { color: Ink(0.08), textColor: Ink(0.6) },
-                        removeButton: { textColor: Ink(0.45), hoverColor: S.ERROR_COLOR },
+            Icon({ width: 28, height: 28, clickable: 1 });
+            that.load("assets/close.png");
+            that.elem.style.filter = T.iconFilter;
+            that.elem.style.cursor = "pointer";
+            that.opacity = 0.6;
+            that.on("click", function() {
+                rightView.hide();
+                rightView.clean();
+            });
+
+        endGroup();
+
+        // PRODUCT
+        startSection("Product");
+
+            inputName = createInput(TextField, {
+                titleText: "NAME",
+                value: draft.name, // WHY: Created with the value, so a required warning ball is not left on the screen.
+                placeholder: "Ex: Wireless Headphones",
+                maxLength: 80,
+                onChange: function() { draft.name = inputName.getValue(); },
+            });
+
+            startRow();
+
+                inputSku = createInput(TextField, {
+                    titleText: "SKU",
+                    value: draft.sku,
+                    placeholder: "HP-BLK-01",
+                    maxLength: 30,
+                    onChange: function() {
+                        // Capital letters, numbers and "-"
+                        const value = inputSku.getValue().toUpperCase().replace(/[^A-Z0-9-]/g, "");
+                        if (value != inputSku.getValue()) inputSku.setValue(value);
+                        draft.sku = value;
                     },
+                });
+                flex(inputSku);
+
+                VGroup({ width: "auto", height: "auto", align: "left top", gap: 6 });
+                flex(that);
+                    Label({ text: "CATEGORY", fontSize: 11, textColor: Ink(0.45) });
+                    that.elem.style.letterSpacing = "1px";
+                    that.elem.style.marginTop = "4px";
+                    categorySelect = ProductsPage.createTinySelect(
+                        ProductsPage.CATEGORIES.map(function(category) { return { value: category.name, label: category.name }; }),
+                        function(id) { draft.category = id; },
+                        Math.max(0, ProductsPage.CATEGORIES.findIndex(function(category) { return category.name == draft.category; }))
+                    );
+                endGroup();
+
+            endGroup();
+
+            inputDescription = createInput(TextField, {
+                titleText: "SHORT DESCRIPTION",
+                value: draft.description,
+                placeholder: "One line for the product list (optional)",
+                maxLength: 120,
+                onChange: function() { draft.description = inputDescription.getValue(); },
+            });
+
+            Label({ text: "STATUS", fontSize: 11, textColor: Ink(0.45) });
+            that.elem.style.letterSpacing = "1px";
+
+            HGroup({ width: "100%", height: "auto", align: "left center", gap: 20 });
+            that.elem.style.flexWrap = "wrap";
+
+                Object.keys(ProductsPage.STATUSES).forEach(function(status) {
+                    const radio = RadioButton({
+                        group: "productStatus",
+                        value: status,
+                        checked: (draft.status == status) ? 1 : 0,
+                        labelText: ProductsPage.STATUSES[status].label + " <span style='font-size:12px; color:" + Ink(0.4) + "'>" + ProductsPage.STATUSES[status].desc + "</span>",
+                        allowHtml: 1,
+                        style: {
+                            mark: { width: 20, height: 20, color: "transparent", borderColor: Ink(0.35) },
+                            checkedMark: { color: "transparent", borderColor: S.ACCENT_COLOR },
+                            hoverMark: { borderColor: Ink(0.7) },
+                            dot: { color: S.ACCENT_COLOR },
+                            label: { fontSize: 14, textColor: Ink(0.9) },
+                        },
+                        onChange: function(self) { draft.status = self.value; },
+                    });
+                    radioList.push(radio);
                 });
 
             endGroup();
 
         endGroup();
 
-    endBox();
+        // PRICING
+        startSection("Pricing");
+
+            startRow();
+
+                inputPrice = createInput(NumberField, {
+                    titleText: "PRICE ($)",
+                    value: (draft.price) ? String(draft.price) : "",
+                    placeholder: "0.00",
+                    allowNegative: 0,
+                    onChange: function() { draft.price = toNumber(inputPrice) || 0; updatePriceInfo(); },
+                });
+                flex(inputPrice);
+
+                inputCompare = createInput(NumberField, {
+                    titleText: "COMPARE-AT ($)",
+                    value: (draft.compareAtPrice !== null) ? String(draft.compareAtPrice) : "",
+                    placeholder: "Old price",
+                    allowNegative: 0,
+                    onChange: function() { draft.compareAtPrice = toNumber(inputCompare); updatePriceInfo(); },
+                });
+                flex(inputCompare);
+
+                inputCost = createInput(NumberField, {
+                    titleText: "COST ($)",
+                    value: (draft.cost !== null) ? String(draft.cost) : "",
+                    placeholder: "Not shown",
+                    allowNegative: 0,
+                    onChange: function() { draft.cost = toNumber(inputCost); updatePriceInfo(); },
+                });
+                flex(inputCost);
+
+            endGroup();
+
+            lblPriceInfo = Label({ text: "", fontSize: 13, textColor: Ink(0.6), width: "100%" });
+
+        endGroup();
+
+        // INVENTORY
+        startSection("Inventory");
+
+            startRow();
+
+                inputStock = createInput(NumberField, {
+                    titleText: "IN STOCK",
+                    value: String(draft.stock),
+                    placeholder: "0",
+                    allowNegative: 0,
+                    allowDecimal: 0,
+                    onChange: function() { draft.stock = toNumber(inputStock) || 0; updateStockInfo(); },
+                });
+                flex(inputStock);
+
+                inputLowLimit = createInput(NumberField, {
+                    titleText: "LOW STOCK AT",
+                    value: String(draft.lowStockLimit),
+                    placeholder: "5",
+                    allowNegative: 0,
+                    allowDecimal: 0,
+                    onChange: function() { draft.lowStockLimit = toNumber(inputLowLimit) || 0; updateStockInfo(); },
+                });
+                flex(inputLowLimit);
+
+            endGroup();
+
+            HGroup({ width: "100%", height: "auto", align: "left center", gap: 8 });
+            that.elem.style.flexWrap = "wrap";
+
+                Label({ text: "Restock:", fontSize: 13, textColor: Ink(0.55) });
+                [10, 25, 50].forEach(function(amount) {
+                    ProductsPage.createButton("+" + amount, "", function() { setStock(draft.stock + amount); });
+                });
+                ProductsPage.createButton("Set to 0", "", function() { setStock(0); });
+
+            endGroup();
+
+            chkContinueSelling = CheckBox({
+                labelText: "Continue selling when out of stock",
+                checked: (draft.continueSelling) ? 1 : 0,
+                style: {
+                    layout: { padding: [0, 2] },
+                    mark: { width: 20, height: 20, color: "transparent", borderColor: Ink(0.35) },
+                    checkedMark: { color: S.PRIMARY_COLOR, borderColor: S.PRIMARY_COLOR },
+                    hoverMark: { borderColor: Ink(0.7) },
+                    tick: { color: Ink(1) },
+                    label: { fontSize: 14, textColor: Ink(0.9) },
+                },
+                onChange: function(self) { draft.continueSelling = self.checked; updateStockInfo(); },
+            });
+
+            lblStockInfo = Label({ text: "", fontSize: 13, textColor: Ink(0.6), width: "100%" });
+
+        endGroup();
+
+        // IMAGES
+        startSection("Images");
+
+            if (draft.images.length) {
+                HGroup({ width: "100%", height: "auto", align: "left center", gap: 8 });
+                that.elem.style.flexWrap = "wrap";
+                    draft.images.forEach(function(url, index) {
+                        Icon({ width: 72, height: 72, round: 8, border: 1, borderColor: S.CARD_BORDER_COLOR });
+                        that.load(url);
+                        that.elem.style.objectFit = "cover";
+                        that.elem.alt = "Image " + (index + 1);
+                    });
+                endGroup();
+            }
+
+            imageFile = FilePicker({
+                width: "100%",
+                multiple: 1,
+                maxFiles: 6,
+                accept: "image/*",
+                maxSize: 5 * 1024 * 1024,
+                zoneHeight: 100,
+                showIcon: 0,
+                titleText: "Drop new images here",
+                descriptionText: "or click to select (the first image is the main image)",
+                style: {
+                    zone: { color: S.FIELD_COLOR, border: 2, borderColor: Ink(0.12), round: 10 },
+                    zoneHover: { color: T.surface3, borderColor: Ink(0.3) },
+                    zoneDragOver: { color: T.tableHighlight, borderColor: S.ACCENT_COLOR },
+                    title: { fontSize: 14, textColor: Ink(0.9) },
+                    desc: { fontSize: 13, textColor: Ink(0.5) },
+                    hint: { textColor: Ink(0.4) },
+                    item: { color: S.FIELD_COLOR, borderColor: Ink(0.1) },
+                    itemName: { textColor: Ink(0.85) },
+                    itemSize: { textColor: Ink(0.45) },
+                    badge: { color: Ink(0.08), textColor: Ink(0.6) },
+                    removeButton: { textColor: Ink(0.45), hoverColor: S.ERROR_COLOR },
+                },
+            });
+
+        endGroup();
+
+    endGroup(); // END SCROLL AREA
 
     // GROUP: Buttons (bottom)
     HGroup({ left: 0, bottom: 0, width: "100%", height: 76, align: "left center", gap: 8, padding: [20, 0] });

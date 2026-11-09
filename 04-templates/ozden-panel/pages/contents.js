@@ -370,29 +370,16 @@ const ContentsPage = function(params = {}) {
 
     // *** PAGE INIT CODE:
 
-    // BOX: Scrollable container
-    // WHY: page does not scroll. Scrollable content must be inside a Box with scrollY: 1.
-    startBox(0, 0, "100%", "100%", {
-        color: "transparent",
-        scrollY: 1,
-    });
+    // SCROLL AREA: The page (comp/scroll-area.js)
+    // WHY: page does not scroll. A ScrollArea fills the window; its content scrolls when it is taller.
+    ScrollArea({ gap: 16, padding: 24, style: Theme.scrollAreaStyle() });
 
-        VGroup({
-            width: "100%",
-            height: "auto", // Grows with content, so the Box can scroll.
-            align: "left top",
-            gap: 16,
-            padding: 24,
-        });
+        initHeader();
+        initSummary();
+        initToolbar();
+        initTable();
 
-            initHeader();
-            initSummary();
-            initToolbar();
-            initTable();
-
-        endGroup();
-
-    endBox();
+    endGroup(); // END SCROLL AREA
 
     render();
 
@@ -744,305 +731,301 @@ const ContentEditor = function(params = {}) {
     // Left line
     Box(0, 0, 1, "100%", { color: Ink(0.12) });
 
-    // GROUP: Scrollable content
-    startBox(0, 0, "100%", "calc(100% - 76px)", { color: "transparent", scrollY: 1 });
+    // SCROLL AREA: The content over the buttons (comp/scroll-area.js)
+    ScrollArea({ height: "calc(100% - 76px)", gap: 14, padding: 20, style: Theme.scrollAreaStyle() });
 
-        VGroup({ width: "100%", height: "auto", align: "left top", gap: 14, padding: 20 });
+        // TITLE
+        HGroup({ width: "100%", height: "auto", align: "left center", gap: 10 });
+        that.elem.style.justifyContent = "space-between";
 
-            // TITLE
+            VGroup({ width: "auto", height: "auto", align: "left top", gap: 0 });
+                Label({ text: (isNew) ? "New " + TYPES[draft.type].label : "Edit " + TYPES[draft.type].label, fontSize: 20, textColor: Ink(0.95) });
+                that.elem.style.fontFamily = "opensans-bold";
+                if (!isNew) {
+                    Label({ text: "Last change: " + new Date(content.updatedAt).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" }) + " by " + escape(content.updatedBy) + " · " + content.views.toLocaleString("en-US") + " views", fontSize: 12, textColor: Ink(0.45) });
+                }
+            endGroup();
+
+            Icon({ width: 28, height: 28, clickable: 1 });
+            that.load("assets/close.png");
+            that.elem.style.filter = T.iconFilter;
+            that.elem.style.cursor = "pointer";
+            that.opacity = 0.6;
+            that.on("click", closeEditor);
+
+        endGroup();
+
+        // CONTENT
+        startSection("Content");
+
+            inputTitle = createInput({
+                titleText: "TITLE",
+                value: draft.title, // WHY: Created with the value, so a required warning ball is not left on the screen.
+                placeholder: "Ex: How to choose headphones",
+                maxLength: 100,
+                onChange: function() {
+                    draft.title = inputTitle.getValue();
+                    if (!isSlugEdited) {
+                        draft.slug = ContentsPage.slugify(draft.title);
+                        inputSlug.setValue(draft.slug);
+                        updateUrl();
+                    }
+                    updateSeo();
+                },
+            });
+
+            inputSlug = createInput({
+                titleText: "URL",
+                value: draft.slug,
+                placeholder: "how-to-choose-headphones",
+                maxLength: 80,
+                onChange: function() {
+                    const value = inputSlug.getValue().toLowerCase().replace(/[^a-z0-9-]/g, "-").replace(/-{2,}/g, "-");
+                    if (value != inputSlug.getValue()) inputSlug.setValue(value);
+                    draft.slug = value;
+                    isSlugEdited = true;
+                    updateUrl();
+                    updateSeo();
+                },
+            });
+
+            lblUrl = Label({ text: "", fontSize: 12, textColor: Ink(0.45), width: "100%" });
+            that.elem.style.marginTop = "-4px";
+            that.elem.style.wordBreak = "break-all";
+
+            inputExcerpt = createInput({
+                titleText: "EXCERPT",
+                value: draft.excerpt,
+                placeholder: "A short summary for lists (optional)",
+                maxLength: 200,
+                onChange: function() { draft.excerpt = inputExcerpt.getValue(); updateSeo(); },
+            });
+
             HGroup({ width: "100%", height: "auto", align: "left center", gap: 10 });
             that.elem.style.justifyContent = "space-between";
-
-                VGroup({ width: "auto", height: "auto", align: "left top", gap: 0 });
-                    Label({ text: (isNew) ? "New " + TYPES[draft.type].label : "Edit " + TYPES[draft.type].label, fontSize: 20, textColor: Ink(0.95) });
-                    that.elem.style.fontFamily = "opensans-bold";
-                    if (!isNew) {
-                        Label({ text: "Last change: " + new Date(content.updatedAt).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" }) + " by " + escape(content.updatedBy) + " · " + content.views.toLocaleString("en-US") + " views", fontSize: 12, textColor: Ink(0.45) });
-                    }
-                endGroup();
-
-                Icon({ width: 28, height: 28, clickable: 1 });
-                that.load("assets/close.png");
-                that.elem.style.filter = T.iconFilter;
-                that.elem.style.cursor = "pointer";
-                that.opacity = 0.6;
-                that.on("click", closeEditor);
-
+                createFieldTitle("TEXT");
+                lblBodyInfo = Label({ text: "", fontSize: 12, textColor: Ink(0.45) });
             endGroup();
 
-            // CONTENT
-            startSection("Content");
+            // TEXTAREA: Content text (native, so it has a normal text editing)
+            const bodyBox = Box({ width: "100%", height: 220, color: S.FIELD_COLOR, border: 1, borderColor: S.CARD_BORDER_COLOR, round: 8 });
+            bodyBox.position = "relative";
+            bodyArea = document.createElement("textarea");
+            bodyArea.value = draft.body;
+            bodyArea.placeholder = "Write the content. A line that starts with \"## \" is a heading.";
+            // WHY: basic.css gives "pointer-events: none" to the boxes and "user-select: none" to the page. They are inherited,
+            // so the textarea could not be clicked or selected. They are set back for the textarea.
+            bodyArea.style.cssText = "position:absolute; left:0; top:0; width:100%; height:100%; box-sizing:border-box; padding:12px 14px; " +
+                "background:transparent; border:0; outline:none; resize:none; color:" + Ink(0.9) + "; font-family:inherit; font-size:15px; line-height:1.6; " +
+                "pointer-events:auto; user-select:text; -webkit-user-select:text; cursor:text;";
+            bodyArea.addEventListener("focus", function() { bodyBox.borderColor = S.ACCENT_COLOR; });
+            bodyArea.addEventListener("blur", function() { bodyBox.borderColor = S.CARD_BORDER_COLOR; });
+            bodyArea.addEventListener("input", function() {
+                draft.body = bodyArea.value;
+                updateBodyInfo();
+                updateSeo();
+            });
+            bodyBox.elem.appendChild(bodyArea);
 
-                inputTitle = createInput({
-                    titleText: "TITLE",
-                    value: draft.title, // WHY: Created with the value, so a required warning ball is not left on the screen.
-                    placeholder: "Ex: How to choose headphones",
-                    maxLength: 100,
-                    onChange: function() {
-                        draft.title = inputTitle.getValue();
-                        if (!isSlugEdited) {
-                            draft.slug = ContentsPage.slugify(draft.title);
-                            inputSlug.setValue(draft.slug);
-                            updateUrl();
-                        }
-                        updateSeo();
-                    },
+            // PAGE OPTIONS
+            grpPageOptions = VGroup({ width: "100%", height: "auto", align: "left top", gap: 8 });
+                CheckBox({
+                    labelText: "Show in the site menu",
+                    checked: draft.showInMenu,
+                    style: darkCheckStyle,
+                    onChange: function(self) { draft.showInMenu = self.checked; },
                 });
-
-                inputSlug = createInput({
-                    titleText: "URL",
-                    value: draft.slug,
-                    placeholder: "how-to-choose-headphones",
-                    maxLength: 80,
-                    onChange: function() {
-                        const value = inputSlug.getValue().toLowerCase().replace(/[^a-z0-9-]/g, "-").replace(/-{2,}/g, "-");
-                        if (value != inputSlug.getValue()) inputSlug.setValue(value);
-                        draft.slug = value;
-                        isSlugEdited = true;
-                        updateUrl();
-                        updateSeo();
-                    },
-                });
-
-                lblUrl = Label({ text: "", fontSize: 12, textColor: Ink(0.45), width: "100%" });
-                that.elem.style.marginTop = "-4px";
-                that.elem.style.wordBreak = "break-all";
-
-                inputExcerpt = createInput({
-                    titleText: "EXCERPT",
-                    value: draft.excerpt,
-                    placeholder: "A short summary for lists (optional)",
-                    maxLength: 200,
-                    onChange: function() { draft.excerpt = inputExcerpt.getValue(); updateSeo(); },
-                });
-
-                HGroup({ width: "100%", height: "auto", align: "left center", gap: 10 });
-                that.elem.style.justifyContent = "space-between";
-                    createFieldTitle("TEXT");
-                    lblBodyInfo = Label({ text: "", fontSize: 12, textColor: Ink(0.45) });
-                endGroup();
-
-                // TEXTAREA: Content text (native, so it has a normal text editing)
-                const bodyBox = Box({ width: "100%", height: 220, color: S.FIELD_COLOR, border: 1, borderColor: S.CARD_BORDER_COLOR, round: 8 });
-                bodyBox.position = "relative";
-                bodyArea = document.createElement("textarea");
-                bodyArea.value = draft.body;
-                bodyArea.placeholder = "Write the content. A line that starts with \"## \" is a heading.";
-                // WHY: basic.css gives "pointer-events: none" to the boxes and "user-select: none" to the page. They are inherited,
-                // so the textarea could not be clicked or selected. They are set back for the textarea.
-                bodyArea.style.cssText = "position:absolute; left:0; top:0; width:100%; height:100%; box-sizing:border-box; padding:12px 14px; " +
-                    "background:transparent; border:0; outline:none; resize:none; color:" + Ink(0.9) + "; font-family:inherit; font-size:15px; line-height:1.6; " +
-                    "pointer-events:auto; user-select:text; -webkit-user-select:text; cursor:text;";
-                bodyArea.addEventListener("focus", function() { bodyBox.borderColor = S.ACCENT_COLOR; });
-                bodyArea.addEventListener("blur", function() { bodyBox.borderColor = S.CARD_BORDER_COLOR; });
-                bodyArea.addEventListener("input", function() {
-                    draft.body = bodyArea.value;
-                    updateBodyInfo();
-                    updateSeo();
-                });
-                bodyBox.elem.appendChild(bodyArea);
-
-                // PAGE OPTIONS
-                grpPageOptions = VGroup({ width: "100%", height: "auto", align: "left top", gap: 8 });
-                    CheckBox({
-                        labelText: "Show in the site menu",
-                        checked: draft.showInMenu,
-                        style: darkCheckStyle,
-                        onChange: function(self) { draft.showInMenu = self.checked; },
-                    });
-                endGroup();
-
-                // POST OPTIONS
-                grpPostOptions = VGroup({ width: "100%", height: "auto", align: "left top", gap: 10 });
-
-                    startRow();
-
-                        VGroup({ width: "auto", height: "auto", align: "left top", gap: 6 });
-                        that.elem.style.flexShrink = "0";
-                            createFieldTitle("CATEGORY");
-                            that.elem.style.marginTop = "4px";
-                            ContentsPage.createTinySelect(
-                                ContentsPage.CATEGORIES.map(function(name) { return { value: name, label: name }; }),
-                                function(id) { draft.category = id; },
-                                Math.max(0, ContentsPage.CATEGORIES.indexOf(draft.category))
-                            );
-                        endGroup();
-
-                        inputTags = createInput({
-                            titleText: "TAGS",
-                            value: draft.tags.join(", "),
-                            placeholder: "audio, guide (comma between tags)",
-                            maxLength: 120,
-                            onChange: function() {
-                                draft.tags = inputTags.getValue().split(",").map(function(tag) { return tag.trim().toLowerCase(); }).filter(Boolean);
-                            },
-                        });
-                        flex(inputTags);
-
-                    endGroup();
-
-                endGroup();
-
-                // BANNER OPTIONS
-                grpBannerOptions = VGroup({ width: "100%", height: "auto", align: "left top", gap: 10 });
-
-                    startRow();
-
-                        inputLink = createInput({
-                            titleText: "LINK",
-                            value: draft.link,
-                            placeholder: "/summer-sale or https://...",
-                            maxLength: 200,
-                            onChange: function() { draft.link = inputLink.getValue().trim(); },
-                        });
-                        flex(inputLink);
-
-                        VGroup({ width: "auto", height: "auto", align: "left top", gap: 6 });
-                        that.elem.style.flexShrink = "0";
-                            createFieldTitle("PLACEMENT");
-                            that.elem.style.marginTop = "4px";
-                            ContentsPage.createTinySelect(
-                                ContentsPage.PLACEMENTS.map(function(name) { return { value: name, label: name }; }),
-                                function(id) { draft.placement = id; },
-                                Math.max(0, ContentsPage.PLACEMENTS.indexOf(draft.placement))
-                            );
-                        endGroup();
-
-                    endGroup();
-
-                endGroup();
-
             endGroup();
 
-            // PUBLISHING
-            startSection("Publishing");
+            // POST OPTIONS
+            grpPostOptions = VGroup({ width: "100%", height: "auto", align: "left top", gap: 10 });
 
-                HGroup({ width: "100%", height: "auto", align: "left center", gap: 18 });
-                that.elem.style.flexWrap = "wrap";
-
-                    Object.keys(STATUSES).forEach(function(status) {
-                        const radio = RadioButton({
-                            group: "contentStatus",
-                            value: status,
-                            checked: (draft.status == status) ? 1 : 0,
-                            labelText: STATUSES[status].label,
-                            style: darkRadioStyle,
-                            onChange: function(self) {
-                                draft.status = self.value;
-                                // WHY "in the future": a published item has a past time; the time on the screen must be used
-                                if (draft.status == "scheduled" && !(draft.publishAt > Date.now())) updateScheduleTime();
-                                updateScheduleView();
-                            },
-                        });
-                        radioList.push(radio);
-                    });
-
-                endGroup();
-
-                Label({ text: "Draft: only the team can see it. Published: visible on the site. Scheduled: published at the time. Archived: hidden, kept for later.", fontSize: 12, textColor: Ink(0.45), width: "100%" });
-
-                // Schedule
-                grpSchedule = HGroup({ width: "100%", height: "auto", align: "left bottom", gap: 10 });
-                that.elem.style.flexWrap = "wrap";
-
-                    const tomorrow = new Date(Date.now() + ContentsPage.DAY);
-                    const scheduleStart = (draft.publishAt > Date.now()) ? new Date(draft.publishAt) : tomorrow;
+                startRow();
 
                     VGroup({ width: "auto", height: "auto", align: "left top", gap: 6 });
-                        createFieldTitle("PUBLISH DATE");
-                        dateSchedule = DatePicker({
-                            width: 170,
-                            height: 40,
-                            date: scheduleStart,
-                            minDate: new Date(),
-                            format: "DD MMM YYYY",
-                            showClearButton: 0,
-                            style: ContentsPage.DATE_STYLE,
-                            onChange: function() { updateScheduleTime(); },
-                        });
+                    that.elem.style.flexShrink = "0";
+                        createFieldTitle("CATEGORY");
+                        that.elem.style.marginTop = "4px";
+                        ContentsPage.createTinySelect(
+                            ContentsPage.CATEGORIES.map(function(name) { return { value: name, label: name }; }),
+                            function(id) { draft.category = id; },
+                            Math.max(0, ContentsPage.CATEGORIES.indexOf(draft.category))
+                        );
                     endGroup();
+
+                    inputTags = createInput({
+                        titleText: "TAGS",
+                        value: draft.tags.join(", "),
+                        placeholder: "audio, guide (comma between tags)",
+                        maxLength: 120,
+                        onChange: function() {
+                            draft.tags = inputTags.getValue().split(",").map(function(tag) { return tag.trim().toLowerCase(); }).filter(Boolean);
+                        },
+                    });
+                    flex(inputTags);
+
+                endGroup();
+
+            endGroup();
+
+            // BANNER OPTIONS
+            grpBannerOptions = VGroup({ width: "100%", height: "auto", align: "left top", gap: 10 });
+
+                startRow();
+
+                    inputLink = createInput({
+                        titleText: "LINK",
+                        value: draft.link,
+                        placeholder: "/summer-sale or https://...",
+                        maxLength: 200,
+                        onChange: function() { draft.link = inputLink.getValue().trim(); },
+                    });
+                    flex(inputLink);
 
                     VGroup({ width: "auto", height: "auto", align: "left top", gap: 6 });
-                        createFieldTitle("TIME");
-                        timeSchedule = TimePicker({
-                            width: 120,
-                            height: 40,
-                            time: (draft.publishAt > Date.now()) ? scheduleStart : "09:00",
-                            minuteStep: 15,
-                            showClearButton: 0,
-                            style: ContentsPage.TIME_STYLE,
-                            onChange: function() { updateScheduleTime(); },
-                        });
+                    that.elem.style.flexShrink = "0";
+                        createFieldTitle("PLACEMENT");
+                        that.elem.style.marginTop = "4px";
+                        ContentsPage.createTinySelect(
+                            ContentsPage.PLACEMENTS.map(function(name) { return { value: name, label: name }; }),
+                            function(id) { draft.placement = id; },
+                            Math.max(0, ContentsPage.PLACEMENTS.indexOf(draft.placement))
+                        );
                     endGroup();
 
-                endGroup();
-
-                // Author
-                HGroup({ width: "100%", height: "auto", align: "left center", gap: 10 });
-                that.elem.style.marginTop = "4px";
-                    createFieldTitle("AUTHOR");
-                    const authors = ContentsPage.getAuthors();
-                    if (!authors.includes(draft.author)) authors.push(draft.author);
-                    ContentsPage.createTinySelect(
-                        authors.map(function(name) { return { value: name, label: name }; }),
-                        function(id) { draft.author = id; },
-                        Math.max(0, authors.indexOf(draft.author))
-                    );
-                endGroup();
-
-            endGroup();
-
-            // FEATURED IMAGE
-            startSection("Featured image", "From the Media Library");
-
-                grpImages = HGroup({ width: "100%", height: "auto", align: "left top", gap: 8 });
-                that.elem.style.flexWrap = "wrap";
-                grpImages.items = [];
-                endGroup();
-
-            endGroup();
-
-            // SEO
-            const seoSection = startSection("SEO", "");
-            lblSeoScore = seoSection.lblRight;
-
-                inputMetaTitle = createInput({
-                    titleText: "META TITLE",
-                    value: draft.metaTitle,
-                    placeholder: "Empty: the title is used",
-                    maxLength: 70,
-                    onChange: function() { draft.metaTitle = inputMetaTitle.getValue(); updateSeo(); },
-                });
-
-                inputMetaDescription = createInput({
-                    titleText: "META DESCRIPTION",
-                    value: draft.metaDescription,
-                    placeholder: "70-160 letters. Shown in the search results.",
-                    maxLength: 170,
-                    onChange: function() { draft.metaDescription = inputMetaDescription.getValue(); updateSeo(); },
-                });
-
-                // Search result preview
-                grpSeoPreview = VGroup({ width: "100%", height: "auto", align: "left top", gap: 2, padding: [14, 12], color: "#FFFFFF", round: 8 });
-                    grpSeoPreview.lblUrl = Label({ text: "", fontSize: 12, textColor: "#3C4043", width: "100%" });
-                    that.elem.style.wordBreak = "break-all";
-                    grpSeoPreview.lblTitle = Label({ text: "", fontSize: 18, textColor: "#1A0DAB", width: "100%" });
-                    grpSeoPreview.lblDescription = Label({ text: "", fontSize: 13, textColor: "#4D5156", width: "100%" });
-                endGroup();
-
-                // Checklist
-                grpSeoChecks = VGroup({ width: "100%", height: "auto", align: "left top", gap: 4 });
-                grpSeoChecks.lines = [];
-                    for (let i = 0; i < 6; i++) {
-                        grpSeoChecks.lines.push(Label({ text: "", fontSize: 13, textColor: Ink(0.8), width: "100%" }));
-                    }
                 endGroup();
 
             endGroup();
 
         endGroup();
 
-    endBox();
+        // PUBLISHING
+        startSection("Publishing");
+
+            HGroup({ width: "100%", height: "auto", align: "left center", gap: 18 });
+            that.elem.style.flexWrap = "wrap";
+
+                Object.keys(STATUSES).forEach(function(status) {
+                    const radio = RadioButton({
+                        group: "contentStatus",
+                        value: status,
+                        checked: (draft.status == status) ? 1 : 0,
+                        labelText: STATUSES[status].label,
+                        style: darkRadioStyle,
+                        onChange: function(self) {
+                            draft.status = self.value;
+                            // WHY "in the future": a published item has a past time; the time on the screen must be used
+                            if (draft.status == "scheduled" && !(draft.publishAt > Date.now())) updateScheduleTime();
+                            updateScheduleView();
+                        },
+                    });
+                    radioList.push(radio);
+                });
+
+            endGroup();
+
+            Label({ text: "Draft: only the team can see it. Published: visible on the site. Scheduled: published at the time. Archived: hidden, kept for later.", fontSize: 12, textColor: Ink(0.45), width: "100%" });
+
+            // Schedule
+            grpSchedule = HGroup({ width: "100%", height: "auto", align: "left bottom", gap: 10 });
+            that.elem.style.flexWrap = "wrap";
+
+                const tomorrow = new Date(Date.now() + ContentsPage.DAY);
+                const scheduleStart = (draft.publishAt > Date.now()) ? new Date(draft.publishAt) : tomorrow;
+
+                VGroup({ width: "auto", height: "auto", align: "left top", gap: 6 });
+                    createFieldTitle("PUBLISH DATE");
+                    dateSchedule = DatePicker({
+                        width: 170,
+                        height: 40,
+                        date: scheduleStart,
+                        minDate: new Date(),
+                        format: "DD MMM YYYY",
+                        showClearButton: 0,
+                        style: ContentsPage.DATE_STYLE,
+                        onChange: function() { updateScheduleTime(); },
+                    });
+                endGroup();
+
+                VGroup({ width: "auto", height: "auto", align: "left top", gap: 6 });
+                    createFieldTitle("TIME");
+                    timeSchedule = TimePicker({
+                        width: 120,
+                        height: 40,
+                        time: (draft.publishAt > Date.now()) ? scheduleStart : "09:00",
+                        minuteStep: 15,
+                        showClearButton: 0,
+                        style: ContentsPage.TIME_STYLE,
+                        onChange: function() { updateScheduleTime(); },
+                    });
+                endGroup();
+
+            endGroup();
+
+            // Author
+            HGroup({ width: "100%", height: "auto", align: "left center", gap: 10 });
+            that.elem.style.marginTop = "4px";
+                createFieldTitle("AUTHOR");
+                const authors = ContentsPage.getAuthors();
+                if (!authors.includes(draft.author)) authors.push(draft.author);
+                ContentsPage.createTinySelect(
+                    authors.map(function(name) { return { value: name, label: name }; }),
+                    function(id) { draft.author = id; },
+                    Math.max(0, authors.indexOf(draft.author))
+                );
+            endGroup();
+
+        endGroup();
+
+        // FEATURED IMAGE
+        startSection("Featured image", "From the Media Library");
+
+            grpImages = HGroup({ width: "100%", height: "auto", align: "left top", gap: 8 });
+            that.elem.style.flexWrap = "wrap";
+            grpImages.items = [];
+            endGroup();
+
+        endGroup();
+
+        // SEO
+        const seoSection = startSection("SEO", "");
+        lblSeoScore = seoSection.lblRight;
+
+            inputMetaTitle = createInput({
+                titleText: "META TITLE",
+                value: draft.metaTitle,
+                placeholder: "Empty: the title is used",
+                maxLength: 70,
+                onChange: function() { draft.metaTitle = inputMetaTitle.getValue(); updateSeo(); },
+            });
+
+            inputMetaDescription = createInput({
+                titleText: "META DESCRIPTION",
+                value: draft.metaDescription,
+                placeholder: "70-160 letters. Shown in the search results.",
+                maxLength: 170,
+                onChange: function() { draft.metaDescription = inputMetaDescription.getValue(); updateSeo(); },
+            });
+
+            // Search result preview
+            grpSeoPreview = VGroup({ width: "100%", height: "auto", align: "left top", gap: 2, padding: [14, 12], color: "#FFFFFF", round: 8 });
+                grpSeoPreview.lblUrl = Label({ text: "", fontSize: 12, textColor: "#3C4043", width: "100%" });
+                that.elem.style.wordBreak = "break-all";
+                grpSeoPreview.lblTitle = Label({ text: "", fontSize: 18, textColor: "#1A0DAB", width: "100%" });
+                grpSeoPreview.lblDescription = Label({ text: "", fontSize: 13, textColor: "#4D5156", width: "100%" });
+            endGroup();
+
+            // Checklist
+            grpSeoChecks = VGroup({ width: "100%", height: "auto", align: "left top", gap: 4 });
+            grpSeoChecks.lines = [];
+                for (let i = 0; i < 6; i++) {
+                    grpSeoChecks.lines.push(Label({ text: "", fontSize: 13, textColor: Ink(0.8), width: "100%" }));
+                }
+            endGroup();
+
+        endGroup();
+
+    endGroup(); // END SCROLL AREA
 
     // GROUP: Buttons (bottom)
     HGroup({ left: 0, bottom: 0, width: "100%", height: 76, align: "left center", gap: 8, padding: [20, 0] });

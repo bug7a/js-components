@@ -1263,54 +1263,43 @@ const SettingsPage = function(params = {}) {
 
     // *** PAGE VIEW:
 
-    // BOX: Scrollable container
-    // WHY: page does not scroll. Scrollable content must be inside a Box with scrollY: 1.
-    startBox(0, 0, "100%", "100%", {
-        color: "transparent",
-        scrollY: 1,
-    });
+    // SCROLL AREA: The page (comp/scroll-area.js)
+    // WHY: page does not scroll. A ScrollArea fills the window; its content scrolls when it is taller.
+    // WHY the padding of 110 at the bottom: space for the footer
+    ScrollArea({ align: "center top", padding: [24, 24, 24, 110], style: Theme.scrollAreaStyle() });
 
-        VGroup({
-            width: "100%",
-            height: "auto", // Grows with content, so the Box can scroll.
-            align: "center top",
-            padding: [24, 24, 24, 110], // Bottom: space for the footer
-        });
+        // GROUP: Content (max width for easy reading)
+        VGroup({ width: "100%", height: "auto", align: "left top", gap: 20 });
+        that.elem.style.maxWidth = "960px";
 
-            // GROUP: Content (max width for easy reading)
-            VGroup({ width: "100%", height: "auto", align: "left top", gap: 20 });
-            that.elem.style.maxWidth = "960px";
+            VGroup({ width: "auto", height: "auto", align: "left top", gap: 0 });
 
-                VGroup({ width: "auto", height: "auto", align: "left top", gap: 0 });
+                Label({ text: "Settings", fontSize: 26, textColor: Ink(0.95) });
+                that.elem.style.fontFamily = "opensans-bold";
 
-                    Label({ text: "Settings", fontSize: 26, textColor: Ink(0.95) });
-                    that.elem.style.fontFamily = "opensans-bold";
-
-                    Label({ text: "Manage the panel and your account", fontSize: 14, textColor: Ink(0.5) });
-
-                endGroup();
-
-                sectionTabs = Tabs({
-                    variant: "pill",
-                    styleName: T.compStyle,
-                    tabs: Theme.indexTabs(SECTIONS), // (the key of a tab is its index: self.value)
-                    onChange: function(self) {
-                        showSection(self.value);
-                    },
-                    style: Theme.tabsStyle({ barColor: CARD_COLOR, borderColor: CARD_BORDER_COLOR, barPadding: 4, barRound: 10, tabRound: 7, padding: [16, 7], activeColor: PRIMARY_COLOR }),
-                });
-
-                initGeneral();
-                initAccount();
-                initNotifications();
-                initAppearance();
-                initAdvanced();
+                Label({ text: "Manage the panel and your account", fontSize: 14, textColor: Ink(0.5) });
 
             endGroup();
 
+            sectionTabs = Tabs({
+                variant: "pill",
+                styleName: T.compStyle,
+                tabs: Theme.indexTabs(SECTIONS), // (the key of a tab is its index: self.value)
+                onChange: function(self) {
+                    showSection(self.value);
+                },
+                style: Theme.tabsStyle({ barColor: CARD_COLOR, borderColor: CARD_BORDER_COLOR, barPadding: 4, barRound: 10, tabRound: 7, padding: [16, 7], activeColor: PRIMARY_COLOR }),
+            });
+
+            initGeneral();
+            initAccount();
+            initNotifications();
+            initAppearance();
+            initAdvanced();
+
         endGroup();
 
-    endBox();
+    endGroup(); // END SCROLL AREA
 
     // FOOTER: Unsaved changes
     footer = HGroup({

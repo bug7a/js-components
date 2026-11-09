@@ -49,7 +49,7 @@ const NotificationsPage = function(params = {}) {
     let shownCount = PAGE_SIZE;
 
     // Components
-    let lblTitle, btnMarkAll, tabs, grpListHost, itemMenu;
+    let lblTitle, btnMarkAll, tabs, listArea, grpListHost, itemMenu;
 
     // *** PRIVATE FUNCTIONS:
 
@@ -289,7 +289,7 @@ const NotificationsPage = function(params = {}) {
             onChange: function(self) {
                 tabId = TABS[self.value].id;
                 shownCount = PAGE_SIZE;
-                grpListHost.containerBox.elem.scrollTop = 0;
+                listArea.scrollToTop();
                 render();
             },
             style: Theme.tabsStyle({ barColor: S.FIELD_COLOR, borderColor: S.CARD_BORDER_COLOR, fontSize: 13, padding: [10, 5], activeColor: S.PRIMARY_COLOR }),
@@ -297,13 +297,13 @@ const NotificationsPage = function(params = {}) {
 
     endGroup();
 
-    // BOX: Scrollable list
-    startBox(0, 112, "100%", "calc(100% - 112px - 52px)", { color: "transparent", scrollY: 1 });
+    // SCROLL AREA: The list between the tabs and the footer (comp/scroll-area.js)
+    listArea = ScrollArea({ top: 112, height: "calc(100% - 112px - 52px)", style: Theme.scrollAreaStyle() });
 
         grpListHost = VGroup({ width: "100%", height: "auto", align: "left top" });
         endGroup();
 
-    endBox();
+    endGroup(); // END SCROLL AREA
 
     // GROUP: Footer
     HGroup({ left: 0, bottom: 0, width: "100%", height: 52, align: "center center" });
