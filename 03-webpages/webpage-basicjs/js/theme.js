@@ -22,12 +22,15 @@ const SITE = {
     // *** COLORS:
     DARK: "#0F1012",            // Koyu bölümler (hero, footer)
     DARK_SOFT: "#18191C",       // Koyu zemin üzerindeki kartlar
-    ACCENT: "#19B5AA",          // The accent: the teal the user chose (2026-11-09; the blue of the logo #23ACCF for an hour, amber #F5B82E before)
-    ACCENT_HOVER: "#33C4BA",
-    ACCENT_TEXT: "#0D706A",     // The accent as a text on the light ground (5.4 : 1)
-    ACCENT_SOFT: "#D6F2EF",
-    BG: "#F4F8F7",              // The light ground, cool with a breath of the accent (warm #F6F4EF before)
-    BG_SOFT: "#E7EFED",
+    // WHY these: the main action of the components (SmartButton tone "cyan": #5BBAC1, its hover, and #376265 of
+    //     "cyanDark" as the text): the buttons of the site are the button of the kit, and its hue is the nearest to the
+    //     blue of the logo. Tried on 2026-11-09 with the teal #19B5AA, CSS turquoise and cadetblue (dark text on it 8.4 : 1).
+    ACCENT: "#5BBAC1",
+    ACCENT_HOVER: "#50AEB5",
+    ACCENT_TEXT: "#376265",     // The accent as a text on the light ground (6.2 : 1)
+    ACCENT_SOFT: "#DEF1F3",
+    BG: "#F3F7F7",              // The light ground, cool with a breath of the accent (warm #F6F4EF before)
+    BG_SOFT: "#E5EDEE",
     CARD: "#FFFFFF",
     INK: "#141414",
     LINE: "rgba(0, 0, 0, 0.09)",
@@ -600,7 +603,7 @@ SITE.endCard = function () {
 // GROUP: İkon zemini
 SITE.iconBadge = function (name, dark = 0, size = 46) {
 
-    const badge = VGroup({ width: size, height: size, align: "center", color: dark ? "rgba(25, 181, 170, 0.14)" : SITE.ACCENT_SOFT, round: 12 });
+    const badge = VGroup({ width: size, height: size, align: "center", color: dark ? "rgba(91, 186, 193, 0.14)" : SITE.ACCENT_SOFT, round: 12 });
     badge.elem.style.flexShrink = "0";
 
         SITE.icon(name, dark ? SITE.ACCENT : SITE.ACCENT_TEXT, Math.round(size * 0.48));
@@ -713,7 +716,7 @@ SITE.injectCss = function () {
         + "b, strong { font-family: opensans-bold; font-weight: normal; }"
         + ".bjs-text code { font-family: " + SITE.MONO + "; font-size: 0.88em; background: rgba(0, 0, 0, 0.06); border-radius: 5px; padding: 1px 5px; }"
         + ".bjs-dark code { background: rgba(255, 255, 255, 0.1); color: #FFFFFF; }"
-        + "::selection { background: rgba(25, 181, 170, 0.35); }";
+        + "::selection { background: rgba(91, 186, 193, 0.35); }";
     document.head.appendChild(style);
 
 };
