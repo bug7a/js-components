@@ -12,9 +12,14 @@ Usage (from the root of the repository):
 
     --with TEXT     a change is mine when one of its lines has this text (more --with: any of them)
     --lines A-B     a change is mine when it touches these lines of the folder's file (1-based; more: any of them)
+    --by-line       every changed line is a change of its own (as in a doc, below), in any file
     -o FILE         where the version goes (without it: printed)
 Every change is listed on stderr ("mine" or "left", its lines in the folder's file and its first line), so the choice can
 be checked; exit code 1 when no change is mine.
+In a doc (CLAUDE.md, context/repo-map.md, _designs/readme.md: a rule or a row a line, the shared docs of commit-files.sh)
+every changed line is a change of its own, also two side by side: git gives them as one block, and that block held the
+lines of two sessions. A block in which n lines became m other lines (n and m not 0, not the same) stays one change: its
+lines can not be paired. Two lines of mine side by side are two changes then: name each one (--with, --lines A-B).
 
 Started Date: November 2026
 Webpage: https://bug7a.github.io/js-components/
@@ -30,6 +35,7 @@ import subprocess
 import sys
 
 HUNK_HEADER = re.compile(r"^@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@")
+DOCS_BY_LINE = ("CLAUDE.md", "context/repo-map.md", "_designs/readme.md")  # the "lines" files of commit-files.sh
 
 
 def run_git(*args):
@@ -50,6 +56,24 @@ def changes_of(path):
     return changes
 
 
+def split_by_line(change):
+    """The lines of a change as changes of their own: a line for a line (n became n), every added line (0 became m),
+    every removed line (n became 0). Another change stays as it is (its lines can not be paired)."""
+    removed = [line for line in change["lines"] if line.startswith("-")]
+    added = [line for line in change["lines"] if line.startswith("+")]
+    old_count, new_count = change["old_count"], change["new_count"]
+    if old_count + new_count <= 1 or (old_count and new_count and old_count != new_count):
+        return [change]
+    if old_count == new_count:
+        return [{"old_start": change["old_start"] + k, "old_count": 1, "new_start": change["new_start"] + k, "new_count": 1,
+                 "lines": [removed[k], added[k]]} for k in range(old_count)]
+    if old_count == 0:
+        return [{"old_start": change["old_start"], "old_count": 0, "new_start": change["new_start"] + k, "new_count": 1,
+                 "lines": [added[k]]} for k in range(new_count)]
+    return [{"old_start": change["old_start"] + k, "old_count": 1, "new_start": change["new_start"], "new_count": 0,
+             "lines": [removed[k]]} for k in range(old_count)]
+
+
 def touches(change, first, last):
     start = change["new_start"]
     end = start + max(change["new_count"], 1) - 1
@@ -65,7 +89,8 @@ def is_mine(change, texts, ranges):
 def apply(head_lines, work_lines, changes):
     """HEAD with these changes; the new lines come from the folder's file (its own line ends)."""
     version = list(head_lines)
-    for change in sorted(changes, key=lambda change: change["old_start"], reverse=True):
+    # WHY new_start too: lines added after one line of HEAD go in one by one at the same place, the last one first
+    for change in sorted(changes, key=lambda change: (change["old_start"], change["new_start"]), reverse=True):
         new_lines = work_lines[change["new_start"] - 1:change["new_start"] - 1 + change["new_count"]] if change["new_count"] else []
         if change["old_count"] == 0:
             version[change["old_start"]:change["old_start"]] = new_lines  # WHY: "-12,0" adds after line 12
@@ -84,6 +109,7 @@ def main():
     parser.add_argument("path", help="the file, from the root of the repository")
     parser.add_argument("--with", dest="texts", action="append", default=[], help="a text of my lines")
     parser.add_argument("--lines", action="append", default=[], type=line_range, help="A-B: my lines in the folder's file")
+    parser.add_argument("--by-line", action="store_true", help="every changed line is a change (as in a doc)")
     parser.add_argument("-o", dest="output", default="", help="the version file (printed without it)")
     arguments = parser.parse_args()
     if not arguments.texts and not arguments.lines:
@@ -98,13 +124,22 @@ def main():
     # WHY: every change on HEAD must give the folder's file, else the changes were read wrong
     if "".join(apply(head_lines, work_lines, changes)) != work_text:
         sys.exit("version-of: the changes do not give the folder's file again; make this version by hand")
+    is_by_line = arguments.by_line or arguments.path in DOCS_BY_LINE
+    if is_by_line:
+        lines = [part for change in changes for part in split_by_line(change)]
+        if "".join(apply(head_lines, work_lines, lines)) == work_text:
+            changes = lines
+        else:
+            print("version-of: the lines do not give the folder's file again: the blocks of git are the changes", file=sys.stderr)
 
     mine = [change for change in changes if is_mine(change, arguments.texts, arguments.lines)]
     for change in changes:
         first = change["new_start"]
         last = first + max(change["new_count"], 1) - 1
         mark = "mine" if change in mine else "left"
-        print(f"{mark}  lines {first}-{last}: {(change['lines'] or [''])[0][:100]}", file=sys.stderr)
+        is_mixed = change["old_count"] and change["new_count"] and change["old_count"] != change["new_count"]
+        note = f" ({change['old_count']} became {change['new_count']} lines: one change)" if is_by_line and is_mixed else ""
+        print(f"{mark}  lines {first}-{last}{note}: {(change['lines'] or [''])[0][:100]}", file=sys.stderr)
     if not mine:
         sys.exit("version-of: no change is mine")
 

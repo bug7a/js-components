@@ -128,7 +128,7 @@ for entry in ${ENTRIES[@]+"${ENTRIES[@]}"}; do
 done
 if [ "$HAS_SHARED_CHANGES" = 1 ]; then
     echo "Only your lines: python3 _ai-tools/version-of.py <file> --with \"a text of them\" -o <version>, then <file>=<version>"
-    echo "(two lines next to each other are one change for it: then the version is HEAD with your edit). All yours: --mine <file>."
+    echo "(in a shared doc every line is a change for it, also side by side). All yours: --mine <file>."
     if [ "$IS_DRY_RUN" = 0 ]; then
         echo "Nothing was committed."
         exit 2
