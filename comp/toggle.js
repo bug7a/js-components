@@ -26,9 +26,10 @@ UI COMPONENT TEMPLATE
    red track, "label": ON / OFF on the track, small corners.
 - onMark, offMark: what shows when on / off: "check", "cross" or a text ("ON"). "": nothing. setMarks() changes them.
   markPlace: "track" (on the free side of the track) or "knob" (in the knob). markStyle: its size and colors.
-- animated: 1 (the default) gives a toggle with marks small motions (not at the first view): a mark on the track grows
-  in behind the knob, a mark in the knob turns in with a small spring, the mark grows a little under the mouse, the knob
-  gets flatter while pressed. A toggle without marks does not change. Off with prefers-reduced-motion. setAnimated().
+- animated: 1 (the default) gives a toggle with marks small motions (not at the first view): a drawn mark (check,
+  cross) on the track grows in behind the knob, in the knob it turns in with a small spring, it grows a little under
+  the mouse; the knob gets flatter while pressed. A text mark (ON / OFF) has no motion: it shows and goes at once. A
+  toggle without marks does not change. Off with prefers-reduced-motion. setAnimated().
 - offButtonScale: the size of the knob when off (1: the same size as on).
 - focusRingColor: the ring of the keyboard focus ("": the ring of basic.js). The ring follows the round of the track.
 - backgroundStyle.selectedBorderColor: the line of the track when on ("": the same as borderColor). A page that gives
@@ -155,13 +156,15 @@ const Toggle = function(params = {}) {
     const HIDDEN_MARK_TURN = 90; // deg: a mark in the knob
     const HIDDEN_MARK_SHIFT = 6; // px: a mark on the track stays behind the knob that leaves
     const HOVER_ICON_SCALE = 1.1;
-    const HOVER_TEXT_SCALE = 1.05;
     const PRESSED_KNOB_SCALE_X = 1.1;
     const PRESSED_KNOB_SCALE_Y = 0.92;
 
     // *** PRIVATE FUNCTIONS:
 
     const hasMarks = () => !!(box.onMark || box.offMark);
+
+    // WHY only a drawn mark (check, cross) moves: a small motion of a text (ON / OFF) looked like a fault.
+    const isMovingMark = (mark) => !!Toggle.MARK_PATHS[mark];
 
     const isMotionOn = function() {
         if (box.animated != 1 || !hasMarks()) return false;
@@ -184,10 +187,14 @@ const Toggle = function(params = {}) {
         return `translateX(${-direction * HIDDEN_MARK_SHIFT}px) scale(${HIDDEN_MARK_SCALE})`;
     };
 
-    const getShownMarkTransform = function(mark) {
+    const getShownMarkTransform = function() {
         if (box.secondState !== "mouseover") return "none";
-        const isIcon = !!Toggle.MARK_PATHS[mark];
-        return `scale(${isIcon ? HOVER_ICON_SCALE : HOVER_TEXT_SCALE})`;
+        return `scale(${HOVER_ICON_SCALE})`;
+    };
+
+    const getMarkTransform = function(mark, isShown, isOnMark) {
+        if (!isMovingMark(mark)) return "none";
+        return isShown ? getShownMarkTransform() : getHiddenMarkTransform(isOnMark);
     };
 
     // The look of the state of the marks. (Nothing when animated is off.)
@@ -195,8 +202,8 @@ const Toggle = function(params = {}) {
         box.button.css.transform = getKnobTransform();
         if (!isMotionOn()) return;
         const isOn = (box.state === "selected");
-        box.onMarkBox.css.transform = isOn ? getShownMarkTransform(box.onMark) : getHiddenMarkTransform(true);
-        box.offMarkBox.css.transform = isOn ? getHiddenMarkTransform(false) : getShownMarkTransform(box.offMark);
+        box.onMarkBox.css.transform = getMarkTransform(box.onMark, isOn, true);
+        box.offMarkBox.css.transform = getMarkTransform(box.offMark, !isOn, false);
     };
 
     const setPressed = function(value) {
@@ -209,9 +216,10 @@ const Toggle = function(params = {}) {
         const isOn = isMotionOn();
         if (!isOn && !wasAnimated) return;
         const transformMotion = isMarkInKnob ? SPRING_TIME + " " + SPRING_EASE : MOTION_TIME + " " + MOTION_EASE;
-        [box.onMarkBox, box.offMarkBox].forEach(function(markBox) {
-            markBox.setMotion(isOn ? `opacity ${MOTION_TIME} ${MOTION_EASE}, transform ${transformMotion}` : "none");
-            if (!isOn) markBox.css.transform = "none";
+        [[box.onMarkBox, box.onMark], [box.offMarkBox, box.offMark]].forEach(function([markBox, mark]) {
+            const isMoving = isOn && isMovingMark(mark);
+            markBox.setMotion(isMoving ? `opacity ${MOTION_TIME} ${MOTION_EASE}, transform ${transformMotion}` : "none");
+            if (!isMoving) markBox.css.transform = "none";
         });
         wasAnimated = isOn;
         paintMotion();

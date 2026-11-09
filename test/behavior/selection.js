@@ -618,6 +618,25 @@ test("Toggle: animated moves the marks, animated: 0 and a toggle without marks s
     plain.remove();
 });
 
+test("Toggle: a text mark (ON / OFF) has no motion, a drawn mark (check, cross) still moves", async function () {
+    const texts = Toggle({ value: 1, onMark: "ON", offMark: "OFF" });
+    const icons = Toggle({ value: 1, onMark: "check", offMark: "cross" });
+    await wait(300); // WHY: setMotion waits a moment before it starts
+    texts.setSecondState("mouseover");
+    icons.setSecondState("mouseover");
+    const lookOf = function (toggle) {
+        return [toggle.onMarkBox.elem.style.transition, toggle.onMarkBox.elem.style.transform, toggle.offMarkBox.elem.style.transform];
+    };
+    const text = lookOf(texts);
+    const icon = lookOf(icons);
+    const isTextStill = !text[0].includes("opacity") && text[1] === "none" && text[2] === "none";
+    const isIconMoving = icon[0].includes("opacity") && icon[1].includes("scale(1.1)") && icon[2].includes("translateX");
+    check("Toggle: a text mark (ON / OFF) has no motion, a drawn mark (check, cross) still moves", isTextStill && isIconMoving,
+        "text: " + text.join(" ; ") + " || drawn: " + icon.join(" ; "));
+    texts.remove();
+    icons.remove();
+});
+
 test("Toggle: a pressed knob gets flatter, and it comes back", async function () {
     const toggle = Toggle({ styleName: "tick", value: 1 });
     await wait(30);
