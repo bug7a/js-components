@@ -19,11 +19,14 @@ UI COMPONENT TEMPLATE
 - onChange is called while dragging (every new value), onChangeEnd when the change is finished
   (the drag is released, a key step, a typed value). Neither is called at create time or with silent: 1.
 - Everything is drawn with code (no image files needed). Accessibility: role="slider", aria-valuenow...
-- Style packages: "light" (default; the old name "classic" works too), "modern", "dark", "ozden", "minimal", "minimalDark".
+- Style packages: "light" (default; the old name "classic" works too) and "dark" (the light and dark look of the kit:
+  a quiet gray field, a fill in a tint of the accent, the handle and the focus in the accent: _designs/slider-field.htm),
+  "modern", "ozden", "minimal", "minimalDark".
   Select with styleName. (SliderField.styles)
   "ozden" (a more usable look for general use), in the colors of SmartButton: a cyan fill with
-  an edge and a white knob; the label is always on the fill and the value never (style.fill.aroundLabel, beforeValue),
-  a focus ring. Its sample: 02-comp-examples/slider-field-ozden.htm.
+  an edge and a white knob, a focus ring. Its sample: 02-comp-examples/slider-field-ozden.htm.
+- The handle never crosses a text (style.fill.aroundLabel and beforeValue, 1 by default): at min the fill holds the
+  label, at max it ends before the value. 0: the handle can go under them (it hides there).
 - Not the same as comp/slider.js (Slider: a track with a round thumb). THE SLIDER OF NEW PAGES is Slider "round";
   SliderField is the parallel design, for a page that asks for its shape.
 
@@ -68,8 +71,8 @@ const SliderFieldDefaults = {
     valueFormat: function (value, self) { return self.formatNumber(value) + self.unitText; }, // Text of the value
     onChange: function (self) { }, // self.value (also while dragging)
     onChangeEnd: function (self) { }, // After a drag, a key step or a typed value
-    styleName: "light", // "light" ("classic": its old name), "modern", "dark", "ozden", "minimal", "minimalDark" or a name added to SliderField.styles
-    style: { // Light style package (default)
+    styleName: "light", // "light" ("classic": its old name), "dark", "modern", "ozden", "minimal", "minimalDark" or a name added to SliderField.styles
+    style: { // The base of every package (a light gray field with a gray fill): a package changes only some keys
         box: {
             color: "#F2F2F4",
             hoverColor: "", // Under the mouse. "": the same color
@@ -90,9 +93,9 @@ const SliderFieldDefaults = {
             minWidth: 26, // Fill width at min (the handle stays visible)
             round: 11,
             innerRound: "", // The right corners while the fill ends inside the field. "": the same as round, 0: straight
-            aroundLabel: 0, // 1: at min the fill holds the label (labelSpace after it): the label is always on the fill
+            aroundLabel: 1, // 1: at min the fill holds the label (labelSpace after it): the handle never crosses the label. 0: it can go under it
             labelSpace: 16,
-            beforeValue: 0, // 1: at max the fill ends before the value (valueSpace before it): the value is never on the fill
+            beforeValue: 1, // 1: at max the fill ends before the value (valueSpace before it): the handle never crosses the value. 0: it can go under it
             valueSpace: 16,
             border: 0,
             borderColor: "transparent",
@@ -141,7 +144,7 @@ const SliderFieldDefaults = {
 
 const SliderField = function (params = {}) {
 
-    // Merge style package: params.style > SliderField.styles[styleName] > SliderFieldDefaults.style (light)
+    // Merge style package: params.style > SliderField.styles[styleName] > SliderFieldDefaults.style (the base)
     basic.applyStylePackage(params, SliderField.styles, SliderFieldDefaults);
 
     // Merge params:
@@ -852,12 +855,37 @@ SliderField.measureText = function (text, elem) {
 // USAGE: SliderField({ styleName: "modern" })
 // USAGE: SliderField({ styleName: "dark", style: { fill: { color: "#3D7A6B" } } }) // Change only some keys.
 // USAGE: SliderField({ style: SliderField.styles.dark }) // The same as styleName: "dark". (The package is copied, never changed.)
-// NOTE: A new package needs only the keys that differ from the default (classic) style.
+// NOTE: A new package needs only the keys that differ from SliderFieldDefaults.style (the base of every package).
 // USAGE: SliderField.styles.myStyle = { fill: { color: "gold" } };
 SliderField.styles = {
 
-    // Light gray field, gray fill. (Like the property sliders of design tools)
-    light: SliderFieldDefaults.style,
+    // The light look of the kit (_designs/slider-field.htm), the default: a quiet gray field with round 6 corners, a
+    // fill in a tint of the accent that ends with a handle in the accent, a bold value, dots for the steps; the keyboard
+    // focus is the accent edge with a soft ring inside.
+    light: {
+        box: { color: "#F2F3F0", hoverColor: "", border: 1, borderColor: Black(0.08), round: 6, boxShadow: "none" },
+        boxFocus: { borderColor: "#3D7A6B", ringColor: "rgba(61, 122, 107, 0.5)", ringWidth: 2 },
+        fill: { color: "#D8E8E2", hoverColor: "#CCE1DA", activeColor: "#BFD9D0", minWidth: 26, round: 6 }, // the accent on the field at 22 %, 30 %, 38 %
+        handle: { width: 4, height: 18, inset: 11, color: "#3D7A6B", hoverColor: "#356C5E", activeColor: "#2E5F53", round: 2 },
+        tick: { size: 3, color: Black(0.15), minSpace: 9 },
+        label: { fontSize: 15, textColor: Black(0.55), fontFamily: "", padding: 14 },
+        value: { fontSize: 15, textColor: Black(0.88), fontFamily: "opensans-bold", padding: 14 },
+        input: { color: "#FFFFFF", textColor: Black(0.88), round: 6 },
+        disabled: { opacity: 0.45, filter: "none" },
+    },
+
+    // The dark look of the kit: the same shapes on the dark surface.
+    dark: {
+        box: { color: "#232322", hoverColor: "", border: 1, borderColor: White(0.08), round: 6, boxShadow: "none" },
+        boxFocus: { borderColor: "#65A293", ringColor: "rgba(101, 162, 147, 0.55)", ringWidth: 2 },
+        fill: { color: "rgba(101, 162, 147, 0.22)", hoverColor: "rgba(101, 162, 147, 0.28)", activeColor: "rgba(101, 162, 147, 0.34)", minWidth: 26, round: 6 },
+        handle: { width: 4, height: 18, inset: 11, color: "#65A293", hoverColor: "#74B0A2", activeColor: "#8CC2B5", round: 2 },
+        tick: { size: 3, color: White(0.2), minSpace: 9 },
+        label: { fontSize: 15, textColor: White(0.55), fontFamily: "", padding: 14 },
+        value: { fontSize: 15, textColor: White(0.9), fontFamily: "opensans-bold", padding: 14 },
+        input: { color: White(0.08), textColor: White(0.9), round: 6 },
+        disabled: { opacity: 0.4, filter: "none" },
+    },
 
     // For general use: the colors of SmartButton and of ProgressBar
     // ozden. The fill is a cyan SmartButton ozden (an edge and a line at its bottom) that ends with a white knob,
@@ -891,21 +919,8 @@ SliderField.styles = {
         disabled: { opacity: 0.5 },
     },
 
-    // Dark theme, same colors as SelectBox, TagInput, Tabs and Stepper "dark".
-    dark: {
-        box: { color: "#232322", border: 1, borderColor: "rgba(255, 255, 255, 0.08)", round: 12 },
-        boxFocus: { borderColor: "#65A293" },
-        fill: { color: "rgba(255, 255, 255, 0.09)", hoverColor: "rgba(255, 255, 255, 0.12)", activeColor: "rgba(255, 255, 255, 0.16)", minWidth: 26, round: 11 },
-        handle: { width: 3, height: 16, inset: 11, color: "rgba(255, 255, 255, 0.35)", hoverColor: "rgba(255, 255, 255, 0.55)", activeColor: "#65A293", round: 2 },
-        tick: { size: 3, color: "rgba(255, 255, 255, 0.22)", minSpace: 9 },
-        label: { fontSize: 15, textColor: "rgba(255, 255, 255, 0.50)", fontFamily: "", padding: 14 },
-        value: { fontSize: 15, textColor: "rgba(255, 255, 255, 0.90)", fontFamily: "", padding: 16 },
-        input: { color: "rgba(255, 255, 255, 0.08)", textColor: "rgba(255, 255, 255, 0.90)", round: 6 },
-        disabled: { opacity: 0.4 },
-    },
-
 };
-SliderField.styles.classic = SliderField.styles.light; // the old name of light: the pages made with it keep their look
+SliderField.styles.classic = SliderField.styles.light; // the old name of light
 
 // The minimal theme (_designs/minimal-theme.htm): a 28 px field with no fill and an edge of 3:1 at least (it is a
 // control), a faint gray fill for the value, a thin handle that darkens under the mouse and is ink while it is dragged,

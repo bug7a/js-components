@@ -193,7 +193,7 @@ CATALOG.COMPONENTS = [
         key: "slider-field", name: "SliderField", cat: "inputs",
         source: "comp/slider-field.js",
         samples: [
-            { file: "02-comp-examples/slider-field.htm", title: "Basic" },
+            { file: "02-comp-examples/slider-field.htm", title: "light (the default), ozden, modern, dark" },
             { file: "02-comp-examples/slider-field-ozden.htm", title: "ozden, a knob, the tones of SmartButton" },
             { file: "02-comp-examples/minimal-theme.htm", title: "Minimal theme (minimal, minimalDark)" },
         ],
