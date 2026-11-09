@@ -1810,6 +1810,18 @@ test("ChatView: minimal: small and made of lines; setTheme() draws the answers a
     chat.remove();
 });
 
+test("ChatView: the first color of Send comes without a motion (a window behind the others kept it transparent)", async function () {
+    const chat = ChatView({ width: 400, height: 300 });
+    const first = getComputedStyle(chat.btnSend.elem).backgroundColor;
+    chat.setInputText("Hi");
+    await wait(300);
+    const typed = getComputedStyle(chat.btnSend.elem).backgroundColor;
+    check("ChatView: the first color of Send comes without a motion (a window behind the others kept it transparent)",
+        first === "rgba(0, 0, 0, 0.1)" && typed === "rgb(61, 122, 107)" && chat.btnSend.elem.style.transition.includes("background-color"),
+        first + " / with a text: " + typed);
+    chat.remove();
+});
+
 // *** JSON VIEW (comp/json-view.js)
 
 const jsonRowText = function (view, key) {

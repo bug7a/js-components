@@ -632,7 +632,7 @@ const ChatView = function (params = {}) {
                 box.btnSend.role = "button";
                 box.btnSend.tabIndex = 0;
                 box.btnSend.elem.style.display = "flex";
-                box.btnSend.css = { alignItems: "center", justifyContent: "center", transition: "background-color 0.15s" };
+                box.btnSend.css = { alignItems: "center", justifyContent: "center" };
             endGroup();
         endGroup();
 
@@ -685,6 +685,11 @@ const ChatView = function (params = {}) {
     startMessages.forEach(box.addMessage);
     paintEmpty();
     box.setBusy(box.busy);
+    // WHY the motion after the first color: the field reads its height before the button gets its color, so the first
+    //     color came with a motion from transparent, and a window that was not drawn (behind the others) kept it
+    //     transparent. Reading the style now draws the first color without a motion.
+    getComputedStyle(box.btnSend.elem).backgroundColor;
+    box.btnSend.css.transition = "background-color 0.15s";
     box.after(0, box.scrollToEnd); // WHY later: the messages of the start are drawn first.
 
     return endObject(box);
