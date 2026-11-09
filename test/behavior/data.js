@@ -2134,7 +2134,7 @@ test("JsonEditor: a switch turns with a click (true -> false, 1 -> 0); a color h
     const unitTitle = findByText("unit", editor.elem);
     clickJsonCell(editor, 0, "unit", unitTitle.parentElement.offsetWidth - 10);
     await wait(30);
-    const menu = Array.from(document.querySelectorAll("[role=menu]")).find(function (el) { return el.offsetParent !== null; });
+    const menu = Array.from(document.querySelectorAll("[role=menu]")).find(function (el) { return el.getClientRects().length > 0; }); // WHY not offsetParent: the menu is fixed
     const item = (menu) ? findByText("box", menu) : null;
     if (item) item.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true }));
     await wait(30);
@@ -2359,7 +2359,7 @@ test("JsonEditor: colorOf paints a color only the page can read; optionsOf gives
         const titleLabel = findByText(title, editor.elem);
         clickJsonCell(editor, 0, title, titleLabel.parentElement.offsetWidth - 10);
         await wait(30);
-        const menu = Array.from(document.querySelectorAll("[role=menu]")).find(function (el) { return el.offsetParent !== null; });
+        const menu = Array.from(document.querySelectorAll("[role=menu]")).find(function (el) { return el.getClientRects().length > 0; }); // WHY not offsetParent: the menu is fixed
         const item = (menu) ? findByText(text, menu) : null;
         if (item) item.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true }));
         await wait(30);
