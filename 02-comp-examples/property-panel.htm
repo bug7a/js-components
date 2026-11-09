@@ -25,6 +25,7 @@
         let panel, canvas, lblText, lblLog;
         const logLines = [];
         const MAX_LOG_LINES = 10;
+        const MIN_PAGE_WIDTH = 720; // px: the canvas and the panel need it; a narrower window (a phone) shows the page smaller
 
         // The JSON of the panel. Every item: type, key, value and its own settings.
         const PANEL_DATA = {
@@ -169,6 +170,10 @@
         };
 
         const start = function () {
+
+            // WHY page.fit: under MIN_PAGE_WIDTH the page is drawn at that width and made smaller (zoom 1 above it)
+            page.fit(MIN_PAGE_WIDTH);
+            page.onResize(function () { page.fit(MIN_PAGE_WIDTH); });
 
             page.color = "#1E1E1E";
 

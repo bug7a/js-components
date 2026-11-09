@@ -62,6 +62,7 @@
         let btnEdit, btnDelete;
 
         const ASSETS_PATH = "../comp/hold-to-confirm-button/";
+        const MIN_PAGE_WIDTH = 720; // px: the form and the table side by side need it; a narrower window (a phone) shows the page smaller
 
         const FORM_BUTTON_STYLE = {
             width: "auto",
@@ -74,6 +75,10 @@
         };
 
         const start = function () {
+
+            // WHY page.fit: under MIN_PAGE_WIDTH the page is drawn at that width and made smaller (zoom 1 above it)
+            page.fit(MIN_PAGE_WIDTH);
+            page.onResize(function () { page.fit(MIN_PAGE_WIDTH); });
 
             page.color = "whitesmoke";
             newId = findNextAvailableID();
@@ -234,12 +239,14 @@
 
         const initFormButtons = function () {
 
-            // Buttons Group
+            // Buttons Group (WHY wrap: in a narrow window the form is narrow too)
             HGroup({
                 fit: 1,
                 gap: 8,
                 padding: [20, 8],
                 align: "left center",
+                wrap: 1,
+                css: { maxWidth: "100%" },
             });
 
                 createUpdateButton();

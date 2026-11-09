@@ -74,7 +74,7 @@
                     });
 
                     // GROUP: Buttons
-                    HGroup({ width: "auto", height: "auto", gap: 8 });
+                    HGroup({ width: "auto", height: "auto", gap: 8, wrap: 1, css: { maxWidth: "100%" } }); // WHY wrap: a phone
 
                         addSampleButton("Orders +1", function () {
                             const orderCount = tabsBasic.getTab("orders").count || 0;

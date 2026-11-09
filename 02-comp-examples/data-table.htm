@@ -163,7 +163,7 @@
                 sortDirection: "desc",
             });
 
-            HGroup({ hug: 1, gap: 8 });
+            HGroup({ hug: 1, gap: 8, wrap: 1, css: { maxWidth: "100%" } }); // WHY wrap: a phone
                 createButton("Add a row", function () {
                     rows.push([table.getBiggestId() + 1, "New Customer", "İstanbul", 999, "Waiting"]);
                     table.updateRows(rows);

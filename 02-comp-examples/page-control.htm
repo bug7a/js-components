@@ -115,7 +115,7 @@
                 // SAMPLE 3: App screens, add / remove pages
                 startCard("3. Screens (vertical slide, pageScroll: 1)", "Each page scrolls its own content. Pages can be added and removed at run time.");
 
-                    HGroup({ width: "100%", height: "auto", align: "left top", gap: 16 });
+                    HGroup({ width: "100%", height: "auto", align: "left top", gap: 16, wrap: 1 }); // WHY wrap: a phone
 
                         screens = PageControl({
                             width: 260,

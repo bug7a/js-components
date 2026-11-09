@@ -107,9 +107,10 @@
         ScrollArea({ align: "center top", gap: 30, padding: [20, 50] });
 
             // GROUP: The card of the button standards
+            // WHY a minimum height, not a height: on a phone the rows wrap, and the card grows with them
             VGroup({
                 width: CARD_WIDTH,
-                height: CARD_HEIGHT,
+                height: "auto",
                 align: "left top",
                 gap: 0,
                 color: "white",
@@ -118,11 +119,11 @@
                 borderColor: INK,
                 boxShadow: "0 10px 30px rgba(0, 0, 0, 0.08), " + BOTTOM_LINE,
                 clipContent: 0,
-                css: { maxWidth: "calc(100vw - 40px)" },
+                css: { maxWidth: "calc(100vw - 40px)", minHeight: CARD_HEIGHT + "px" },
             });
 
                 // GROUP: Content (it fills the card: the height of the card in its edge)
-                VGroup({ width: "100%", height: CARD_HEIGHT - 2 * CARD_BORDER, align: "left top", gap: 8, padding: [24, 22] });
+                VGroup({ width: "100%", height: "auto", align: "left top", gap: 8, padding: [24, 22], css: { minHeight: (CARD_HEIGHT - 2 * CARD_BORDER) + "px" } });
 
                     Label({
                         plainText: "Button styles",
@@ -142,7 +143,7 @@
 
                     // PRIMARY: the actions, each in its own color (it waits while the job runs)
                     createSectionTitle("Primary (ozden)");
-                    HGroup({ width: "100%", height: "auto", align: "left center", gap: 10, color: PRIMARY_ROW_COLOR, clipContent: 0 });
+                    HGroup({ width: "100%", height: "auto", align: "left center", gap: 10, wrap: 1, color: PRIMARY_ROW_COLOR, clipContent: 0 }); // WHY wrap: a phone
                         SmartButton({ labelText: "Edit", iconFile: ICONS.edit, style: TEAL_ACTION, onClick: waitForJob });
                         SmartButton({ labelText: "Save", iconFile: ICONS.save, style: CYAN_ACTION, onClick: waitForJob });
                         SmartButton({ labelText: "Send", iconFile: ICONS.send, style: SKY_ACTION, onClick: waitForJob });
@@ -152,7 +153,7 @@
 
                     // ALTERNATIVE (ozden2): the white trash (it asks before it deletes), plain buttons in a few colors
                     createSectionTitle("Alternative (ozden2)");
-                    HGroup({ height: "auto", align: "left center", gap: 10, clipContent: 0 });
+                    HGroup({ height: "auto", align: "left center", gap: 10, wrap: 1, clipContent: 0 });
                         SmartButton({
                             styleName: "ozden2",
                             tone: "white",
@@ -171,7 +172,7 @@
 
                     // ALTERNATIVE (ozden3): the same kinds with a fainter edge, a gray bin
                     createSectionTitle("Alternative (ozden3)");
-                    HGroup({ width: "100%", height: "auto", align: "left center", gap: 10, clipContent: 0 });
+                    HGroup({ width: "100%", height: "auto", align: "left center", gap: 10, wrap: 1, clipContent: 0 });
                         SmartButton({
                             styleName: "ozden3",
                             width: TRASH_WIDTH,
