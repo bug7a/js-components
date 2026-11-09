@@ -1,18 +1,21 @@
 /* Bismillah */
 
 /*
-CHROME TOOLS: the parts the Node tools of test/ share (compare-pages.js, focus-rings.js, screenshot.js):
-the server of the repository (and of an old commit), git, puppeteer and Chrome, the list of the samples.
+CHROME TOOLS: the parts the Node tools of test/ share (compare-pages.js, focus-rings.js, run-tests.js, screenshot.js):
+the server of the repository (and of an old commit), git, puppeteer and Chrome, the list of the samples, and the runs
+of the tools (a tool says when another one runs at the same time).
 
     const chrome = require("./_chrome.js");
     const server = await chrome.startServer({ commit: "HEAD", listFolders: true, pages: { "/__x__.htm": html } });
     const browser = await chrome.launchChrome();
+    const run = chrome.startRun("screenshot");   // ... run.noteOthers() on the way; run.end() in a finally
 */
 
 "use strict";
 
 const http = require("http");
 const fs = require("fs");
+const os = require("os");
 const path = require("path");
 const { execFileSync } = require("child_process");
 
@@ -203,8 +206,108 @@ const helpText = function (toolFile) {
     return header.replace("/*", "").trim();
 };
 
+// *** THE RUNS OF THE TOOLS: a tool that opens Chrome says when another one runs at the same time.
+// WHY: two browsers side by side change the timing (a test fails, a picture is taken in a motion, compare-pages finds
+//      false differences), and the sessions of one folder run the tools at the same time.
+
+const RUNS_FOLDER = path.join(os.tmpdir(), "basicjs-tool-runs"); // 4242.json while the run 4242 runs: { pid, tool, since }
+const TOLD_PART = ".told-by-"; // 4242.told-by-4343.json: the run 4343 told the run 4242 that it runs too
+
+const twoDigits = function (number) {
+    return String(number).padStart(2, "0");
+};
+
+const isRunning = function (pid) {
+    try {
+        process.kill(pid, 0); // WHY 0: it only asks whether the process is there
+        return true;
+    } catch (error) {
+        return error.code === "EPERM"; // it is there, but of another user
+    }
+};
+
+const readJson = function (file) {
+    try {
+        return JSON.parse(fs.readFileSync(file, "utf8"));
+    } catch (error) {
+        return null; // it is gone, or it is being written
+    }
+};
+
+const listRunFiles = function () {
+    try {
+        return fs.readdirSync(RUNS_FOLDER);
+    } catch (error) {
+        return [];
+    }
+};
+
+// A run that lives now, from its file (null: it is gone). The files of a run that ended without end() (stopped with
+// Ctrl + C) are deleted: its own file and the files that told it of others.
+const readLivingRun = function (name) {
+    const file = path.join(RUNS_FOLDER, name);
+    const pid = Number(name.split(".")[0]);
+    if (isRunning(pid)) return name.includes(TOLD_PART) ? null : readJson(file);
+    fs.rmSync(file, { force: true });
+    return null;
+};
+
+const findLivingRuns = function () {
+    return listRunFiles().map(readLivingRun).filter(Boolean);
+};
+
+// A run of a tool, from its start to end(): it looks for the other runs (noteOthers: at the start, on the way and in
+// end()) and tells them that it runs too, so a short run that started first knows of a later one at its end.
+//     const run = chrome.startRun("screenshot");
+//     try { ... run.noteOthers() before a page ... } finally { run.end(); }
+//     if (run.hasOthers()) console.log(run.describeOthers());
+const startRun = function (tool) {
+    const now = new Date();
+    const self = { pid: process.pid, tool: tool, since: twoDigits(now.getHours()) + ":" + twoDigits(now.getMinutes()) };
+    const ownFile = path.join(RUNS_FOLDER, process.pid + ".json");
+    const toldStart = process.pid + TOLD_PART;
+    const others = new Map();
+    fs.mkdirSync(RUNS_FOLDER, { recursive: true });
+    fs.writeFileSync(ownFile, JSON.stringify(self));
+
+    const tell = function (run) {
+        fs.writeFileSync(path.join(RUNS_FOLDER, run.pid + TOLD_PART + process.pid + ".json"), JSON.stringify(self));
+    };
+
+    const noteOthers = function () {
+        findLivingRuns().forEach(function (run) {
+            if (run.pid === process.pid) return;
+            others.set(run.pid, run);
+            tell(run);
+        });
+        listRunFiles().filter(function (name) { return name.startsWith(toldStart); }).forEach(function (name) {
+            const run = readJson(path.join(RUNS_FOLDER, name));
+            if (run) others.set(run.pid, run);
+        });
+    };
+
+    const end = function () {
+        noteOthers();
+        fs.rmSync(ownFile, { force: true });
+        listRunFiles().filter(function (name) { return name.startsWith(toldStart); }).forEach(function (name) {
+            fs.rmSync(path.join(RUNS_FOLDER, name), { force: true });
+        });
+    };
+
+    const describeOthers = function () {
+        const list = [...others.values()].map(function (run) {
+            return run.tool + " (pid " + run.pid + ", since " + run.since + ")";
+        }).join(", ");
+        return "NOTE: another tool with Chrome runs in this time too: " + list + ". Two browsers side by side change "
+            + "the timing: run again alone what failed or differs.";
+    };
+
+    noteOthers();
+    return { noteOthers, end, describeOthers, hasOthers: function () { return others.size > 0; } };
+};
+
 module.exports = {
     ROOT, SAMPLES_FOLDER, OLD_PATH,
     runGit, readGitLines, isInCommit,
-    listSamples, toPagePath, startServer, launchChrome, guardPage, sleep, helpText,
+    listSamples, toPagePath, startServer, launchChrome, guardPage, sleep, helpText, startRun,
 };

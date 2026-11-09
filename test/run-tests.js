@@ -17,7 +17,8 @@ Then the catalog (not with --commit): every sample of 02-comp-examples is a samp
 sample named there is a file.
 The exit code is 1 when a page failed or did not finish, 2 when the tool itself could not run.
 It needs Chrome and puppeteer-core, like compare-pages.js (CHROME_PATH for another place of Chrome).
-WHY one page at a time: the pages measure sizes and times; two pages side by side made each other slow.
+WHY one page at a time: the pages measure sizes and times; two pages side by side made each other slow. When another
+tool with Chrome runs at the same time (another session), it says so at the start and at the end (a NOTE).
 WHY --commit: a test page is committed in parts (each session its own lines); the folder has the whole page and passes,
 while the commits had a test without its first lines, and their page did not open for two days.
 */
@@ -131,9 +132,12 @@ const main = async function () {
     // A commit: the server gives its files under OLD_PATH (the page and the scripts it loads from there)
     const origin = "http://127.0.0.1:" + server.address().port + ((options.commit) ? chrome.OLD_PATH : "");
     let isAllPassed = true;
+    const run = chrome.startRun("run-tests");
+    if (run.hasOthers()) console.log(run.describeOthers());
 
     try {
         for (const name of options.names) {
+            run.noteOthers();
             const query = (options.only) ? "?only=" + encodeURIComponent(options.only) : "";
             const result = await runPage(browser, origin + "/" + PAGES[name] + query);
             console.log(result.title);
@@ -143,10 +147,12 @@ const main = async function () {
     } finally {
         await browser.close();
         server.close();
+        run.end();
     }
 
     // WHY not with --commit: the catalog of the folder, not of the commit
     if (!options.commit && !printCatalog()) isAllPassed = false;
+    if (run.hasOthers()) console.log(run.describeOthers());
     return (isAllPassed) ? 0 : 1;
 };
 

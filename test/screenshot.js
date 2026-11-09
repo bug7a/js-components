@@ -42,6 +42,7 @@ Options:
     --no-picture      only the --print values and the errors: no picture is saved
 
 It prints the file, and the errors of the page (exit code 1 when the page throws, or --clip or --click finds nothing).
+When another tool with Chrome runs at the same time (another session), it says so at the end (a NOTE).
 The pictures older than 48 hours in _screenshots/ are deleted first (never readme.md).
 The server lists a folder as Live Server does, so the Open Folder of basic designer works in it.
 It needs Chrome and puppeteer-core, like compare-pages.js (CHROME_PATH for another place of Chrome).
@@ -422,6 +423,7 @@ const main = async function () {
     const origin = "http://127.0.0.1:" + server.address().port;
     const file = path.join(SCREENSHOTS_FOLDER, todayText() + "-" + options.name + ".png");
     let hasError = false;
+    const run = chrome.startRun("screenshot");
 
     try {
         const after = await takePicture(browser, origin + "/" + options.page, options);
@@ -441,9 +443,11 @@ const main = async function () {
     } finally {
         await browser.close();
         server.close();
+        run.end();
     }
 
     if (!options.isNoPicture) console.log(path.relative(ROOT, file));
+    if (run.hasOthers()) console.log(run.describeOthers());
     return (hasError) ? 1 : 0;
 };
 

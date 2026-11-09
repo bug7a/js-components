@@ -46,8 +46,9 @@ and every typed field; not in pre, code or a textarea: code is text there). A co
 text", DIFF). In the old page too: printed under the result, which stays (MarkdownView shows one on purpose). A page
 that can not be opened in the commit, or that is not in it, is still opened now and looked at.
 The files of a run are in a folder of its own (compare-pages/<day-time-process> in the temp folder of the system);
-the folders older than 48 hours are deleted when a run starts. When another compare-pages runs at the same time (an
-other session), it says so at the start and under the totals: two browsers side by side give false differences.
+the folders older than 48 hours are deleted when a run starts. When another tool with Chrome runs at the same time
+(compare-pages, run-tests, screenshot or focus-rings of another session), it says so at the start and under the
+totals: two browsers side by side give false differences.
 
 It presses and types, nothing else: hover, drag and the keyboard are not measured.
 Before the screenshot an endless animation (a turning ring, pulsing dots) is stopped at its start, in both pages.
@@ -65,8 +66,6 @@ const { ROOT, SAMPLES_FOLDER, OLD_PATH, readGitLines, isInCommit, listSamples, s
 
 const OUT_ROOT = path.join(os.tmpdir(), "compare-pages");
 const OLD_RUN_AGE = 48 * 60 * 60 * 1000; // ms: the folder of an older run is deleted when a run starts
-const RUNNING_FILE = "running.json"; // in the folder of a run while it runs: { pid, since }
-const TOLD_FILE_START = "told-by-"; // told-by-4242.json: the run 4242 told this one that it runs too
 
 const DESKTOP_SIZE = { width: 1280, height: 800 };
 const PHONE_SIZE = { width: 390, height: 844 };
@@ -104,7 +103,6 @@ const runFolderName = function () {
 };
 
 const OUT_FOLDER = path.join(OUT_ROOT, runFolderName());
-const THIS_RUN = { pid: process.pid, since: twoDigits(RUN_START.getHours()) + ":" + twoDigits(RUN_START.getMinutes()) };
 
 // WHY by age, not all: the folder of another run may be in use now.
 const deleteOldRuns = function () {
@@ -120,70 +118,9 @@ const deleteOldRuns = function () {
     });
 };
 
-const isRunning = function (pid) {
-    try {
-        process.kill(pid, 0); // WHY 0: it only asks whether the process is there
-        return true;
-    } catch (error) {
-        return error.code === "EPERM"; // it is there, but of another user
-    }
-};
-
-const readJson = function (file) {
-    try {
-        return JSON.parse(fs.readFileSync(file, "utf8"));
-    } catch (error) {
-        return null; // it is not there (a run that is done), or it is being written
-    }
-};
-
-// The other runs of this tool that run now: [{ pid, since, folder }]
-const findOtherRuns = function () {
-    if (!fs.existsSync(OUT_ROOT)) return [];
-    const runs = fs.readdirSync(OUT_ROOT).map(function (name) {
-        const run = readJson(path.join(OUT_ROOT, name, RUNNING_FILE));
-        return run ? Object.assign(run, { folder: name }) : null;
-    });
-    return runs.filter(function (run) {
-        return run && run.pid !== process.pid && isRunning(run.pid);
-    });
-};
-
-// WHY: a run that started first and looks only before its pages may never see one that started later.
-const tellOtherRun = function (run) {
-    try {
-        fs.writeFileSync(path.join(OUT_ROOT, run.folder, TOLD_FILE_START + process.pid + ".json"), JSON.stringify(THIS_RUN));
-    } catch (error) {
-        // that run is done, and its folder is gone
-    }
-};
-
-const namesOfToldFiles = function () {
-    if (!fs.existsSync(OUT_FOLDER)) return [];
-    return fs.readdirSync(OUT_FOLDER).filter(function (name) { return name.startsWith(TOLD_FILE_START); });
-};
-
-// The runs that told this one that they run too
-const readTellers = function () {
-    return namesOfToldFiles().map(function (name) { return readJson(path.join(OUT_FOLDER, name)); }).filter(Boolean);
-};
-
-const markRunning = function () {
-    fs.mkdirSync(OUT_FOLDER, { recursive: true });
-    fs.writeFileSync(path.join(OUT_FOLDER, RUNNING_FILE), JSON.stringify(THIS_RUN));
-};
-
-// The files that say it runs go, and an empty folder too (a run in which every page was the same).
-const unmarkRunning = function () {
-    fs.rmSync(path.join(OUT_FOLDER, RUNNING_FILE), { force: true });
-    namesOfToldFiles().forEach(function (name) { fs.rmSync(path.join(OUT_FOLDER, name), { force: true }); });
+// A run in which every page was the same leaves no folder.
+const deleteEmptyFolder = function () {
     if (fs.existsSync(OUT_FOLDER) && fs.readdirSync(OUT_FOLDER).length === 0) fs.rmdirSync(OUT_FOLDER);
-};
-
-const describeOtherRuns = function (runs) {
-    const list = runs.map(function (run) { return "pid " + run.pid + " since " + run.since; }).join(", ");
-    return "NOTE: another compare-pages runs in this time too (" + list + "): two browsers side by side give false "
-        + "differences of timing: check a DIFF or LIVE again alone.";
 };
 
 // *** THE PAGES TO COMPARE:
@@ -1031,18 +968,9 @@ const comparePage = async function (browser, port, pair, sizes) {
     return "SAME";
 };
 
-// The pages in one browser. The other runs of this tool are looked for before every page (one may start later).
-const compareAll = async function (options, pages, sizes) {
-    const otherRuns = new Map();
-    const noteOtherRuns = function () {
-        findOtherRuns().forEach(function (run) {
-            tellOtherRun(run);
-            otherRuns.set(run.pid, run);
-        });
-        readTellers().forEach(function (run) { otherRuns.set(run.pid, run); });
-    };
-    noteOtherRuns();
-    if (otherRuns.size > 0) console.log(describeOtherRuns([...otherRuns.values()]) + "\n");
+// The pages in one browser. The other tools with Chrome are looked for before every page (one may start later).
+const compareAll = async function (options, pages, sizes, run) {
+    if (run.hasOthers()) console.log(run.describeOthers() + "\n");
 
     const server = await chrome.startServer({ commit: options.base });
     const browser = await chrome.launchChrome();
@@ -1050,7 +978,7 @@ const compareAll = async function (options, pages, sizes) {
 
     try {
         for (const pair of pages) {
-            noteOtherRuns();
+            run.noteOthers();
             if (!isInCommit(options.base, pair.oldPath)) {
                 totals[await lookAtNewPage(browser, server.address().port, pair, sizes, options.base)]++;
                 continue;
@@ -1062,9 +990,9 @@ const compareAll = async function (options, pages, sizes) {
         server.close();
     }
 
-    noteOtherRuns();
+    run.noteOthers();
     printTotals(totals);
-    if (otherRuns.size > 0) console.log(describeOtherRuns([...otherRuns.values()]));
+    if (run.hasOthers()) console.log(run.describeOthers());
     return (totals.DIFF > 0) ? 1 : 0;
 };
 
@@ -1083,11 +1011,13 @@ const main = async function () {
     }
 
     deleteOldRuns();
-    markRunning();
+    fs.mkdirSync(OUT_FOLDER, { recursive: true });
+    const run = chrome.startRun("compare-pages");
     try {
-        return await compareAll(options, pages, sizes);
+        return await compareAll(options, pages, sizes, run);
     } finally {
-        unmarkRunning();
+        run.end();
+        deleteEmptyFolder();
     }
 };
 

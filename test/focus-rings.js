@@ -24,7 +24,8 @@ The results:
 It clicks, nothing else: the ring of the keyboard itself (Tab) is not measured.
 It needs Chrome and puppeteer-core (npm install puppeteer-core; CHROME_PATH for another place of Chrome).
 WHY three tabs side by side: each check compares a tab with itself (before and after blur), so the tabs do not
-disturb it (as they disturb the pictures of compare-pages).
+disturb it (as they disturb the pictures of compare-pages). When another tool with Chrome runs at the same time
+(another session), it says so at the start and at the end (a NOTE).
 */
 
 "use strict";
@@ -281,6 +282,8 @@ const main = async function () {
 
     const server = await chrome.startServer({ pages: { [SELF_CHECK_PATH]: SELF_CHECK_PAGE } });
     const browser = await chrome.launchChrome();
+    const run = chrome.startRun("focus-rings");
+    if (run.hasOthers()) console.log(run.describeOthers() + "\n");
     try {
         const port = server.address().port;
         if (!await runSelfCheck(browser, port)) return 2;
@@ -290,6 +293,8 @@ const main = async function () {
     } finally {
         await browser.close();
         server.close();
+        run.end();
+        if (run.hasOthers()) console.log(run.describeOthers());
     }
 };
 
