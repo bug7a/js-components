@@ -10,7 +10,8 @@ UI COMPONENT TEMPLATE
   another look.
 - A list of items: an icon, a title and a description on every row, or your own row (createItemView).
 - Layouts: "vertical" (a list), "horizontal" (one row of tiles: categories, cards) and "grid" (tiles that
-  wrap: files, icons, pictures). setLayout() changes it later.
+  wrap: files, icons, pictures). setLayout() changes it later. style.tile.fitRow: 1: the tiles of a grid share the
+  whole row (as many as fit at tile.width, then wider), so no empty end is left before the scroll bar.
 - Selection: "single", "multiple" or "none". The selected keys: getSelectedKeys(), the items: getSelected().
   style.selected.canSelectAgain: 0 (ozden, ozdenDark; light and dark: 1): in a single list the selected row can not
   be chosen again: a click, Enter or Space does nothing (no onItemClick), no look under the mouse, no hand cursor.
@@ -152,6 +153,7 @@ const ItemListDefaults = {
             gap: 15,
             spacing: 4, // Between the tiles
             listPadding: [12, 5], // Around the tiles
+            fitRow: 0, // 1 (layout "grid"): the tiles share a row: as many as fit at their width, then wider: no empty end
             iconSize: 70,
             frameSize: 90, // A circle behind the icon. 0: no circle
             frameColor: White(0.3),
@@ -542,9 +544,15 @@ const ItemList = function (params = {}) {
         createTexts(row, entry, isTile);
     };
 
+    const isFitRowGrid = function () {
+        return box.layout === "grid" && basic.isOn(_s.tile.fitRow);
+    };
+
     const createRowBox = function (isTile) {
         if (isTile) {
-            return VGroup({ width: _s.tile.width, height: _s.tile.height, align: "center top", gap: _s.tile.gap, padding: _s.tile.padding });
+            // WHY "auto": a cell of the grid of fitRow gives the width (createListGroup)
+            const width = isFitRowGrid() ? "auto" : _s.tile.width;
+            return VGroup({ width: width, height: _s.tile.height, align: "center top", gap: _s.tile.gap, padding: _s.tile.padding });
         }
         return HGroup({ width: "100%", height: _s.row.height, align: "left center", gap: _s.row.gap, padding: _s.row.padding });
     };
@@ -645,7 +653,10 @@ const ItemList = function (params = {}) {
             return group;
         }
         if (box.layout === "grid") {
-            return HGroup({ width: "100%", height: "auto", align: "left top", gap: _s.tile.spacing, padding: _s.tile.listPadding, wrap: 1 });
+            const grid = HGroup({ width: "100%", height: "auto", align: "left top", gap: _s.tile.spacing, padding: _s.tile.listPadding, wrap: 1 });
+            // tile.fitRow: columns of tile.width at least that fill the row (the browser counts them at every width)
+            if (isFitRowGrid()) grid.css = { display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(" + _s.tile.width + "px, 1fr))" };
+            return grid;
         }
         const group = VGroup({ width: "100%", height: "auto", align: "left top", gap: _s.list.gap, padding: _s.box.padding });
         group.css.alignItems = "stretch";

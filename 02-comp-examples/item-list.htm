@@ -144,6 +144,7 @@
                 height: STYLE_LIST_HEIGHT,
                 layout: "grid",
                 styleName: styleName,
+                style: { tile: { fitRow: 1 } }, // the tiles share the row: no empty end before the scroll bar
                 items: PICTURES,
                 selectedKeys: ["fennel"],
                 onChange: function (self) { showSelection(info, self); },
@@ -203,10 +204,15 @@
 
                     ItemList({
                         width: "100%",
-                        height: 216,
+                        height: 132, // WHY: the tiles (115), the room around them and the scroll bar under them
                         layout: "horizontal",
                         items: DRINKS.map(withoutDescription),
                         selectedKeys: ["coffee"],
+                        style: {
+                            box: { color: "white" }, // WHY: the white of the card (ozden has its own gray)
+                            tile: { width: 96, height: "auto", padding: [4, 12], gap: 8, iconSize: 46, frameSize: 62, frameColor: Black(0.04), listPadding: [8, 4] }, // frameColor: a circle seen on white
+                            title: { fontSize: 15 },
+                        },
                     });
 
                 endCard();
@@ -221,6 +227,7 @@
                         styleName: "dark",
                         selection: "multiple",
                         items: DRINKS,
+                        style: { tile: { fitRow: 1 } }, // the tiles share the row: no empty end before the scroll bar
                     });
 
                 endCard();

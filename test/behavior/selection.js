@@ -725,6 +725,27 @@ test("ItemList gallery: a photo fills its square with no filter, the selected on
         JSON.stringify({ light: light, dark: dark, ozden: ozden }));
 });
 
+test("ItemList grid, style.tile.fitRow: 1: the tiles share the row (as many as fit at tile.width, then wider), no empty end", async function () {
+    const TILE = { width: 100, spacing: 8, listPadding: 6 };
+    const rectsOf = function (fitRow) {
+        const list = ItemList({ left: 0, top: 0, width: 300, height: 300, layout: "grid", items: ["A", "B", "C"], style: { tile: Object.assign({ fitRow: fitRow }, TILE) } });
+        const rects = ["0", "1", "2"].map(function (key) { return list.getRow(key).elem.getBoundingClientRect(); });
+        const end = list.wrapper.elem.getBoundingClientRect().right - TILE.listPadding;
+        list.remove();
+        return { rects: rects, end: end };
+    };
+    // 300 - 2 (the edge) - 12 (the padding) = 286 px: two columns of 100 + 8 fit, three do not: two of 139
+    const fitted = rectsOf(1);
+    const plain = rectsOf(0);
+    const r = fitted.rects;
+    const isTwoColumns = Math.round(r[0].top) === Math.round(r[1].top) && r[2].top > r[0].top;
+    const isFilled = Math.abs(r[1].right - fitted.end) < 1.5 && Math.abs(r[0].width - r[1].width) < 1 && r[0].width > TILE.width;
+    const isPlainKept = Math.round(plain.rects[0].width) === TILE.width;
+    check("ItemList grid, style.tile.fitRow: 1: the tiles share the row (as many as fit at tile.width, then wider), no empty end",
+        isTwoColumns && isFilled && isPlainKept,
+        "widths: " + r.map(function (rect) { return Math.round(rect.width); }).join(", ") + ", the end of the second: " + Math.round(r[1].right) + " (the row ends at " + Math.round(fitted.end) + "), without fitRow: " + Math.round(plain.rects[0].width));
+});
+
 // *** TINY SELECT (comp/tiny-select.js)
 
 test("TinySelect: an index that is not in the list shows emptyText (no error, no onChange), getSelectedItem() is null", async function () {
