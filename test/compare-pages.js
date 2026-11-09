@@ -24,6 +24,10 @@ In both pages the clock stands still at 6 Nov 2026 12:00 and Math.random gives t
     node test/compare-pages.js --init "localStorage.setItem('appid_login', '{}')" ...
                                                         --init: JavaScript before the scripts of the page (a login
                                                         that the page keeps in localStorage); with --run, in that order
+    node test/compare-pages.js --picture-only draft.htm=copy.htm
+                                                        only the picture after the load (and --run): no presses, no
+                                                        typing, no DOM (the log stays); a draft of _designs/ and a copy
+                                                        of it drawn by the component, in seconds
     node test/compare-pages.js --moving-clock ...       the clock of the pages goes on from 6 Nov 2026 12:00, for a
                                                         page that waits for the time to pass (without it Date.now()
                                                         and new Date() give that moment all the time)
@@ -435,6 +439,9 @@ const runPage = async function (browser, url, size, steps) {
         const htmlAsText = createHtmlRecorder(page);
         await htmlAsText.look("after the load");
         const counts = await page.evaluate(function () { return window.__compare.collectTargets(); });
+
+        // WHY: a draft and a copy of it made with the component have other DOMs, and their presses took minutes.
+        if (steps.isPictureOnly) return { picture, dom: "", endDom: "", presses: "", log: log.join("\n"), counts, htmlAsText: htmlAsText.list() };
 
         const presses = [];
         const startUrl = page.url();
@@ -886,12 +893,13 @@ const readWidth = function (text) {
 
 const readOptions = function (args) {
     const options = { base: "HEAD", isAll: false, isHelp: false, pages: [], widths: [], init: "", runs: [],
-        isClockStopped: true };
+        isClockStopped: true, isPictureOnly: false };
     for (let i = 0; i < args.length; i++) {
         if (args[i] === "--base") options.base = args[++i];
         else if (args[i] === "--init") options.init = args[++i] || "";
         else if (args[i] === "--run") options.runs.push(args[++i] || "");
         else if (args[i] === "--moving-clock") options.isClockStopped = false;
+        else if (args[i] === "--picture-only") options.isPictureOnly = true;
         else if (args[i] === "--all") options.isAll = true;
         else if (args[i] === "--width") options.widths.push(readWidth(args[++i]));
         else if (args[i] === "--help") options.isHelp = true;
@@ -911,7 +919,7 @@ const choosePages = function (options) {
     return pairs.flatMap(function (pair) {
         return runs.map(function (run, index) {
             const runName = (runs.length > 1) ? "run" + (index + 1) : "";
-            const steps = { init: options.init, run: run, isClockStopped: options.isClockStopped };
+            const steps = { init: options.init, run: run, isClockStopped: options.isClockStopped, isPictureOnly: options.isPictureOnly };
             return Object.assign({}, pair, { steps: steps, runName: runName });
         });
     });
