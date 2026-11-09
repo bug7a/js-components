@@ -984,11 +984,7 @@ CustomersPage.createTinySelect = function(list, onSelect, selectedIndex = 0) {
 CustomersPage.getSmartTableStyle = function(libPath) {
     const S = CustomersPage.STYLE;
     return {
-        scrollBarParams: {
-            bar_border: 0, bar_round: 3, bar_borderColor: Ink(0.15), bar_width: 4, bar_mouseOverWidth: 4,
-            bar_mouseOverColor: T.scrollBar, bar_opacity: 0.4, bar_mouseOverOpacity: 0.9, bar_padding: 2, bar_color: T.scrollBar,
-            neverHide: 0, showDots: 0,
-        },
+        scrollBarParams: Theme.scrollBarParams(),
         // WHY: Filtre kutusu ile alt bar aynı renkti, kutu görünmüyordu. Bar kart rengine, kutu ise alan rengine (FIELD_COLOR) alındı.
         searchInputParams: {
             width: "50%", height: 34, border: 1, round: 8, color: S.FIELD_COLOR, borderColor: S.CARD_BORDER_COLOR,

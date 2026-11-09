@@ -233,20 +233,7 @@ const UsersPage = function(params = {}) {
             sortByTitleIndex: 0,
             sortDirection: "Z-A", // "A-Z" or "Z-A"
             invertColor: 0,
-            scrollBarParams: {
-                bar_border: 0,
-                bar_round: 3,
-                bar_borderColor: Ink(0.15),
-                bar_width: 4,
-                bar_mouseOverWidth: 4,
-                bar_mouseOverColor: T.scrollBar,
-                bar_opacity: 0.4,
-                bar_mouseOverOpacity: 0.9,
-                bar_padding: 2,
-                bar_color: T.scrollBar,
-                neverHide: 0,
-                showDots: 0,
-            },
+            scrollBarParams: Theme.scrollBarParams(),
             // WHY: Kutunun çerçevesi yoktu, alt çizgisi de koyu geliyordu; filtre kutusu alt barda belli olmuyordu.
             searchInputParams: {
                 width: "50%",

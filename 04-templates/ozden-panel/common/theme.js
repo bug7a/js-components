@@ -388,18 +388,23 @@ Theme.tableStyle = function(look = {}) {
         body: { color: bodyColor, paddingY: 10 },
         cell: { textColor: look.textColor || Ink(0.8), fontSize: look.fontSize || 14, padding: [8, 4] },
         rowHover: { color: Ink(0.05), lineColor: Ink(0.1) },
-        scrollBar: { neverHide: 0, showDots: 0, bar_color: T.scrollBar },
+        scrollBar: Theme.scrollBarParams(),
     };
 
 };
 
-// The ScrollArea of the panel (a page, the details of a row): the bar of its tables, thin, without the dots, in the
-// color of the theme; it shows while the content moves.
+// The scroll bar of the panel (its tables and its pages): thin, without the dots, it shows while the content moves;
+// in the color of the theme, also under the mouse (there it is less transparent). The other params are the ones of
+// ScrollBar (basic/scroll-bar.js), the same as the defaults of SmartTable.
+// USAGE: SmartTable({ scrollBarParams: Theme.scrollBarParams(), ... })
+Theme.scrollBarParams = function() {
+    return { neverHide: 0, showDots: 0, bar_color: T.scrollBar, bar_mouseOverColor: T.scrollBar };
+};
+
+// The ScrollArea of the panel (a page, the details of a row): the bar of its tables.
 // USAGE: ScrollArea({ gap: 16, padding: 24, style: Theme.scrollAreaStyle() }) ... endGroup();
 Theme.scrollAreaStyle = function() {
-    return {
-        scrollBar: { neverHide: 0, showDots: 0, bar_color: T.scrollBar, bar_mouseOverColor: T.scrollBar },
-    };
+    return { scrollBar: Theme.scrollBarParams() };
 };
 
 // ["NAME", "CITY"], ["60%", "39%"], ["left", "right"] -> the columns of TinyTable
