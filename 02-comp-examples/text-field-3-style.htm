@@ -40,10 +40,10 @@
                     focusBackgroundColor: "whitesmoke",
                     lineColor: "transparent",
                     focusLineColor: "transparent",
+                    backBorderColor: "lightgray", // WHY params: TextField paints its edge at every focus and blur
+                    focusBackBorderColor: "lightgray",
                 });
                 myInput1.setTitleText("FIRST NAME");
-                myInput1.background.border = 1;
-                myInput1.background.borderColor = "lightgray";
 
                 // INPUT: #2
                 const myInput2 = TextField({
