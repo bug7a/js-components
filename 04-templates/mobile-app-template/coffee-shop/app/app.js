@@ -493,7 +493,7 @@ App.createMenu = function () {
             height: "auto",
             items: AppSettings.menu.map((item) => ({ key: item.pageId, text: item.text, description: item.description, iconFile: item.iconFile })),
             selection: "none",
-            styleName: "modern",
+            styleName: "light",
             style: { box: { border: 0 } },
             onItemClick: function (self, item) {
                 App.menu.close();

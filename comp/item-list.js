@@ -12,7 +12,7 @@ UI COMPONENT TEMPLATE
 - Layouts: "vertical" (a list), "horizontal" (one row of tiles: categories, cards) and "grid" (tiles that
   wrap: files, icons, pictures). setLayout() changes it later.
 - Selection: "single", "multiple" or "none". The selected keys: getSelectedKeys(), the items: getSelected().
-  style.selected.canSelectAgain: 0 (ozden, ozdenDark; modern and dark: 1): in a single list the selected row can not
+  style.selected.canSelectAgain: 0 (ozden, ozdenDark; light and dark: 1): in a single list the selected row can not
   be chosen again: a click, Enter or Space does nothing (no onItemClick), no look under the mouse, no hand cursor.
   The keys can still go to it (its focus ring; a screen reader reads it as selected).
   onChange(self, selectedItems) is NOT called at create time, by setItems() or with silent: 1.
@@ -48,7 +48,9 @@ UI COMPONENT TEMPLATE
   (if it is loaded).
 - Style packages: "ozden" (default; the name "classic" still works), "ozdenDark" (the same on a dark page), "gallery" and
   "galleryDark" (pictures: layout "grid", a big photo on every tile with its title under it),
-  "modern", "dark", "minimal" and "minimalDark" (lines, 28 px rows: _designs/minimal-theme.htm).
+  "light" and "dark" (the light and dark look of the kit: a white box with one thin line, flat 56 px rows, the
+  selected one in a tint of the accent with a full mark: _designs/item-list.htm), "minimal" and "minimalDark"
+  (lines, 28 px rows: _designs/minimal-theme.htm).
   Select with styleName. (ItemList.styles)
 
 USAGE:
@@ -66,7 +68,7 @@ list.setSelected(["broccoli"], 1);          // silent: onChange is not called
 list.addItem({ key: "tomato", text: "Tomato", description: "Vegetable" });
 list.updateItem("tomato", { description: "Fruit, really" });
 list.setLayout("grid");
-ItemList({ selection: "multiple", styleName: "modern" });
+ItemList({ selection: "multiple", styleName: "light" });
 ItemList({ layout: "horizontal", height: 200, styleName: "dark" });
 ItemList({ showSearch: 1, searchParams: { placeholder: "Ara" } });
 ItemList({
@@ -114,7 +116,7 @@ const ItemListDefaults = {
     ariaLabel: "List",
     onItemClick: function (self, item, index, event) { },
     onChange: function (self, selectedItems) { }, // Not at create time, not by setItems(), not with silent: 1
-    styleName: "ozden", // "ozden", "ozdenDark", "modern", "dark", "gallery", "galleryDark", "minimal", "minimalDark" or a name added to ItemList.styles
+    styleName: "ozden", // "ozden", "ozdenDark", "light", "dark", "gallery", "galleryDark", "minimal", "minimalDark" or a name added to ItemList.styles
     style: { // The ozden style package (default)
         box: {
             color: "whitesmoke", // WHY: A row is white under the mouse: on a white page a list with no color of its own shows nothing.
@@ -1503,7 +1505,7 @@ ItemList.getCheckSvg = function (color, size) {
 };
 
 // *** STYLE PACKAGES:
-// USAGE: ItemList({ styleName: "modern" })
+// USAGE: ItemList({ styleName: "light" })
 // USAGE: ItemList({ styleName: "dark", style: { row: { round: 4 } } }) // Change only some keys.
 // USAGE: ItemList({ style: ItemList.styles.dark }) // The same as styleName: "dark". (The package is copied, never changed.)
 // NOTE: A new package needs only the keys that differ from the default (ozden) style.
@@ -1534,21 +1536,13 @@ ItemList.styles = {
         scrollBar: { bar_color: "#CFCFCD", bar_mouseOverColor: "#CFCFCD" },
     },
 
-    // Light cards with a thin border and a check mark on the selected rows.
-    modern: {
-        box: { color: "transparent", padding: 8 }, // WHY transparent: the gray of ozden is not its look.
-        list: { gap: 8 },
-        row: {
-            height: 64,
-            padding: [14, 10],
-            gap: 14,
-            color: "white",
-            border: 1,
-            borderColor: Black(0.08),
-            round: 12,
-            boxShadow: "0px 1px 2px rgba(0, 0, 0, 0.04)",
-            motion: "background-color 0.2s, border-color 0.2s",
-        },
+    // The light look of the kit (_designs/item-list.htm): a white box with one thin line and round 10 corners, flat
+    // rows of 56 px; the row under the mouse in a soft gray, the selected one in a tint of the accent with a full
+    // mark (an empty circle on the other rows).
+    light: {
+        box: { color: "#FFFFFF", border: 1, borderColor: Black(0.12), round: 10, padding: 6 },
+        list: { gap: 2 }, // WHY: the colors of two rows never meet
+        row: { height: 56, padding: [12, 10], gap: 12, color: "transparent", round: 8 },
         // WHY: The effects of the ozden tiles (a grey icon in a circle that grows) are turned off.
         tile: {
             width: 132,
@@ -1556,7 +1550,7 @@ ItemList.styles = {
             padding: [12, 14],
             gap: 8,
             spacing: 8,
-            listPadding: 8,
+            listPadding: 6, // as box.padding
             iconSize: 56,
             frameSize: 0,
             iconFilter: "",
@@ -1564,46 +1558,46 @@ ItemList.styles = {
             selectedIconFilter: "",
             selectedFontFamily: "",
             selectedColor: "",
-            hover: { color: "#F7F8F6", borderColor: Black(0.14) },
+            hover: { color: "#F2F3F0" },
         },
-        section: { padding: [14, 6], fontSize: 13, textColor: Black(0.45) }, // WHY: 14: over the texts of the cards
-        hover: { color: "#F7F8F6", borderColor: Black(0.14), lineColor: "" }, // WHY: "": the lines of ozden are not filled in.
-        selected: { color: "#EEF6F3", borderColor: "#3D7A6B", opacity: 1, canSelectAgain: 1 }, // WHY: 1: a card is a card again (not the ozden rule)
-        focus: { ringColor: "rgba(61, 122, 107, 0.6)" },
-        icon: { size: 40, round: 10, color: "#F1F2EF" },
-        title: { fontSize: 15, textColor: Black(0.85), fontFamily: "opensans-bold" },
-        desc: { fontSize: 13, textColor: Black(0.5), marginTop: 0 },
-        check: { visible: 1, size: 20, color: "#3D7A6B", iconColor: "white", borderColor: Black(0.2) },
-        empty: { fontSize: 14, textColor: Black(0.45) },
+        section: { padding: [12, 6], fontSize: 13, textColor: Black(0.55) }, // WHY 12: over the icons of the rows
+        hover: { color: "#F2F3F0", lineColor: "" }, // WHY: "": the lines of ozden are not filled in.
+        selected: { color: "#E4EFEB", opacity: 1, canSelectAgain: 1 }, // WHY 1: a click on it is an onItemClick again (the rule of ozden is its own)
+        focus: { ringColor: "rgba(61, 122, 107, 0.5)" },
+        icon: { size: 36, round: 8, color: "#F2F3F0" },
+        title: { fontSize: 15, textColor: Black(0.88), fontFamily: "opensans" },
+        desc: { fontSize: 13, textColor: Black(0.55), marginTop: 0 },
+        check: { visible: 1, size: 20, color: "#3D7A6B", iconColor: "#FFFFFF", borderColor: Black(0.25) },
+        empty: { fontSize: 14, textColor: Black(0.55) },
+        // The search field of the light look (_designs/search-input.htm): SearchInput light in its colors and sizes,
+        // round 8 as the rows.
         search: {
-            styleName: "original", // WHY: not the ozden package of the default search box; the first look of SearchInput
-            height: 44, // as ozden and ozdenDark
-            padding: [8, 8, 8, 4],
+            styleName: "light", // A package of SearchInput.styles
+            height: 44,
+            padding: [6, 6, 6, 0], // left, top, right, bottom: as box.padding (the rows have their own 6 under it)
             fontSize: 15,
-            color: "white",
+            textOffsetY: -1, // WHY: the small letters of Open Sans sit low in their line
+            color: "#FFFFFF",
+            textColor: Black(0.88),
+            placeholderColor: Black(0.38),
             border: 1,
-            borderColor: Black(0.1),
-            borderBottomStyle: "1px solid " + Black(0.1),
-            round: 10,
+            borderColor: Black(0.12),
+            borderBottomStyle: "1px solid " + Black(0.12),
+            focusBorderColor: "#3D7A6B", // the accent while typing (2 px)
+            focusRingColor: "rgba(61, 122, 107, 0.5)",
+            round: 8,
             searchIconSize: 18,
+            searchIconLeft: 14,
+            clearIconRight: 12,
         },
         scrollBar: { bar_color: "#A0A0A0", bar_mouseOverColor: "#6E6E6C", neverHide: 0, showDots: 0 },
     },
 
-    // The dark cards of the Ozden Panel (webpage-ozden-panel, theme "dark").
+    // The dark look of the kit: the same shapes on the dark surface (#232322, on a #1A1A19 page).
     dark: {
-        box: { color: "transparent", padding: 8 },
-        list: { gap: 8 },
-        row: {
-            height: 64,
-            padding: [14, 10],
-            gap: 14,
-            color: "#1A1A19", // surface: a card
-            border: 1,
-            borderColor: White(0.08),
-            round: 10,
-            motion: "background-color 0.2s, border-color 0.2s",
-        },
+        box: { color: "#232322", border: 1, borderColor: White(0.12), round: 10, padding: 6 },
+        list: { gap: 2 },
+        row: { height: 56, padding: [12, 10], gap: 12, color: "transparent", round: 8 },
         // WHY: The effects of the ozden tiles (a grey icon in a circle that grows) are turned off.
         tile: {
             width: 132,
@@ -1611,7 +1605,7 @@ ItemList.styles = {
             padding: [12, 14],
             gap: 8,
             spacing: 8,
-            listPadding: 8,
+            listPadding: 6, // as box.padding
             iconSize: 56,
             frameSize: 0,
             iconFilter: "",
@@ -1619,30 +1613,38 @@ ItemList.styles = {
             selectedIconFilter: "",
             selectedFontFamily: "",
             selectedColor: "",
-            hover: { color: "#232322" },
+            hover: { color: White(0.07) },
         },
-        section: { padding: [14, 6], fontSize: 13, textColor: White(0.45) }, // WHY: 14: over the texts of the cards
-        hover: { color: "#232322", lineColor: "" }, // surface2. WHY: "": the lines of ozden are not filled in.
-        selected: { color: "#2C2C2A", borderColor: "#65A293", opacity: 1, canSelectAgain: 1 }, // surface3, accent. WHY: 1: as modern
-        focus: { ringColor: "#65A293" },
-        icon: { size: 40, round: 8, color: "#232322" },
-        title: { fontSize: 15, textColor: White(0.9), fontFamily: "opensans-bold" },
-        desc: { fontSize: 13, textColor: White(0.45), marginTop: 0 },
-        check: { visible: 1, size: 20, color: "#65A293", iconColor: "#141414", borderColor: White(0.25) },
-        empty: { fontSize: 14, textColor: White(0.45) },
+        section: { padding: [12, 6], fontSize: 13, textColor: White(0.55) }, // WHY 12: over the icons of the rows
+        hover: { color: White(0.07), lineColor: "" }, // WHY: "": the lines of ozden are not filled in.
+        selected: { color: "rgba(101, 162, 147, 0.2)", opacity: 1, canSelectAgain: 1 }, // WHY 1: as light
+        focus: { ringColor: "rgba(101, 162, 147, 0.55)" },
+        icon: { size: 36, round: 8, color: White(0.07) },
+        title: { fontSize: 15, textColor: White(0.9), fontFamily: "opensans" },
+        desc: { fontSize: 13, textColor: White(0.55), marginTop: 0 },
+        check: { visible: 1, size: 20, color: "#65A293", iconColor: "#0F1F1B", borderColor: White(0.3) },
+        empty: { fontSize: 14, textColor: White(0.55) },
+        // The search field of the dark look. WHY light: SearchInput has no dark package yet: its light one in the dark
+        // colors, its icons inverted (a white search icon, a gray clear button with a dark cross).
         search: {
-            styleName: "original", // WHY: not the ozden package of the default search box; the first look of SearchInput
-            height: 44, // as ozden and ozdenDark
-            padding: [8, 8, 8, 4],
+            styleName: "light", // A package of SearchInput.styles
+            height: 44,
+            padding: [6, 6, 6, 0], // left, top, right, bottom: as box.padding (the rows have their own 6 under it)
             fontSize: 15,
-            color: "#232322", // surface2: a field
+            textOffsetY: -1, // WHY: the small letters of Open Sans sit low in their line
+            color: "#232322",
             textColor: White(0.9),
-            placeholderColor: White(0.35),
+            placeholderColor: White(0.38),
             border: 1,
-            borderColor: White(0.1),
-            borderBottomStyle: "1px solid " + White(0.1),
+            borderColor: White(0.12),
+            borderBottomStyle: "1px solid " + White(0.12),
+            focusBorderColor: "#65A293", // the accent while typing (2 px)
+            hoverRingColor: White(0.08),
+            focusRingColor: "rgba(101, 162, 147, 0.55)",
             round: 8,
             searchIconSize: 18,
+            searchIconLeft: 14,
+            clearIconRight: 12,
             invertIconColor: 1,
         },
         scrollBar: { bar_color: "#8A8A88", bar_mouseOverColor: "#BFBFBD", neverHide: 0, showDots: 0 },

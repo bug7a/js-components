@@ -50,13 +50,13 @@ test("Toggle: setValue() calls onChange, setValue(value, 1) does not; nothing at
 
 test("ItemList: style.hover {} means no look under the mouse, the default stays without it", async function () {
     const listWithoutHover = ItemList({ width: 200, height: 100, items: ["A"], style: { hover: {} } });
-    const modernWithoutHover = ItemList({ width: 200, height: 100, items: ["A"], styleName: "modern", style: { hover: {} } });
+    const lightWithoutHover = ItemList({ width: 200, height: 100, items: ["A"], styleName: "light", style: { hover: {} } });
     const defaultList = ItemList({ width: 200, height: 100, items: ["A"] });
-    const colors = [listWithoutHover.style.hover.color, modernWithoutHover.style.hover.color, defaultList.style.hover.color];
+    const colors = [listWithoutHover.style.hover.color, lightWithoutHover.style.hover.color, defaultList.style.hover.color];
     check("ItemList: style.hover {} means no look under the mouse, the default stays without it",
         colors[0] === undefined && colors[1] === undefined && colors[2] === "white", colors.join(" / "));
     listWithoutHover.remove();
-    modernWithoutHover.remove();
+    lightWithoutHover.remove();
     defaultList.remove();
 });
 
@@ -77,23 +77,24 @@ test("ItemList: ozden draws a line above and under the row under the mouse, the 
     };
     const ozdenList = ItemList({ width: 300, height: 300, items: ["Apple", "Banana"], selectedKeys: ["1"] });
     const shadowList = ItemList({ width: 300, height: 300, items: ["Apple"], style: { row: { boxShadow: OWN_SHADOW } } });
-    const modernList = ItemList({ width: 300, height: 300, items: ["Apple"], styleName: "modern" });
+    // WHY an own shadow: light has no lines and no shadow of its own; a package without lines never touches it.
+    const lightList = ItemList({ width: 300, height: 300, items: ["Apple"], styleName: "light", style: { row: { boxShadow: OWN_SHADOW } } });
     const ozden = shadowsUnderMouse(ozdenList.getRow("0"));
     const selected = shadowsUnderMouse(ozdenList.getRow("1"));
     const own = shadowsUnderMouse(shadowList.getRow("0"));
-    const modernBefore = modernList.getRow("0").elem.style.boxShadow;
-    const modern = shadowsUnderMouse(modernList.getRow("0"));
+    const lightBefore = lightList.getRow("0").elem.style.boxShadow;
+    const light = shadowsUnderMouse(lightList.getRow("0"));
     const LINES = "inset 0 1px 0 " + Black(0.2) + ", inset 0 -1px 0 " + Black(0.2);
     const isOzdenOk = ozden[0] === asWritten(LINES) && ozden[1] === "";
     const isSelectedOk = selected[0] === "" && selected[1] === "";
     const isOwnOk = own[0] === asWritten(LINES + ", " + OWN_SHADOW) && own[1] === OWN_SHADOW;
-    const isModernOk = modern[0] === modernBefore && modern[1] === modernBefore && modernBefore !== "";
+    const isLightOk = lightBefore === OWN_SHADOW && light[0] === OWN_SHADOW && light[1] === OWN_SHADOW;
     check("ItemList: ozden draws a line above and under the row under the mouse, the own shadow of a row stays",
-        isOzdenOk && isSelectedOk && isOwnOk && isModernOk,
-        "ozden: " + ozden.join(" -> ") + " | selected: " + selected.join(" -> ") + " | own: " + own.join(" -> ") + " | modern: " + modern.join(" -> "));
+        isOzdenOk && isSelectedOk && isOwnOk && isLightOk,
+        "ozden: " + ozden.join(" -> ") + " | selected: " + selected.join(" -> ") + " | own: " + own.join(" -> ") + " | light: " + light.join(" -> "));
     ozdenList.remove();
     shadowList.remove();
-    modernList.remove();
+    lightList.remove();
 });
 
 test("ItemList: setActiveKey gives a row the look of the mouse, also a selected one that can be chosen again; null takes it back", async function () {
@@ -189,7 +190,7 @@ test("SelectBox ozden: the selected row can not be chosen again (no look, the ke
         "ozden: " + ozdenRows + " ;; ozden ItemList rows: " + ozdenListRows + " ;; classic: " + classicRows + " ;; classic ItemList rows: " + classicListRows);
 });
 
-test("ItemList ozden: the selected row (single) can not be chosen again (a click, Enter, Space do nothing; no hand), modern can", async function () {
+test("ItemList ozden: the selected row (single) can not be chosen again (a click, Enter, Space do nothing; no hand), light can", async function () {
     // The mouse on the selected Banana, then a click, Enter and Space on it.
     const tryAgain = function (params) {
         const clicked = [];
@@ -205,9 +206,9 @@ test("ItemList ozden: the selected row (single) can not be chosen again (a click
         return result;
     };
     const ozden = tryAgain({});
-    const modern = tryAgain({ styleName: "modern" });
-    check("ItemList ozden: the selected row (single) can not be chosen again (a click, Enter, Space do nothing; no hand), modern can",
-        ozden === "0 / default / transparent" && modern.startsWith("3 / pointer"), "ozden: " + ozden + " ;; modern: " + modern);
+    const light = tryAgain({ styleName: "light" });
+    check("ItemList ozden: the selected row (single) can not be chosen again (a click, Enter, Space do nothing; no hand), light can",
+        ozden === "0 / default / transparent" && light.startsWith("3 / pointer"), "ozden: " + ozden + " ;; light: " + light);
 });
 
 test("ItemList in a combobox: setActiveKey leaves the look of the mouse only on the active row", async function () {
@@ -687,13 +688,13 @@ test("ItemList: the ozden list has a gray ground of its own, so the white of a r
     const ozden = lookOf("ozden");
     const dark = lookOf("ozdenDark");
     const old = lookOf("classic");
-    const others = [lookOf("modern").ground, lookOf("dark").ground].join();
+    const others = [lookOf("light").ground, lookOf("dark").ground].join(); // their own surfaces
     const own = ItemList({ left: 0, top: 0, width: 200, height: 100, items: ["A"], style: { box: { color: "transparent" } } });
     const pageCanChange = getComputedStyle(own.elem).backgroundColor;
     own.remove();
     check("ItemList: the ozden list has a gray ground of its own, so the white of a row under the mouse is seen on a white page",
         ozden.ground === "rgb(245, 245, 245)" && ozden.hover === "white" && dark.ground === "rgb(26, 26, 25)" && dark.hover === "#262624" && old.ground === ozden.ground &&
-        others === "rgba(0, 0, 0, 0),rgba(0, 0, 0, 0)" && pageCanChange === "rgba(0, 0, 0, 0)",
+        others === "rgb(255, 255, 255),rgb(35, 35, 34)" && pageCanChange === "rgba(0, 0, 0, 0)",
         [ozden.ground, ozden.hover, dark.ground, dark.hover, old.ground, others, pageCanChange].join(" | "));
 });
 
