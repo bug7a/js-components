@@ -7,7 +7,7 @@ of the tools (a tool says when another one runs at the same time).
 
     const chrome = require("./_chrome.js");
     const server = await chrome.startServer({ commit: "HEAD", listFolders: true, pages: { "/__x__.htm": html } });
-    const browser = await chrome.launchChrome();
+    const browser = await chrome.launchChrome();          // { scrollBars: true }: bars that take room
     const run = chrome.startRun("screenshot");   // ... run.noteOthers() on the way; run.end() in a finally
 */
 
@@ -162,8 +162,20 @@ const loadPuppeteer = function () {
     throw new Error("puppeteer-core is not found. Install it: npm install puppeteer-core");
 };
 
-const launchChrome = function () {
-    return loadPuppeteer().launch({ headless: "new", executablePath: CHROME_FILE, args: ["--no-sandbox"] });
+// scrollBars: a scroll bar takes room, as in WebKit with "Show scroll bars: Always" (a mouse on a Mac) and on Windows.
+// WHY: puppeteer hides the bars of headless Chrome (--hide-scrollbars) and on a Mac they lie over the content, so a box
+//      that a bar makes narrower was never tested: a JsonEditor changed its size again in the same frame there
+//      ("ResizeObserver loop completed with undelivered notifications") and every test passed. A box of basic.js keeps
+//      its bar of 0 px (basic.css), as in WebKit.
+const SCROLL_BAR_ARGS = ["--disable-features=OverlayScrollbar"];
+
+const launchChrome = function ({ scrollBars = false } = {}) {
+    const options = { headless: "new", executablePath: CHROME_FILE, args: ["--no-sandbox"] };
+    if (scrollBars) {
+        options.args = options.args.concat(SCROLL_BAR_ARGS);
+        options.ignoreDefaultArgs = ["--hide-scrollbars"];
+    }
+    return loadPuppeteer().launch(options);
 };
 
 const sleep = function (ms) {
@@ -195,9 +207,24 @@ const blockOuterLinks = function () {
     };
 };
 
+// An error event of the window that is not an exception goes to the console ("ERROR EVENT ..."), where the tools read it.
+// WHY: "ResizeObserver loop completed with undelivered notifications" is such an event: puppeteer gives no "pageerror"
+//      for it and the console does not show it, so no tool saw it. An exception is not written again (its "pageerror"
+//      says it); a message once in a page (a loop says it at every frame). console.info, not error: the test pages
+//      count a console.error as an error of a component, and components-test leaves the loop out on purpose (a
+//      notice of the browser). It runs in the page, before its scripts.
+const reportErrorEvents = function () {
+    const reported = new Set();
+    window.addEventListener("error", function (event) {
+        if (event.error || reported.has(event.message)) return;
+        reported.add(event.message);
+        console.info("ERROR EVENT " + event.message);
+    });
+};
+
 // Every page a tool opens: await chrome.guardPage(page) before its goto().
 const guardPage = function (page) {
-    return page.evaluateOnNewDocument(blockOuterLinks);
+    return Promise.all([page.evaluateOnNewDocument(blockOuterLinks), page.evaluateOnNewDocument(reportErrorEvents)]);
 };
 
 // The header comment of a tool, for its --help.

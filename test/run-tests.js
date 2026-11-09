@@ -11,8 +11,12 @@ RUN TESTS: the self-checking test pages from the terminal, one after the other.
                                                         a text that is in none of them FAILS (a typo tests nothing)
     node test/run-tests.js --only scroll-area           one component: its file in components, its tests in behavior (10 s)
     node test/run-tests.js behavior --commit HEAD       the page as it is in a commit, with the basic/ and comp/ of that commit
+    node test/run-tests.js --scroll-bars                scroll bars that take room, as WebKit with "Show scroll bars: Always"
+                                                        (a mouse on a Mac) and Windows: a box a bar makes narrower is tested
 
-It prints the title of every page ("... - ALL PASS" or "... - 2 FAILED") and the lines of what failed or warned.
+It prints the title of every page ("... - ALL PASS" or "... - 2 FAILED") and the lines of what failed or warned, and
+the errors of the page that no check of it saw (PAGE ERROR: an exception; ERROR EVENT: an error event of the window,
+as a ResizeObserver loop).
 Then the catalog (not with --commit): every sample of 02-comp-examples is a sample in index/catalog.js, and every
 sample named there is a file.
 The exit code is 1 when a page failed or did not finish, 2 when the tool itself could not run.
@@ -54,6 +58,15 @@ const readProblemLines = function (problemSource) {
 
 // *** ONE PAGE:
 
+// The same line once, with how many times it came ("... (4 times)"). WHY: a ResizeObserver loop says it at every frame.
+const withoutRepeats = function (lines) {
+    const counts = new Map();
+    lines.forEach(function (line) { counts.set(line, (counts.get(line) || 0) + 1); });
+    return [...counts].map(function ([line, count]) {
+        return (count > 1) ? line + " (" + count + " times)" : line;
+    });
+};
+
 const runPage = async function (browser, url) {
     const context = await browser.createBrowserContext();
     const errors = [];
@@ -61,14 +74,17 @@ const runPage = async function (browser, url) {
         const page = await context.newPage();
         await chrome.guardPage(page);
         page.on("pageerror", function (error) { errors.push("PAGE ERROR " + error.message); });
+        page.on("console", function (message) {
+            if (message.text().startsWith("ERROR EVENT ")) errors.push(message.text()); // chrome.guardPage writes it
+        });
         await page.setViewport(WINDOW);
         await page.goto(url, { waitUntil: "load", timeout: LOAD_TIMEOUT });
         await page.waitForFunction("/ALL PASS| FAILED/.test(document.title)", { timeout: FINISH_TIMEOUT, polling: LOOK_INTERVAL });
         const title = await page.title();
         const problems = await page.evaluate(readProblemLines, PROBLEM_LINE.source);
-        return { title: title, isPassed: !/ FAILED/.test(title), lines: problems.concat(errors) };
+        return { title: title, isPassed: !/ FAILED/.test(title), lines: problems.concat(withoutRepeats(errors)) };
     } catch (error) {
-        return { title: "did not finish: " + error.message.split("\n")[0], isPassed: false, lines: errors };
+        return { title: "did not finish: " + error.message.split("\n")[0], isPassed: false, lines: withoutRepeats(errors) };
     } finally {
         await context.close();
     }
@@ -77,12 +93,13 @@ const runPage = async function (browser, url) {
 // *** START:
 
 const readOptions = function (args) {
-    const options = { names: [], only: "", commit: "", isHelp: false };
+    const options = { names: [], only: "", commit: "", scrollBars: false, isHelp: false };
     for (let i = 0; i < args.length; i++) {
         const arg = args[i];
         if (arg === "--help") options.isHelp = true;
         else if (arg === "--only") options.only = args[++i] || "";
         else if (arg === "--commit") options.commit = args[++i] || "HEAD";
+        else if (arg === "--scroll-bars") options.scrollBars = true;
         else options.names.push(arg);
     }
     if (!options.names.length) options.names = DEFAULT_PAGES;
@@ -128,7 +145,7 @@ const main = async function () {
     if (unknown.length) throw new Error("No such test: " + unknown.join(", ") + " (" + Object.keys(PAGES).join(", ") + ")");
 
     const server = await chrome.startServer({ commit: options.commit });
-    const browser = await chrome.launchChrome();
+    const browser = await chrome.launchChrome({ scrollBars: options.scrollBars });
     // A commit: the server gives its files under OLD_PATH (the page and the scripts it loads from there)
     const origin = "http://127.0.0.1:" + server.address().port + ((options.commit) ? chrome.OLD_PATH : "");
     let isAllPassed = true;

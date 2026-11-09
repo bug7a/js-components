@@ -100,7 +100,8 @@ const watchPage = function (page, log) {
         dialog.dismiss().catch(function () {});
     });
     page.on("console", function (message) {
-        if (message.type() !== "error" && message.type() !== "warn") return;
+        const isErrorEvent = message.text().startsWith("ERROR EVENT "); // chrome.guardPage writes it
+        if (message.type() !== "error" && message.type() !== "warn" && !isErrorEvent) return;
         if (message.text().startsWith("Failed to load resource")) return; // WHY: the "response" line names the file
         log.push({ isError: false, text: "CONSOLE " + message.type() + " " + withoutOrigin(message.text()) });
     });
