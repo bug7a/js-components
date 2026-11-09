@@ -43,9 +43,11 @@ Options:
                       works; more than one --print: each one): a check without reading a picture
     --no-picture      only the --print values and the errors: no picture is saved
     --cut             the texts cut at this width, after --run: by the left edge of the window or of a box of the
-                      page (a card narrower than what is in it): they can not be reached, so exit code 1; and the ones
-                      that go out on the right of the window (a note: a carousel or a bar of tabs does it on purpose).
-                      A text in a part that scrolls to the side is not counted
+                      page (a card narrower than what is in it): they can not be reached; by the right edge of a box
+                      (a title wider than its card, a label narrower than its text), with no "..." (an ellipsis is
+                      on purpose): its end can not be read; so exit code 1. And the ones that go out on the right of
+                      the window (a note: a carousel or a bar of tabs does it on purpose). A text in a part that
+                      scrolls to the side is not counted
 
 It prints the file, and the errors of the page (exit code 1 when the page throws, or --clip or --click finds nothing).
 When another tool with Chrome runs at the same time (another session), it says so at the end (a NOTE).
@@ -263,8 +265,8 @@ const readPrints = async function (page, expressions, log) {
 };
 
 // Runs in the page (--cut): the texts cut by the left edge of a box of the page (a card narrower than what is in it)
-// or of the window, and the ones that go out on the right of the window. A text in a part that scrolls to the side
-// is not counted: it can be reached.
+// or of the window, the ones cut by the right edge of a box with no ellipsis, and the ones that go out on the right
+// of the window. A text in a part that scrolls to the side is not counted: it can be reached.
 const findCutTexts = function () {
     const width = window.innerWidth;
     const EDGE = 2; // px over an edge that are not counted (a rounding)
@@ -278,7 +280,34 @@ const findCutTexts = function () {
             .map(function (node) { return node.textContent.trim(); })
             .join(" ").trim();
     };
-    const found = { windowLeft: [], boxLeft: [], right: [] };
+    // The words of a text, not its element: a Label as wide as its card cuts its own text (overflow: hidden of
+    // basic.css). WHY word by word: the space at the end of a line of a text that wraps (pre-wrap) stands out of its
+    // box and is not seen.
+    const textRectOf = function (elem) {
+        const range = document.createRange();
+        let left = Infinity;
+        let right = -Infinity;
+        elem.childNodes.forEach(function (node) {
+            if (node.nodeType !== Node.TEXT_NODE) return;
+            const words = /\S+/g;
+            for (let word = words.exec(node.textContent); word; word = words.exec(node.textContent)) {
+                range.setStart(node, word.index);
+                range.setEnd(node, word.index + word[0].length);
+                [...range.getClientRects()].forEach(function (part) {
+                    if (part.width < 1) return;
+                    left = Math.min(left, part.left);
+                    right = Math.max(right, part.right);
+                });
+            }
+        });
+        return (left === Infinity) ? null : { left: left, right: right };
+    };
+    // WHY: a text in a box whose edge fades (a mask: ScrollingText) is cut on purpose, also where a box around it cuts too
+    const isMasked = function (elem) {
+        const style = getComputedStyle(elem);
+        return [style.maskImage, style.webkitMaskImage].some(function (mask) { return mask && mask !== "none"; });
+    };
+    const found = { windowLeft: [], boxLeft: [], boxRight: [], right: [] };
     document.querySelectorAll("body *").forEach(function (elem) {
         const text = ownTextOf(elem);
         if (!text) return;
@@ -286,15 +315,26 @@ const findCutTexts = function () {
         if (rect.width < 1 || rect.height < 1 || rect.bottom < 0) return;
         const style = getComputedStyle(elem);
         if (style.visibility === "hidden" || Number(style.opacity) === 0) return;
-        // The boxes that cut what goes out of them, the nearest first
+        // The boxes that cut what goes out of them, the nearest first (its own box too for the right edge)
         const boxes = [];
+        let isInAMask = isMasked(elem);
         for (let parent = elem.parentElement; parent && parent !== document.body; parent = parent.parentElement) {
             if (getComputedStyle(parent).overflowX === "visible") continue;
             if (isScrollingX(parent)) return;
             boxes.push(parent.getBoundingClientRect());
+            isInAMask = isInAMask || isMasked(parent);
         }
+        const rightBoxes = (style.overflowX === "visible") ? boxes : [rect].concat(boxes);
         const nearest = boxes[0] || { left: 0, right: width };
         const shortText = text.slice(0, 30);
+        // WHY its own box too: a Label cuts what goes out of it. WHY not with an ellipsis: "..." cuts on purpose. WHY not
+        //     white-space: pre: the lines of a code keep their length and its editor scrolls them to the side.
+        const textRect = textRectOf(elem) || rect;
+        const isCutOnPurpose = (style.textOverflow === "ellipsis" || style.whiteSpace === "pre" || isInAMask);
+        const isCutOnTheRight = !isCutOnPurpose && rightBoxes.some(function (box) {
+            return box.right < width - 0.5 && textRect.right > box.right + EDGE && textRect.left < box.right - SEEN;
+        });
+        if (isCutOnTheRight) found.boxRight.push(shortText);
         const isCutByABox = boxes.some(function (box) {
             return box.left > 0.5 && rect.left < box.left - EDGE && rect.right > box.left + SEEN;
         });
@@ -321,6 +361,7 @@ const describeCut = function (cut, width) {
     };
     add(cut.windowLeft, "by the left edge of the window", true);
     add(cut.boxLeft, "by the left edge of a box", true);
+    add(cut.boxRight, "by the right edge of a box (no \"...\")", true);
     add(cut.right, "go out on the right", false);
     if (lines.length === 0) lines.push({ isError: false, text: "CUT: no text is cut at " + width + " px" });
     return lines;
