@@ -320,6 +320,12 @@ CATALOG.COMPONENTS = [
         tr: "Markdown ile yazılmış bir metni sayfada çizer: rapor, yapay zekâ cevabı. Başlıklar, listeler, tablolar, resimler, renkli ve kopyalanan kod. Metin hiçbir zaman HTML olarak okunmaz. Parça parça gelen metin. Aydınlık ve karanlık tema.",
     },
     {
+        key: "chat-view", name: "ChatView", cat: "data",
+        source: "comp/chat-view.js", deps: ["comp/code-editor.js", "comp/markdown-view.js", "comp/scroll-area.js"], samples: ["02-comp-examples/chat-view.htm"],
+        en: "A conversation with an AI: the messages of the user in bubbles, the answers drawn as Markdown, an answer that comes piece by piece and three dots while it is waited for, a field that grows, with Send and Stop. Light and dark themes.",
+        tr: "Bir yapay zekâyla konuşma: kullanıcının mesajları balonlarda, cevaplar Markdown olarak çizilir; parça parça gelen cevap, beklenirken üç nokta; yazdıkça uzayan, Gönder ve Durdur düğmeli bir alan. Aydınlık ve karanlık tema.",
+    },
+    {
         key: "log-view", name: "LogView", cat: "data",
         source: "comp/log-view.js", samples: ["02-comp-examples/log-view.htm"],
         en: "The output of a program: colored lines with their time and level, following the last line. Fast output is drawn in batches. Light and dark themes.",

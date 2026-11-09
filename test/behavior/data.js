@@ -1717,6 +1717,79 @@ test("MarkdownView: remove(): a text that was still coming draws nothing; a head
         [view.isRemoved, group.isRemoved, stays].join(" | "));
 });
 
+// *** CHAT VIEW (comp/chat-view.js)
+
+const typeInChat = function (chat, text, keyLook) {
+    const field = chat.textareaElem;
+    field.focus();
+    field.value = text;
+    field.dispatchEvent(new Event("input", { bubbles: true }));
+    field.dispatchEvent(new KeyboardEvent("keydown", Object.assign({ key: "Enter", bubbles: true, cancelable: true }, keyLook)));
+};
+
+test("ChatView: Enter sends the text as a message of the user and calls onSend; Shift+Enter is a new line", async function () {
+    const sent = [];
+    const chat = ChatView({ width: 400, height: 300, onSend: function (self, text) { sent.push(self === chat ? text : "not self"); } });
+    typeInChat(chat, "  Hi\nthere  ", { shiftKey: true });
+    const afterShift = chat.getMessages().length;
+    typeInChat(chat, "  Hi\nthere  ");
+    const messages = chat.getMessages();
+    const isRight = afterShift === 0 && sent.join() === "Hi\nthere" && messages.length === 1 && messages[0].role === "user" &&
+        messages[0].text === "Hi\nthere" && chat.getInputText() === "";
+    check("ChatView: Enter sends the text as a message of the user and calls onSend; Shift+Enter is a new line", isRight,
+        JSON.stringify([afterShift, sent, messages, chat.getInputText()]));
+    chat.remove();
+});
+
+test("ChatView: an answer that comes piece by piece: the dots until its first words, then Markdown", async function () {
+    const chat = ChatView({ width: 400, height: 300, messages: [{ role: "user", text: "Hi" }] });
+    const key = chat.addMessage({ role: "assistant" });
+    chat.setBusy(1);
+    const dotsBefore = chat.dotsRow.visible;
+    chat.appendText(key, "**Hel");
+    chat.appendText(key, "lo**");
+    await wait(80);
+    const html = chat.messageGroup.elem.innerHTML;
+    const isRight = dotsBefore == 1 && chat.dotsRow.visible == 0 && html.includes("<strong>Hello</strong>") && chat.getMessageText(key) === "**Hello**" &&
+        chat.getMessages()[1].role === "assistant";
+    check("ChatView: an answer that comes piece by piece: the dots until its first words, then Markdown", isRight,
+        [dotsBefore, chat.dotsRow.visible, chat.getMessageText(key)].join(" | "));
+    chat.remove();
+});
+
+test("ChatView: Stop ends busy and calls onStop; a text is never read as HTML", async function () {
+    const stops = [];
+    const chat = ChatView({ width: 400, height: 300, onStop: function (self) { stops.push(self.busy); } });
+    chat.addMessage({ role: "user", text: "<b>not bold</b>" });
+    chat.setBusy(1);
+    chat.btnSend.elem.click();
+    const bubble = chat.messageGroup.elem.textContent;
+    check("ChatView: Stop ends busy and calls onStop; a text is never read as HTML",
+        chat.busy === 0 && stops.join() === "0" && bubble.includes("<b>not bold</b>") && !chat.messageGroup.elem.querySelector("b, strong"),
+        [chat.busy, stops.join(), bubble].join(" | "));
+    chat.remove();
+});
+
+test("ChatView: the view follows a new answer until the reader scrolls up", async function () {
+    const chat = ChatView({ width: 400, height: 200 });
+    for (let index = 0; index < 8; index++) chat.addMessage({ role: "user", text: "Message " + index });
+    chat.scrollToEnd();
+    await wait(50);
+    const scrollBox = chat.messageArea.scrollBox.elem;
+    const key = chat.addMessage({ role: "assistant" });
+    chat.appendText(key, "An answer\n\nwith two paragraphs");
+    await wait(100);
+    const followed = scrollBox.scrollHeight - scrollBox.scrollTop - scrollBox.clientHeight;
+    scrollBox.scrollTop = 0;
+    scrollBox.dispatchEvent(new Event("scroll"));
+    await wait(30);
+    chat.appendText(key, "\n\nand a third one");
+    await wait(100);
+    check("ChatView: the view follows a new answer until the reader scrolls up", followed <= 1 && scrollBox.scrollTop === 0,
+        "the distance to the end: " + followed + ", after a scroll up: " + scrollBox.scrollTop);
+    chat.remove();
+});
+
 // *** JSON VIEW (comp/json-view.js)
 
 const jsonRowText = function (view, key) {

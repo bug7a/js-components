@@ -85,6 +85,7 @@
             { file: "comp/json-view.js", name: "JsonView", deps: ["comp/context-menu.js", "comp/tree-view.js"], params: { height: 200, value: { a: 1, b: [1, 2] } } },
             { file: "comp/json-editor.js", name: "JsonEditor", deps: ["comp/context-menu.js", "comp/search-input.js"], params: { height: 300, value: [{ name: "A", price: 1, tags: ["x"] }] } },
             { file: "comp/markdown-view.js", name: "MarkdownView", deps: ["comp/code-editor.js"], params: { height: 200, markdownText: "# Hi\n\n```python\nx = 1\n```" } },
+            { file: "comp/chat-view.js", name: "ChatView", deps: ["comp/code-editor.js", "comp/markdown-view.js", "comp/scroll-area.js"], params: { height: 300, messages: [{ role: "user", text: "Hi" }, { role: "assistant", text: "**Hello**" }] } },
             { file: "comp/tool-bar.js", name: "ToolBar", deps: ["comp/tooltip.js", "comp/context-menu.js", "comp/menu-bar.js"], params: { items: [{ key: "save", icon: "save", hint: "Save", shortcut: "Ctrl+S" }, "-", { key: "menu", text: "Menu", items: ["One"] }] } },
             { file: "comp/currency-field.js", name: "CurrencyField", deps: INPUT_B },
             { file: "comp/email-field.js", name: "EmailField", deps: INPUT_B },
