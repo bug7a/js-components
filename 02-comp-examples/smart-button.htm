@@ -71,6 +71,7 @@
 
                 createTonesRow();
                 createProfileCard();
+                createProfileCard2();
                 createFileCard();
 
                 lblResult = Label({ text: "-", fontSize: 14, textColor: Black(0.5) });
@@ -192,6 +193,29 @@
                 SmartButton({ labelText: "Cancel", onClick: function () { showResult("Canceled."); } });
 
                 SmartButton({ tone: "cyan", labelText: "Save", iconFile: ICONS.save, onClick: save });
+
+            endCard();
+        };
+
+        // Alternative profile style: the trash asks again
+        const createProfileCard2 = function () {
+            startCard("Profile", "Ayşe Yılmaz · ayse@example.com. Save waits while the job runs, then it says \"Saved\" in the color of a success for a moment.");
+
+                SmartButton({
+                    styleName: "ozden3",
+                    tone: "white",
+                    labelText: "",
+                    iconFile: TRASH_ICON,
+                    ariaLabel: "Delete the profile",
+                    ask: "Click again to delete the profile.",
+                    onClick: function () { showResult("The profile is deleted."); },
+                });
+
+                createSpace();
+
+                SmartButton({ styleName: "ozden3", labelText: "Cancel", onClick: function () { showResult("Canceled."); } });
+
+                SmartButton({ tone: "blue", labelText: "Save", iconFile: ICONS.save });
 
             endCard();
         };
