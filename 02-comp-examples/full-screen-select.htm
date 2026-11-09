@@ -37,79 +37,95 @@
     const STATUSES = [{ key: "on", text: "On" }, { key: "off", text: "Off" }, { key: "auto", text: "Automatic" }];
     const CITIES = ["İstanbul", "İzmir", "Ankara", "Çanakkale", "Şanlıurfa", "Muğla", "Ağrı", "Trabzon", "Eskişehir", "Gaziantep"];
 
-    const SCREEN_WIDTH = 600; // The page fits this width (a phone screen)
-    const MAX_SCREEN_WIDTH = 1024;
-    const SPACE = 20;
-    const FIELD_WIDTH = SCREEN_WIDTH - 2 * SPACE;
+    // *** THE COLORS AND SIZES OF THE PAGE
+    const PAGE_COLOR = "#F4F5F2";
+    const CARD_WIDTH = 480;
+    const LIGHT_CARD = { color: "white", line: Black(0.08), text: Black(0.55), title: Black(0.8) };
+    const DARK_CARD = { color: "#141414", line: "#141414", text: White(0.5), title: White(0.6) };
+
+    const start = function () {
+
+        page.color = PAGE_COLOR;
+
+        // SCROLL AREA: The page (comp/scroll-area.js)
+        ScrollArea({ align: "center top", gap: 20, padding: [16, 40] });
+
+            Label({ text: "FullScreenSelect", fontSize: 24, bold: 1, textColor: Black(0.8) });
+
+            // CARD: Three fields
+            startCard("Click a field: its list opens on the whole screen, with a search box.", LIGHT_CARD);
+
+                startField("Fruits:", LIGHT_CARD);
+                    const fruits = FullScreenSelect({
+                        width: "100%",
+                        items: FRUITS,
+                        selectedKey: "banana",
+                        onChange: function (self) { showSelected(fruitsInfo, self); },
+                    });
+                    const fruitsInfo = createInfo();
+                    showSelected(fruitsInfo, fruits);
+                endField();
+
+                startField("Connection status:", LIGHT_CARD);
+                    FullScreenSelect({ width: "100%", items: STATUSES, selectedKey: "auto" });
+                endField();
+
+                // autoWidth and Turkish letters in the search
+                startField("City (autoWidth: 1; search \"canakkale\" or \"sanli\"):", LIGHT_CARD);
+                    FullScreenSelect({ autoWidth: 1, items: CITIES, placeholder: "Şehir ara", emptyText: "Sonuç yok" });
+                endField();
+
+            endCard();
+
+            // CARD: The dark package
+            startCard("styleName: \"dark\"", DARK_CARD);
+                FullScreenSelect({ width: "100%", styleName: "dark", items: FRUITS, selectedKey: "mango" });
+            endCard();
+
+        endGroup();
+
+    };
+
+    // *** OTHER FUNCTIONS:
+
+    // GROUP: A card in the colors of its page, with a line that says what to try
+    const startCard = function (text, look) {
+        VGroup({
+            width: CARD_WIDTH,
+            height: "auto",
+            align: "left top",
+            gap: 20,
+            padding: 24,
+            color: look.color,
+            round: 10,
+            border: 1,
+            borderColor: look.line,
+            css: { maxWidth: "100%" }, // WHY maxWidth: on a phone the card is as wide as the screen
+        });
+        Label({ plainText: text, fontSize: 13, textColor: look.text });
+    };
+
+    const endCard = function () {
+        endGroup();
+    };
 
     // GROUP: A title over a field
-    const startField = function (title, look = {}) {
+    const startField = function (title, look) {
         VGroup({ width: "100%", height: "auto", align: "left top", gap: 10 });
-        Label({ plainText: title, fontSize: 16, textColor: look.textColor || Black(0.8) });
+        Label({ plainText: title, fontSize: 16, textColor: look.title });
     };
 
     const endField = function () {
         endGroup();
     };
 
-    const createInfo = function (textColor = Black(0.45)) {
-        return Label({ plainText: "", width: "100%", fontSize: 14, textColor: textColor });
+    const createInfo = function () {
+        return Label({ plainText: "", width: "100%", fontSize: 14, textColor: Black(0.45) });
     };
 
     const showSelected = function (info, select) {
         const item = select.getSelectedItem();
         info.plainText = item ? "selectedKey: \"" + item.key + "\"" : "";
-    };
-
-    const start = function () {
-
-        //page.fit(SCREEN_WIDTH, MAX_SCREEN_WIDTH);
-        page.onResize(function () {
-            //page.fit(SCREEN_WIDTH, MAX_SCREEN_WIDTH);
-        });
-        page.color = "white";
-
-        ScrollArea({ align: "left top", gap: 30, padding: [SPACE, 40] });
-
-            Label({ text: "FullScreenSelect", fontSize: 26, bold: 1, textColor: Black(0.8) });
-
-            // The two fields of ui-select-text-e2.htm
-            startField("Fruits:");
-                const fruits = FullScreenSelect({
-                    width: FIELD_WIDTH,
-                    items: FRUITS,
-                    selectedKey: "banana",
-                    onChange: function (self) { showSelected(fruitsInfo, self); },
-                });
-                const fruitsInfo = createInfo();
-                showSelected(fruitsInfo, fruits);
-            endField();
-
-            startField("Connection status:");
-                FullScreenSelect({ width: FIELD_WIDTH, items: STATUSES, selectedKey: "auto" });
-            endField();
-
-            // autoWidth and Turkish letters in the search
-            startField("City (autoWidth: 1; search \"canakkale\" or \"sanli\"):");
-                FullScreenSelect({ autoWidth: 1, items: CITIES, placeholder: "Şehir ara", emptyText: "Sonuç yok" });
-            endField();
-
-            // GROUP: The dark package
-            VGroup({
-                width: "100%",
-                height: "auto",
-                align: "left top",
-                gap: 10,
-                padding: SPACE,
-                color: "#141414",
-                round: 12,
-            });
-                Label({ plainText: "styleName: \"dark\"", fontSize: 16, textColor: White(0.6) });
-                FullScreenSelect({ width: FIELD_WIDTH - 2 * SPACE, styleName: "dark", items: FRUITS, selectedKey: "mango" });
-            endGroup();
-
-        endGroup();
-
     };
 
     </script>

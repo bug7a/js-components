@@ -19,63 +19,75 @@
 
         /* Bismillah */
 
-        // DESIGN PAGE: SearchInput with styleName "ozden", to edit SearchInput.styles.ozden (comp/search-input.js).
+        // SearchInput (comp/search-input.js): the model page, and the design page of SearchInput.styles.ozden.
         // The look comes only from the package: the samples give no look params.
         // basic-designer:
         // http://127.0.0.1:5505/_basic-designer/index.htm?page=02-comp-examples/search-input.htm
         // WHY a name for every SearchInput: it is the name of its layer in basic-designer.
+
+        // *** THE COLORS AND SIZES OF THE PAGE
+        const PAGE_COLOR = "#F4F5F2";
+        const CARD_WIDTH = 540;
+        const LIGHT_CARD = { color: "white", line: Black(0.08), text: Black(0.45) };
+        const DARK_CARD = { color: "#1E1F22", line: "#1E1F22", text: White(0.45) };
 
         // *** VARIABLES:
         let lblSearched;
 
         const start = function () {
 
-            page.color = "#F4F5F2";
+            page.color = PAGE_COLOR;
 
             // SCROLL AREA: The page (comp/scroll-area.js)
             // WHY: page does not scroll. A ScrollArea fills the window; its content scrolls when it is taller.
-            ScrollArea({ align: "left top", gap: 28, padding: 40, color: "#FFFFFF" });
+            ScrollArea({ align: "center top", gap: 20, padding: [16, 40] });
 
-                // SAMPLES: ozden
-                caption("ozden · empty");
-                const searchEmpty = SearchInput({
-                    styleName: "ozden",
-                    onChange: showSearched,
-                });
+                Label({ text: "SearchInput", fontSize: 24, bold: 1, textColor: Black(0.8) });
 
-                caption("ozden · with text (value shows the clear icon)");
-                SearchInput({
-                    styleName: "ozden",
-                    placeholder: "Search products",
-                    value: "fishing boat",
-                    onChange: showSearched,
-                });
+                // CARD: ozden (the default)
+                startCard("styleName: \"ozden\" (the default)", LIGHT_CARD);
 
-                caption("ozden · wide (480)");
-                const searchWide = SearchInput({
-                    styleName: "ozden",
-                    width: 480,
-                    height: 40,
-                    fontSize: 18,
-                    searchIconSize: 20,
-                    placeholder: "Search in all pages",
-                    onChange: showSearched,
-                });
+                    caption("empty", LIGHT_CARD);
+                    const searchEmpty = SearchInput({
+                        styleName: "ozden",
+                        onChange: showSearched,
+                    });
 
-                caption("ozden · animated: 1 (move the mouse over it, click, type, clear; the packages are still: animated 0)");
-                const searchAnimated = SearchInput({
-                    styleName: "ozden",
-                    animated: 1,
-                    placeholder: "Search products",
-                    onChange: showSearched,
-                });
+                    caption("with text (a value shows the clear icon)", LIGHT_CARD);
+                    SearchInput({
+                        styleName: "ozden",
+                        placeholder: "Search products",
+                        value: "fishing boat",
+                        onChange: showSearched,
+                    });
 
-                lblSearched = Label({ text: "Searched: -", fontSize: 13, textColor: Black(0.5) });
+                    caption("wide (480)", LIGHT_CARD);
+                    const searchWide = SearchInput({
+                        styleName: "ozden",
+                        width: 480,
+                        height: 40,
+                        fontSize: 18,
+                        searchIconSize: 20,
+                        placeholder: "Search in all pages",
+                        onChange: showSearched,
+                        css: { maxWidth: "100%" }, // WHY maxWidth: on a phone it is as wide as the card
+                    });
 
-                // SAMPLES: ozdenDark
-                VGroup({ hug: 1, align: "left top", gap: 12, padding: 24, color: "#1E1F22", round: 16 });
+                    caption("animated: 1 (move the mouse over it, click, type, clear; the packages are still: animated 0)", LIGHT_CARD);
+                    const searchAnimated = SearchInput({
+                        styleName: "ozden",
+                        animated: 1,
+                        placeholder: "Search products",
+                        onChange: showSearched,
+                    });
 
-                    Label({ text: "ozdenDark · on a dark page", fontSize: 12, textColor: White(0.45) });
+                    lblSearched = Label({ text: "Searched: -", fontSize: 13, textColor: Black(0.5) });
+
+                endCard();
+
+                // CARD: ozdenDark
+                startCard("styleName: \"ozdenDark\" (a dark page)", DARK_CARD);
+
                     SearchInput({
                         styleName: "ozdenDark",
                         placeholder: "Search products",
@@ -83,7 +95,7 @@
                         onChange: showSearched,
                     });
 
-                    Label({ text: "ozdenDark · animated: 1", fontSize: 12, textColor: White(0.45) });
+                    caption("animated: 1", DARK_CARD);
                     const searchDarkAnimated = SearchInput({
                         styleName: "ozdenDark",
                         animated: 1,
@@ -91,14 +103,15 @@
                         onChange: showSearched,
                     });
 
-                endGroup();
+                endCard();
 
-                // LIGHT (to compare)
-                caption("light · to compare");
-                const searchLight = SearchInput({
-                    styleName: "light",
-                    onChange: showSearched,
-                });
+                // CARD: light (to compare)
+                startCard("styleName: \"light\" (the look of the kit, to compare)", LIGHT_CARD);
+                    const searchLight = SearchInput({
+                        styleName: "light",
+                        onChange: showSearched,
+                    });
+                endCard();
 
             endGroup();
 
@@ -107,11 +120,32 @@
         // *** OTHER FUNCTIONS:
 
         const showSearched = function (self) {
-            lblSearched.text = "Searched: " + (self.getSearchText() || "-");
+            lblSearched.plainText = "Searched: " + (self.getSearchText() || "-");
         };
 
-        const caption = function (text) {
-            return Label({ text: text, fontSize: 12, textColor: Black(0.4) });
+        // GROUP: A card in the colors of its page, with its title
+        const startCard = function (title, look) {
+            VGroup({
+                width: CARD_WIDTH,
+                height: "auto",
+                align: "left top",
+                gap: 12,
+                padding: 24,
+                color: look.color,
+                round: 10,
+                border: 1,
+                borderColor: look.line,
+                css: { maxWidth: "100%" }, // WHY maxWidth: on a phone the card is as wide as the screen
+            });
+            Label({ plainText: title, fontSize: 13, bold: 1, textColor: look.text });
+        };
+
+        const endCard = function () {
+            endGroup();
+        };
+
+        const caption = function (text, look) {
+            return Label({ plainText: text, fontSize: 12, textColor: look.text });
         };
 
     </script>

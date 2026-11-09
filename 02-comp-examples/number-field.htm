@@ -1,62 +1,102 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
 
-        <title>NumberField JS Component</title>
+<head>
+    <title>NumberField</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0"><!-- , user-scalable=no -->
+    <!-- LIBRARY FILES -->
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Bold.ttf" as="font" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="../basic/basic.css">
+    <script src="../basic/basic.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../basic/scroll-bar.js" type="text/javascript" charset="utf-8"></script>
 
-        <!-- LIBRARY FILES -->
-        <!-- <link rel="preload" href="image.png" as="image"> -->
-        <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
-        <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
-        <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
+    <!-- COMPONENT FILES -->
+    <script src="../comp/tooltip.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/text-field.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/number-field.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/scroll-area.js" type="text/javascript" charset="utf-8"></script>
 
-        <script src="../comp/tooltip.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../comp/text-field.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../comp/number-field.js" type="text/javascript" charset="utf-8"></script>
+    <script>
 
-        <script>
+        /* Bismillah */
 
-        // NumberField (comp/number-field.js): a TextField for numbers (allowNegative, allowDecimal); its value goes to the console.
+        // NumberField (comp/number-field.js): a TextField for numbers (allowNegative, allowDecimal, maxDecimalDigits).
+        // The value is written under it (onChange).
+
+        // *** THE COLORS AND SIZES OF THE PAGE
+        const PAGE_COLOR = "#F4F5F2";
+        const CARD_WIDTH = 420;
+
+        let lblValue;
 
         const start = function () {
 
-            page.color = "white";
+            page.color = PAGE_COLOR;
 
-            // GROUP: Centered content
-            HGroup();
+            // SCROLL AREA: The page (comp/scroll-area.js)
+            ScrollArea({ align: "center top", gap: 20, padding: [16, 40] });
 
-                // INPUT: #1
-                const myInput = NumberField({
-                    styleName: "modern",
-                    key: "1",
-                    width: 350,
-                    titleText: "NUMERIC",
-                    placeholder: "(auto)",
-                    maxLength: 35,
-                    allowNegative: 1,
-                    allowDecimal: 1,
-                    decimalSeparator: ".", // or ","
-                    maxDecimalDigits: 2,
-                });
+                Label({ text: "NumberField", fontSize: 24, bold: 1, textColor: Black(0.8) });
+
+                // CARD: The field and what to try
+                startCard("Only a number can be typed: a minus, and two digits after the \".\".");
+
+                    // NUMBER FIELD
+                    NumberField({
+                        styleName: "modern",
+                        width: "100%",
+                        titleText: "NUMERIC",
+                        placeholder: "(auto)",
+                        maxLength: 35,
+                        allowNegative: 1,
+                        allowDecimal: 1,
+                        decimalSeparator: ".", // or ","
+                        maxDecimalDigits: 2,
+                        onChange: function (self) {
+                            lblValue.plainText = "Value: " + self.getValue();
+                        },
+                    });
+
+                    // LABEL: The value (onChange)
+                    lblValue = Label({ text: "Value: -", fontSize: 13, textColor: Black(0.5) });
+
+                endCard();
 
             endGroup();
 
-            // Get value
-            myInput.onChange = function () {
-                console.log(myInput.getValue());
-            };
-
         };
 
-        </script>
+        // *** OTHER FUNCTIONS:
 
-    </head>
-    <body>
+        // GROUP: A white card with a line that says what to try
+        const startCard = function (text) {
+            VGroup({
+                width: CARD_WIDTH,
+                height: "auto",
+                align: "left top",
+                gap: 14,
+                padding: 24,
+                color: "white",
+                round: 10,
+                border: 1,
+                borderColor: Black(0.08),
+                css: { maxWidth: "100%", alignItems: "stretch" }, // WHY maxWidth: on a phone the card is as wide as the screen
+            });
+            Label({ text: text, fontSize: 13, textColor: Black(0.55) });
+        };
 
-        <!-- HTML content -->
+        const endCard = function () {
+            endGroup();
+        };
 
-    </body>
+    </script>
+
+</head>
+
+<body>
+</body>
+
 </html>
