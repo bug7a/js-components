@@ -1569,26 +1569,14 @@ ItemList.styles = {
         desc: { fontSize: 13, textColor: Black(0.55), marginTop: 0 },
         check: { visible: 1, size: 20, color: "#3D7A6B", iconColor: "#FFFFFF", borderColor: Black(0.25) },
         empty: { fontSize: 14, textColor: Black(0.55) },
-        // The search field of the light look (_designs/search-input.htm): SearchInput light in its colors and sizes,
-        // round 8 as the rows.
+        // The search field of the light look: SearchInput light, round 8 as the rows.
+        // WHY border and round: the search box of ozden (the default) has border 0 and round 2, and its keys fill
+        // this package.
         search: {
             styleName: "light", // A package of SearchInput.styles
-            height: 44,
             padding: [6, 6, 6, 0], // left, top, right, bottom: as box.padding (the rows have their own 6 under it)
-            fontSize: 15,
-            textOffsetY: -1, // WHY: the small letters of Open Sans sit low in their line
-            color: "#FFFFFF",
-            textColor: Black(0.88),
-            placeholderColor: Black(0.38),
             border: 1,
-            borderColor: Black(0.12),
-            borderBottomStyle: "1px solid " + Black(0.12),
-            focusBorderColor: "#3D7A6B", // the accent while typing (2 px)
-            focusRingColor: "rgba(61, 122, 107, 0.5)",
             round: 8,
-            searchIconSize: 18,
-            searchIconLeft: 14,
-            clearIconRight: 12,
         },
         scrollBar: { bar_color: "#A0A0A0", bar_mouseOverColor: "#6E6E6C", neverHide: 0, showDots: 0 },
     },
@@ -1624,28 +1612,15 @@ ItemList.styles = {
         desc: { fontSize: 13, textColor: White(0.55), marginTop: 0 },
         check: { visible: 1, size: 20, color: "#65A293", iconColor: "#0F1F1B", borderColor: White(0.3) },
         empty: { fontSize: 14, textColor: White(0.55) },
-        // The search field of the dark look. WHY light: SearchInput has no dark package yet: its light one in the dark
-        // colors, its icons inverted (a white search icon, a gray clear button with a dark cross).
+        // The search field of the dark look: SearchInput dark, round 8 as the rows.
+        // WHY color, border and round: the search box of ozden (the default) is white with border 0 and round 2, and
+        // its keys fill this package.
         search: {
-            styleName: "light", // A package of SearchInput.styles
-            height: 44,
+            styleName: "dark", // A package of SearchInput.styles
             padding: [6, 6, 6, 0], // left, top, right, bottom: as box.padding (the rows have their own 6 under it)
-            fontSize: 15,
-            textOffsetY: -1, // WHY: the small letters of Open Sans sit low in their line
             color: "#232322",
-            textColor: White(0.9),
-            placeholderColor: White(0.38),
             border: 1,
-            borderColor: White(0.12),
-            borderBottomStyle: "1px solid " + White(0.12),
-            focusBorderColor: "#65A293", // the accent while typing (2 px)
-            hoverRingColor: White(0.08),
-            focusRingColor: "rgba(101, 162, 147, 0.55)",
             round: 8,
-            searchIconSize: 18,
-            searchIconLeft: 14,
-            clearIconRight: 12,
-            invertIconColor: 1,
         },
         scrollBar: { bar_color: "#8A8A88", bar_mouseOverColor: "#BFBFBD", neverHide: 0, showDots: 0 },
     },

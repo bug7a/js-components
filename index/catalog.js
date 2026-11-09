@@ -573,7 +573,7 @@ CATALOG.COMPONENTS = [
     },
     {
         key: "search-input", name: "SearchInput", cat: "inputs",
-        source: "comp/search-input.js", samples: [{ file: "02-comp-examples/search-input.htm", title: "ozden, ozdenDark (new pages)" }, { file: "02-comp-examples/search-input-2-light.htm", title: "light: a standard search box" }, { file: "02-comp-examples/search-input-place.htm", title: "Place: right / bottom" }, "02-comp-examples/minimal-theme.htm"],
+        source: "comp/search-input.js", samples: [{ file: "02-comp-examples/search-input.htm", title: "ozden, ozdenDark (new pages)" }, { file: "02-comp-examples/search-input-2-light.htm", title: "light: a white field, the accent while typing" }, { file: "02-comp-examples/search-input-3-dark.htm", title: "dark: the same on a dark page" }, { file: "02-comp-examples/search-input-place.htm", title: "Place: right / bottom" }, "02-comp-examples/minimal-theme.htm"],
         en: "Search field with a search icon and a clear button.",
         tr: "Arama ikonu ve temizleme düğmeli arama kutusu.",
     },

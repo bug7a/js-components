@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Search Input: dark</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- LIBRARY FILES -->
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="../basic/basic.css">
+    <script src="../basic/basic.js" type="text/javascript" charset="utf-8"></script>
+
+    <!-- COMPONENT FILES -->
+    <script src="../comp/search-input.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/scroll-area.js" type="text/javascript" charset="utf-8"></script>
+
+    <script>
+
+        /* Bismillah */
+
+        // DESIGN PAGE: SearchInput with styleName "dark", the dark look of the kit (_designs/search-input.htm): the
+        // field of "light" on the dark surface, light text and icons; while typing the edge is in the accent and 2 px.
+        // The look comes only from the package (SearchInput.styles.dark): the samples give no look params.
+
+        // *** THE COLORS AND SIZES OF THE PAGE
+        const PAGE_COLOR = "#1A1A19";
+        const CARD_COLOR = "#232322";
+        const CAPTION_COLOR = White(0.45);
+        const CARD_WIDTH = 520;
+
+        // *** VARIABLES:
+        let lblSearched;
+
+        const start = function () {
+
+            page.color = PAGE_COLOR;
+
+            // BOX: Scrolling page
+            // WHY 16 at the sides: the card fills a phone (390 px)
+            ScrollArea({ align: "left top", gap: 24, padding: [16, 40], styleName: "dark" });
+
+                Label({ text: "SearchInput: dark", fontSize: 24, bold: 1, textColor: White(0.85) });
+
+                caption("dark · empty (click it: the edge while typing)");
+                SearchInput({
+                    styleName: "dark",
+                    onChange: showSearched,
+                });
+
+                caption("dark · with text (value shows the clear icon)");
+                SearchInput({
+                    styleName: "dark",
+                    placeholder: "Search products",
+                    value: "running shoes",
+                    onChange: showSearched,
+                });
+
+                // GROUP: A card in the color of the field, with a search box as wide as the card
+                VGroup({
+                    width: "100%",
+                    height: "auto",
+                    align: "left top",
+                    gap: 12,
+                    padding: 20,
+                    color: CARD_COLOR,
+                    round: 10,
+                    border: 1,
+                    borderColor: White(0.08),
+                    css: { maxWidth: CARD_WIDTH + "px" },
+                });
+                    caption("dark · on a card of its color, as wide as the card (width: \"100%\")");
+                    SearchInput({
+                        styleName: "dark",
+                        width: "100%",
+                        placeholder: "Search in all pages",
+                        onChange: showSearched,
+                    });
+                endGroup();
+
+                lblSearched = Label({ text: "Searched: -", fontSize: 13, textColor: White(0.5) });
+
+            endGroup();
+
+        };
+
+        // *** OTHER FUNCTIONS:
+
+        const showSearched = function (self) {
+            lblSearched.plainText = "Searched: " + (self.getSearchText() || "-");
+        };
+
+        const caption = function (text) {
+            return Label({ text: text, fontSize: 12, textColor: CAPTION_COLOR });
+        };
+
+    </script>
+
+</head>
+
+<body>
+</body>
+
+</html>

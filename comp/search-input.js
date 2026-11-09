@@ -6,17 +6,19 @@ Search Input - v24.04
 
 UI COMPONENT TEMPLATE
 - You can customize, this template code as you need:
-- Style packages: "original" (the default: whitesmoke with a soft bottom line), "light" (its old name "classic": a standard search box:
-  white, a thin gray edge, round corners, a line search icon, a dark edge while typing), "ozden", "ozdenDark".
+- Style packages: "original" (the default: whitesmoke with a soft bottom line), "light" (its old name "classic") and
+  "dark" (the light and dark look of the kit: a white / dark field with one thin line, round 10, a line search icon,
+  a soft round clear button, the accent on the edge while typing: _designs/search-input.htm), "ozden", "ozdenDark".
   Select with styleName. (SearchInput.styles)
--- "light", "ozden" and "ozdenDark" are 44 px high ("original" and the defaults: 50). A
+-- "light", "dark", "ozden" and "ozdenDark" are 44 px high ("original" and the defaults: 50). A
    height given by the page wins over it.
 - focusBorderColor: the edge while typing, 2 px of this color ("": the edge does not change). It is a
-  color, not a motion: also with animated: 0. "light" has it. focusBorderWidth: 1 only the edge (minimal).
-- The vertical place: textOffsetY / clearIconOffsetY move the text and the clear icon from the
+  color, not a motion: also with animated: 0. "light" and "dark" have it. focusBorderWidth: 1 only the edge (minimal).
+- The vertical place: textOffsetY / clearIconOffsetY / searchIconOffsetY move the text and the icons from the
   middle of the box. ozden / ozdenDark: -2 / -1: center() does not count their 3 px bottom line, and the small letters
   of Open Sans sit low in their line (measured: the text was about 3 px low, the clear icon 1 px; the search icon is
-  right where it is: its round lens is over the middle, its handle under it).
+  right where it is: its round lens is over the middle, its handle under it). light / dark: the icons 1 px under the
+  middle, at the middle of the small letters of the text.
 -- A package is a package of params (basic.js v26.10.27): its keys fill the params you did not give.
 -- SearchInput.styles.myStyle = { style: {}, color: "white", textColor: "#222", ... };
 - animated: 1 adds small motions (not at the first view): under the mouse a thin line and a bigger search icon,
@@ -27,7 +29,8 @@ UI COMPONENT TEMPLATE
   corner of its box (the default left / top is not used then). Sample: 02-comp-examples/search-input-place.htm
 - The right end: clearIconRight moves the clear icon and the end of the text to the left, so
   the right end of the box is kept for an object of the page (the column chip of SmartTable); setClearIconRight().
-  A click on such an object keeps its own click (it does not start typing). clearIconMinTextWidth: a narrow box does
+  A click on such an object keeps its own click (it does not start typing). textEndSpace: the px between the end of
+  the text and the clear icon (light and dark: 6). clearIconMinTextWidth: a narrow box does
   not show its clear icon when the text beside it would be narrower than this; the text gets its place.
 - A cut text: a text longer than the box is not cut sharply: it fades out over textFadeWidth px
   at the side where it goes on (under the clear icon, an object of the page, or the search icon). While not typing,
@@ -60,6 +63,7 @@ const SearchInputDefaults = {
     searchIconLeft: 16, // px: the search icon from the left side of the box
     searchIconGap: 8, // px: between the search icon and the text
     clearIconRight: 16, // px: the clear icon from the right side of the box (more: the right end is for an object of the page)
+    textEndSpace: null, // px between the end of the text and the clear icon. null: 20 - searchIconSize (where it always was)
     showClearIcon: 1,
     clearIconMinTextWidth: 0, // px: the clear icon is not shown when the text beside it would be narrower (0: always shown)
     textFadeWidth: 24, // px: a text longer than the box fades out over this width where it is cut (0: cut sharply)
@@ -80,6 +84,7 @@ const SearchInputDefaults = {
     fontSize: 20,
     textOffsetY: 0, // px: the text up (-) or down (+) from the middle of the box (the ozden packages: -2)
     clearIconOffsetY: 0, // px: the clear icon up (-) or down (+) from the middle of the box (the ozden packages: -1)
+    searchIconOffsetY: 0, // px: the search icon up (-) or down (+) from the middle of the box (light and dark: 1)
     invertIconColor: 0, // 1: both icons are inverted (white icons for a dark field)
     invertSearchIconColor: null, // null: invertIconColor. 0 / 1: only the search icon
     invertClearIconColor: null, // null: invertIconColor. 0 / 1: only the clear icon
@@ -88,7 +93,7 @@ const SearchInputDefaults = {
     focusRingColor: "rgba(0, 0, 0, 0.16)", // animated: the line while typing
     onChange: function(self) {}, // The text changed (typed, pasted, cleared, setValue()): self.value, self.getSearchText() (lower case). Not at create time, not with setValue(value, 1)
     onEnter: function(self) {}, // Enter, and the clear icon: self.getSearchText()
-    styleName: "original", // "original" (the look of these defaults), "light" ("classic": its old name), "ozden", "ozdenDark", "minimal", "minimalDark" or a name added to SearchInput.styles
+    styleName: "original", // "original" (the look of these defaults), "light" ("classic": its old name), "dark", "ozden", "ozdenDark", "minimal", "minimalDark" or a name added to SearchInput.styles
     style: {}, // WHY: the look is in the flat params above; the packages are packages of params (see SearchInput.styles).
 };
 
@@ -114,6 +119,7 @@ const SearchInput = function(params = {}) {
     // *** Private variables:
     const ICONS_SPACE = 80; // The width of the box that is not for the text, with the default icon place (16 + 8)
     const CLEAR_ICON_PLACE = 16; // px: the text is longer by this when the clear icon is not used
+    const CLEAR_ICON_SIZE = 20; // px
 
     // animated: 1
     const MOTION_TIME = "0.25s";
@@ -143,7 +149,12 @@ const SearchInput = function(params = {}) {
 
     // The width of the text beside the clear icon: the box without the icons. A search icon moved from its default
     // place (16 + 8), or a clear icon moved from its place (clearIconRight 16), moves the text too.
+    // textEndSpace: the space before the clear icon is given (light and dark: 6).
     const getTextWidthWithClearIcon = function() {
+        if (box.textEndSpace !== null) {
+            const textLeft = box.searchIconLeft + box.searchIconSize + box.searchIconGap;
+            return box.width - textLeft - box.textEndSpace - CLEAR_ICON_SIZE - box.clearIconRight;
+        }
         const iconMove = (box.searchIconLeft - SearchInputDefaults.searchIconLeft) + (box.searchIconGap - SearchInputDefaults.searchIconGap);
         const clearIconMove = box.clearIconRight - SearchInputDefaults.clearIconRight;
         return box.width - ICONS_SPACE - iconMove - clearIconMove;
@@ -184,6 +195,7 @@ const SearchInput = function(params = {}) {
         self.imgClearIcon.center("top");
         self.imgClearIcon.top += self.clearIconOffsetY;
         self.imgIcon.center("top");
+        self.imgIcon.top += self.searchIconOffsetY;
     };
 
     const refreshLayout = function(self) {
@@ -439,7 +451,7 @@ const SearchInput = function(params = {}) {
         }
 
         // ICON: Clear icon button
-        box.imgClearIcon = Icon(5, 0, 20, 20, {
+        box.imgClearIcon = Icon(5, 0, CLEAR_ICON_SIZE, CLEAR_ICON_SIZE, {
             right: box.clearIconRight,
             opacity: 0,
             space: 0,
@@ -531,6 +543,15 @@ SearchInput.addPlaceholderStyle = function() {
 
 };
 
+// The icons of the light and dark looks: lines on a 24 x 24 grid, their colors in the drawing (no invert filter).
+SearchInput.getLineSearchIconFile = function(color) {
+    return "data:image/svg+xml;utf8," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="' + color + '" stroke-width="2" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L20 20"/></svg>');
+};
+
+SearchInput.getRoundClearIconFile = function(circleColor, crossColor) {
+    return "data:image/svg+xml;utf8," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="' + circleColor + '"/><path d="M9 9l6 6M15 9l-6 6" fill="none" stroke="' + crossColor + '" stroke-width="2" stroke-linecap="round"/></svg>');
+};
+
 // *** STYLE PACKAGES:
 // USAGE: SearchInput({ styleName: "ozden" })
 // USAGE: SearchInput({ styleName: "ozden", fontSize: 16 }) // A param you give wins over the package.
@@ -543,31 +564,66 @@ SearchInput.styles = {
     // SmartTable "green" and FullScreenSelect use it by this name.
     original: { style: {} },
 
-    // A standard search box: white, a thin gray edge, round 8, 44 px, a line search icon on
-    // the left, a gray round clear button, the text 16 px; while typing the edge is dark and 2 px.
+    // The light look of the kit (_designs/search-input.htm): a 44 px white field with one thin line and round 10
+    // corners, a 15 px text, a line search icon, a soft round clear button; while typing the edge turns to the
+    // accent of the kit (2 px).
     light: {
         style: {},
-        searchIconFile: "data:image/svg+xml;utf8," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L20 20"/></svg>'),
-        clearIconFile: "data:image/svg+xml;utf8," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="#8C8C8C"/><path d="M9 9l6 6M15 9l-6 6" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round"/></svg>'),
-        searchIconSize: 20,
+        searchIconFile: SearchInput.getLineSearchIconFile("#000000"),
+        clearIconFile: SearchInput.getRoundClearIconFile("#A3A3A0", "#FFFFFF"),
+        searchIconSize: 18,
+        searchIconLeft: 14,
+        clearIconRight: 12,
         searchIconOpacity: 0.55,
         clearIconOpacity: 1, // (its gray is in the drawing)
         invertIconColor: 0,
-        color: "white",
-        textColor: "rgba(0, 0, 0, 0.85)",
-        placeholderColor: "rgba(0, 0, 0, 0.45)",
-        fontSize: 16,
+        color: "#FFFFFF",
+        textColor: Black(0.88),
+        placeholderColor: Black(0.38),
+        fontSize: 15,
         height: 44,
-        textOffsetY: -2, // WHY: the small letters of Open Sans sit low in their line: their middle meets the icons
-        clearIconOffsetY: 0,
+        textOffsetY: -1, // WHY: the small letters of Open Sans sit low in their line
+        searchIconOffsetY: 1, // WHY 1: the icons at the middle of the small letters of the text
+        clearIconOffsetY: 1,
+        textEndSpace: 6,
         border: 1,
-        borderColor: "rgba(0, 0, 0, 0.2)",
-        borderBottomStyle: "1px solid rgba(0, 0, 0, 0.2)",
-        focusBorderColor: "rgba(0, 0, 0, 0.6)",
-        round: 8,
+        borderColor: Black(0.12),
+        borderBottomStyle: "1px solid " + Black(0.12),
+        focusBorderColor: "#3D7A6B", // the accent of the kit
+        round: 10,
         animated: 0, // 1: small hover / focus motions
-        hoverRingColor: "rgba(0, 0, 0, 0.08)",
-        focusRingColor: "rgba(0, 0, 0, 0.16)",
+        hoverRingColor: Black(0.08),
+        focusRingColor: "rgba(61, 122, 107, 0.5)",
+    },
+
+    // The dark look of the kit: the same field on the dark surface (#232322, on a #1A1A19 page), light text and icons.
+    dark: {
+        style: {},
+        searchIconFile: SearchInput.getLineSearchIconFile("#FFFFFF"),
+        clearIconFile: SearchInput.getRoundClearIconFile("#7A7A78", "#141414"),
+        searchIconSize: 18,
+        searchIconLeft: 14,
+        clearIconRight: 12,
+        searchIconOpacity: 0.55,
+        clearIconOpacity: 1, // (its gray is in the drawing)
+        invertIconColor: 0,
+        color: "#232322",
+        textColor: White(0.9),
+        placeholderColor: White(0.38),
+        fontSize: 15,
+        height: 44,
+        textOffsetY: -1, // WHY: the small letters of Open Sans sit low in their line
+        searchIconOffsetY: 1, // WHY 1: the icons at the middle of the small letters of the text
+        clearIconOffsetY: 1,
+        textEndSpace: 6,
+        border: 1,
+        borderColor: White(0.12),
+        borderBottomStyle: "1px solid " + White(0.12),
+        focusBorderColor: "#65A293", // the accent of the kit on a dark page
+        round: 10,
+        animated: 0, // 1: small hover / focus motions
+        hoverRingColor: White(0.08),
+        focusRingColor: "rgba(101, 162, 147, 0.55)",
     },
 
     // Bugra's style: a round field with a thin line, a soft search icon and a white round clear button. (Change, add or remove any look param.)
@@ -626,7 +682,7 @@ SearchInput.styles = {
     },
 
 };
-SearchInput.styles.classic = SearchInput.styles.light; // the old name of light: the pages made with it keep their look
+SearchInput.styles.classic = SearchInput.styles.light; // the old name of light
 
 // The minimal theme (_designs/minimal-theme.htm): 28 px, a 13 px text, no fill, a thin line with round ends that turns
 // ink while typing, a line search icon and a line cross. minimalDark: the same in white on a dark window.
