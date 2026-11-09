@@ -10,6 +10,8 @@ SCREENSHOT: one picture of a page (or of a part of it) for a report, in one comm
     node test/screenshot.js tabs.htm --before                the page of the last commit left, the page now right
     node test/screenshot.js tabs.htm --before HEAD~2 --name tabs-fix
     node test/screenshot.js stepper.htm --print "document.title" --print "page.width" --no-picture
+    node test/screenshot.js item-list.htm --clip-text 'styleName: "light"' --clip-text 'styleName: "dark" ·'
+                                                             the two cards with these titles (lower on the page too)
     node test/screenshot.js "03-webpages/webpage-handbook/index.htm#/box" --click "Run" --click "Copy"
     node test/screenshot.js "03-webpages/webpage-handbook/index.htm#/using-components" --click "Run" \
         --click "Your name" --type "Ada" --click "Save"     (the example runs in an iframe: it is searched too)
@@ -26,7 +28,10 @@ Options:
                       --click and --type run after --run, one after the other in the order they are given
     --clip "x"        only this part: a basic.js expression (BasicDesigner.ui.pageMenu, a box or its elem, or a list
                       of them) or a CSS selector ([role=dialog], #id: its first element that is seen); --margin px
-                      around it (12). More than one --clip: the part that holds all of them
+                      around it (12). More than one --clip: the part that holds all of them. A part out of the
+                      window (lower in a ScrollArea) is scrolled into it; a taller one makes the window taller
+    --clip-text "t"   only the box around a title: the card or the group of the element whose text starts with
+                      this text (its parent). With --clip and more --clip-text: the part that holds them all
     --before [commit] before | after in one picture, with labels (HEAD by default)
     --name what       the file: _screenshots/YYYY-MM-DD-what.png (the name of the page by default)
     --width, --height the window (1280 x 800; a width under 500 is 844 high)
@@ -102,15 +107,28 @@ const watchPage = function (page, log) {
     });
 };
 
-// Runs in the page: the rectangle that holds every clip. A clip is a basic.js expression (an object, an element or a
-// list of them) or a CSS selector (its first element that is seen).
+// Runs in the page: the rectangle that holds every clip, brought into the window with its margin. A clip is a
+// basic.js expression (an object, an element or a list of them), a CSS selector (its first element that is seen) or
+// { text } (--clip-text: the parent of the deepest element whose text starts with it: a title in its card).
 // WHY "seen": a closed panel or a hidden layer of the page is often the first element of a selector ([role=dialog]).
-const findClipRect = function (clips) {
+// WHY brought into the window: a part lower in a ScrollArea was cut at the bottom of the picture (the page does not
+//     scroll, its box does). scroll-margin keeps the margin above it in the window.
+const findClipRect = function (clips, margin) {
     const isSeen = function (element) {
         const rect = element.getBoundingClientRect();
         return (rect.width > 0 && rect.height > 0);
     };
+    const textOf = function (element) { return element.textContent.replace(/\s+/g, " ").trim(); };
+    const elementsOfText = function (text) {
+        const wanted = text.replace(/\s+/g, " ").trim();
+        const isStartedByText = function (element) { return textOf(element).startsWith(wanted); };
+        const title = [...document.querySelectorAll("body *")].filter(isSeen).find(function (element) {
+            return isStartedByText(element) && ![...element.children].some(isStartedByText);
+        });
+        return (title && title.parentElement) ? [title.parentElement] : [];
+    };
     const elementsOf = function (clip) {
+        if (clip && typeof clip === "object") return elementsOfText(clip.text);
         let found = null;
         try {
             found = (0, eval)(clip); // WHY indirect: the globals of the page, not the variables of this function
@@ -128,13 +146,26 @@ const findClipRect = function (clips) {
             return [];
         }
     };
-    const rects = clips.flatMap(elementsOf).filter(isSeen).map(function (element) { return element.getBoundingClientRect(); });
-    if (!rects.length) return null;
-    const left = Math.min.apply(null, rects.map(function (rect) { return rect.left; }));
-    const top = Math.min.apply(null, rects.map(function (rect) { return rect.top; }));
-    const right = Math.max.apply(null, rects.map(function (rect) { return rect.right; }));
-    const bottom = Math.max.apply(null, rects.map(function (rect) { return rect.bottom; }));
-    return { x: left, y: top, width: right - left, height: bottom - top };
+    const unionOf = function (elements) {
+        const rects = elements.map(function (element) { return element.getBoundingClientRect(); });
+        const left = Math.min.apply(null, rects.map(function (rect) { return rect.left; }));
+        const top = Math.min.apply(null, rects.map(function (rect) { return rect.top; }));
+        const right = Math.max.apply(null, rects.map(function (rect) { return rect.right; }));
+        const bottom = Math.max.apply(null, rects.map(function (rect) { return rect.bottom; }));
+        return { x: left, y: top, width: right - left, height: bottom - top };
+    };
+    const elements = clips.flatMap(elementsOf).filter(isSeen);
+    if (!elements.length) return null;
+    const rect = unionOf(elements);
+    const isInWindow = (rect.y >= margin && rect.y + rect.height + margin <= window.innerHeight);
+    if (isInWindow) return rect;
+    const topOf = function (element) { return element.getBoundingClientRect().top; };
+    const topmost = elements.reduce(function (a, b) { return (topOf(b) < topOf(a)) ? b : a; });
+    const ownScrollMargin = topmost.style.scrollMarginTop;
+    topmost.style.scrollMarginTop = margin + "px";
+    topmost.scrollIntoView({ block: "start", inline: "nearest" });
+    topmost.style.scrollMarginTop = ownScrollMargin;
+    return unionOf(elements);
 };
 
 // Runs in the page: the middle of the element that shows this text (or has it as its aria-label, title or
@@ -222,6 +253,10 @@ const readPrints = async function (page, expressions, log) {
     return prints;
 };
 
+const nameOfClip = function (clip) {
+    return (typeof clip === "string") ? clip : "the text \"" + clip.text + "\"";
+};
+
 // The clipped part with its margin, inside the window.
 const clipWithMargin = function (rect, margin, size) {
     const left = Math.max(0, Math.floor(rect.x - margin));
@@ -271,12 +306,21 @@ const takePicture = async function (browser, url, options) {
         if (options.isNoPicture) return { picture: null, log, prints };
         if (!options.clips.length) return { picture: await page.screenshot(), log, prints };
 
-        const rect = await page.evaluate(findClipRect, options.clips);
+        let rect = await page.evaluate(findClipRect, options.clips, options.margin);
         if (!rect || rect.width === 0 || rect.height === 0) {
-            log.push({ isError: true, text: "CLIP: nothing is found for " + options.clips.join(" + ") });
+            log.push({ isError: true, text: "CLIP: nothing is found for " + options.clips.map(nameOfClip).join(" + ") });
             return { picture: await page.screenshot(), log, prints };
         }
-        const clip = clipWithMargin(rect, options.margin, options);
+        // WHY: a part taller than the window (or at the end of a box that can not scroll more) was still cut.
+        let size = { width: options.width, height: options.height };
+        const neededHeight = Math.ceil(rect.y + rect.height + options.margin);
+        if (neededHeight > size.height) {
+            size = { width: options.width, height: neededHeight };
+            await page.setViewport({ width: size.width, height: size.height, deviceScaleFactor: options.scale });
+            await sleep(options.wait);
+            rect = await page.evaluate(findClipRect, options.clips, options.margin);
+        }
+        const clip = clipWithMargin(rect, options.margin, size);
         return { picture: await page.screenshot({ clip }), log, prints };
     } finally {
         await context.close();
@@ -333,6 +377,7 @@ const readOptions = function (args) {
         else if (arg === "--click") options.actions.push({ kind: "click", text: args[++i] });
         else if (arg === "--type") options.actions.push({ kind: "type", text: args[++i] });
         else if (arg === "--clip") options.clips.push(args[++i]);
+        else if (arg === "--clip-text") options.clips.push({ text: args[++i] });
         else if (arg === "--print") options.prints.push(args[++i]);
         else if (arg === "--no-picture") options.isNoPicture = true;
         else if (arg === "--name") options.name = args[++i];
