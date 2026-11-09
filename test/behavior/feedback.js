@@ -171,6 +171,25 @@ test("Toast: offsetTop moves the toasts down, the sides keep offset", async func
     toast.close();
 });
 
+test("Toast: a styleName warns once and changes nothing, theme gives the colors", async function () {
+    const themeOfPage = Toast.options.theme;
+    Toast.setOptions({ theme: "light" }); // WHY: "auto" would follow the system of the test machine
+    const warn = console.warn;
+    let warnings = 0;
+    console.warn = function () { warnings++; };
+    const wrong = Toast.show({ messageText: "Saved", duration: 0, styleName: "dark" });
+    const right = Toast.show({ messageText: "Saved", duration: 0, theme: "dark" });
+    console.warn = warn;
+    await wait(30);
+    const isRight = warnings === 1 && wrong.theme === null && right.theme === "dark"
+        && wrong.card.color !== right.card.color;
+    check("Toast: a styleName warns once and changes nothing, theme gives the colors", isRight,
+        [warnings, wrong.theme, right.theme, wrong.card.color, right.card.color].join(" | "));
+    wrong.close();
+    right.close();
+    Toast.setOptions({ theme: themeOfPage });
+});
+
 // *** TOOLTIP (comp/tooltip.js)
 
 test("Tooltip: a new text keeps the arrow at the mouse", async function () {

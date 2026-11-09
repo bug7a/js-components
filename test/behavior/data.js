@@ -1034,6 +1034,21 @@ test("GraphBox: setTheme() changes the look, setStyle() keeps the other keys", a
     chart.remove();
 });
 
+test("GraphBox: a styleName warns once and changes nothing, theme gives the colors", async function () {
+    const warn = console.warn;
+    let warnings = 0;
+    console.warn = function () { warnings++; };
+    const wrong = GraphBox({ width: 300, height: 150, labels: ["A", "B"], values: [1, 2], styleName: "dark" });
+    const right = GraphBox({ width: 300, height: 150, labels: ["A", "B"], values: [1, 2], theme: "dark" });
+    console.warn = warn;
+    const isRight = warnings === 1 && wrong.theme === "light" && right.theme === "dark"
+        && wrong.lblTitle.textColor !== right.lblTitle.textColor;
+    check("GraphBox: a styleName warns once and changes nothing, theme gives the colors", isRight,
+        [warnings, wrong.theme, right.theme, wrong.lblTitle.textColor, right.lblTitle.textColor].join(" | "));
+    wrong.remove();
+    right.remove();
+});
+
 test("SliderField and Stepper: a value typed in a field that is removed is not sent", async function () {
     const calls = [];
     const field = SliderField({ value: 3, onChange: function () { calls.push("slider field"); } });
@@ -1049,10 +1064,10 @@ test("SliderField and Stepper: a value typed in a field that is removed is not s
 });
 
 test("PhoneField: setCountryCode() keeps the number, a number filled without its code keeps its digits", async function () {
-    const phone = PhoneField({ width: 300, value: "+90 (555) 123-4567" });
+    const phone = PhoneField({ styleName: "modern", width: 300, value: "+90 (555) 123-4567" });
     phone.setCountryCode("+1");
     const changed = phone.getValue();
-    const filled = PhoneField({ width: 300 });
+    const filled = PhoneField({ styleName: "modern", width: 300 });
     const el = filled.input.inputElement;
     el.value = "5551234567"; // (autofill: the digits, with no code)
     el.dispatchEvent(new Event("input", { bubbles: true }));

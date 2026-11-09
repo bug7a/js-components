@@ -106,6 +106,10 @@ const ToastDefaults = {
 
 const Toast = function (params = {}) {
 
+    // WHY: The other components take styleName; a toast takes theme (the colors, also "auto") and style (the shapes).
+    //      Without this line a styleName is kept quietly and the toast keeps the theme of the page.
+    if (params.styleName) console.warn("Toast: styleName is not used. The colors come with theme (\"light\", \"dark\", \"auto\", \"minimal\", \"minimalDark\"), the shapes with style.");
+
     // Merge params: the shapes of its theme (Toast.THEMES[name].style: minimal), then the defaults
     // WHY before the defaults: the shapes of a theme win over the default shapes, a style of the page over both
     const themeOfParams = Toast.THEMES[params.theme || Toast.options.theme];

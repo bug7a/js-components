@@ -239,6 +239,10 @@ const GraphBoxDefaults = {
 
 const GraphBox = function (params = {}) {
 
+    // WHY: The other components take styleName; a chart takes theme (the colors, also "auto") and style (the shapes).
+    //      Without this line a styleName is kept quietly and the chart stays light.
+    if (params.styleName) console.warn("GraphBox: styleName is not used. The colors come with theme (\"light\", \"dark\", \"auto\", \"minimal\", \"minimalDark\"), the shapes with style.");
+
     // Merge params: the shapes of its theme (GraphBox.THEMES[name].style: minimal), then the defaults
     // WHY before the defaults: the shapes of a theme win over the default shapes, a style of the page over both
     const themeOfParams = GraphBox.THEMES[params.theme];
