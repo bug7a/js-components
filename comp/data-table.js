@@ -20,6 +20,8 @@ seen; 100 000 rows in about 0.1 s in the Tauri template). A few rows inside a te
 - Your own cell: column.createView(cell, value, row, self) makes objects in the cell (a chart, a button). It runs
   again when the value of the row changes (updateRows, updateRow).
 - The rows scroll with the ScrollBar of basic.js (basic/scroll-bar.js, load it first; useScrollBar: 0 turns it off).
+- A table narrower than its columns (a phone): the rows scroll to the side and the titles go with them; an "auto"
+  column is never narrower than its minWidth.
 - The rows off the screen are not laid out or drawn (CSS content-visibility: auto): 10 000 rows came on the
   screen in 2.2 s before, 1.4 s now, a sort took 315 ms, now 210 ms.
 - The values are shown as plain text (a value can not inject HTML).
@@ -34,6 +36,7 @@ A COLUMN:
                           // A row object: row[key].
     type: "number",       // "text" (default) or "number": how it is sorted
     width: 100,           // a number or "auto" (default): the "auto" columns share the width that is left
+    minWidth: 100,        // an "auto" column is never narrower (default 100); a narrower table scrolls to the side
     align: "left",        // "left" (default), "center", "right"
     sortable: 1,          // a click on the title sorts the rows
     iconFile: "",         // a small icon before the title
@@ -179,15 +182,24 @@ const DataTable = function (params = {}) {
         return box.columns.find(function (column) { return column.key == key; }) || null;
     };
 
+    // The width the columns need: a narrower table scrolls to the side.
+    const findColumnsWidth = function () {
+        return box.columns.reduce(function (sum, column) {
+            return sum + ((column.width == "auto") ? column.minWidth : Number(column.width));
+        }, 0);
+    };
+
     const findRow = function (id) {
         return box.rowList.find(function (row) { return row.id == id; }) || null;
     };
 
-    // The flex size of a column: a number is fixed, "auto" shares the free width.
+    // The flex size of a column: a number is fixed, "auto" shares the free width, not under its minWidth.
+    // WHY the minimum: with a minimum of 0, a narrow table (a phone) gave its "auto" column no width, and its text
+    //     broke after every letter, so every row was very tall.
     const applyColumnWidth = function (cell, column) {
         if (column.width == "auto") {
             cell.width = 0;
-            cell.css = { flex: "1 1 0", minWidth: "0px" };
+            cell.css = { flex: "1 1 0", minWidth: column.minWidth + "px" };
             return;
         }
         cell.css = { flex: "0 0 auto" };
@@ -583,6 +595,7 @@ const DataTable = function (params = {}) {
         };
         box.searchInput = SearchInput(searchParams);
         box.searchInput.shrink = 0;
+        box.searchInput.css = { maxWidth: "60%" }; // WHY: on a narrow table (a phone) the title keeps room
 
     };
 
@@ -764,14 +777,19 @@ const DataTable = function (params = {}) {
 
     endGroup();
 
-    // BOX: Scrolling area of the rows
-    box.scrollBox = startBox(0, rowsTop, "100%", "calc(100% - " + rowsTop + "px)", { color: "transparent", scrollY: 1 });
+    // BOX: Scrolling area of the rows (to the side too, when the table is narrower than its columns)
+    box.scrollBox = startBox(0, rowsTop, "100%", "calc(100% - " + rowsTop + "px)", { color: "transparent", scrollY: 1, scrollX: 1 });
 
         // GROUP: Rows (the order: their CSS order, showRows)
-        box.rowsGroup = VGroup({ width: "100%", height: "auto", align: "left top" });
+        box.rowsGroup = VGroup({ width: "100%", height: "auto", align: "left top", css: { minWidth: findColumnsWidth() + "px" } });
         endGroup();
 
     endBox();
+
+    // WHY: the titles are not in the box that scrolls (they stay at the top); they go to the side with the rows.
+    box.scrollBox.on("scroll", function () {
+        box.titleRow.elem.scrollLeft = box.scrollBox.elem.scrollLeft;
+    });
 
     // LABEL: No rows / no result
     box.lblEmpty = Label({
@@ -811,6 +829,7 @@ DataTable.fitColumns = function (columns) {
             valueIndex: i,
             type: "text",
             width: "auto",
+            minWidth: 100, // px: the least width of an "auto" column (a narrower table scrolls to the side)
             align: "left",
             sortable: 0,
             iconFile: "",

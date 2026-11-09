@@ -2570,3 +2570,25 @@ test("Canvas: setTheme(\"dark\") changes the ground and the pen of a line with n
     check("Canvas: setTheme(\"dark\") changes the ground and the pen of a line with no color; a color of the page stays",
         ground === "rgb(26, 26, 25)" && pen === "230,230,228,255" && round === "2px", [ground, pen, round].join(" | "));
 });
+
+test("DataTable: in a table narrower than its columns an \"auto\" column keeps its minWidth; the rows scroll to the side and the titles go with them", async function () {
+    const columns = [
+        { key: "id", title: "#", width: 60 },
+        { key: "name", title: "Name" },
+        { key: "city", title: "City", width: 120 },
+        { key: "amount", title: "Amount", width: 130 },
+    ];
+    const table = DataTable({ left: 0, top: 0, width: 300, height: 200, columns: columns, rows: [[1, "Sofia Rodriguez", "Tokyo", 205]] });
+    await wait(30);
+    const nameCell = table.rowList[0].cells[1];
+    const nameWidth = Math.round(nameCell.elem.getBoundingClientRect().width);
+    const rowHeight = Math.round(table.rowList[0].elem.getBoundingClientRect().height);
+    const isWider = (table.scrollBox.elem.scrollWidth > table.scrollBox.elem.clientWidth);
+    table.scrollBox.elem.scrollLeft = 80;
+    table.scrollBox.elem.dispatchEvent(new Event("scroll"));
+    const titleLeft = table.titleRow.elem.scrollLeft;
+    table.remove();
+    check("DataTable: in a table narrower than its columns an \"auto\" column keeps its minWidth; the rows scroll to the side and the titles go with them",
+        nameWidth === 100 && rowHeight < 100 && isWider && titleLeft === 80, // (the bug: a letter in a line, 300 px)
+        "name " + nameWidth + " px, row " + rowHeight + " px, wider: " + isWider + ", titles at " + titleLeft);
+});
