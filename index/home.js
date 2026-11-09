@@ -120,9 +120,9 @@ HomeView.createHeader = function () {
 
     HomeView.startContent({ flow: "horizontal", height: 76, align: "left center", gap: 12 });
 
-        // ICON: Logo (341 x 81)
+        // ICON: Logo (351 x 83: the paper boat, basicUI, COMPONENTS)
         Icon({
-            width: 185,
+            width: 186,
             height: 44,
             color: "transparent",
         });
