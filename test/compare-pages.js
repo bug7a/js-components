@@ -23,6 +23,11 @@ The old page loads the old basic/ and comp/ too, so a change in a component is m
     node test/compare-pages.js --init "localStorage.setItem('appid_login', '{}')" ...
                                                         --init: JavaScript before the scripts of the page (a login
                                                         that the page keeps in localStorage); with --run, in that order
+    node test/compare-pages.js --stop-clock ...         the clock of the pages does not move: Date.now() and new Date()
+                                                        give one moment all the time (without it the time starts at
+                                                        6 Nov 2026 12:00 and goes on): a page that shows the time (the
+                                                        clock of a panel) is not LIVE for a second; a page that waits
+                                                        for the time to pass may not go on (both pages alike)
 
 The results:
     SAME    no difference (a difference that goes away when the page is opened again was only timing)
@@ -100,7 +105,7 @@ const findChangedPages = function (base) {
 
 // *** IN THE PAGE: this function runs in the browser, before the scripts of the page.
 
-const preparePage = function () {
+const preparePage = function (settings = {}) {
 
     // WHY: a random value or the time on a page would differ in every run.
     let seed = 12345;
@@ -112,13 +117,18 @@ const preparePage = function () {
     const RealDate = Date;
     const fixedStart = new RealDate(2026, 10, 6, 12, 0, 0).getTime();
     const realStart = RealDate.now();
+    // WHY --stop-clock: the time a page shows (the clock of a panel) was a second apart in two runs, and the page LIVE.
+    const readNow = function () {
+        if (settings.isClockStopped) return fixedStart;
+        return fixedStart + (RealDate.now() - realStart);
+    };
     window.Date = class extends RealDate {
         constructor(...args) {
-            if (args.length === 0) super(fixedStart + (RealDate.now() - realStart));
+            if (args.length === 0) super(readNow());
             else super(...args);
         }
         static now() {
-            return fixedStart + (RealDate.now() - realStart);
+            return readNow();
         }
     };
 
@@ -357,7 +367,8 @@ const typeEverywhere = async function (page, fieldCount, lines, htmlAsText) {
 };
 
 // WHY a new context for every run: localStorage of one run (a login page) must not reach the next.
-// steps: { init, run }: JavaScript before the scripts of the page, and after its load (the same in the old page).
+// steps: { init, run, isClockStopped }: JavaScript before the scripts of the page, and after its load (the same in the
+// old page); isClockStopped: the time of the page does not move (--stop-clock).
 const runPage = async function (browser, url, size, steps) {
     const context = await browser.createBrowserContext();
     try {
@@ -367,7 +378,7 @@ const runPage = async function (browser, url, size, steps) {
         await page.setRequestInterception(true);
         watchPage(page, log);
         await page.setViewport(size);
-        await page.evaluateOnNewDocument(preparePage);
+        await page.evaluateOnNewDocument(preparePage, { isClockStopped: steps.isClockStopped });
         if (steps.init) await page.evaluateOnNewDocument(steps.init);
         await page.goto(url, { waitUntil: "load", timeout: LOAD_TIMEOUT });
         await sleep(LOAD_WAIT);
@@ -832,11 +843,13 @@ const readWidth = function (text) {
 };
 
 const readOptions = function (args) {
-    const options = { base: "HEAD", isAll: false, isHelp: false, pages: [], widths: [], init: "", runs: [] };
+    const options = { base: "HEAD", isAll: false, isHelp: false, pages: [], widths: [], init: "", runs: [],
+        isClockStopped: false };
     for (let i = 0; i < args.length; i++) {
         if (args[i] === "--base") options.base = args[++i];
         else if (args[i] === "--init") options.init = args[++i] || "";
         else if (args[i] === "--run") options.runs.push(args[++i] || "");
+        else if (args[i] === "--stop-clock") options.isClockStopped = true;
         else if (args[i] === "--all") options.isAll = true;
         else if (args[i] === "--width") options.widths.push(readWidth(args[++i]));
         else if (args[i] === "--help") options.isHelp = true;
@@ -854,7 +867,8 @@ const choosePages = function (options) {
     return pairs.flatMap(function (pair) {
         return runs.map(function (run, index) {
             const runName = (runs.length > 1) ? "run" + (index + 1) : "";
-            return Object.assign({}, pair, { steps: { init: options.init, run: run }, runName: runName });
+            const steps = { init: options.init, run: run, isClockStopped: options.isClockStopped };
+            return Object.assign({}, pair, { steps: steps, runName: runName });
         });
     });
 };
