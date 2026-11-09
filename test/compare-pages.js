@@ -6,6 +6,7 @@ COMPARE PAGES: does a page still work the same after a change?
 Every page is opened twice, as it is now and as it was in a git commit, and the two are compared:
 the DOM, a screenshot, the text after every press and every typed field, and the console. At 1280 and 390 px.
 The old page loads the old basic/ and comp/ too, so a change in a component is measured as well.
+In both pages the clock stands still at 6 Nov 2026 12:00 and Math.random gives the same numbers in every run.
 
     node test/compare-pages.js                          the samples changed since the last commit,
                                                         and the samples that load a changed component
@@ -23,11 +24,9 @@ The old page loads the old basic/ and comp/ too, so a change in a component is m
     node test/compare-pages.js --init "localStorage.setItem('appid_login', '{}')" ...
                                                         --init: JavaScript before the scripts of the page (a login
                                                         that the page keeps in localStorage); with --run, in that order
-    node test/compare-pages.js --stop-clock ...         the clock of the pages does not move: Date.now() and new Date()
-                                                        give one moment all the time (without it the time starts at
-                                                        6 Nov 2026 12:00 and goes on): a page that shows the time (the
-                                                        clock of a panel) is not LIVE for a second; a page that waits
-                                                        for the time to pass may not go on (both pages alike)
+    node test/compare-pages.js --moving-clock ...       the clock of the pages goes on from 6 Nov 2026 12:00, for a
+                                                        page that waits for the time to pass (without it Date.now()
+                                                        and new Date() give that moment all the time)
 
 The results:
     SAME    no difference (a difference that goes away when the page is opened again was only timing)
@@ -117,7 +116,8 @@ const preparePage = function (settings = {}) {
     const RealDate = Date;
     const fixedStart = new RealDate(2026, 10, 6, 12, 0, 0).getTime();
     const realStart = RealDate.now();
-    // WHY --stop-clock: the time a page shows (the clock of a panel) was a second apart in two runs, and the page LIVE.
+    // WHY a clock that stands still: the time a page shows (the clock of a panel) was a second apart in two runs, and
+    //     the page LIVE, where a real change could hide.
     const readNow = function () {
         if (settings.isClockStopped) return fixedStart;
         return fixedStart + (RealDate.now() - realStart);
@@ -368,7 +368,7 @@ const typeEverywhere = async function (page, fieldCount, lines, htmlAsText) {
 
 // WHY a new context for every run: localStorage of one run (a login page) must not reach the next.
 // steps: { init, run, isClockStopped }: JavaScript before the scripts of the page, and after its load (the same in the
-// old page); isClockStopped: the time of the page does not move (--stop-clock).
+// old page); isClockStopped: the time of the page does not move (the default; --moving-clock: it goes on).
 const runPage = async function (browser, url, size, steps) {
     const context = await browser.createBrowserContext();
     try {
@@ -844,15 +844,17 @@ const readWidth = function (text) {
 
 const readOptions = function (args) {
     const options = { base: "HEAD", isAll: false, isHelp: false, pages: [], widths: [], init: "", runs: [],
-        isClockStopped: false };
+        isClockStopped: true };
     for (let i = 0; i < args.length; i++) {
         if (args[i] === "--base") options.base = args[++i];
         else if (args[i] === "--init") options.init = args[++i] || "";
         else if (args[i] === "--run") options.runs.push(args[++i] || "");
-        else if (args[i] === "--stop-clock") options.isClockStopped = true;
+        else if (args[i] === "--moving-clock") options.isClockStopped = false;
         else if (args[i] === "--all") options.isAll = true;
         else if (args[i] === "--width") options.widths.push(readWidth(args[++i]));
         else if (args[i] === "--help") options.isHelp = true;
+        // WHY: an option it does not know was taken for the name of a page, and nothing said so.
+        else if (args[i].startsWith("--")) throw new Error("Unknown option " + args[i] + ": node test/compare-pages.js --help");
         else options.pages.push(toPagePair(args[i]));
     }
     return options;
