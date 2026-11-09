@@ -22,12 +22,12 @@ const SITE = {
     // *** COLORS:
     DARK: "#0F1012",            // Koyu bölümler (hero, footer)
     DARK_SOFT: "#18191C",       // Koyu zemin üzerindeki kartlar
-    ACCENT: "#F5B82E",          // Ana vurgu (amber)
-    ACCENT_HOVER: "#FFC94D",
-    ACCENT_TEXT: "#8A5A00",     // Açık zeminde vurgu yazısı
-    ACCENT_SOFT: "#FBEFD0",
-    BG: "#F6F4EF",              // Sayfa zemini
-    BG_SOFT: "#EDEAE2",
+    ACCENT: "#23ACCF",          // The accent: the blue of the paper boat logo (2026-11-09, the user; amber #F5B82E before)
+    ACCENT_HOVER: "#3DBEDD",
+    ACCENT_TEXT: "#0F6E8A",     // The accent as a text on the light ground (5.4 : 1)
+    ACCENT_SOFT: "#D9F0F7",
+    BG: "#F5F7F9",              // The light ground, cool (warm #F6F4EF before)
+    BG_SOFT: "#E9EEF2",
     CARD: "#FFFFFF",
     INK: "#141414",
     LINE: "rgba(0, 0, 0, 0.09)",
@@ -600,7 +600,7 @@ SITE.endCard = function () {
 // GROUP: İkon zemini
 SITE.iconBadge = function (name, dark = 0, size = 46) {
 
-    const badge = VGroup({ width: size, height: size, align: "center", color: dark ? "rgba(245, 184, 46, 0.14)" : SITE.ACCENT_SOFT, round: 12 });
+    const badge = VGroup({ width: size, height: size, align: "center", color: dark ? "rgba(35, 172, 207, 0.14)" : SITE.ACCENT_SOFT, round: 12 });
     badge.elem.style.flexShrink = "0";
 
         SITE.icon(name, dark ? SITE.ACCENT : SITE.ACCENT_TEXT, Math.round(size * 0.48));
@@ -713,7 +713,7 @@ SITE.injectCss = function () {
         + "b, strong { font-family: opensans-bold; font-weight: normal; }"
         + ".bjs-text code { font-family: " + SITE.MONO + "; font-size: 0.88em; background: rgba(0, 0, 0, 0.06); border-radius: 5px; padding: 1px 5px; }"
         + ".bjs-dark code { background: rgba(255, 255, 255, 0.1); color: #FFFFFF; }"
-        + "::selection { background: rgba(245, 184, 46, 0.35); }";
+        + "::selection { background: rgba(35, 172, 207, 0.35); }";
     document.head.appendChild(style);
 
 };
