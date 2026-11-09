@@ -729,6 +729,7 @@ const ReportsPage = function(params = {}) {
             const params = {
                 height: 100,
                 titleText: kpi.title,
+                allowHtml: 1, // WHY: the title shows the change against the previous period in color (getChangeText)
                 valueText: "",
                 iconFile: "",
                 style: {
