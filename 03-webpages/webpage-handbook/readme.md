@@ -147,7 +147,7 @@ The handbook is an installable app and **opens without internet too**. The `easy
 Settings: `offlineMode: true` (network first: with internet every file comes from the network and its saved copy is
 renewed; without internet the saved copy is used), `theme: "light"`, a launch screen (`launchScreen`, only in the
 installed app; `launchScreenHideByCode: true`: `js/site.js` → `SiteApp.hideLaunchScreen()` closes it when the chapters
-are drawn), accent color `#2F6FEB`.
+are drawn), the turquoise of the site for the install button and the spinner (`#5BBAC1`, the kit's SmartButton `cyan`).
 
 **`offlineFiles`:** the files saved at the first visit: every file of the site (all chapters in both languages, the
 files of the examples, the logo, `basic/`, `comp/`, `js/`). So everything opens offline even if the visitor never
@@ -320,7 +320,7 @@ El kitabı kurulabilir bir uygulamadır ve **internet yokken de açılır**. Bun
 
 Ayarlar: `offlineMode: true` (önce ağ: internet varken her dosya ağdan gelir ve kaydı yenilenir, yokken kayıtlı olan
 kullanılır), `theme: "light"`, açılış ekranı (`launchScreen`, sadece kurulu uygulamada; `launchScreenHideByCode: true`:
-bölümler çizilince `js/site.js` → `SiteApp.hideLaunchScreen()` kapatır), vurgu rengi `#2F6FEB`.
+bölümler çizilince `js/site.js` → `SiteApp.hideLaunchScreen()` kapatır), kurulum düğmesi ve dönen işaret için sitenin turkuazı (`#5BBAC1`, kitin SmartButton `cyan` rengi).
 
 **`offlineFiles`:** İlk ziyarette kaydedilen dosyalar: sitenin bütün dosyaları (iki dilin bütün bölümleri, örneklerin
 dosyaları, logo, `basic/`, `comp/`, `js/`). Böylece ziyaretçi Türkçeye geçmeden veya bir örneği çalıştırmadan da hepsi

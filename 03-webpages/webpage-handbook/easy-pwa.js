@@ -211,7 +211,7 @@ SPDX-License-Identifier: Apache-2.0
         // "auto" (light or dark by the setting of the device), "light" or "dark". The colors are in themes.
         theme: "light",
         themes: {
-            light: { page: "#FBFBF9", title: "rgba(0, 0, 0, 0.85)", text: "rgba(0, 0, 0, 0.55)", spinner: "#2F6FEB" },
+            light: { page: "#FBFBF9", title: "rgba(0, 0, 0, 0.85)", text: "rgba(0, 0, 0, 0.55)", spinner: "#5BBAC1" },
             dark: { page: "#141414", title: "rgba(255, 255, 255, 0.9)", text: "rgba(255, 255, 255, 0.55)", spinner: "#5FB39F" },
         },
 
@@ -232,8 +232,8 @@ SPDX-License-Identifier: Apache-2.0
             banner: "#1F2326",
             bannerText: "#FFFFFF",
             bannerSoftText: "rgba(255, 255, 255, 0.65)",
-            button: "#2F6FEB",
-            buttonText: "#FFFFFF",
+            button: "#5BBAC1",                      // The turquoise of the site (js/theme.js), the kit's SmartButton "cyan"
+            buttonText: "rgba(0, 0, 0, 0.75)",
             notice: "#C0392B",
             noticeText: "#FFFFFF",
         },
