@@ -418,6 +418,7 @@ const ActivityPage = function(params = {}) {
                 });
 
                 searchInput = SearchInput({
+                    styleName: "original", // the first look of SearchInput
                     width: 240,
                     height: 40,
                     border: 1,

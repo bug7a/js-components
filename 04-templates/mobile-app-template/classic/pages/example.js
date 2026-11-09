@@ -154,11 +154,11 @@ const ExampleViews = {
         };
         // GROUP: The green half
         VGroup({ width: "100%", height: "50%", align: "center center", color: App.colors.green });
-            SearchInput({ width: 300, height: 50, color: Black(0.2), textColor: Black(0.65), placeholderColor: Black(0.4), borderBottomStyle: "2px solid " + Black(0.2), searchIconOpacity: 0.4, ...iconFiles });
+            SearchInput({ styleName: "original", width: 300, height: 50, color: Black(0.2), textColor: Black(0.65), placeholderColor: Black(0.4), borderBottomStyle: "2px solid " + Black(0.2), searchIconOpacity: 0.4, ...iconFiles });
         endGroup();
         // GROUP: The white half
         VGroup({ width: "100%", height: "50%", align: "center center", color: "white" });
-            SearchInput({ width: 300, height: 50, placeholder: "Filter", searchIconOpacity: 0.4, ...iconFiles });
+            SearchInput({ styleName: "original", width: 300, height: 50, placeholder: "Filter", searchIconOpacity: 0.4, ...iconFiles });
         endGroup();
     },
 

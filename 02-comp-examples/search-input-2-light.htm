@@ -23,7 +23,7 @@
         // white field with one thin line and round 10 corners, a line search icon on the left, a soft round clear button;
         // while typing the edge is in the accent of the kit and 2 px (focusBorderColor). The look comes only from the
         // package (SearchInput.styles.light): the samples give no look params. Without a styleName a SearchInput has
-        // the "original" look (the default). On a dark page: search-input-3-dark.htm.
+        // the "ozden" look (the default). On a dark page: search-input-3-dark.htm.
 
         // *** THE COLORS AND SIZES OF THE PAGE
         const PAGE_COLOR = "#F4F5F2";
@@ -81,8 +81,9 @@
 
                 lblSearched = Label({ text: "Searched: -", fontSize: 13, textColor: Black(0.5) });
 
-                caption("original · the default (no styleName), to compare");
+                caption("original · the first look, to compare");
                 SearchInput({
+                    styleName: "original",
                     onChange: showSearched,
                 });
 

@@ -6,9 +6,10 @@ Search Input - v24.04
 
 UI COMPONENT TEMPLATE
 - You can customize, this template code as you need:
-- Style packages: "original" (the default: whitesmoke with a soft bottom line), "light" (its old name "classic") and
+- Style packages: "ozden" (the default), "ozdenDark", "original" (the first look: whitesmoke with a soft bottom line,
+  the values of SearchInputDefaults), "light" (its old name "classic") and
   "dark" (the light and dark look of the kit: a white / dark field with one thin line, round 10, a line search icon,
-  a soft round clear button, the accent on the edge while typing: _designs/search-input.htm), "ozden", "ozdenDark".
+  a soft round clear button, the accent on the edge while typing: _designs/search-input.htm).
   Select with styleName. (SearchInput.styles)
 -- "light", "dark", "ozden" and "ozdenDark" are 44 px high ("original" and the defaults: 50). A
    height given by the page wins over it.
@@ -93,7 +94,7 @@ const SearchInputDefaults = {
     focusRingColor: "rgba(0, 0, 0, 0.16)", // animated: the line while typing
     onChange: function(self) {}, // The text changed (typed, pasted, cleared, setValue()): self.value, self.getSearchText() (lower case). Not at create time, not with setValue(value, 1)
     onEnter: function(self) {}, // Enter, and the clear icon: self.getSearchText()
-    styleName: "original", // "original" (the look of these defaults), "light" ("classic": its old name), "dark", "ozden", "ozdenDark", "minimal", "minimalDark" or a name added to SearchInput.styles
+    styleName: "ozden", // "ozden", "ozdenDark", "original" (the look of these defaults), "light" ("classic": its old name), "dark", "minimal", "minimalDark" or a name added to SearchInput.styles
     style: {}, // WHY: the look is in the flat params above; the packages are packages of params (see SearchInput.styles).
 };
 
@@ -560,7 +561,7 @@ SearchInput.getRoundClearIconFile = function(circleColor, crossColor) {
 // NOTE: A package needs only the params that differ from SearchInputDefaults.
 SearchInput.styles = {
 
-    // The look of SearchInputDefaults (whitesmoke, a soft bottom line), the default. ItemList, SelectBox,
+    // The look of SearchInputDefaults (whitesmoke, a soft bottom line), the first look. SelectBox light / dark,
     // SmartTable "green" and FullScreenSelect use it by this name.
     original: { style: {} },
 

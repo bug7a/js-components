@@ -287,6 +287,7 @@ const CustomersPage = function(params = {}) {
             that.elem.style.flexWrap = "wrap";
 
                 SearchInput({
+                    styleName: "original", // the first look of SearchInput
                     width: 260,
                     height: 40,
                     border: 1,

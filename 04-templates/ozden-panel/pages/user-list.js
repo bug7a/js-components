@@ -266,6 +266,7 @@ const UserListPage = function(params = {}) {
             that.elem.style.flexWrap = "wrap";
 
                 searchInput = SearchInput({
+                    styleName: "original", // the first look of SearchInput
                     width: 280,
                     height: 40,
                     border: 1,

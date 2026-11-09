@@ -957,7 +957,7 @@ test("SearchInput: right / bottom place it (the default left / top does not win)
     box.remove();
 });
 
-test("SearchInput ozden: the clear icon in the middle of the face of the box (its 3 px bottom line), the text 2 px over it; classic as before", async function () {
+test("SearchInput ozden: the clear icon in the middle of the face of the box (its 3 px bottom line), the text 2 px over it; original as before", async function () {
     // The middles of the clear icon and of the text box, from the top of the field
     const middlesOf = function (params) {
         const field = SearchInput(Object.assign({ left: 20, top: 100, width: 300 }, params));
@@ -969,9 +969,9 @@ test("SearchInput ozden: the clear icon in the middle of the face of the box (it
     };
     const isAt = (value, expected) => Math.abs(value - expected) < 0.6;
     const ozden = middlesOf({ styleName: "ozden" }); // 44 px: a 1 px edge and a 3 px bottom line: the face is 1-41 (middle 21)
-    const classic = middlesOf({}); // 50 px: no edge, a 2 px bottom line: the middle of the whole box, as before
-    const isOk = isAt(ozden.clear, 21) && isAt(ozden.text, 20) && isAt(classic.clear, 25) && isAt(classic.text, 25);
-    check("SearchInput ozden: the clear icon in the middle of the face of the box (its 3 px bottom line), the text 2 px over it; classic as before", isOk, "ozden: " + JSON.stringify(ozden) + ", classic: " + JSON.stringify(classic));
+    const original = middlesOf({ styleName: "original" }); // 50 px: no edge, a 2 px bottom line: the middle of the whole box, as before
+    const isOk = isAt(ozden.clear, 21) && isAt(ozden.text, 20) && isAt(original.clear, 25) && isAt(original.text, 25);
+    check("SearchInput ozden: the clear icon in the middle of the face of the box (its 3 px bottom line), the text 2 px over it; original as before", isOk, "ozden: " + JSON.stringify(ozden) + ", original: " + JSON.stringify(original));
 });
 
 // *** STEPPER (comp/stepper.js)

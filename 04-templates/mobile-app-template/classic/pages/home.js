@@ -74,6 +74,7 @@ App.addPage({
         const categoryTitle = PageHeader({ titleText: "Categories", showBack: 0 });
         createIn(categoryTitle, function () {
             SearchInput({
+                styleName: "original", // the first look of SearchInput
                 right: App.BAR_SPACE,
                 bottom: 20,
                 width: 200,

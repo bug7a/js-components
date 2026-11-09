@@ -83,6 +83,7 @@ App.addPage({
         startBox({ width: "100%", height: SEARCH_AREA_HEIGHT, color: "transparent" });
         that.shrink = 0;
             SearchInput({
+                styleName: "original", // the first look of SearchInput
                 left: App.BAR_SPACE,
                 bottom: 20,
                 width: App.DESIGN_WIDTH - App.BAR_SPACE * 2,

@@ -537,6 +537,7 @@ const TopBar = function(params = {}) {
         // EXAMPLE: How to add a SearchInput on topBar
         // Search: pages, users, orders, products
         box.searchInput = SearchInput({
+            styleName: "original", // the first look of SearchInput
             top: 0,
             left: 0,
             width: 260,
