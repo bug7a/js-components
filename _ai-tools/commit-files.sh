@@ -16,11 +16,16 @@
 #   ./_ai-tools/commit-files.sh --dry-run -m "..." a.js           what would be committed (its diff); nothing is committed
 #   ./_ai-tools/commit-files.sh -m "..." new.js --delete old.js   old.js leaves the repository (a moved file: the new path, and
 #                                                        --delete the old one; it must not be in the folder any more)
+#   ./_ai-tools/commit-files.sh -m "..." --mine CLAUDE.md         a shared file whole: all its changes are mine
 #
 # The paths are from the root of the repository; a version file (file=version) and the message file from the
 # folder you are in. It prints the files of the commit and the commit. After it the shared index follows HEAD
 # for these files, unless something of them is staged there (then it says so and leaves it).
 # A file of the folder is committed whole: give a version (file=version) when other sessions changed lines of it.
+# A shared file with more than one change is not committed whole: it lists the changes and stops (exit 2; --dry-run
+# goes on). Shared: CLAUDE.md, context/repo-map.md, _designs/readme.md (a change is a line: a rule, a row) and
+# index/catalog.js, test/behavior/*.js, test/behavior-test.htm, test/components-test.htm (a change is a block).
+# WHY: committed whole, a shared file took the lines of another session with it.
 # A test page in the commit: run it as it is in the commit after it (node test/run-tests.js behavior --commit HEAD).
 #
 # WHY not git commit: it commits the shared index, with what others added to it.
@@ -44,6 +49,8 @@ MESSAGE_FILE=""
 IS_DRY_RUN=0
 ENTRIES=()
 DELETIONS=()
+MINE=()
+SHARED_DOCS="CLAUDE.md context/repo-map.md _designs/readme.md"
 
 # A path from the folder of the caller (an absolute path stays as it is)
 fromCaller() {
@@ -59,6 +66,7 @@ while [ $# -gt 0 ]; do
         -F) MESSAGE_FILE="$(fromCaller "${2:-}")"; shift 2 ;;
         --dry-run) IS_DRY_RUN=1; shift ;;
         --delete) DELETIONS+=("${2:-}"); shift 2 ;;
+        --mine) MINE+=("${2:-}"); ENTRIES+=("${2:-}"); shift 2 ;;
         -h|--help) sed -n '4,/^$/p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
         *) ENTRIES+=("$1"); shift ;;
     esac
@@ -74,6 +82,59 @@ if [ ${#ENTRIES[@]} -eq 0 ] && [ ${#DELETIONS[@]} -eq 0 ]; then
 fi
 
 START_HEAD="$(git rev-parse HEAD)"
+
+# "lines" for a shared doc, "blocks" for a shared code file, nothing for another file
+sharedKind() {
+    case " $SHARED_DOCS " in *" $1 "*) echo "lines"; return ;; esac
+    case "$1" in
+        index/catalog.js|test/behavior/*.js|test/behavior-test.htm|test/components-test.htm) echo "blocks" ;;
+    esac
+}
+
+isMine() {
+    for mine in ${MINE[@]+"${MINE[@]}"}; do
+        [ "$mine" = "$1" ] && return 0
+    done
+    return 1
+}
+
+# The changes of a file of the folder against HEAD, one a line: "line N: its text" (lines) or "lines A-B" (blocks)
+listChanges() {
+    git diff -U0 "$START_HEAD" -- "$1" | awk -v kind="$2" '
+        /^@@ / {
+            split($3, added, ",")
+            line = substr(added[1], 2) + 0
+            count = (added[2] == "") ? 1 : added[2] + 0
+            if (count == 0) print "removed after line " line
+            else if (kind == "blocks") print "lines " line "-" (line + count - 1)
+            next
+        }
+        kind == "lines" && /^\+/ && !/^\+\+\+/ { print "line " line ": " substr($0, 2, 90); line++ }
+    '
+}
+
+HAS_SHARED_CHANGES=0
+for entry in ${ENTRIES[@]+"${ENTRIES[@]}"}; do
+    [ "$entry" != "${entry%%=*}" ] && continue # a version: only the lines in it
+    kind="$(sharedKind "$entry")"
+    [ -z "$kind" ] && continue
+    isMine "$entry" && continue
+    changes="$(listChanges "$entry" "$kind")"
+    count="$(printf '%s\n' "$changes" | grep -c .)"
+    [ "$count" -le 1 ] && continue
+    echo "$entry: $count changes, in a file that other sessions change too:"
+    printf '%s\n' "$changes" | sed 's/^/    /'
+    HAS_SHARED_CHANGES=1
+done
+if [ "$HAS_SHARED_CHANGES" = 1 ]; then
+    echo "Only your lines: python3 _ai-tools/version-of.py <file> --with \"a text of them\" -o <version>, then <file>=<version>"
+    echo "(two lines next to each other are one change for it: then the version is HEAD with your edit). All yours: --mine <file>."
+    if [ "$IS_DRY_RUN" = 0 ]; then
+        echo "Nothing was committed."
+        exit 2
+    fi
+fi
+
 TEMP_DIR="$(mktemp -d -t commit-files)"
 trap 'rm -rf "$TEMP_DIR"' EXIT
 export GIT_INDEX_FILE="$TEMP_DIR/index"
