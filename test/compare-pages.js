@@ -20,7 +20,11 @@ In both pages the clock stands still at 6 Nov 2026 12:00 and Math.random gives t
                                                         --run: JavaScript after the load (a page of a panel, a tab, a
                                                         dialog), in the old page and in the new one, before the picture;
                                                         more than one --run: each is a state of its own, compared one
-                                                        after the other in one browser (the pages of a panel at once)
+                                                        after the other in one browser (the pages of a panel at once);
+                                                        an object pressed in an earlier state of the page (the same
+                                                        look, text and place: the menu and the bar of a panel) is not
+                                                        pressed again, its line says "skipped", and the 60 presses of a
+                                                        state go to its own objects
     node test/compare-pages.js --init "localStorage.setItem('appid_login', '{}')" ...
                                                         --init: JavaScript before the scripts of the page (a login
                                                         that the page keeps in localStorage); with --run, in that order
@@ -28,11 +32,9 @@ In both pages the clock stands still at 6 Nov 2026 12:00 and Math.random gives t
                                                         only the picture after the load (and --run): no presses, no
                                                         typing, no DOM (the log stays); a draft of _designs/ and a copy
                                                         of it drawn by the component, in seconds
-    node test/compare-pages.js --press-once --run "openPageByKey('Home')" --run "openPageByKey('Orders')" ...
-                                                        --press-once: an object pressed in an earlier state of the page
-                                                        (the same look, text and place: the menu and the bar of a panel)
-                                                        is not pressed again, its line says "skipped"; the 60 presses of
-                                                        a state go to its own objects
+    node test/compare-pages.js --press-all --run "openPageByKey('Home')" --run "openPageByKey('Orders')" ...
+                                                        --press-all: every object in every state, also the ones an
+                                                        earlier state pressed (twice the time on a panel)
     node test/compare-pages.js --moving-clock ...       the clock of the pages goes on from 6 Nov 2026 12:00, for a
                                                         page that waits for the time to pass (without it Date.now()
                                                         and new Date() give that moment all the time)
@@ -247,7 +249,8 @@ const preparePage = function (settings = {}) {
             + " [" + style + "] " + attributes + " :: " + ownText;
     };
 
-    // The same object in another state of the page (--press-once): its look and attributes, its place and its text.
+    // The same object in another state of the page (one pressed there is not pressed again): its look and attributes,
+    // its place and its text.
     const KEY_TEXT_LENGTH = 100; // letters of the text of an object in its key
     const keyOf = function (elem) {
         const rect = elem.getBoundingClientRect();
@@ -305,7 +308,7 @@ const preparePage = function (settings = {}) {
             return found;
         },
 
-        // pressedBefore: the keys of the objects pressed in the earlier states of the page (--press-once), or null.
+        // pressedBefore: the keys of the objects pressed in the earlier states of the page, or null (--press-all).
         collectTargets: function (pressedBefore) {
             this.targets = findPressable();
             this.seen = new Set(this.targets);
@@ -408,7 +411,7 @@ const pressOpenedObjects = async function (page, startUrl, lines, htmlAsText, pr
 };
 
 // pressedIndexes: the objects it pressed are added to it. WHY a skipped object is not counted: the presses of a state go
-//     to its own objects (--press-once).
+//     to its own objects.
 const pressEverything = async function (page, startUrl, targetCount, lines, htmlAsText, pressedIndexes) {
     let pressCount = 0;
     for (let index = 0; index < targetCount && pressCount < MAX_PRESSES; index++) {
@@ -442,8 +445,8 @@ const typeEverywhere = async function (page, fieldCount, lines, htmlAsText) {
 // WHY a new context for every run: localStorage of one run (a login page) must not reach the next.
 // steps: { init, run, isClockStopped }: JavaScript before the scripts of the page, and after its load (the same in the
 // old page); isClockStopped: the time of the page does not move (the default; --moving-clock: it goes on).
-// With --press-once also { pressedBefore, pressedNow }: the keys of the objects the earlier states pressed (they are
-// not pressed), and the set the keys of the ones this run presses go into (stepsOfState()).
+// Also { pressedBefore, pressedNow } (not with --press-all): the keys of the objects the earlier states pressed (they
+// are not pressed), and the set the keys of the ones this run presses go into (stepsOfState()).
 const runPage = async function (browser, url, size, steps) {
     const context = await browser.createBrowserContext();
     try {
@@ -690,11 +693,11 @@ const lookWithoutOld = async function (browser, newUrl, size, pair, reason) {
     return { status: "DIFF", counts: newRun.counts, differences, fileStart, isWithoutOld: true, htmlInBoth: [] };
 };
 
-// --press-once: the keys of the objects pressed in the earlier states of a page at a size, in the old page and in the
+// The keys of the objects pressed in the earlier states of a page at a size, in the old page and in the
 // new one ("old tabs.htm 1280" -> Set)
 const pressedInStates = new Map();
 
-// The steps of the runs of a state: with --press-once, what the earlier states of its page pressed (not pressed again)
+// The steps of the runs of a state: what the earlier states of its page pressed (not pressed again; --press-all: none)
 // and the set its own presses go into.
 // WHY a copy for pressedBefore: every run of a state (a try again, the runs of LIVE) skips the same objects.
 const stepsOfState = function (pair, size, version) {
@@ -947,14 +950,14 @@ const readWidth = function (text) {
 
 const readOptions = function (args) {
     const options = { base: "HEAD", isAll: false, isHelp: false, pages: [], widths: [], init: "", runs: [],
-        isClockStopped: true, isPictureOnly: false, isPressOnce: false };
+        isClockStopped: true, isPictureOnly: false, isPressAll: false };
     for (let i = 0; i < args.length; i++) {
         if (args[i] === "--base") options.base = args[++i];
         else if (args[i] === "--init") options.init = args[++i] || "";
         else if (args[i] === "--run") options.runs.push(args[++i] || "");
         else if (args[i] === "--moving-clock") options.isClockStopped = false;
         else if (args[i] === "--picture-only") options.isPictureOnly = true;
-        else if (args[i] === "--press-once") options.isPressOnce = true;
+        else if (args[i] === "--press-all") options.isPressAll = true;
         else if (args[i] === "--all") options.isAll = true;
         else if (args[i] === "--width") options.widths.push(readWidth(args[++i]));
         else if (args[i] === "--help") options.isHelp = true;
@@ -975,7 +978,7 @@ const choosePages = function (options) {
         return runs.map(function (run, index) {
             const runName = (runs.length > 1) ? "run" + (index + 1) : "";
             const steps = { init: options.init, run: run, isClockStopped: options.isClockStopped, isPictureOnly: options.isPictureOnly,
-                isPressOnce: options.isPressOnce };
+                isPressOnce: !options.isPressAll };
             return Object.assign({}, pair, { steps: steps, runName: runName });
         });
     });
