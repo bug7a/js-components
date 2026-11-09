@@ -17,7 +17,9 @@ The old page loads the old basic/ and comp/ too, so a change in a component is m
     node test/compare-pages.js old.htm=new.htm          a page that got a new name: old.htm of the commit, new.htm now
     node test/compare-pages.js --run "openPageByKey('roles')" 04-templates/ozden-panel/index.htm
                                                         --run: JavaScript after the load (a page of a panel, a tab, a
-                                                        dialog), in the old page and in the new one, before the picture
+                                                        dialog), in the old page and in the new one, before the picture;
+                                                        more than one --run: each is a state of its own, compared one
+                                                        after the other in one browser (the pages of a panel at once)
     node test/compare-pages.js --init "localStorage.setItem('appid_login', '{}')" ...
                                                         --init: JavaScript before the scripts of the page (a login
                                                         that the page keeps in localStorage); with --run, in that order
@@ -568,12 +570,16 @@ const toPagePair = function (arg) {
 };
 
 const describePair = function (pair) {
-    if (pair.oldPath === pair.newPath) return pair.newPath;
-    return pair.newPath + " (" + pair.oldPath + " in the commit)";
+    let text = pair.newPath;
+    if (pair.oldPath !== pair.newPath) text += " (" + pair.oldPath + " in the commit)";
+    if (pair.steps.run) text += " --run " + pair.steps.run;
+    return text;
 };
 
+// WHY the name of the run: the states of one page (more than one --run) must not write over the files of each other.
 const fileStartOf = function (pair, size) {
-    return path.join(OUT_FOLDER, path.basename(pair.newPath, ".htm") + "-" + size.width);
+    const name = path.basename(pair.newPath, ".htm") + (pair.runName ? "-" + pair.runName : "");
+    return path.join(OUT_FOLDER, name + "-" + size.width);
 };
 
 // Nothing to compare with: the new page is still opened and looked at (HTML written as text; its files are saved).
@@ -826,11 +832,11 @@ const readWidth = function (text) {
 };
 
 const readOptions = function (args) {
-    const options = { base: "HEAD", isAll: false, isHelp: false, pages: [], widths: [], steps: { init: "", run: "" } };
+    const options = { base: "HEAD", isAll: false, isHelp: false, pages: [], widths: [], init: "", runs: [] };
     for (let i = 0; i < args.length; i++) {
         if (args[i] === "--base") options.base = args[++i];
-        else if (args[i] === "--init") options.steps.init = args[++i] || "";
-        else if (args[i] === "--run") options.steps.run = args[++i] || "";
+        else if (args[i] === "--init") options.init = args[++i] || "";
+        else if (args[i] === "--run") options.runs.push(args[++i] || "");
         else if (args[i] === "--all") options.isAll = true;
         else if (args[i] === "--width") options.widths.push(readWidth(args[++i]));
         else if (args[i] === "--help") options.isHelp = true;
@@ -843,7 +849,14 @@ const choosePages = function (options) {
     let pairs = options.pages;
     if (options.isAll) pairs = listSamples().map(toPagePair);
     else if (pairs.length === 0) pairs = findChangedPages(options.base).map(toPagePair);
-    return pairs.map(function (pair) { return Object.assign({}, pair, { steps: options.steps }); });
+    // WHY one pair for each --run: each is a state of its own (a page of a panel), all of them in one browser.
+    const runs = (options.runs.length > 0) ? options.runs : [""];
+    return pairs.flatMap(function (pair) {
+        return runs.map(function (run, index) {
+            const runName = (runs.length > 1) ? "run" + (index + 1) : "";
+            return Object.assign({}, pair, { steps: { init: options.init, run: run }, runName: runName });
+        });
+    });
 };
 
 const chooseSizes = function (options) {
@@ -868,7 +881,7 @@ const compareAndPrint = async function (browser, port, pair, size) {
 
 // A page that is not in the commit: nothing to compare with, but it is still opened at each size and looked at.
 const lookAtNewPage = async function (browser, port, pair, sizes, base) {
-    console.log(pair.oldPath + "\n  not in " + base + ": nothing to compare with (a new name: old.htm=new.htm)");
+    console.log(describePair(pair) + "\n  not in " + base + ": nothing to compare with (a new name: old.htm=new.htm)");
     const newUrl = "http://127.0.0.1:" + port + "/" + pair.newPath;
     let status = "SKIPPED";
     for (const size of sizes) {
