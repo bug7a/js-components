@@ -42,6 +42,7 @@
                     width: TABLE_WIDTH,
                     height: TABLE_HEIGHT,
                     styleName: "plain",
+                    css: { maxWidth: "100%" }, // WHY maxWidth: on a phone the table is as wide as the screen (its rows scroll to the side)
                     columns: [
                         { key: "id", title: "#", valueIndex: 0, width: 60 },
                         { key: "name", title: "Name", valueIndex: 1, width: 220, sortable: 1 },

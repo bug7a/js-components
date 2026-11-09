@@ -40,7 +40,7 @@
             ScrollArea({
                 align: "center top",
                 gap: 30,
-                padding: 50,
+                padding: [16, 50], // WHY 16 at the sides: the cards fill a phone (390 px)
             });
 
                 // LABEL: Title
@@ -63,6 +63,7 @@
                     borderColor: "#F1C74A",
                     round: 8,
                     padding: [12, 10],
+                    css: { maxWidth: "100%" }, // WHY maxWidth: on a phone the note is as wide as the screen
                 });
 
                 // SAMPLE 1: Single file, read content
@@ -84,6 +85,7 @@
                                 + "<br><b>lastModified:</b> " + new Date(info.lastModified).toLocaleString();
                             showTextContent(info);
                         },
+                        css: { maxWidth: "100%" }, // WHY maxWidth: on a phone it is as wide as the card
                     });
 
                     lblSingle = Label({
@@ -124,6 +126,7 @@
                         onError: function (self, errors) {
                             lblErrors.text = errors.map(function (e) { return FilePicker.escapeHtml(e.message); }).join("<br>");
                         },
+                        css: { maxWidth: "100%" }, // WHY maxWidth: on a phone it is as wide as the card
                     });
 
                     lblImages = Label({
@@ -152,6 +155,7 @@
                         onChange: function (self) {
                             lblFolder.text = self.files.length + " file(s)";
                         },
+                        css: { maxWidth: "100%" }, // WHY maxWidth: on a phone it is as wide as the card
                     });
 
                     lblFolder = Label({
@@ -181,6 +185,7 @@
                             title: { textColor: "#3E8E62" },
                             badge: { color: "#DFEFE6", textColor: "#3E8E62" },
                         },
+                        css: { maxWidth: "100%" }, // WHY maxWidth: on a phone it is as wide as the card
                     });
 
                     // GROUP: Buttons
@@ -220,6 +225,7 @@
                         styleName: "dark",
                         multiple: 1,
                         zoneHeight: 130,
+                        css: { maxWidth: "100%" }, // WHY maxWidth: on a phone it is as wide as the card
                     });
                     fileDark.addFiles([
                         { name: "report.pdf", path: "/Users/ada/report.pdf", size: 240000, type: "application/pdf", lastModified: 1 },
@@ -245,6 +251,7 @@
                 round: 10,
                 border: 1,
                 borderColor: look.borderColor,
+                css: { maxWidth: "100%" }, // WHY maxWidth: on a phone the card is as wide as the screen
             });
             Label({
                 text: title,

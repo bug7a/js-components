@@ -32,7 +32,7 @@
             ScrollArea({
                 align: "center top",
                 gap: 30,
-                padding: 50,
+                padding: [16, 50], // WHY 16 at the sides: the cards fill a phone (390 px)
             });
 
                 // LABEL: Title
@@ -218,7 +218,7 @@
                 round: 10,
                 border: 1,
                 borderColor: Black(0.1),
-                css: { alignItems: "stretch" },
+                css: { maxWidth: "100%", alignItems: "stretch" }, // WHY maxWidth: on a phone the card is as wide as the screen
             });
             Label({
                 text: title,

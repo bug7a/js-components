@@ -39,7 +39,7 @@
 
             page.color = "#F4F5F2";
 
-            ScrollArea({ align: "center top", padding: 40, gap: 24 });
+            ScrollArea({ align: "center top", padding: [16, 40], gap: 24 });
 
                 Label({ text: "TextField · ozden, ozdenDark", fontSize: 22, fontFamily: "opensans-bold", textColor: Black(0.8) });
 
@@ -145,7 +145,7 @@
                 round: 16,
                 border: 1,
                 borderColor: borderColor,
-                css: { alignItems: "stretch" },
+                css: { maxWidth: "100%", alignItems: "stretch" }, // WHY maxWidth: on a phone the card is as wide as the screen
             });
             Label({ text: caption, fontSize: 12, textColor: captionColor, css: { letterSpacing: "1px" } });
         };

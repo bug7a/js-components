@@ -21,6 +21,8 @@
 
         // SmartTable (comp/smart-table.js) with actions: clear, insert and delete rows, load 1M rows, go back to the top.
 
+        const MIN_PAGE_WIDTH = 720; // px: the two halves need it; a narrower window (a phone) shows the page smaller
+
         let newId = null;
         let smartTable1;
 
@@ -57,6 +59,10 @@
         const itemDataListCopy = [...itemDataList];
 
         const start = function () {
+
+            // WHY page.fit: under MIN_PAGE_WIDTH the page is drawn at that width and made smaller (zoom 1 above it)
+            page.fit(MIN_PAGE_WIDTH);
+            page.onResize(function () { page.fit(MIN_PAGE_WIDTH); });
 
             page.color = "white";
             newId = findNextAvailableID();
