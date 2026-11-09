@@ -6,8 +6,8 @@ PhoneField - v26.11
 
 UI COMPONENT TEMPLATE
 - You can customize, this template code as you need:
-- NEW PROJECTS: styleName "ozden" on a light page, "ozdenDark" on a dark page (the packages
-  of TextField, comp/text-field.js; the look of 02-comp-examples/text-field.htm), unless the user asks for another one.
+- NEW PROJECTS: styleName "light" (the default) on a light page, "dark" on a dark page (the packages
+  of TextField, comp/text-field.js; the look of 02-comp-examples/text-field-8-light-dark.htm), unless the user asks for another one.
 
 
 Started Date: June 2024

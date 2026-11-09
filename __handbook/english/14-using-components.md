@@ -160,7 +160,7 @@ The components of the kit for a new page, and their look on a light page and on 
 | A button | `SmartButton` (`smart-button.js`) | `ozden` (the default); `tone: "cyan"` for the main action | `ozdenDark`; `tone: "cyanDark"` |
 | A search box | `SearchInput` (`search-input.js`) | `ozden` | `ozdenDark` |
 | A check box, a radio button | `CheckBox` (`check-box.js`), `RadioButton` (`radio-button.js`) | `light` | `dark` |
-| A text field | `TextField` (`text-field.js`) and the fields made from it: `EmailField`, `PasswordField`, `PhoneField`, `NumberField`, `CurrencyField`, `UrlField`, `TextAreaField` (a file each) | `ozden` | `ozdenDark` |
+| A text field | `TextField` (`text-field.js`) and the fields made from it: `EmailField`, `PasswordField`, `PhoneField`, `NumberField`, `CurrencyField`, `UrlField`, `TextAreaField` (a file each) | `light` | `dark` |
 | A list | `ItemList` (`item-list.js`) | `ozden` (the default) | `ozdenDark` |
 | A dropdown | `SelectBox` (`select-box.js`) | `light` | `dark` |
 | A big table | `SmartTable` (`smart-table.js`) | `light` | `dark` |

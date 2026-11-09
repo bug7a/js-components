@@ -160,7 +160,7 @@ Kitin yeni bir sayfa için bileşenleri ve açık ile koyu sayfadaki görünüş
 | Bir buton | `SmartButton` (`smart-button.js`) | `ozden` (varsayılan); ana iş için `tone: "cyan"` | `ozdenDark`; `tone: "cyanDark"` |
 | Bir arama kutusu | `SearchInput` (`search-input.js`) | `ozden` | `ozdenDark` |
 | İşaret kutusu, radyo butonu | `CheckBox` (`check-box.js`), `RadioButton` (`radio-button.js`) | `light` | `dark` |
-| Bir metin alanı | `TextField` (`text-field.js`) ve ondan yapılan alanlar: `EmailField`, `PasswordField`, `PhoneField`, `NumberField`, `CurrencyField`, `UrlField`, `TextAreaField` (her biri kendi dosyasında) | `ozden` | `ozdenDark` |
+| Bir metin alanı | `TextField` (`text-field.js`) ve ondan yapılan alanlar: `EmailField`, `PasswordField`, `PhoneField`, `NumberField`, `CurrencyField`, `UrlField`, `TextAreaField` (her biri kendi dosyasında) | `light` | `dark` |
 | Bir liste | `ItemList` (`item-list.js`) | `ozden` (varsayılan) | `ozdenDark` |
 | Açılır liste | `SelectBox` (`select-box.js`) | `light` | `dark` |
 | Büyük bir tablo | `SmartTable` (`smart-table.js`) | `light` | `dark` |

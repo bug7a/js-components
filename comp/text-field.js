@@ -6,8 +6,8 @@ TextField - v26.11
 
 UI COMPONENT TEMPLATE
 - You can customize, this template code as you need:
-- NEW PROJECTS: use styleName "ozden" on a light page and "ozdenDark" on a dark page (the
-  look of 02-comp-examples/text-field.htm), unless the user asks for another one. The fields made from TextField
+- NEW PROJECTS: use the default styleName "light" on a light page and "dark" on a dark page (the
+  look of 02-comp-examples/text-field-8-light-dark.htm), unless the user asks for another one. The fields made from TextField
   (EmailField, PhoneField, PasswordField, UrlField, NumberField, CurrencyField, TextAreaField) take the same
   packages: give them the same styleName. The default is light; the pages made before name modern.
 - comp/tooltip.js, loaded before this file, shows the hint of the warning ball in a bubble; without it the ball

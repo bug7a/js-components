@@ -513,8 +513,8 @@ CATALOG.COMPONENTS = [
         key: "text-field", name: "TextField", cat: "inputs",
         source: "comp/text-field.js", deps: ["comp/tooltip.js"],
         samples: [
-            { file: "02-comp-examples/text-field.htm", title: "ozden (new pages)" },
-            { file: "02-comp-examples/text-field-8-light-dark.htm", title: "light (the default) and dark" },
+            { file: "02-comp-examples/text-field-8-light-dark.htm", title: "light (the default, new pages) and dark" },
+            { file: "02-comp-examples/text-field.htm", title: "ozden" },
             { file: "02-comp-examples/text-field-2.htm", title: "Units & hints" },
             { file: "02-comp-examples/text-field-3-style.htm", title: "Style" },
             { file: "02-comp-examples/text-field-4-custom-unit.htm", title: "Custom unit" },
