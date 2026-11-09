@@ -15,6 +15,7 @@
 
     <!-- COMPONENT FILES -->
     <!-- NOTE: LabelEditor draws its panel with these components, so they are loaded first. -->
+    <script src="../comp/smart-button.js" type="text/javascript" charset="utf-8"></script>
     <script src="../comp/side-panel.js" type="text/javascript" charset="utf-8"></script>
     <script src="../comp/stepper.js" type="text/javascript" charset="utf-8"></script>
     <script src="../comp/color-picker.js" type="text/javascript" charset="utf-8"></script>
@@ -165,16 +166,13 @@
             endGroup();
         };
 
+        // A button of the sample (SmartButton): its gray, a secondary one white
         const addSampleButton = function (text, onClick, isSecondary = 0) {
-            const btn = Button({
-                text: text,
-                width: 130,
-                height: 36,
-                fontSize: 14,
+            return SmartButton({
+                labelText: text,
+                tone: (isSecondary) ? "white" : "",
+                onClick: onClick,
             });
-            if (isSecondary) btn.color = "lightgray";
-            btn.on("click", onClick);
-            return btn;
         };
 
         const addInfoLabel = function (text) {

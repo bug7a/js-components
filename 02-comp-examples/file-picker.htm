@@ -13,6 +13,7 @@
     <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
 
     <!-- COMPONENT FILES -->
+    <script src="../comp/smart-button.js" type="text/javascript" charset="utf-8"></script>
     <script src="../comp/file-picker.js" type="text/javascript" charset="utf-8"></script>
     <script src="../comp/scroll-area.js" type="text/javascript" charset="utf-8"></script>
 
@@ -195,23 +196,28 @@
                         gap: 8,
                     });
 
-                        Button({ text: "Enable", width: 100, height: 36, fontSize: 14, color: "lightgray" });
-                        that.on("click", function (self) {
-                            fileCompact.setEnabled(fileCompact.enabled ? 0 : 1);
-                            self.text = (fileCompact.enabled) ? "Disable" : "Enable";
+                        SmartButton({
+                            labelText: "Enable",
+                            tone: "white",
+                            onClick: function (self) {
+                                fileCompact.setEnabled(fileCompact.enabled ? 0 : 1);
+                                self.setLabelText((fileCompact.enabled) ? "Disable" : "Enable");
+                            },
                         });
 
-                        Button({ text: "Browse...", width: 100, height: 36, fontSize: 14 });
-                        that.on("click", function () {
-                            fileCompact.open(); // Works only if enabled
+                        SmartButton({
+                            labelText: "Browse...",
+                            onClick: function () { fileCompact.open(); }, // Works only if enabled
                         });
 
-                        Button({ text: "Clear All", width: 100, height: 36, fontSize: 14 });
-                        that.on("click", function () {
-                            fileSingle.clear();
-                            fileImages.clear();
-                            fileFolder.clear();
-                            fileCompact.clear();
+                        SmartButton({
+                            labelText: "Clear All",
+                            onClick: function () {
+                                fileSingle.clear();
+                                fileImages.clear();
+                                fileFolder.clear();
+                                fileCompact.clear();
+                            },
                         });
 
                     endGroup();

@@ -13,6 +13,7 @@
         <script src="../basic/scroll-bar.js" type="text/javascript" charset="utf-8"></script>
 
         <!-- COMPONENTS -->
+        <script src="../comp/smart-button.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/data-table.js" type="text/javascript" charset="utf-8"></script>
 
         <script>
@@ -24,13 +25,12 @@
 
         const PAGE_WIDTH = 700;
         const PAGE_SPACE = 10;
-        const BUTTON_WIDTH = 140;
         const BUTTON_HEIGHT = 50;
         const BUTTON_GAP = 4;
         const COLOR_SIZE = 30;
         const COLOR_GAP = 6;
-        const ADD_COLOR = "#5ABB9F";
-        const DELETE_COLOR = "indianred";
+        const ADD_TONE = "green"; // the tones of SmartButton
+        const DELETE_TONE = "orange";
 
         // The data: [id, name, colors]
         let palettes = [
@@ -95,26 +95,22 @@
             // GROUP: Test buttons
             HGroup({ left: PAGE_SPACE, bottom: PAGE_SPACE, hug: 1, gap: BUTTON_GAP, position: "absolute" });
 
-                createButton("Add Items", ADD_COLOR, addPalettes);
-                createButton("Update Items", ADD_COLOR, renameFirstPalette);
-                createButton("Delete Items", DELETE_COLOR, deleteTwoPalettes);
-                createButton("Clear All", DELETE_COLOR, clearPalettes);
+                createButton("Add Items", ADD_TONE, addPalettes);
+                createButton("Update Items", ADD_TONE, renameFirstPalette);
+                createButton("Delete Items", DELETE_TONE, deleteTwoPalettes);
+                createButton("Clear All", DELETE_TONE, clearPalettes);
 
             endGroup();
 
         };
 
-        const createButton = function (text, color, onClick) {
-            const button = Button({
-                text: text,
-                width: BUTTON_WIDTH,
+        const createButton = function (text, tone, onClick) {
+            return SmartButton({
+                labelText: text,
+                tone: tone,
                 height: BUTTON_HEIGHT,
-                fontSize: 18,
-                minimal: 1,
-                color: color,
+                onClick: onClick,
             });
-            button.on("click", onClick);
-            return button;
         };
 
         // Two new palettes after the biggest id

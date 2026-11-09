@@ -13,6 +13,7 @@
     <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
 
     <!-- COMPONENT FILES -->
+    <script src="../comp/smart-button.js" type="text/javascript" charset="utf-8"></script>
     <script src="../comp/toast.js" type="text/javascript" charset="utf-8"></script>
     <script src="../comp/scroll-area.js" type="text/javascript" charset="utf-8"></script>
 
@@ -236,19 +237,9 @@
             HGroup({ width: "100%", height: "auto", align: "left center", gap: 8, wrap: 1 });
         };
 
+        // A button of the sample (SmartButton, its gray)
         const smallButton = function (text, onClick) {
-            const btn = Button({
-                text: text,
-                width: "auto",
-                height: 36,
-                fontSize: 14,
-                color: "#E8E8E8",
-                textColor: Black(0.75),
-                round: 6,
-                css: { padding: "0 14px" },
-            });
-            btn.on("click", onClick);
-            return btn;
+            return SmartButton({ labelText: text, onClick: onClick });
         };
 
         const infoLabel = function (text) {

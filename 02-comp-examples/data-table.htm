@@ -13,6 +13,7 @@
     <script src="../basic/basic.js" type="text/javascript" charset="utf-8"></script>
     <script src="../basic/scroll-bar.js" type="text/javascript" charset="utf-8"></script>
 
+    <script src="../comp/smart-button.js" type="text/javascript" charset="utf-8"></script>
     <script src="../comp/search-input.js" type="text/javascript" charset="utf-8"></script>
     <script src="../comp/data-table.js" type="text/javascript" charset="utf-8"></script>
     <script src="../comp/scroll-area.js" type="text/javascript" charset="utf-8"></script>
@@ -183,10 +184,9 @@
 
     };
 
+    // A button of the sample (SmartButton, white)
     const createButton = function (text, onClick) {
-        const button = Button({ text: text, width: "auto", height: 36, fontSize: 14, minimal: 1, padding: [14, 0] });
-        button.on("click", onClick);
-        return button;
+        return SmartButton({ labelText: text, tone: "white", onClick: onClick });
     };
 
     const start = function () {

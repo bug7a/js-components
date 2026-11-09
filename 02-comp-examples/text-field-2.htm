@@ -13,6 +13,7 @@
         <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
         <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
 
+        <script src="../comp/smart-button.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/tooltip.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/text-field.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/number-field.js" type="text/javascript" charset="utf-8"></script>
@@ -92,18 +93,11 @@
 
         };
 
+        // A button of the sample (SmartButton, its gray): its text goes to the console
         const createSettingButton = function (text) {
-            const btn = Button({
-                text: text,
-                width: "auto",
-                height: "auto",
-                color: "lightgray",
-                fontSize: 16,
-                padding: [8, 4],
-                minimal: 1,
-            });
-            btn.on("click", function () {
-                console.log(text);
+            SmartButton({
+                labelText: text,
+                onClick: function () { console.log(text); },
             });
         };
 

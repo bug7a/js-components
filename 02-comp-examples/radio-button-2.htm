@@ -12,6 +12,7 @@
     <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
 
     <!-- COMPONENT FILES -->
+    <script src="../comp/smart-button.js" type="text/javascript" charset="utf-8"></script>
     <script src="../comp/radio-button.js" type="text/javascript" charset="utf-8"></script>
     <script src="../comp/scroll-area.js" type="text/javascript" charset="utf-8"></script>
 
@@ -140,11 +141,14 @@
                     // GROUP: Enable premium
                     HGroup({ width: "auto", height: "auto", gap: 8, padding: [12, 4] });
 
-                        Button({ text: "Enable Premium", width: 150, height: 36, fontSize: 14, color: "lightgray" });
-                        that.on("click", function (self) {
-                            rdoPremium.setEnabled(rdoPremium.enabled ? 0 : 1);
-                            rdoPremium.setLabelText("Premium" + (rdoPremium.enabled ? "" : " (disabled)"));
-                            self.text = (rdoPremium.enabled ? "Disable" : "Enable") + " Premium";
+                        SmartButton({
+                            labelText: "Enable Premium",
+                            tone: "white",
+                            onClick: function (self) {
+                                rdoPremium.setEnabled(rdoPremium.enabled ? 0 : 1);
+                                rdoPremium.setLabelText("Premium" + (rdoPremium.enabled ? "" : " (disabled)"));
+                                self.setLabelText((rdoPremium.enabled ? "Disable" : "Enable") + " Premium");
+                            },
                         });
 
                     endGroup();

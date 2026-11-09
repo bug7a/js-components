@@ -13,6 +13,7 @@
     <script src="../basic/scroll-bar.min.js" type="text/javascript" charset="utf-8"></script>
 
     <!-- COMPONENT FILES -->
+    <script src="../comp/smart-button.js" type="text/javascript" charset="utf-8"></script>
     <script src="../comp/toggle.js" type="text/javascript" charset="utf-8"></script>
     <script src="../comp/scroll-area.js" type="text/javascript" charset="utf-8"></script>
 
@@ -173,10 +174,9 @@
             endGroup();
         };
 
+        // A button of the sample (SmartButton, its gray)
         const addButton = function (text, onClick) {
-            const btn = Button({ text: text, width: "auto", height: 40, fontSize: 15, padding: [14, 0] });
-            btn.on("click", onClick);
-            return btn;
+            return SmartButton({ labelText: text, onClick: onClick });
         };
 
         // GROUP: A card with a title and a short description.

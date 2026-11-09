@@ -13,6 +13,7 @@
     <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
 
     <!-- COMPONENT FILES -->
+    <script src="../comp/smart-button.js" type="text/javascript" charset="utf-8"></script>
     <script src="../comp/spark-line-box.js" type="text/javascript" charset="utf-8"></script>
     <script src="../comp/scroll-area.js" type="text/javascript" charset="utf-8"></script>
     <script src="../comp/mini-graph-box.js" type="text/javascript" charset="utf-8"></script><!-- Only for the comparison sample -->
@@ -95,7 +96,7 @@
 
                     smallButton("Pause", function (self) {
                         isPaused = isPaused ? 0 : 1;
-                        self.text = isPaused ? "Continue" : "Pause";
+                        self.setLabelText(isPaused ? "Continue" : "Pause");
                     });
 
                 endCard();
@@ -258,19 +259,9 @@
             endGroup();
         };
 
-        const smallButton = function (text, func) {
-            const btn = Button({
-                text: text,
-                width: "auto",
-                height: 34,
-                fontSize: 13,
-                color: "#E8E8E8",
-                textColor: Black(0.75),
-                round: 6,
-                css: { padding: "0 14px" },
-            });
-            btn.on("click", func);
-            return btn;
+        // A button of the sample (SmartButton, its gray)
+        const smallButton = function (text, onClick) {
+            return SmartButton({ labelText: text, onClick: onClick });
         };
 
     </script>

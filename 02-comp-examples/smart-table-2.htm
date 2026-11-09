@@ -12,6 +12,7 @@
     <script src="../basic/scroll-bar.js" type="text/javascript" charset="utf-8"></script>
 
     <!-- COMPONENT FILES -->
+    <script src="../comp/smart-button.js" type="text/javascript" charset="utf-8"></script>
     <script src="../comp/search-input.js" type="text/javascript" charset="utf-8"></script>
     <script src="../comp/context-menu.js" type="text/javascript" charset="utf-8"></script>
     <script src="../comp/tooltip.js" type="text/javascript" charset="utf-8"></script>
@@ -94,15 +95,9 @@
 
         };
 
+        // A button of the sample (SmartButton, its gray)
         const createButton = function (text, onClick) {
-            const btn = Button({
-                text: text,
-                width: 280,
-                padding: [12, 0],
-                color: "lightgray",
-                minimal: 1,
-            });
-            btn.on("click", onClick);
+            SmartButton({ labelText: text, width: 280, onClick: onClick });
         };
 
         const createAllButtons = function () {

@@ -13,6 +13,7 @@
     <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
 
     <!-- COMPONENT FILES -->
+    <script src="../comp/smart-button.js" type="text/javascript" charset="utf-8"></script>
     <script src="../comp/tag-input.js" type="text/javascript" charset="utf-8"></script>
     <script src="../comp/scroll-area.js" type="text/javascript" charset="utf-8"></script>
 
@@ -212,16 +213,13 @@
             endGroup();
         };
 
+        // A button of the sample (SmartButton): its gray, a secondary one white
         const addSampleButton = function (text, onClick, isSecondary = 0) {
-            const btn = Button({
-                text: text,
-                width: 100,
-                height: 36,
-                fontSize: 14,
+            return SmartButton({
+                labelText: text,
+                tone: (isSecondary) ? "white" : "",
+                onClick: onClick,
             });
-            if (isSecondary) btn.color = "lightgray";
-            btn.on("click", onClick);
-            return btn;
         };
 
         const addInfoLabel = function (text) {

@@ -13,6 +13,7 @@
     <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
 
     <!-- COMPONENT FILES -->
+    <script src="../comp/smart-button.js" type="text/javascript" charset="utf-8"></script>
     <script src="../comp/context-menu.js" type="text/javascript" charset="utf-8"></script>
     <script src="../comp/scroll-area.js" type="text/javascript" charset="utf-8"></script>
 
@@ -193,16 +194,7 @@
                 startCard("4. Left click (trigger: \"click\")");
 
                     // BUTTON: More
-                    const btnMore = Button({
-                        text: "More ⋯",
-                        width: "auto",
-                        height: 36,
-                        fontSize: 14,
-                        color: "#E8E8E8",
-                        textColor: Black(0.75),
-                        round: 6,
-                        css: { padding: "0 16px" },
-                    });
+                    const btnMore = SmartButton({ labelText: "More ⋯" });
 
                     lblMore = infoLabel("Click the button. Click it again to close.");
 

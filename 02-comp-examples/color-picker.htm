@@ -13,6 +13,7 @@
     <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
 
     <!-- COMPONENT FILES -->
+    <script src="../comp/smart-button.js" type="text/javascript" charset="utf-8"></script>
     <script src="../comp/color-picker.js" type="text/javascript" charset="utf-8"></script>
     <script src="../comp/scroll-area.js" type="text/javascript" charset="utf-8"></script>
 
@@ -142,7 +143,7 @@
 
                         smallButton("Disable", function (self) {
                             colorFunctions.setEnabled(colorFunctions.enabled ? 0 : 1);
-                            self.text = (colorFunctions.enabled) ? "Disable" : "Enable";
+                            self.setLabelText((colorFunctions.enabled) ? "Disable" : "Enable");
                         });
 
                     endGroup();
@@ -191,19 +192,9 @@
             });
         };
 
-        const smallButton = function (text, func) {
-            const btn = Button({
-                text: text,
-                width: "auto",
-                height: 34,
-                fontSize: 13,
-                color: "#E8E8E8",
-                textColor: Black(0.75),
-                round: 6,
-                css: { padding: "0 14px" },
-            });
-            btn.on("click", func);
-            return btn;
+        // A button of the sample (SmartButton, its gray)
+        const smallButton = function (text, onClick) {
+            return SmartButton({ labelText: text, onClick: onClick });
         };
 
     </script>

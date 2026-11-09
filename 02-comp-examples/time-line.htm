@@ -13,6 +13,7 @@
     <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
 
     <!-- COMPONENT FILES -->
+    <script src="../comp/smart-button.js" type="text/javascript" charset="utf-8"></script>
     <script src="../comp/time-line.js" type="text/javascript" charset="utf-8"></script>
     <script src="../comp/scroll-area.js" type="text/javascript" charset="utf-8"></script>
 
@@ -146,13 +147,13 @@
 
                         smallButton("Disable", function (self) {
                             lineLive.setEnabled(lineLive.enabled ? 0 : 1);
-                            self.text = (lineLive.enabled) ? "Disable" : "Enable";
+                            self.setLabelText((lineLive.enabled) ? "Disable" : "Enable");
                         });
 
                         smallButton("setTheme(\"minimal\")", function (self) {
                             const isMinimal = (lineLive.styleName === "minimal");
                             lineLive.setTheme(isMinimal ? "light" : "minimal");
-                            self.text = (isMinimal) ? "setTheme(\"minimal\")" : "setTheme(\"light\")";
+                            self.setLabelText((isMinimal) ? "setTheme(\"minimal\")" : "setTheme(\"light\")");
                         });
 
                     endGroup();
@@ -275,19 +276,9 @@
             });
         };
 
-        const smallButton = function (text, func) {
-            const btn = Button({
-                text: text,
-                width: "auto",
-                height: 34,
-                fontSize: 13,
-                color: "#E8E8E8",
-                textColor: Black(0.75),
-                round: 6,
-                css: { padding: "0 14px" },
-            });
-            btn.on("click", func);
-            return btn;
+        // A button of the sample (SmartButton, its gray)
+        const smallButton = function (text, onClick) {
+            return SmartButton({ labelText: text, onClick: onClick });
         };
 
     </script>

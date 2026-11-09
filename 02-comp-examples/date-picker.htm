@@ -13,6 +13,7 @@
     <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
 
     <!-- COMPONENT FILES -->
+    <script src="../comp/smart-button.js" type="text/javascript" charset="utf-8"></script>
     <script src="../comp/date-picker.js" type="text/javascript" charset="utf-8"></script>
     <script src="../comp/scroll-area.js" type="text/javascript" charset="utf-8"></script>
 
@@ -154,20 +155,23 @@
                         gap: 8,
                     });
 
-                        Button({ text: "Enable", width: 90, height: 36, fontSize: 14, color: "lightgray" });
-                        that.on("click", function (self) {
-                            dateDisabled.setEnabled(dateDisabled.enabled ? 0 : 1);
-                            self.text = (dateDisabled.enabled) ? "Disable" : "Enable";
+                        SmartButton({
+                            labelText: "Enable",
+                            tone: "white",
+                            onClick: function (self) {
+                                dateDisabled.setEnabled(dateDisabled.enabled ? 0 : 1);
+                                self.setLabelText((dateDisabled.enabled) ? "Disable" : "Enable");
+                            },
                         });
 
-                        Button({ text: "Today", width: 90, height: 36, fontSize: 14 });
-                        that.on("click", function () {
-                            dateDisabled.setDate(new Date());
+                        SmartButton({
+                            labelText: "Today",
+                            onClick: function () { dateDisabled.setDate(new Date()); },
                         });
 
-                        Button({ text: "Open", width: 90, height: 36, fontSize: 14 });
-                        that.on("click", function () {
-                            dateDisabled.open(); // Only works if enabled
+                        SmartButton({
+                            labelText: "Open",
+                            onClick: function () { dateDisabled.open(); }, // Only works if enabled
                         });
 
                     endGroup();
