@@ -2387,6 +2387,36 @@ test("JsonEditor: colorOf paints a color only the page can read; optionsOf gives
     check("JsonEditor: colorOf paints a color only the page can read; optionsOf gives the choices of a text (a column, a row of an object), never of a number or of a name of the table", row === "true | orange | orange | false | false", row);
 });
 
+test("JsonEditor: the bar under the rows only when the columns do not fit: none in a narrower table that fits and in the window of open() (in WebKit a bar of a moment was a ResizeObserver loop), one when a column is dragged wider", async function () {
+    const sideScrollOf = function (editor) {
+        return getComputedStyle(editor.elem.querySelector("div.json-editor-scroll")).overflowX;
+    };
+    const editor = JsonEditor({ width: 700, height: 200, value: [{ name: "Apple", price: 1.2 }] });
+    await wait(30);
+    const atStart = sideScrollOf(editor);
+    editor.width = 500;
+    await wait(60);
+    const narrower = sideScrollOf(editor);
+    const edge = Array.from(editor.elem.querySelectorAll("div")).find(function (el) { return el.style.cursor === "col-resize"; });
+    const edgeX = edge.getBoundingClientRect().left + 2;
+    edge.dispatchEvent(new PointerEvent("pointerdown", { button: 0, clientX: edgeX, bubbles: true, cancelable: true }));
+    window.dispatchEvent(new PointerEvent("pointermove", { clientX: edgeX + 400, bubbles: true }));
+    window.dispatchEvent(new PointerEvent("pointerup", { clientX: edgeX + 400, bubbles: true }));
+    await wait(30);
+    const dragged = sideScrollOf(editor);
+    const longText = "a long text in a cell ".repeat(3);
+    editor.setValue([{ a: longText, b: longText, c: longText }]);
+    await wait(30);
+    const wider = sideScrollOf(editor);
+    editor.remove();
+    const win = JsonEditor.open({ value: [{ name: "Apple" }] });
+    await wait(60);
+    const inWindow = sideScrollOf(win.editor);
+    win.close();
+    const row = [atStart, narrower, dragged, wider, inWindow].join(" | ");
+    check("JsonEditor: the bar under the rows only when the columns do not fit: none in a narrower table that fits and in the window of open() (in WebKit a bar of a moment was a ResizeObserver loop), one when a column is dragged wider", row === "hidden | hidden | auto | auto | hidden", row);
+});
+
 // *** TIME LINE (comp/time-line.js)
 
 test("TimeLine: the style packages; what the page gave stays over them, after setTheme() too; the default look is as before", async function () {

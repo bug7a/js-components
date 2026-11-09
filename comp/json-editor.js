@@ -832,6 +832,15 @@ const JsonEditor = function (params = {}) {
             const extra = Math.floor((room - total) / free.length);
             free.forEach(function (column) { column.width += extra; });
         }
+        allowSideScroll(total > room);
+    };
+
+    // The bar under the rows only when the columns do not fit.
+    // WHY: with the bar always allowed, a narrower table showed it for a moment (its columns were the wider ones) and lost
+    //      it when they were fitted: the scroller changed its size again in the same frame (WebKit, where a scroll bar
+    //      takes room: "ResizeObserver loop completed with undelivered notifications").
+    const allowSideScroll = function (isWider) {
+        scroller.scrollX = (isWider) ? 1 : 0;
     };
 
     const totalWidth = function () {
@@ -935,6 +944,7 @@ const JsonEditor = function (params = {}) {
             const onMove = function (self, moveEvent) {
                 column.width = Math.max(SIZE.MIN_COLUMN, startWidth + withPageZoom(moveEvent.clientX - startX));
                 column.isSized = true;
+                allowSideScroll(totalWidth() > scroller.elem.clientWidth);
                 drawHead();
                 drawRows(true);
                 placeActive();
