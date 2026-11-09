@@ -207,6 +207,8 @@ DetailView.createPreviewPane = function () {
             DetailView.lblLive = Label({ text: SITE.svg("eye", SITE.TEXT_SOFT, 16), width: 16, height: 16 });
             that.elem.style.flexShrink = "0";
             DetailView.lblLiveText = SITE.label(T.liveExample, { bold: 1, fontSize: 13, textColor: SITE.TEXT_SOFT });
+            // WHY: the tabs of the samples give the room (they scroll); this text is never cut in the middle of a word
+            DetailView.lblLiveText.elem.style.flexShrink = "0";
 
             // TABS: Birden fazla örnek var ise
             if (DetailView.samples.length > 1) {
