@@ -26,7 +26,8 @@ UI COMPONENT TEMPLATE
   "ozden" (a more usable look for general use), in the colors of SmartButton: a cyan fill with
   an edge and a white knob, a focus ring. Its sample: 02-comp-examples/slider-field-ozden.htm.
 - The handle never crosses a text (style.fill.aroundLabel and beforeValue, 1 by default): at min the fill holds the
-  label, at max it ends before the value. 0: the handle can go under them (it hides there).
+  label (and the handle stands 6 px after it), at max it ends before the value; the handle is always seen. 0: the
+  handle can go under them (it hides there).
 - Not the same as comp/slider.js (Slider: a track with a round thumb). THE SLIDER OF NEW PAGES is Slider "round";
   SliderField is the parallel design, for a page that asks for its shape.
 
@@ -177,7 +178,8 @@ const SliderField = function (params = {}) {
     const PAGE_STEPS = 10; // PageUp / PageDown
     const LABEL_DOT_SPACE = 8; // px: no dots this close to the label
     const VALUE_DOT_SPACE = 10; // px: no dots this close to the value text
-    const TEXT_OVERLAP = 4; // px: the handle may touch a text this much before it is hidden
+    const TEXT_OVERLAP = 4; // px: the handle may touch a text this much before it is hidden (aroundLabel / beforeValue 0)
+    const HANDLE_LABEL_SPACE = 6; // px between the label and the handle at min (aroundLabel)
     const FILL_DOT_SPACE = 4; // px: no dots this close to the end of the fill
     const HANDLE_DOT_SPACE = 8; // px: no dots this close to the right side of the handle
     const VALUE_CLICK_SPACE = 6; // px: a click this close to the value text starts the typing
@@ -237,7 +239,9 @@ const SliderField = function (params = {}) {
         let start = _s.fill.minWidth;
         let end = width;
         if (_s.fill.aroundLabel == 1 && box.labelText) {
-            start = Math.max(start, _s.label.padding + box.lblLabel.elem.offsetWidth + _s.fill.labelSpace);
+            // WHY the room of the handle: a thin handle inside the end of the fill stood on the label at min (hidden)
+            const handleRoom = _s.handle.inset + _s.handle.width + HANDLE_LABEL_SPACE;
+            start = Math.max(start, _s.label.padding + box.lblLabel.elem.offsetWidth + Math.max(_s.fill.labelSpace, handleRoom));
         }
         if (_s.fill.beforeValue == 1) {
             end = width - _s.value.padding - getWidestValueWidth() - _s.fill.valueSpace;
@@ -340,10 +344,11 @@ const SliderField = function (params = {}) {
         const labelRight = (box.labelText) ? _s.label.padding + box.lblLabel.elem.offsetWidth + LABEL_DOT_SPACE : 0;
         const valueLeft = width - _s.value.padding - box.lblValue.elem.offsetWidth - VALUE_DOT_SPACE;
 
-        // WHY: At the ends the handle would be drawn on the label or the value text.
+        // WHY: At the ends the handle would be drawn on the label or the value text. Only without aroundLabel /
+        //      beforeValue: with them the handle stays beside the texts and is always seen.
         const handleRight = handleLeft + _s.handle.width;
-        const isOnLabel = (box.labelText && handleRight > _s.label.padding - TEXT_OVERLAP && handleLeft < labelRight - TEXT_OVERLAP);
-        const isOnValue = (handleRight > valueLeft + TEXT_OVERLAP);
+        const isOnLabel = (_s.fill.aroundLabel != 1 && box.labelText && handleRight > _s.label.padding - TEXT_OVERLAP && handleLeft < labelRight - TEXT_OVERLAP);
+        const isOnValue = (_s.fill.beforeValue != 1 && handleRight > valueLeft + TEXT_OVERLAP);
         box.handle.css.opacity = (isOnLabel || isOnValue) ? "0" : "1";
 
         if (tickCount > 0) {

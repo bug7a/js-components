@@ -626,6 +626,32 @@ test("SliderField: a click at 80 % gives the same value in a scaled box (a trans
     holder.remove();
 });
 
+test("SliderField: the handle is seen at min and at max in every package, beside the label (not on it)", async function () {
+    const NAMES = ["light", "dark", "modern", "ozden", "minimal"];
+    const fields = NAMES.map(function (styleName, index) {
+        return {
+            styleName: styleName,
+            atMin: SliderField({ left: 0, top: index * 100, width: 320, styleName: styleName, labelText: "Blur", value: 0, minValue: 0, maxValue: 10 }),
+            atMax: SliderField({ left: 0, top: index * 100 + 50, width: 320, styleName: styleName, labelText: "Blur", value: 10, minValue: 0, maxValue: 10 }),
+        };
+    });
+    await wait(100); // WHY: the layout is made after the field is placed (its size)
+    const results = fields.map(function (field) {
+        const styleName = field.styleName;
+        const atMin = field.atMin;
+        const atMax = field.atMax;
+        const labelRight = atMin.lblLabel.elem.getBoundingClientRect().right;
+        const handleLeft = atMin.handle.elem.getBoundingClientRect().left;
+        const result = styleName + ": " + atMin.handle.elem.style.opacity + "/" + atMax.handle.elem.style.opacity + " " + Math.round(handleLeft - labelRight);
+        const isOk = atMin.handle.elem.style.opacity === "1" && atMax.handle.elem.style.opacity === "1" && handleLeft >= labelRight;
+        atMin.remove();
+        atMax.remove();
+        return { isOk: isOk, text: result };
+    });
+    check("SliderField: the handle is seen at min and at max in every package, beside the label (not on it)",
+        results.every(function (r) { return r.isOk; }), results.map(function (r) { return r.text; }).join(", "));
+});
+
 // *** SLIDER (comp/slider.js)
 
 test("Slider: setValue(v) gives v back", async function () {
