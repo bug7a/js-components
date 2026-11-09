@@ -5,6 +5,12 @@
 Tabs - v26.10
 
 UI COMPONENT TEMPLATE
+- THE CONTENT OF THE TABS (new pages): Tabs is the bar; the pages under it are a PageControl (comp/page-control.js),
+  one page for each tab with the same key, and the onChange of the tabs opens it:
+      const pages = PageControl({ width: "100%", height: 400, transition: "fade", pages: ["home", "orders"] });
+      Tabs({ tabs: ["home", "orders"], value: "home", onChange: (self) => pages.open(self.value) });
+  PageControl gives the pages their motion (slide, fade), hides the inactive ones from the keyboard and the screen
+  readers and can be swiped. (panels: 1 stays for the pages made with it.)
 - A tab bar: one tab is active, the others can be clicked. An animated indicator moves to the active tab.
 - Variants: "underline" (a line under the active tab, default) and "pill" (a filled shape behind the active tab,
   like a segmented control).
@@ -14,7 +20,7 @@ UI COMPONENT TEMPLATE
   and the active tab is scrolled into view.
 - fullWidth: 1 -> the tabs share the bar width equally.
 - vertical: 1 -> the tabs are stacked (Ex: settings sections). The indicator is on the left side.
-- panels: 1 -> a content Box for every tab under the bar. Only the active one is shown.
+- panels: 1 -> a content Box for every tab under the bar. Only the active one is shown. (New pages: a PageControl, above.)
   Fill a panel with setPanelContent(key, fn) or startPanel(key) ... endPanel(), or get it with getPanel(key).
 - Keyboard: ArrowLeft / ArrowRight (ArrowUp / ArrowDown when vertical), Home, End move between the tabs. Enter / Space
   activates, Delete closes a closable tab. Tab key moves the focus out of the bar (roving tabindex).
