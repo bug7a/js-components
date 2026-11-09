@@ -230,6 +230,33 @@ test("Badge: showZero shows 0, dotForOne: 0 shows 1 as a number; the defaults ar
     holder.remove();
 });
 
+test("Badge: light and dark are a pill in the danger color with a white number and a ring, ozden as before; dotStyle places the dot", async function () {
+    const host = Box(0, 0, 60, 60, { color: "transparent" });
+    const made = createIn(host, function () {
+        return {
+            light: Badge({ styleName: "light", value: 5 }),
+            dark: Badge({ styleName: "dark", value: 120 }),
+            ozden: Badge({ value: 5 }),
+            placed: Badge({ value: 1, dotStyle: { top: 10, right: 12 } }),
+        };
+    });
+    await wait(30);
+    const lookOf = function (badge) {
+        const style = getComputedStyle(badge.label.elem);
+        return [style.backgroundColor, style.color, style.borderTopWidth, style.borderTopColor, style.minWidth, badge.label.elem.textContent].join(" ");
+    };
+    const light = lookOf(made.light);
+    const dark = lookOf(made.dark);
+    const ozden = lookOf(made.ozden);
+    const dot = made.placed.dot.elem.style.top + " " + made.placed.dot.elem.style.right;
+    host.remove();
+    check("Badge: light and dark are a pill in the danger color with a white number and a ring, ozden as before; dotStyle places the dot",
+        light === "rgb(217, 83, 79) rgb(255, 255, 255) 2px rgb(255, 255, 255) 18px 5"
+            && dark === "rgb(224, 96, 90) rgb(255, 255, 255) 2px rgb(26, 26, 25) 18px 99+"
+            && ozden.startsWith("rgb(205, 92, 92) rgba(0, 0, 0, 0.85) 1px") && dot === "10px 12px",
+        [light, dark, ozden, dot].join(" | "));
+});
+
 // *** APP BAR, PAGE HEADER, SETTINGS ROW (comp/app-bar.js, comp/page-header.js, comp/settings-row.js)
 
 test("AppBar: the title stands at the left (after the back button) or in the middle of the bar", async function () {

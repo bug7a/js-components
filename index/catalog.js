@@ -649,10 +649,10 @@ CATALOG.COMPONENTS = [
         tr: "Bir nesnenin üzerinde ipucu balonu: fareyi izler ya da nesnenin yanında durur; isteğe bağlı kenarlıklı ok, hep ekranın içinde; içinde kendi içeriğin ya da açık kalan, tıklanabilen bir popover.",
     },
     {
-        key: "badge", name: "BadgeV2", cat: "feedback",
+        key: "badge", name: "Badge", cat: "feedback",
         source: "comp/badge.js", samples: ["02-comp-examples/badge.htm"],
-        en: "Notification badge on an object: a dot or a number; 0 and 1 can be shown as numbers, and the number can have its own look (a white ring).",
-        tr: "Bir nesnenin üzerinde bildirim rozeti: nokta ya da sayı; 0 ve 1 de sayı olarak gösterilebilir, sayının kendi görünüşü olabilir (beyaz halka).",
+        en: "Notification badge on an object: a dot or a number; 0 and 1 can be shown as numbers, and the dot and the number can have their own look; style packages ozden (the default), light and dark.",
+        tr: "Bir nesnenin üzerinde bildirim rozeti: nokta ya da sayı; 0 ve 1 de sayı olarak gösterilebilir, nokta ve sayının kendi görünüşü olabilir; stil paketleri ozden (varsayılan), light ve dark.",
     },
     {
         key: "login-page", name: "LoginPage", cat: "pages",

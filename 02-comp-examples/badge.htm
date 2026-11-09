@@ -2,59 +2,91 @@
 <html lang="en">
 
 <head>
-    <title>BadgeV2 Component Demo</title>
+    <title>Badge</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <!-- LIBRARY FILES -->
-    <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
-    <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Bold.ttf" as="font" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="../basic/basic.css">
+    <script src="../basic/basic.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../basic/scroll-bar.js" type="text/javascript" charset="utf-8"></script>
 
     <!-- COMPONENT FILES -->
     <script src="../comp/badge.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/scroll-area.js" type="text/javascript" charset="utf-8"></script>
 
     <script>
 
-        // Badge (comp/badge.js) over a box: a number, and a number bigger than its maxValue (999 with maxValue: 9).
+        /* Bismillah */
+
+        // Badge (comp/badge.js) on a box: 1 is a dot, a number, a number bigger than its maxValue ("99+"), in the style
+        // packages "ozden" (the default), "light" and "dark" (the look of the kit). badge.setValue(0): hidden.
+
+        // *** THE COLORS AND SIZES OF THE PAGE
+        const PAGE_COLOR = "#F4F5F2";
+        const OZDEN_CARD = { color: "#F5F5F5", item: "lightgray", text: Black(0.45) };
+        const LIGHT_CARD = { color: "#FFFFFF", item: "#F2F3F0", text: Black(0.45) };
+        const DARK_CARD = { color: "#1A1A19", item: "#2C2C2B", text: White(0.5) };
+        const ITEM_SIZE = 56;
 
         const start = function () {
 
-            page.color = "#f5f5f5";
+            page.color = PAGE_COLOR;
 
-            HGroup({
-                gap: 10,
-            });
+            ScrollArea({ align: "center top", gap: 20, padding: [16, 40] });
 
-                const box1 = Box(0, 0, 100, 100, {
-                    color: "lightgray",
-                    round: 5,
-                });
+                Label({ text: "Badge", fontSize: 24, bold: 1, textColor: Black(0.8) });
 
-                // Badge with number
-                const badge1 = Badge({
-                    value: 1,
-                    maxValue: 99,
-                });
-                box1.add(badge1);
+                // CARD: ozden, the default
+                startCard(OZDEN_CARD, "styleName: \"ozden\" (the default)");
+                    addBadgeBox(OZDEN_CARD, { value: 1 });
+                    addBadgeBox(OZDEN_CARD, { value: 5 });
+                    addBadgeBox(OZDEN_CARD, { value: 120 });
+                endCard();
 
-                const box2 = Box(0, 0, 100, 100, {
-                    color: "lightgray",
-                    round: 5,
-                });
+                // CARD: light, the look of the kit
+                startCard(LIGHT_CARD, "styleName: \"light\"");
+                    addBadgeBox(LIGHT_CARD, { styleName: "light", value: 1 });
+                    addBadgeBox(LIGHT_CARD, { styleName: "light", value: 5 });
+                    addBadgeBox(LIGHT_CARD, { styleName: "light", value: 120 });
+                endCard();
 
-                // Badge with number
-                const badge2 = Badge({
-                    value: 999,
-                    maxValue: 9,
-                });
-                box2.add(badge2);
+                // CARD: dark, the look of the kit on a dark page
+                startCard(DARK_CARD, "styleName: \"dark\"");
+                    addBadgeBox(DARK_CARD, { styleName: "dark", value: 1 });
+                    addBadgeBox(DARK_CARD, { styleName: "dark", value: 5 });
+                    addBadgeBox(DARK_CARD, { styleName: "dark", value: 120 });
+                endCard();
 
             endGroup();
 
-            // badge.setValue(0): hidden, setValue(1): a dot, setValue(10): a number
-
         };
+
+        // *** OTHER FUNCTIONS:
+
+        // GROUP: A card in the colors of its page: its title, then its boxes in a row (endCard() closes them)
+        const startCard = function (card, title) {
+            VGroup({ width: "100%", height: "auto", align: "left top", gap: 14, padding: 20, color: card.color, round: 10, border: 1, borderColor: Black(0.08), css: { maxWidth: "420px" } });
+                Label({ text: title, fontSize: 13, bold: 1, textColor: card.text });
+            HGroup({ width: "auto", height: "auto", align: "left center", gap: 16 });
+        };
+
+        const endCard = function () {
+            endGroup(); // the row
+            endGroup(); // the card
+        };
+
+        // BOX: A box with its badge (params of Badge)
+        const addBadgeBox = function (card, params) {
+            const item = Box({ width: ITEM_SIZE, height: ITEM_SIZE, color: card.item, round: 12, position: "relative" });
+            item.add(Badge(params));
+            return item;
+        };
+
     </script>
+
 </head>
 
 <body>
