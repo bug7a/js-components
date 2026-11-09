@@ -13,8 +13,12 @@ SCREENSHOT: one picture of a page (or of a part of it) for a report, in one comm
     node test/screenshot.js "03-webpages/webpage-handbook/index.htm#/box" --click "Run" --click "Copy"
     node test/screenshot.js "03-webpages/webpage-handbook/index.htm#/using-components" --click "Run" \
         --click "Your name" --type "Ada" --click "Save"     (the example runs in an iframe: it is searched too)
+    node test/screenshot.js 04-templates/ozden-panel/index.htm --init "localStorage.setItem('appid_login', '{}')" \
+        --run "openPageByKey('Reports')"                    (a page of the panel: it opens after its login)
 
 Options:
+    --init "code"     runs before the scripts of the page, in the page of --before too: a login that the page keeps
+                      in localStorage
     --run "code"      runs in the page after it is loaded (await works): open a menu, a dialog, a state
     --click "text"    a click of the mouse on the element that shows this text (or has it as its aria-label, title or
                       placeholder), in the page or in one of its iframes of the same origin, brought into the window
@@ -232,6 +236,7 @@ const takePicture = async function (browser, url, options) {
     try {
         const page = await context.newPage();
         await chrome.guardPage(page);
+        if (options.init) await page.evaluateOnNewDocument(options.init);
         const log = [];
         watchPage(page, log);
         await page.setViewport({ width: options.width, height: options.height, deviceScaleFactor: options.scale });
@@ -316,13 +321,14 @@ const todayText = function () {
 };
 
 const readOptions = function (args) {
-    const options = { page: "", run: "", actions: [], clips: [], prints: [], name: "", before: "", width: DEFAULT_WIDTH, height: 0,
-        scale: 0, wait: DEFAULT_WAIT, margin: DEFAULT_MARGIN, isNoPicture: false, isHelp: false };
+    const options = { page: "", init: "", run: "", actions: [], clips: [], prints: [], name: "", before: "", width: DEFAULT_WIDTH,
+        height: 0, scale: 0, wait: DEFAULT_WAIT, margin: DEFAULT_MARGIN, isNoPicture: false, isHelp: false };
     for (let i = 0; i < args.length; i++) {
         const arg = args[i];
         const hasValue = (args[i + 1] !== undefined && !args[i + 1].startsWith("--"));
         if (arg === "--help") options.isHelp = true;
         else if (arg === "--before") options.before = (hasValue) ? args[++i] : "HEAD";
+        else if (arg === "--init") options.init = args[++i];
         else if (arg === "--run") options.run = args[++i];
         else if (arg === "--click") options.actions.push({ kind: "click", text: args[++i] });
         else if (arg === "--type") options.actions.push({ kind: "type", text: args[++i] });
