@@ -1729,13 +1729,17 @@ const typeInChat = function (chat, text, keyLook) {
 
 test("ChatView: Enter sends the text as a message of the user and calls onSend; Shift+Enter is a new line", async function () {
     const sent = [];
-    const chat = ChatView({ width: 400, height: 300, onSend: function (self, text) { sent.push(self === chat ? text : "not self"); } });
+    const keys = [];
+    const chat = ChatView({ width: 400, height: 300, onSend: function (self, text, key) {
+        sent.push(self === chat ? text : "not self");
+        keys.push(key);
+    } });
     typeInChat(chat, "  Hi\nthere  ", { shiftKey: true });
     const afterShift = chat.getMessages().length;
     typeInChat(chat, "  Hi\nthere  ");
     const messages = chat.getMessages();
     const isRight = afterShift === 0 && sent.join() === "Hi\nthere" && messages.length === 1 && messages[0].role === "user" &&
-        messages[0].text === "Hi\nthere" && chat.getInputText() === "";
+        messages[0].text === "Hi\nthere" && keys.join() === messages[0].key && chat.getInputText() === "";
     check("ChatView: Enter sends the text as a message of the user and calls onSend; Shift+Enter is a new line", isRight,
         JSON.stringify([afterShift, sent, messages, chat.getInputText()]));
     chat.remove();

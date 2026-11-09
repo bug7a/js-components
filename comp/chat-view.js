@@ -13,7 +13,8 @@ UI COMPONENT
 - An answer that comes: addMessage({ role: "assistant" }) gives its key, appendText(key, piece) adds every piece. Only the
   end of the answer is drawn again, and the view follows it until the reader scrolls up.
 - The field: Enter sends, Shift+Enter makes a new line (sendOnEnter: 0: Enter makes a new line, Ctrl / Cmd + Enter sends).
-  The message of the user is added, the field is emptied and onSend(self, text) is called: the page asks for the answer.
+  The message of the user is added, the field is emptied and onSend(self, text, key) is called (key: the key of that
+  message): the page asks for the answer.
   setBusy(1) while it comes: three dots until its first words, and Stop in the place of Send (Stop: setBusy(0), then
   onStop(self)).
 - showInput: 0 -> only the messages: the page has a field of its own and adds every message.
@@ -68,7 +69,7 @@ const ChatViewDefaults = {
     ariaLabel: "Conversation",
     copyText: "Copy", // The button of a code in an answer
     copiedText: "Copied",
-    onSend: function (self, text) { }, // The user sent a text: its message is on the view, the field is empty again
+    onSend: function (self, text, key) { }, // The user sent a text: its message (key) is on the view, the field is empty again
     onStop: function (self) { }, // Stop was pressed (busy is 0 already)
     onLinkClick: null, // function (self, address) {}: a link of an answer comes to you. null: it opens in a new tab.
     styleName: "light", // "light", "dark" or a name added to ChatView.styles
@@ -502,14 +503,15 @@ const ChatView = function (params = {}) {
     };
     // USAGE: get: chat.busy, set: chat.setBusy(1)
 
-    // The text of the field is sent, as the button does: its message, an empty field, onSend(self, text).
+    // The text of the field is sent, as the button does: its message, an empty field, onSend(self, text, key).
+    // WHY the key: a page that keeps the conversation (or a program in another language) knows the message by it.
     box.send = function () {
         if (box.busy == 1 || !hasText()) return;
         const text = box.textareaElem.value.trim();
         box.setInputText("");
-        box.addMessage({ role: "user", text: text });
+        const key = box.addMessage({ role: "user", text: text });
         box.scrollToEnd();
-        box.onSend(box, text);
+        box.onSend(box, text, key);
     };
 
     // As the Stop button: busy goes to 0, then onStop(self).
