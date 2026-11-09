@@ -469,6 +469,10 @@ Toggle.styles = {
     // sharper edge), and it would need a color for each state.
     ozden: {
         style: {},
+        height: 36,
+        width: 65,
+        onMark: "ON", // Shows when on: "check", "cross" or a text ("ON"). "": nothing
+        offMark: "OFF", // Shows when off
         backgroundStyle: { selectedBorderColor: Black(0.2) }, // over the color: a darker line of it
         buttonStyle: {
             selectedShadow: "-4px 0px 6px -1px rgba(0, 0, 0, 0.5), 0px 0px 0px 1px rgba(0, 0, 0, 0.2)",
@@ -478,6 +482,10 @@ Toggle.styles = {
     // For a dark page: a black track that turns green, a soft knob (the dark card of toggle.htm).
     ozdenDark: {
         style: {},
+        height: 36,
+        width: 65,
+        onMark: "ON", // Shows when on: "check", "cross" or a text ("ON"). "": nothing
+        offMark: "OFF", // Shows when off
         backgroundStyle: { color: "black", selectedColor: "#2C5A38", borderColor: White(0.25) },
         buttonStyle: { color: White(0.25), selectedColor: White(0.75) },
     },
