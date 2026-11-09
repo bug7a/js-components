@@ -22,7 +22,8 @@ UI COMPONENT TEMPLATE
   the part under it (limit.barColor on the bar, secondBarColor on the second part, color on the track; on a dark
   track darkTrack.limitColor), half and half while the end of the bar goes over it. The own color of a limit is
   its color on the track. limit.dotOpacity: every dot ("ozden": 0.85).
-- Style packages: "light" (default; the old name "classic" works too), "modern", "ozden" (the bar is a cyan SmartButton
+- Style packages: "light" (default; the old name "classic" works too) and "dark" (the light and dark look of the kit: a
+  thin round track of 10 px with no edge, the bar in the accent: _designs/progress-bar.htm), "modern", "ozden" (the bar is a cyan SmartButton
   ozden, with its edge and its line at the bottom; a round track, the second part a light bar next to it; a dark
   limit line with a text). "ozdenDark" (for a dark page). Select with styleName.
   (ProgressBar.styles)
@@ -30,8 +31,8 @@ UI COMPONENT TEMPLATE
   style.bar.innerRound ("": as round as the track; "ozden": 0, straight).
 - A DARK TRACK: darkTrack: 1 gives the track the colors of style.darkTrack (#242424 with a faint white edge;
   "ozden": Black(0.85) with no edge); the bars keep theirs. setDarkTrack().
-- THE TRACK of every bar: 16 px, #F2F2F2, a 2 px light gray edge, round 4 (the default;
-  "modern" keeps its own: 10 px, no edge, round ends; "ozden" has round ends).
+- THE TRACK of the base (ProgressBarDefaults.style): 16 px, #F2F2F2, a 2 px light gray edge, round 4 ("light",
+  "dark" and "modern" have their own: 10 px, no edge, round ends; "ozden" has round ends).
 - Everything is drawn with code (no image files needed).
 
 NOTE: comp/line-progress-bar.js (vertical lines style) is named LineProgressBar, so both can be loaded on the same page.
@@ -69,8 +70,8 @@ const ProgressBarDefaults = {
     },
     onChange: function (self) { }, // self.value
     onComplete: function (self) { }, // Called once when the value reaches maxValue.
-    styleName: "light", // "light" ("classic": its old name), "modern", "ozden", "ozdenDark", "minimal", "minimalDark" or a name added to ProgressBar.styles
-    style: { // Light style package (default)
+    styleName: "light", // "light" ("classic": its old name), "dark", "modern", "ozden", "ozdenDark", "minimal", "minimalDark" or a name added to ProgressBar.styles
+    style: { // The base of every package (a thin dark bar on a light gray track): a package changes only some keys
         layout: {
             gap: 6, // Space between the title row and the bar
         },
@@ -145,7 +146,7 @@ const ProgressBarDefaults = {
 
 const ProgressBar = function (params = {}) {
 
-    // Merge style package: params.style > ProgressBar.styles[styleName] > ProgressBarDefaults.style (light)
+    // Merge style package: params.style > ProgressBar.styles[styleName] > ProgressBarDefaults.style (the base)
     basic.applyStylePackage(params, ProgressBar.styles, ProgressBarDefaults);
 
     // Merge params:
@@ -764,12 +765,41 @@ const ProgressBar = function (params = {}) {
 // USAGE: ProgressBar({ styleName: "modern" })
 // USAGE: ProgressBar({ styleName: "modern", style: { bar: { color: "tomato" } } }) // Change only some keys.
 // USAGE: ProgressBar({ style: ProgressBar.styles.modern }) // The same as styleName: "modern". (The package is copied, never changed.)
-// NOTE: A new package needs only the keys that differ from the default (classic) style.
+// NOTE: A new package needs only the keys that differ from ProgressBarDefaults.style (the base of every package).
 // USAGE: ProgressBar.styles.myStyle = { bar: { color: "red" } };
 ProgressBar.styles = {
 
-    // Thin dark bar on a light gray track.
-    light: ProgressBarDefaults.style,
+    // The light look of the kit (_designs/progress-bar.htm), the default: a thin round track of 10 px with no edge, the
+    // bar in the accent, the second part the accent at 35 %, a limit a 2 px soft gray line with its text under it, a
+    // 14 px title and a 13 px value.
+    light: {
+        layout: { gap: 6 },
+        track: { height: 10, color: "#E6E7E3", round: 100, border: 0, borderColor: "transparent" },
+        darkTrack: { color: "#2E2E2D", borderColor: "transparent", limitColor: White(0.7) },
+        bar: { color: "#3D7A6B", fillOpacity: 1, border: 0, borderColor: "", boxShadow: "none", innerRound: "", joinEdge: 1, motion: 0.3 },
+        secondBar: { color: "", fillOpacity: 0.35, lighten: 0, borderOpacity: 0.45 }, // the main color at 35 %
+        stripes: { color: "rgba(255, 255, 255, 0.35)", size: 14, speed: 0.8 },
+        limit: { shape: "line", color: Black(0.45), width: 2, round: 1, overhang: 4, dotSize: 6, dotOpacity: 1, barColor: "white", secondBarColor: "", textSize: 12, textColor: Black(0.55), textSpace: 6 },
+        successBar: { color: "#5DB36B" },
+        errorBar: { color: "#D9534F" },
+        title: { fontSize: 14, textColor: Black(0.88) },
+        valueText: { fontSize: 13, textColor: Black(0.55) },
+    },
+
+    // The dark look of the kit: the same shapes on a dark page.
+    dark: {
+        layout: { gap: 6 },
+        track: { height: 10, color: "#363635", round: 100, border: 0, borderColor: "transparent" },
+        darkTrack: { color: "#111110", borderColor: White(0.2), limitColor: White(0.7) },
+        bar: { color: "#65A293", fillOpacity: 1, border: 0, borderColor: "", boxShadow: "none", innerRound: "", joinEdge: 1, motion: 0.3 },
+        secondBar: { color: "", fillOpacity: 0.35, lighten: 0, borderOpacity: 0.45 },
+        stripes: { color: "rgba(255, 255, 255, 0.25)", size: 14, speed: 0.8 },
+        limit: { shape: "line", color: White(0.5), width: 2, round: 1, overhang: 4, dotSize: 6, dotOpacity: 1, barColor: "#141414", secondBarColor: "", textSize: 12, textColor: White(0.55), textSpace: 6 },
+        successBar: { color: "#7FCB8F" },
+        errorBar: { color: "#FF7B72" },
+        title: { fontSize: 14, textColor: White(0.9) },
+        valueText: { fontSize: 13, textColor: White(0.55) },
+    },
 
     // The ozden bar: the colors of
     // SmartButton. The bar is a cyan SmartButton ozden (its edge and its line at the bottom: it looks raised);
@@ -926,7 +956,7 @@ ProgressBar.styles = {
     },
 
 };
-ProgressBar.styles.classic = ProgressBar.styles.light; // the old name of light: the pages made with it keep their look
+ProgressBar.styles.classic = ProgressBar.styles.light; // the old name of light
 
 // The moving stripes (a class can have an animation; its colors are css variables of the bar)
 ProgressBar.injectCss = function () {

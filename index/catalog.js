@@ -228,7 +228,7 @@ CATALOG.COMPONENTS = [
         key: "progress-bar", name: "ProgressBar", cat: "feedback",
         source: "comp/progress-bar.js",
         samples: [
-            { file: "02-comp-examples/progress-bar.htm", title: "Basic" },
+            { file: "02-comp-examples/progress-bar.htm", title: "light (the default), modern, dark" },
             { file: "02-comp-examples/progress-bar-ozden.htm", title: "ozden, two parts, stripes, limits, a dark track" },
             { file: "02-comp-examples/minimal-theme.htm", title: "Minimal theme (minimal, minimalDark)" },
         ],

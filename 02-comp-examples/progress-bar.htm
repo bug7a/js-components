@@ -20,9 +20,12 @@
 
         /* Bismillah */
 
-        // ProgressBar (comp/progress-bar.js): the default bar, an upload (maxValue, valueFormat, status), indeterminate, the modern style, a style of your own.
+        // ProgressBar (comp/progress-bar.js): the default bar (light, the look of the kit), an upload (maxValue, valueFormat,
+        // status), indeterminate, the modern style, a style of your own, the dark style on a dark page.
 
         const CARD_MAX_WIDTH = 420;
+        const LIGHT_CARD = { color: "white", line: Black(0.1), title: Black(0.45) };
+        const DARK_CARD = { color: "#1A1A19", line: White(0.1), title: White(0.5) };
 
         // *** VARIABLES:
         let prgBasic, lblBasic;
@@ -49,8 +52,8 @@
                     fontFamily: "opensans-bold",
                 });
 
-                // SAMPLE 1: Default (classic)
-                startCard("1. Default");
+                // SAMPLE 1: Default (light)
+                startCard("1. Default (light)");
 
                     prgBasic = ProgressBar({
                         width: "100%",
@@ -242,6 +245,35 @@
 
                 endCard();
 
+                // SAMPLE 6: The dark style on a dark page
+                startCard("6. Dark Style", DARK_CARD);
+
+                    ProgressBar({
+                        styleName: "dark",
+                        width: "100%",
+                        titleText: "Uploading",
+                        value: 40,
+                    });
+
+                    ProgressBar({
+                        styleName: "dark",
+                        width: "100%",
+                        titleText: "Storage",
+                        value: 70,
+                        secondValue: 5,
+                        limits: [{ value: 90, text: "limit 90" }],
+                    });
+
+                    ProgressBar({
+                        styleName: "dark",
+                        width: "100%",
+                        titleText: "Saved",
+                        value: 100,
+                        status: "success",
+                    });
+
+                endCard();
+
             endGroup();
 
         };
@@ -265,23 +297,23 @@
         };
 
         // GROUP: A white card with a title.
-        const startCard = function (title) {
+        const startCard = function (title, card = LIGHT_CARD) {
             VGroup({
                 width: "100%",
                 height: "auto",
                 align: "left top",
                 gap: 16,
                 padding: 20,
-                color: "white",
+                color: card.color,
                 round: 10,
                 border: 1,
-                borderColor: Black(0.1),
+                borderColor: card.line,
                 css: { maxWidth: CARD_MAX_WIDTH + "px" },
             });
             Label({
                 text: title,
                 fontSize: 14,
-                textColor: Black(0.45),
+                textColor: card.title,
             });
         };
 
