@@ -520,19 +520,19 @@ test("Toggle: selectedBorderColor is the line of the track when on, and it goes 
     toggle.remove();
 });
 
-test("Toggle modern: a darker line around the track when on (70 x 40, a round knob, as before)", async function () {
+test("Toggle ozden: a darker line around the track when on (70 x 40, a round knob, as before)", async function () {
     const toggle = Toggle({ left: 20, top: 100, value: 1 });
     const on = { width: toggle.button.width, height: toggle.button.height, line: toggle.background.borderColor };
     toggle.setValue(0);
     const off = { width: toggle.button.width, height: toggle.button.height, line: toggle.background.borderColor };
     const isSize = toggle.width === 70 && toggle.height === 40 && on.width === 34 && on.height === 34 && off.width === 34;
     const isLine = on.line === Black(0.2) && off.line === Black(0.05);
-    check("Toggle modern: a darker line around the track when on (70 x 40, a round knob, as before)", isSize && isLine,
+    check("Toggle ozden: a darker line around the track when on (70 x 40, a round knob, as before)", isSize && isLine,
         "box: " + toggle.width + " x " + toggle.height + ", on: " + JSON.stringify(on) + ", off: " + JSON.stringify(off));
     toggle.remove();
 });
 
-test("Toggle modern: when on, a shadow to the left of the knob and a thin line around it; none when off; a page's own shadow wins", async function () {
+test("Toggle ozden: when on, a shadow to the left of the knob and a thin line around it; none when off; a page's own shadow wins", async function () {
     const readShadow = (toggle) => getComputedStyle(toggle.button.elem).boxShadow;
     const toggle = Toggle({ left: 20, top: 100, value: 1 });
     const ownColors = Toggle({ left: 120, top: 100, value: 1, buttonStyle: { selectedColor: "gold" } });
@@ -543,7 +543,7 @@ test("Toggle modern: when on, a shadow to the left of the knob and a thin line a
     const off = readShadow(toggle);
     const hasBoth = on.includes("-4px 0px 6px -1px") && on.includes("0px 0px 0px 1px");
     const isClassicKept = readShadow(classic).includes("-1px 0px 6px 0px");
-    check("Toggle modern: when on, a shadow to the left of the knob and a thin line around it; none when off; a page's own shadow wins",
+    check("Toggle ozden: when on, a shadow to the left of the knob and a thin line around it; none when off; a page's own shadow wins",
         hasBoth && off === "none" && readShadow(ownColors) === on && readShadow(ownShadow) === "none" && isClassicKept,
         [on, off, readShadow(ownColors), readShadow(ownShadow), readShadow(classic)].join(" / "));
     [toggle, ownColors, ownShadow, classic].forEach((item) => item.remove());
@@ -640,24 +640,24 @@ test("Toggle: float has a knob bigger than its track, a param still wins over th
     toggle.remove();
 });
 
-test("Toggle: the classic knob has the same size on and off (the modern one is smaller when off)", async function () {
+test("Toggle: the classic knob has the same size on and off (the ozden one is smaller when off)", async function () {
     const MOTION_WAIT = 300; // (the knob moves in 0.2 s)
     const knobWidth = function (toggle) { return toggle.button.elem.getBoundingClientRect().width; };
     const classicToggle = Toggle({ styleName: "classic", value: 0 });
-    const modernToggle = Toggle({ value: 0 });
+    const ozdenToggle = Toggle({ value: 0 });
     await wait(MOTION_WAIT);
     const classicOff = knobWidth(classicToggle);
-    const modernOff = knobWidth(modernToggle);
+    const ozdenOff = knobWidth(ozdenToggle);
     classicToggle.setValue(1);
-    modernToggle.setValue(1);
+    ozdenToggle.setValue(1);
     await wait(MOTION_WAIT);
     const classicOn = knobWidth(classicToggle);
-    const modernOn = knobWidth(modernToggle);
+    const ozdenOn = knobWidth(ozdenToggle);
     const isClassicSame = Math.abs(classicOff - classicOn) < 0.5 && Math.round(classicOn) === 32;
-    const isModernSmaller = modernOff < modernOn * 0.7;
-    check("Toggle: the classic knob has the same size on and off (the modern one is smaller when off)", isClassicSame && isModernSmaller, "classic: " + classicOff + " / " + classicOn + ", modern: " + modernOff + " / " + modernOn);
+    const isOzdenSmaller = ozdenOff < ozdenOn * 0.7;
+    check("Toggle: the classic knob has the same size on and off (the ozden one is smaller when off)", isClassicSame && isOzdenSmaller, "classic: " + classicOff + " / " + classicOn + ", ozden: " + ozdenOff + " / " + ozdenOn);
     classicToggle.remove();
-    modernToggle.remove();
+    ozdenToggle.remove();
 });
 
 // *** PERIOD BAR (comp/period-bar.js)

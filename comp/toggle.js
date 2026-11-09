@@ -5,12 +5,16 @@ Toggle - v25.08
 
 UI COMPONENT TEMPLATE
 - An on / off switch: a round knob (box.button) slides on a track (box.background). A click switches it.
-- Style packages: "modern" (default: the knob is smaller when off), "classic", "dark" (for a dark
-  page) and more shapes (toggle-2.htm). Select with styleName. (Toggle.styles)
--- "modern": a darker line around the colored track when on (selectedBorderColor: the light
+- Style packages: "ozden" (default: the knob is smaller when off), "ozdenDark" (for a dark page), "light" and
+  "dark" (the light and dark look of the kit), "classic" and more shapes (toggle-2.htm). Select with styleName.
+  (Toggle.styles)
+-- "ozden": a darker line around the colored track when on (selectedBorderColor: the light
    look had no clear edge when on). Its size: 70 x 40, a round knob.
    When on, a shadow to the left of the knob and a thin line around it, so the white knob stands
    out on the track (buttonStyle.selectedShadow). A page with its own selectedShadow keeps that.
+-- "light" / "dark" (_designs/toggle.htm): a flat pill track of 52 x 30 that turns to the accent of the kit when on, a
+   white (dark: light gray) knob of the same size on and off with a soft shadow, 12 px marks. A mark in the knob
+   (markPlace "knob"): give it a dark color, markStyle: { color: Black(0.6), selectedColor: Black(0.6) }.
 -- "classic": for a 600 px design: 60 x 40, a light
    gray track that turns blue, a white knob of the same size on and off, with a shadow.
 -- A package is a package of params (basic.js v26.10.27): its keys fill the params you did not give, also the
@@ -28,7 +32,7 @@ UI COMPONENT TEMPLATE
 - offButtonScale: the size of the knob when off (1: the same size as on).
 - focusRingColor: the ring of the keyboard focus ("": the ring of basic.js). The ring follows the round of the track.
 - backgroundStyle.selectedBorderColor: the line of the track when on ("": the same as borderColor). A page that gives
-  its own borderColor and no selectedBorderColor keeps that line when on too (the line of "modern" when on is for
+  its own borderColor and no selectedBorderColor keeps that line when on too (the line of "ozden" when on is for
   its own colors).
 - backgroundStyle.left, top, width, height: a track of another size than the box (Ex: "float").
 - buttonStyle.shadow / buttonStyle.selectedShadow: the shadow of the knob when off / on.
@@ -95,7 +99,7 @@ const ToggleDefaults = {
         shadow: "none", // off
         selectedShadow: "-1px 0px 4px rgba(0, 0, 0, 0.15)", // on
     },
-    styleName: "modern", // "modern", "classic", "float", "round", "slim", "outline", "square", "tick", "badge", "label", "minimal", "minimalDark" or a name added to Toggle.styles
+    styleName: "ozden", // "ozden", "ozdenDark", "light", "dark", "classic", "float", "round", "slim", "outline", "square", "tick", "badge", "label", "minimal", "minimalDark" or a name added to Toggle.styles
     style: {}, // WHY: the look is in the params above; the packages are packages of params (see Toggle.styles).
 };
 
@@ -107,7 +111,7 @@ const Toggle = function(params = {}) {
         if (params[name]) params[name] = Object.assign({}, params[name]);
     });
     // WHY: a page that gives its own line of the track (borderColor) keeps it when on too, as before: the line
-    //      of a package when on (modern: selectedBorderColor) is for the colors of that package.
+    //      of a package when on (ozden: selectedBorderColor) is for the colors of that package.
     const ownStyle = params.backgroundStyle || {};
     const keepsOwnLine = (ownStyle.borderColor !== undefined && ownStyle.selectedBorderColor === undefined);
 
@@ -463,7 +467,7 @@ Toggle.styles = {
     // the first falls only to the left, its negative spread keeps it inside the track. The second is the thin line
     // around the knob, in the strength of the line of the track. A real border would be gray over the white knob (no
     // sharper edge), and it would need a color for each state.
-    modern: {
+    ozden: {
         style: {},
         backgroundStyle: { selectedBorderColor: Black(0.2) }, // over the color: a darker line of it
         buttonStyle: {
@@ -472,10 +476,37 @@ Toggle.styles = {
     },
 
     // For a dark page: a black track that turns green, a soft knob (the dark card of toggle.htm).
-    dark: {
+    ozdenDark: {
         style: {},
         backgroundStyle: { color: "black", selectedColor: "#2C5A38", borderColor: White(0.25) },
         buttonStyle: { color: White(0.25), selectedColor: White(0.75) },
+    },
+
+    // The light look of the kit (_designs/toggle.htm): a flat gray pill that turns to the accent, a white knob of the
+    // same size on and off with a soft shadow.
+    light: {
+        style: {},
+        width: 52,
+        height: 30,
+        spacing: 3,
+        offButtonScale: 1,
+        focusRingColor: "rgba(61, 122, 107, 0.5)",
+        markStyle: { size: 12, lineWidth: 3, fontSize: 11, color: Black(0.45), selectedColor: "#FFFFFF" },
+        backgroundStyle: { color: "#D4D5D1", selectedColor: "#3D7A6B", border: 0, borderColor: "transparent", selectedBorderColor: "", round: 100 },
+        buttonStyle: { color: "#FFFFFF", selectedColor: "#FFFFFF", round: 100, shadow: "0 1px 2px rgba(0, 0, 0, 0.25)", selectedShadow: "0 1px 2px rgba(0, 0, 0, 0.25)" },
+    },
+
+    // The dark look of the kit: the same shapes on a dark page, a dark gray pill and a light knob.
+    dark: {
+        style: {},
+        width: 52,
+        height: 30,
+        spacing: 3,
+        offButtonScale: 1,
+        focusRingColor: "rgba(101, 162, 147, 0.55)",
+        markStyle: { size: 12, lineWidth: 3, fontSize: 11, color: White(0.7), selectedColor: "#0F1F1B" },
+        backgroundStyle: { color: "#3A3A38", selectedColor: "#65A293", border: 0, borderColor: "transparent", selectedBorderColor: "", round: 100 },
+        buttonStyle: { color: "#CFCFCD", selectedColor: "#FFFFFF", round: 100, shadow: "0 1px 2px rgba(0, 0, 0, 0.5)", selectedShadow: "0 1px 2px rgba(0, 0, 0, 0.5)" },
     },
 
     // For a 600 px design:

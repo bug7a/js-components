@@ -716,7 +716,7 @@ test("NumberField and CurrencyField: a second decimal separator typed in the num
 // *** THE DARK PACKAGES OF A WHOLE WINDOW (the Python package: App(theme="dark"))
 
 // NOTE: ProgressBar ozdenDark is not here: this page loads LineProgressBar under that name.
-test("Dark packages: Toggle dark and Dialog ozdenDark take the dark tones", async function () {
+test("Dark packages: Toggle ozdenDark and Dialog ozdenDark take the dark tones", async function () {
     const isDark = function (color) {
         const parts = color.match(/\d+(\.\d+)?/g).map(Number);
         return parts[0] + parts[1] + parts[2] < 3 * 128;
@@ -724,10 +724,10 @@ test("Dark packages: Toggle dark and Dialog ozdenDark take the dark tones", asyn
     const isLight = function (color) { return !isDark(color); };
     const ground = function (element) { return getComputedStyle(element).backgroundColor; };
 
-    const toggle = Toggle({ left: 0, top: 0, styleName: "dark" });
+    const toggle = Toggle({ left: 0, top: 0, styleName: "ozdenDark" });
     const plainToggle = Toggle({ left: 100, top: 0 });
     const toggleLooks = toggle.backgroundStyle.color === "black" && plainToggle.backgroundStyle.color === "whitesmoke"
-        && toggle.width === 70 && Toggle.styles.modern.backgroundStyle.color === undefined;
+        && toggle.width === 70 && Toggle.styles.ozden.backgroundStyle.color === undefined;
     toggle.remove();
     plainToggle.remove();
 
@@ -754,7 +754,7 @@ test("Dark packages: Toggle dark and Dialog ozdenDark take the dark tones", asyn
     await promise;
     const packageStays = Dialog.styles.ozden.card.color === "white";
 
-    check("Dark packages: Toggle dark and Dialog ozdenDark take the dark tones",
+    check("Dark packages: Toggle ozdenDark and Dialog ozdenDark take the dark tones",
         toggleLooks && cardIsDark && titleIsLight && fieldIsDark && buttonIsDarkTone && keepsSizes && confirmIsDark && packageStays,
         [toggleLooks, cardIsDark, titleIsLight, fieldIsDark, buttonIsDarkTone, keepsSizes, confirmIsDark, packageStays].join(" "));
 });

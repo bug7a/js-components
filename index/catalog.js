@@ -611,12 +611,12 @@ CATALOG.COMPONENTS = [
         source: "comp/toggle.js",
         samples: [
             { file: "02-comp-examples/toggle.htm", title: "A settings list" },
-            { file: "02-comp-examples/toggle-2.htm", title: "modern and classic" },
+            { file: "02-comp-examples/toggle-2.htm", title: "ozden, light, dark and classic" },
             { file: "02-comp-examples/toggle-3.htm", title: "Shapes and marks" },
             { file: "02-comp-examples/minimal-theme.htm", title: "Minimal theme (minimal, minimalDark)" },
         ],
-        en: "On and off switch for light and dark pages. Many looks: modern, classic, the shapes float, round, slim, outline and square, and tick, badge and label with a check, a cross or a text.",
-        tr: "Açık ve koyu sayfalar için aç/kapat anahtarı. Birçok görünüm: modern, classic, float, round, slim, outline, square şekilleri ve onay, çarpı ya da yazılı tick, badge, label.",
+        en: "On and off switch for light and dark pages. Many looks: ozden (the default), light and dark (the look of the kit), classic, the shapes float, round, slim, outline and square, and tick, badge and label with a check, a cross or a text.",
+        tr: "Açık ve koyu sayfalar için aç/kapat anahtarı. Birçok görünüm: ozden (varsayılan), light ve dark (kitin görünüşü), classic, float, round, slim, outline, square şekilleri ve onay, çarpı ya da yazılı tick, badge, label.",
     },
     {
         key: "tiny-select", name: "TinySelect", cat: "selection",
