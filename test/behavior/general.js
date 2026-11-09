@@ -727,7 +727,7 @@ test("Dark packages: Toggle ozdenDark and Dialog ozdenDark take the dark tones",
     const toggle = Toggle({ left: 0, top: 0, styleName: "ozdenDark" });
     const plainToggle = Toggle({ left: 100, top: 0 });
     const toggleLooks = toggle.backgroundStyle.color === "black" && plainToggle.backgroundStyle.color === "whitesmoke"
-        && toggle.width === 70 && Toggle.styles.ozden.backgroundStyle.color === undefined;
+        && toggle.width === 65 && Toggle.styles.ozden.backgroundStyle.color === undefined;
     toggle.remove();
     plainToggle.remove();
 

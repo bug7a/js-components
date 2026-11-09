@@ -520,14 +520,14 @@ test("Toggle: selectedBorderColor is the line of the track when on, and it goes 
     toggle.remove();
 });
 
-test("Toggle ozden: a darker line around the track when on (70 x 40, a round knob, as before)", async function () {
+test("Toggle ozden: a darker line around the track when on (65 x 36, a round knob)", async function () {
     const toggle = Toggle({ left: 20, top: 100, value: 1 });
     const on = { width: toggle.button.width, height: toggle.button.height, line: toggle.background.borderColor };
     toggle.setValue(0);
     const off = { width: toggle.button.width, height: toggle.button.height, line: toggle.background.borderColor };
-    const isSize = toggle.width === 70 && toggle.height === 40 && on.width === 34 && on.height === 34 && off.width === 34;
+    const isSize = toggle.width === 65 && toggle.height === 36 && on.width === 30 && on.height === 30 && off.width === 30;
     const isLine = on.line === Black(0.2) && off.line === Black(0.05);
-    check("Toggle ozden: a darker line around the track when on (70 x 40, a round knob, as before)", isSize && isLine,
+    check("Toggle ozden: a darker line around the track when on (65 x 36, a round knob)", isSize && isLine,
         "box: " + toggle.width + " x " + toggle.height + ", on: " + JSON.stringify(on) + ", off: " + JSON.stringify(off));
     toggle.remove();
 });
@@ -564,7 +564,7 @@ test("Toggle: a page's own line (borderColor) stays when on; one style object gi
 
 test("Toggle: a mark shows in its state, setMarks changes it, a toggle without marks has empty marks", async function () {
     const toggle = Toggle({ styleName: "label", value: 0 });
-    const plainToggle = Toggle({ value: 1 });
+    const plainToggle = Toggle({ value: 1, onMark: "", offMark: "" }); // WHY: ozden, the default, shows ON / OFF
     await wait(30);
     const offState = toggle.onMarkBox.opacity + "/" + toggle.offMarkBox.opacity;
     const offText = toggle.offMarkBox.children[0].text;
