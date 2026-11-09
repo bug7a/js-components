@@ -34,6 +34,11 @@ and Chrome draws the same page in more than one way.
 Under a difference of a text (dom, endDom, presses, log): its first line, old and new, around the first letter that
 differs, then the changes of all its lines, word by word, the most common first:
     the changes of all 80 lines: - "cursor: pointer;" x64, + "cursor: pointer;" x16
+HTML written as text: every run looks for a tag or an entity in a text that is seen (after the load, after every press
+and every typed field; not in pre, code or a textarea: code is text there). A component writes its texts as plain text
+(allowHtml: 0), so HTML that a page gives it is shown as it is written. Only in the new page: a difference ("html as
+text", DIFF). In the old page too: printed under the result, which stays (MarkdownView shows one on purpose). A page
+that can not be opened in the commit, or that is not in it, is still opened now and looked at.
 
 It presses and types, nothing else: hover, drag and the keyboard are not measured.
 Before the screenshot an endless animation (a turning ring, pulsing dots) is stopped at its start, in both pages.
@@ -68,6 +73,7 @@ const LOG_WIDTH = 170; // letters of a line in the report
 const CHANGE_KINDS = 4; // the most common changes printed under a difference
 const CHANGE_WIDTH = 60; // letters of a change in the report
 const MAX_WORDS = 400; // a longer line is not compared word by word (the table of a longer one is slow)
+const HTML_ITEMS_SHOWN = 3; // texts with HTML written as text, printed under a result
 
 // *** THE PAGES TO COMPARE:
 
@@ -123,6 +129,19 @@ const preparePage = function () {
         const rect = elem.getBoundingClientRect();
         return rect.width >= 1 && rect.height >= 1;
     };
+
+    const isSeen = function (elem) {
+        if (!isDrawn(elem)) return false;
+        if (!elem.checkVisibility) return true;
+        return elem.checkVisibility({ opacityProperty: true, visibilityProperty: true });
+    };
+
+    // A tag or an entity written as text. WHY: a component writes its texts as plain text (allowHtml: 0); HTML that
+    // a page gives it (a word in color) is shown as it is written.
+    const HTML_AS_TEXT = /<\/?[a-z][a-z0-9-]*(\s[^<>]*)?\/?>|&(#[0-9]+|#x[0-9a-f]+|[a-z]+);/i;
+    const CODE_PLACES = "script, style, noscript, template, textarea, pre, code, [contenteditable]"; // code is text there
+    const EXCERPT_BEFORE = 20; // letters before the found tag
+    const EXCERPT_LENGTH = 90; // letters of a found text
 
     // The outermost pressable objects: a press on a button, not also on the label in it.
     const findPressable = function () {
@@ -199,6 +218,21 @@ const preparePage = function () {
             return count + " | " + document.title + " | " + document.body.innerText.replace(/\s+/g, " ");
         },
 
+        // The texts that are seen and have HTML written in them (HTML_AS_TEXT), cut around the tag.
+        findHtmlAsText: function () {
+            const found = [];
+            const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+            for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+                const match = HTML_AS_TEXT.exec(node.data);
+                if (!match) continue;
+                const parent = node.parentElement;
+                if (!parent || parent.closest(CODE_PLACES) || !isSeen(parent)) continue;
+                const from = Math.max(0, match.index - EXCERPT_BEFORE);
+                found.push(node.data.slice(from, from + EXCERPT_LENGTH).replace(/\s+/g, " ").trim());
+            }
+            return found;
+        },
+
         collectTargets: function () {
             this.targets = findPressable();
             this.seen = new Set(this.targets);
@@ -268,17 +302,35 @@ const watchPage = function (page, log) {
     });
 };
 
-const pressOpenedObjects = async function (page, startUrl, lines) {
+// The texts with HTML written in them (findHtmlAsText), each with the moment it was first seen.
+const createHtmlRecorder = function (page) {
+    const found = new Map();
+    return {
+        look: async function (moment) {
+            const texts = await page.evaluate(function () { return window.__compare.findHtmlAsText(); })
+                .catch(function () { return []; });
+            texts.forEach(function (text) {
+                if (!found.has(text)) found.set(text, moment);
+            });
+        },
+        list: function () {
+            return [...found].map(function (entry) { return { text: entry[0], moment: entry[1] }; });
+        },
+    };
+};
+
+const pressOpenedObjects = async function (page, startUrl, lines, htmlAsText, pressMoment) {
     for (let level = 0; level < OPENED_LEVELS; level++) {
         const openedCount = await page.evaluate(function () { return window.__compare.pressOpened(); });
         if (openedCount === 0) return;
         await sleep(PRESS_WAIT);
         if (page.url() !== startUrl) return;
         lines.push("  opened " + openedCount + " " + await page.evaluate(function () { return window.__compare.readState(); }));
+        await htmlAsText.look(pressMoment + ", in what it opened");
     }
 };
 
-const pressEverything = async function (page, startUrl, targetCount, lines) {
+const pressEverything = async function (page, startUrl, targetCount, lines, htmlAsText) {
     const pressCount = Math.min(targetCount, MAX_PRESSES);
     for (let index = 0; index < pressCount; index++) {
         const result = await page.evaluate(function (i) { return window.__compare.pressTarget(i); }, index);
@@ -288,15 +340,17 @@ const pressEverything = async function (page, startUrl, targetCount, lines) {
             return;
         }
         lines.push("press " + index + " " + result + " " + await page.evaluate(function () { return window.__compare.readState(); }));
-        await pressOpenedObjects(page, startUrl, lines);
+        await htmlAsText.look("after press " + index);
+        await pressOpenedObjects(page, startUrl, lines, htmlAsText, "after press " + index);
     }
 };
 
-const typeEverywhere = async function (page, fieldCount, lines) {
+const typeEverywhere = async function (page, fieldCount, lines, htmlAsText) {
     for (let index = 0; index < fieldCount; index++) {
         const result = await page.evaluate(function (i) { return window.__compare.typeInField(i); }, index);
         await sleep(TYPE_WAIT);
         lines.push("type " + index + " " + result + " " + await page.evaluate(function () { return window.__compare.readState(); }));
+        await htmlAsText.look("after typing in field " + index);
     }
 };
 
@@ -323,13 +377,15 @@ const runPage = async function (browser, url, size, steps) {
         await page.evaluate(function () { window.__compare.holdEndlessAnimations(); });
         const picture = await page.screenshot({ captureBeyondViewport: false });
         const dom = await page.evaluate(function () { return window.__compare.dumpDom(); });
+        const htmlAsText = createHtmlRecorder(page);
+        await htmlAsText.look("after the load");
         const counts = await page.evaluate(function () { return window.__compare.collectTargets(); });
 
         const presses = [];
         const startUrl = page.url();
         try {
-            await pressEverything(page, startUrl, counts.targets, presses);
-            await typeEverywhere(page, counts.fields, presses);
+            await pressEverything(page, startUrl, counts.targets, presses, htmlAsText);
+            await typeEverywhere(page, counts.fields, presses, htmlAsText);
             await sleep(END_WAIT);
         } catch (error) {
             // WHY the same in both runs: a press that reloads the page ends the list here.
@@ -337,7 +393,7 @@ const runPage = async function (browser, url, size, steps) {
         }
         const endDom = await page.evaluate(function () { return window.__compare.dumpDom(); }).catch(function () { return ""; });
 
-        return { picture, dom, endDom, presses: presses.join("\n"), log: log.join("\n"), counts };
+        return { picture, dom, endDom, presses: presses.join("\n"), log: log.join("\n"), counts, htmlAsText: htmlAsText.list() };
     } finally {
         await context.close();
     }
@@ -475,6 +531,27 @@ const findLiveParts = async function (browser, runs) {
     return parts;
 };
 
+// *** HTML WRITTEN AS TEXT:
+
+const htmlTextsOf = function (runs) {
+    return new Set(runs.flatMap(function (run) {
+        return run.htmlAsText.map(function (item) { return item.text; });
+    }));
+};
+
+// HTML written as text in the new page and in no run of the old page: a difference (none: null).
+const findNewHtmlAsText = function (oldRuns, newRun) {
+    const oldTexts = htmlTextsOf(oldRuns);
+    const items = newRun.htmlAsText.filter(function (item) { return !oldTexts.has(item.text); });
+    return (items.length > 0) ? { part: "html as text", items: items } : null;
+};
+
+// HTML written as text in the old page too: printed, not a difference (a page may show a tag on purpose).
+const findHtmlInBoth = function (oldRuns, newRun) {
+    const oldTexts = htmlTextsOf(oldRuns);
+    return newRun.htmlAsText.filter(function (item) { return oldTexts.has(item.text); });
+};
+
 const saveRun = function (fileStart, run) {
     fs.writeFileSync(fileStart + ".png", run.picture);
     TEXT_PARTS.forEach(function (part) {
@@ -495,6 +572,21 @@ const describePair = function (pair) {
     return pair.newPath + " (" + pair.oldPath + " in the commit)";
 };
 
+const fileStartOf = function (pair, size) {
+    return path.join(OUT_FOLDER, path.basename(pair.newPath, ".htm") + "-" + size.width);
+};
+
+// Nothing to compare with: the new page is still opened and looked at (HTML written as text; its files are saved).
+const lookWithoutOld = async function (browser, newUrl, size, pair, reason) {
+    const newRun = await runPage(browser, newUrl, size, pair.steps);
+    const fileStart = fileStartOf(pair, size);
+    saveRun(fileStart + "-new", newRun);
+    const differences = [{ part: "old page", reason: reason }];
+    const newHtml = findNewHtmlAsText([], newRun);
+    if (newHtml) differences.push(newHtml);
+    return { status: "DIFF", counts: newRun.counts, differences, fileStart, isWithoutOld: true, htmlInBoth: [] };
+};
+
 const compareAtSize = async function (browser, port, pair, size) {
     const oldUrl = "http://127.0.0.1:" + port + OLD_PATH + "/" + pair.oldPath;
     const newUrl = "http://127.0.0.1:" + port + "/" + pair.newPath;
@@ -503,15 +595,22 @@ const compareAtSize = async function (browser, port, pair, size) {
     const newRuns = [];
 
     for (let attempt = 1; attempt <= TRIES; attempt++) {
-        oldRun = await runPage(browser, oldUrl, size, pair.steps);
+        try {
+            oldRun = await runPage(browser, oldUrl, size, pair.steps);
+        } catch (error) {
+            // WHY on: the new page of an old page that throws is still looked at (it hid HTML written as text).
+            return lookWithoutOld(browser, newUrl, size, pair, "it can not be opened in the commit: " + error.message.split("\n")[0]);
+        }
         newRun = await runPage(browser, newUrl, size, pair.steps);
         oldRuns.push(oldRun);
         newRuns.push(newRun);
         differences = await compareRuns(browser, oldRun, newRun);
-        if (differences.length === 0) return { status: "SAME", counts: newRun.counts };
+        const newHtml = findNewHtmlAsText(oldRuns, newRun);
+        if (newHtml) differences.push(newHtml);
+        if (differences.length === 0) return { status: "SAME", counts: newRun.counts, htmlInBoth: findHtmlInBoth(oldRuns, newRun) };
     }
 
-    const fileStart = path.join(OUT_FOLDER, path.basename(pair.newPath, ".htm") + "-" + size.width);
+    const fileStart = fileStartOf(pair, size);
     saveRun(fileStart + "-old", oldRun);
     saveRun(fileStart + "-new", newRun);
     const pictureDifference = differences.find(function (difference) { return difference.part === "picture"; });
@@ -526,7 +625,8 @@ const compareAtSize = async function (browser, port, pair, size) {
     const newLiveParts = await findLiveParts(browser, newRuns);
     const liveParts = oldLiveParts.concat(newLiveParts);
     const isLive = differences.every(function (difference) { return liveParts.includes(difference.part); });
-    return { status: isLive ? "LIVE" : "DIFF", counts: newRun.counts, differences, fileStart };
+    const htmlInBoth = findHtmlInBoth(oldRuns, newRun);
+    return { status: isLive ? "LIVE" : "DIFF", counts: newRun.counts, differences, fileStart, htmlInBoth };
 };
 
 // *** THE CHANGED PART OF A PICTURE:
@@ -663,10 +763,25 @@ const cutAround = function (oldLine, newLine) {
     return [oldLine.slice(from, from + LOG_WIDTH), newLine.slice(from, from + LOG_WIDTH)];
 };
 
+// "the text" (the moment it was seen), ... and 2 more
+const describeHtmlItems = function (items) {
+    const shown = items.slice(0, HTML_ITEMS_SHOWN).map(function (item) {
+        return JSON.stringify(item.text) + " (" + item.moment + ")";
+    });
+    const otherCount = items.length - HTML_ITEMS_SHOWN;
+    return (otherCount > 0) ? shown.join(", ") + " and " + otherCount + " more" : shown.join(", ");
+};
+
+const printHtmlInBoth = function (items) {
+    if (!items || items.length === 0) return;
+    console.log("    html as text, in the old page too: " + describeHtmlItems(items));
+};
+
 const printResult = function (size, result) {
     const counts = "(" + result.counts.targets + " objects, " + result.counts.fields + " fields)";
     if (result.status === "SAME") {
         console.log("  " + size.width + ": SAME " + counts);
+        printHtmlInBoth(result.htmlInBoth);
         return;
     }
     const parts = result.differences.map(function (difference) { return difference.part; }).join(", ");
@@ -676,6 +791,14 @@ const printResult = function (size, result) {
             console.log("    picture: " + difference.place);
             return;
         }
+        if (difference.part === "old page") {
+            console.log("    old page: " + difference.reason);
+            return;
+        }
+        if (difference.part === "html as text") {
+            console.log("    html as text, only in the new page: " + describeHtmlItems(difference.items));
+            return;
+        }
         const [oldText, newText] = cutAround(difference.oldLine, difference.newLine);
         console.log("    " + difference.part + ", " + difference.count + " lines, the first at line " + difference.lineNumber + ":");
         console.log("      old: " + oldText);
@@ -683,7 +806,9 @@ const printResult = function (size, result) {
         const changes = describeChanges(difference.pairs);
         if (changes) console.log("      the changes of all " + difference.count + " lines: " + changes);
     });
-    console.log("    files: " + result.fileStart + "-old.png, -new.png, .dom.txt ...");
+    printHtmlInBoth(result.htmlInBoth);
+    const files = result.isWithoutOld ? "-new.png, -new.dom.txt ..." : "-old.png, -new.png, .dom.txt ...";
+    console.log("    files: " + result.fileStart + files);
 };
 
 const printTotals = function (totals) {
@@ -741,6 +866,25 @@ const compareAndPrint = async function (browser, port, pair, size) {
     }
 };
 
+// A page that is not in the commit: nothing to compare with, but it is still opened at each size and looked at.
+const lookAtNewPage = async function (browser, port, pair, sizes, base) {
+    console.log(pair.oldPath + "\n  not in " + base + ": nothing to compare with (a new name: old.htm=new.htm)");
+    const newUrl = "http://127.0.0.1:" + port + "/" + pair.newPath;
+    let status = "SKIPPED";
+    for (const size of sizes) {
+        try {
+            const newRun = await runPage(browser, newUrl, size, pair.steps);
+            const newHtml = findNewHtmlAsText([], newRun);
+            if (!newHtml) continue;
+            console.log("  " + size.width + ": html as text: " + describeHtmlItems(newHtml.items));
+        } catch (error) {
+            console.log("  " + size.width + ": it can not be opened: " + error.message.split("\n")[0]);
+        }
+        status = "DIFF";
+    }
+    return status;
+};
+
 // The result of a page is the worst result of its sizes.
 const comparePage = async function (browser, port, pair, sizes) {
     console.log(describePair(pair));
@@ -777,8 +921,7 @@ const main = async function () {
     try {
         for (const pair of pages) {
             if (!isInCommit(options.base, pair.oldPath)) {
-                console.log(pair.oldPath + "\n  not in " + options.base + ": nothing to compare with (a new name: old.htm=new.htm)");
-                totals.SKIPPED++;
+                totals[await lookAtNewPage(browser, server.address().port, pair, sizes, options.base)]++;
                 continue;
             }
             totals[await comparePage(browser, server.address().port, pair, sizes)]++;
