@@ -9,6 +9,9 @@ SCREENSHOT: one picture of a page (or of a part of it) for a report, in one comm
     node test/screenshot.js _basic-designer/index.htm --run "BasicDesigner.openFolderDialog()" --clip "[role=dialog]"
     node test/screenshot.js tabs.htm --before                the page of the last commit left, the page now right
     node test/screenshot.js tabs.htm --before HEAD~2 --name tabs-fix
+    node test/screenshot.js --join 2026-11-09-hero-old.png 2026-11-09-hero-new.png --label "before: amber" \
+        --label "after: teal" --name hero-colors             two pictures of yours side by side, with labels: a page
+                                                             outside git (--before can not read its old version)
     node test/screenshot.js stepper.htm --print "document.title" --print "page.width" --no-picture
     node test/screenshot.js stepper.htm --width 390 --cut --no-picture
                                                              is anything cut on a phone? (the texts; exit code 1)
@@ -35,6 +38,10 @@ Options:
     --clip-text "t"   only the box around a title: the card or the group of the element whose text starts with
                       this text (its parent). With --clip and more --clip-text: the part that holds them all
     --before [commit] before | after in one picture, with labels (HEAD by default)
+    --join a b        no page: the pictures a and b side by side, a on the left (a path, or a name in _screenshots/;
+                      .png, .jpg, .webp); --name: a-vs-b by default. Take the old state first with --name, then the new
+                      one, then join them. The labels are as large as the pictures need (a picture of 2x pixels: 2x)
+    --label "text"    the label of a picture of --join, the left one first (its file name without the date by default)
     --name what       the file: _screenshots/YYYY-MM-DD-what.png (the name of the page by default)
     --width, --height the window (1280 x 800; a width under 500 is 844 high)
     --scale n         pixels per px (2 for a part, 1 for the whole window)
@@ -442,33 +449,94 @@ const takePicture = async function (browser, url, options) {
     }
 };
 
-// *** BEFORE | AFTER: the two pictures side by side, drawn by the browser itself (no image library).
+// *** SIDE BY SIDE: two pictures with their labels, drawn by the browser itself (no image library).
+// --before: the page of a commit | the page now. --join: two pictures of yours.
 
 const SIDE_GAP = 16; // px between the pictures
 const LABEL_HEIGHT = 28; // px
+const SIDE_VIEW = { width: 4000, height: 3000 }; // px: room for two wide pictures
+const PICTURE_TYPES = { ".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".webp": "image/webp" };
 
-const sideBySide = async function (browser, before, after, beforeLabel, scale) {
+const escapeHtml = function (text) {
+    return String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+};
+
+// sides: [{ picture, label, type }], the left one first. Every picture keeps its own pixels (zoom 1 / scale).
+// scale 0: found from the pictures (--join): one more for every DEFAULT_WIDTH of the widest, so the labels of a
+// picture of 2x pixels are as large as the ones of --before.
+const sideBySide = async function (browser, sides, scale) {
     const context = await browser.createBrowserContext();
     try {
         const page = await context.newPage();
         await chrome.guardPage(page);
-        const half = function (picture, label) {
-            const source = "data:image/png;base64," + Buffer.from(picture).toString("base64");
-            return '<div class="side"><div class="label">' + label + '</div><img src="' + source + '"></div>';
+        const half = function (side) {
+            const source = "data:" + (side.type || "image/png") + ";base64," + Buffer.from(side.picture).toString("base64");
+            return '<div class="side"><div class="label">' + escapeHtml(side.label) + '</div><img src="' + source + '"></div>';
         };
         const html = "<!DOCTYPE html><style>" +
             "body { margin: 0; background: #E9E9EC; font: 13px -apple-system, sans-serif; color: #333; }" +
             "#all { display: inline-flex; gap: " + SIDE_GAP + "px; padding: " + SIDE_GAP + "px; align-items: flex-start; }" +
-            ".label { height: " + LABEL_HEIGHT + "px; font-weight: 600; }" +
-            "img { display: block; zoom: " + (1 / scale) + "; }" +
-            "</style><div id=\"all\">" + half(before, beforeLabel) + half(after, "after (now)") + "</div>";
-        await page.setViewport({ width: 4000, height: 3000, deviceScaleFactor: scale });
+            ".label { height: " + LABEL_HEIGHT + "px; font-weight: 600; white-space: nowrap; }" +
+            "img { display: block; zoom: var(--zoom); }" +
+            "</style><div id=\"all\">" + sides.map(half).join("") + "</div>";
+        await page.setViewport({ width: SIDE_VIEW.width, height: SIDE_VIEW.height, deviceScaleFactor: scale || 1 });
         await page.setContent(html, { waitUntil: "load" });
+        if (!scale) {
+            const widest = await page.evaluate(function () {
+                return Math.max.apply(null, [...document.images].map(function (image) { return image.naturalWidth; }));
+            });
+            scale = Math.max(1, Math.round(widest / DEFAULT_WIDTH));
+            await page.setViewport({ width: SIDE_VIEW.width, height: SIDE_VIEW.height, deviceScaleFactor: scale });
+        }
+        await page.evaluate(function (zoom) { document.documentElement.style.setProperty("--zoom", zoom); }, 1 / scale);
         const all = await page.$("#all");
         return await all.screenshot();
     } finally {
         await context.close();
     }
+};
+
+// *** JOIN: two pictures of yours side by side (a page outside git, where --before can not read the old version).
+
+// A picture by a path (from the working folder or the repository) or by its name in _screenshots/
+const findPicture = function (name) {
+    const places = [path.resolve(name), path.join(ROOT, name), path.join(SCREENSHOTS_FOLDER, name)];
+    const file = places.find(function (place) { return fs.existsSync(place) && fs.statSync(place).isFile(); });
+    if (!file) throw new Error("No such picture: " + name);
+    const type = PICTURE_TYPES[path.extname(file).toLowerCase()];
+    if (!type) throw new Error("Not a picture (.png, .jpg, .webp): " + name);
+    return { file: file, type: type };
+};
+
+// "2026-11-09-hero-old.png" -> "hero-old"
+const nameOfPicture = function (file) {
+    return path.basename(file).replace(/\.\w+$/, "").replace(/^\d{4}-\d{2}-\d{2}-/, "");
+};
+
+const joinPictures = async function (options) {
+    const names = options.join.filter(function (name) { return name && !name.startsWith("--"); });
+    if (names.length !== 2) throw new Error("--join takes two pictures: --join a.png b.png");
+    // WHY read first: the old pictures of _screenshots/ are deleted below, and a picture to join may be one of them
+    const sides = names.map(function (name, index) {
+        const found = findPicture(name);
+        return { picture: fs.readFileSync(found.file), type: found.type, file: found.file,
+            label: options.labels[index] || nameOfPicture(found.file) };
+    });
+    const name = options.name || nameOfPicture(sides[0].file) + "-vs-" + nameOfPicture(sides[1].file);
+    deleteOldPictures();
+    fs.mkdirSync(SCREENSHOTS_FOLDER, { recursive: true });
+    const file = path.join(SCREENSHOTS_FOLDER, todayText() + "-" + name + ".png");
+    const browser = await chrome.launchChrome();
+    const run = chrome.startRun("screenshot");
+    try {
+        fs.writeFileSync(file, await sideBySide(browser, sides, (options.isScaleGiven) ? options.scale : 0));
+    } finally {
+        await browser.close();
+        run.end();
+    }
+    console.log(path.relative(ROOT, file));
+    if (run.hasOthers()) console.log(run.describeOthers());
+    return 0;
 };
 
 // *** START:
@@ -481,12 +549,15 @@ const todayText = function () {
 
 const readOptions = function (args) {
     const options = { page: "", init: "", run: "", actions: [], clips: [], prints: [], name: "", before: "", width: DEFAULT_WIDTH,
-        height: 0, scale: 0, wait: DEFAULT_WAIT, margin: DEFAULT_MARGIN, isNoPicture: false, isHelp: false };
+        height: 0, scale: 0, wait: DEFAULT_WAIT, margin: DEFAULT_MARGIN, isNoPicture: false, isHelp: false, join: [], labels: [],
+        isScaleGiven: false };
     for (let i = 0; i < args.length; i++) {
         const arg = args[i];
         const hasValue = (args[i + 1] !== undefined && !args[i + 1].startsWith("--"));
         if (arg === "--help") options.isHelp = true;
         else if (arg === "--before") options.before = (hasValue) ? args[++i] : "HEAD";
+        else if (arg === "--join") options.join = [args[++i], args[++i]];
+        else if (arg === "--label") options.labels.push(args[++i]);
         else if (arg === "--init") options.init = args[++i];
         else if (arg === "--run") options.run = args[++i];
         else if (arg === "--click") options.actions.push({ kind: "click", text: args[++i] });
@@ -499,7 +570,7 @@ const readOptions = function (args) {
         else if (arg === "--name") options.name = args[++i];
         else if (arg === "--width") options.width = Number(args[++i]);
         else if (arg === "--height") options.height = Number(args[++i]);
-        else if (arg === "--scale") options.scale = Number(args[++i]);
+        else if (arg === "--scale") { options.scale = Number(args[++i]); options.isScaleGiven = true; }
         else if (arg === "--wait") options.wait = Number(args[++i]);
         else if (arg === "--margin") options.margin = Number(args[++i]);
         else options.page = chrome.toPagePath(arg);
@@ -520,6 +591,7 @@ const printValues = function (title, prints) {
 
 const main = async function () {
     const options = readOptions(process.argv.slice(2));
+    if (options.join.length && !options.isHelp) return joinPictures(options);
     if (options.isHelp || !options.page) {
         console.log(chrome.helpText(__filename));
         return 0;
@@ -546,7 +618,8 @@ const main = async function () {
         if (options.before) {
             const before = await takePicture(browser, origin + OLD_PATH + "/" + options.page, options);
             if (!options.isNoPicture) {
-                picture = await sideBySide(browser, before.picture, after.picture, "before (" + options.before + ")", options.scale);
+                const sides = [{ picture: before.picture, label: "before (" + options.before + ")" }, { picture: after.picture, label: "after (now)" }];
+                picture = await sideBySide(browser, sides, options.scale);
             }
             printLog("before: ", before.log);
             printValues("before: ", before.prints);
