@@ -321,9 +321,9 @@ CATALOG.COMPONENTS = [
     },
     {
         key: "chat-view", name: "ChatView", cat: "data",
-        source: "comp/chat-view.js", deps: ["comp/code-editor.js", "comp/markdown-view.js", "comp/scroll-area.js"], samples: ["02-comp-examples/chat-view.htm"],
-        en: "A conversation with an AI: the messages of the user in bubbles, the answers drawn as Markdown, an answer that comes piece by piece and three dots while it is waited for, a field that grows, with Send and Stop. Light and dark themes.",
-        tr: "Bir yapay zekâyla konuşma: kullanıcının mesajları balonlarda, cevaplar Markdown olarak çizilir; parça parça gelen cevap, beklenirken üç nokta; yazdıkça uzayan, Gönder ve Durdur düğmeli bir alan. Aydınlık ve karanlık tema.",
+        source: "comp/chat-view.js", deps: ["comp/code-editor.js", "comp/markdown-view.js", "comp/scroll-area.js"], samples: ["02-comp-examples/chat-view.htm", "02-comp-examples/minimal-theme.htm"],
+        en: "A conversation with an AI: the messages of the user in bubbles, the answers drawn as Markdown, an answer that comes piece by piece and three dots while it is waited for, a field that grows, with Send and Stop. Light, dark and minimal themes.",
+        tr: "Bir yapay zekâyla konuşma: kullanıcının mesajları balonlarda, cevaplar Markdown olarak çizilir; parça parça gelen cevap, beklenirken üç nokta; yazdıkça uzayan, Gönder ve Durdur düğmeli bir alan. Aydınlık, karanlık ve minimal tema.",
     },
     {
         key: "log-view", name: "LogView", cat: "data",

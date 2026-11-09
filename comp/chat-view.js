@@ -20,7 +20,8 @@ UI COMPONENT
 - showInput: 0 -> only the messages: the page has a field of its own and adds every message.
 - height: a number or "100%" (the messages scroll above the field).
 - Needs comp/markdown-view.js and comp/scroll-area.js (basic/scroll-bar.js for the bar; comp/code-editor.js colors the code).
-- Style packages: "light" (default), "dark". Select with styleName (ChatView.styles), or later with setTheme().
+- Style packages: "light" (default), "dark", "minimal", "minimalDark" (_designs/minimal-theme.htm: small and made of
+  lines; MinimalAccent makes them in a color of the page). Select with styleName (ChatView.styles), or later with setTheme().
 
 USAGE:
 const chat = ChatView({
@@ -72,13 +73,14 @@ const ChatViewDefaults = {
     onSend: function (self, text, key) { }, // The user sent a text: its message (key) is on the view, the field is empty again
     onStop: function (self) { }, // Stop was pressed (busy is 0 already)
     onLinkClick: null, // function (self, address) {}: a link of an answer comes to you. null: it opens in a new tab.
-    styleName: "light", // "light", "dark" or a name added to ChatView.styles
+    styleName: "light", // "light", "dark", "minimal", "minimalDark" or a name added to ChatView.styles
     style: { // Light style package (default)
         box: { color: "white" },
         page: { padding: [18, 20], gap: 20, maxWidth: 760 }, // The column of the messages. WHY maxWidth: a wide line is hard to read.
-        user: { color: "#EFEFEC", textColor: Black(0.88), fontSize: 15, lineRatio: 1.55, round: 18, padding: [16, 10], maxWidth: "82%" },
+        user: { color: "#EFEFEC", textColor: Black(0.88), fontSize: 15, lineRatio: 1.55, round: 18, padding: [16, 10], maxWidth: "82%", border: 0, borderColor: "transparent" },
         system: { fontSize: 13, textColor: Black(0.45) },
         answerStyleName: "light", // The package of MarkdownView an answer is drawn with
+        answer: {}, // Keys of the style of that MarkdownView over its package (Ex: { text: { fontSize: 13 } })
         dots: { color: Black(0.35), size: 7, gap: 5 }, // While the first words of an answer are waited for
         field: { // The place of the field and its button, under the messages
             margin: [16, 12], // Around it
@@ -92,12 +94,14 @@ const ChatViewDefaults = {
             round: 16,
             fontSize: 15,
             lineHeight: 22,
+            lineSpace: 6, // px above and under the lines: one line is as high as the button
             textColor: Black(0.88),
             placeholderColor: Black(0.4),
         },
         button: {
             size: 34,
             iconSize: 18,
+            round: null, // null: a circle
             color: "#3D7A6B",
             iconColor: White(1),
             disabledColor: Black(0.1), // Send while the field is empty
@@ -137,7 +141,6 @@ const ChatView = function (params = {}) {
     let isFieldHover = 0;
     const ROLES = ["user", "assistant", "system"];
     const BOTTOM_SPACE = 30; // px: this near to the end is at the end
-    const FIELD_PADDING_Y = 6; // px above and under the lines of the field: one line is as high as the button
 
     // *** PUBLIC VARIABLES:
     box.textareaElem = null; // The raw <textarea> of the field: a page can listen to its paste / drop
@@ -212,22 +215,32 @@ const ChatView = function (params = {}) {
         box.onLinkClick(box, address);
     };
 
+    const createAnswerView = function (entry) {
+        entry.view = MarkdownView({
+            width: "100%",
+            height: "auto",
+            markdownText: entry.text,
+            autoScroll: 0, // WHY: The view of the conversation follows the end, not the answer.
+            remotePictures: box.remotePictures,
+            copyText: box.copyText,
+            copiedText: box.copiedText,
+            onLinkClick: (typeof box.onLinkClick === "function") ? onAnswerLinkClick : null,
+            styleName: _s.answerStyleName,
+            style: ChatView.answerLookOf(_s),
+        });
+    };
+
     const createAnswerRow = function (entry) {
         // GROUP: The whole width; its MarkdownView grows with its text
         entry.row = VGroup({ width: "100%", height: "auto", align: "left top", clipContent: 0 });
-            entry.view = MarkdownView({
-                width: "100%",
-                height: "auto",
-                markdownText: entry.text,
-                autoScroll: 0, // WHY: The view of the conversation follows the end, not the answer.
-                remotePictures: box.remotePictures,
-                copyText: box.copyText,
-                copiedText: box.copiedText,
-                onLinkClick: (typeof box.onLinkClick === "function") ? onAnswerLinkClick : null,
-                styleName: _s.answerStyleName,
-                style: ChatView.ANSWER_LOOK,
-            });
+            createAnswerView(entry);
         endGroup();
+    };
+
+    // WHY made again (setTheme): the sizes of a package (minimal) are a style of the MarkdownView, given when it is made.
+    const drawAnswerAgain = function (entry) {
+        entry.view.remove();
+        createIn(entry.row, function () { createAnswerView(entry); });
     };
 
     const createRow = function (entry) {
@@ -255,6 +268,8 @@ const ChatView = function (params = {}) {
             lineHeight: Math.round(look.fontSize * look.lineRatio),
             round: look.round,
             padding: look.padding,
+            border: look.border,
+            borderColor: look.borderColor,
         });
         entry.label.css.maxWidth = look.maxWidth;
     };
@@ -323,7 +338,7 @@ const ChatView = function (params = {}) {
     // The field grows with its lines up to maxInputLines, then it scrolls.
     const growField = function () {
         const elem = box.textareaElem;
-        const most = _s.field.lineHeight * box.maxInputLines + FIELD_PADDING_Y * 2;
+        const most = _s.field.lineHeight * box.maxInputLines + _s.field.lineSpace * 2;
         elem.style.height = "auto"; // WHY: First reset, so scrollHeight is the height of the text (also when it got shorter).
         // WHY: Not drawn yet (a closed tab): scrollHeight is 0, and the field keeps the height of its CSS.
         if (elem.scrollHeight === 0) return;
@@ -355,7 +370,8 @@ const ChatView = function (params = {}) {
         }
         const name = (isBusy) ? box.stopText : box.sendText;
         const svg = (isBusy) ? ChatView.getStopSvg(iconColor, look.iconSize) : ChatView.getSendSvg(iconColor, look.iconSize);
-        box.btnSend.props({ color: color, text: svg, width: look.size, height: look.size, round: look.size / 2 });
+        const round = (look.round === null || look.round === undefined) ? look.size / 2 : look.round;
+        box.btnSend.props({ color: color, text: svg, width: look.size, height: look.size, round: round });
         box.btnSend.cursor = (isEnabled) ? "pointer" : "default";
         box.btnSend.aria = { label: name, disabled: (isEnabled) ? "false" : "true" };
         box.btnSend.elem.title = name;
@@ -398,6 +414,7 @@ const ChatView = function (params = {}) {
         box.inputRow.padding = look.margin;
         elem.style.fontSize = look.fontSize + "px";
         elem.style.lineHeight = look.lineHeight + "px";
+        elem.style.padding = look.lineSpace + "px 4px";
         elem.style.color = look.textColor;
         elem.style.setProperty("--chat-view-placeholder", look.placeholderColor);
         growField();
@@ -570,7 +587,7 @@ const ChatView = function (params = {}) {
         box.style = _s;
         applyLook();
         entries.forEach(function (entry) {
-            if (entry.view) entry.view.setTheme(_s.answerStyleName);
+            if (entry.view) drawAnswerAgain(entry);
         });
     };
     // USAGE: chat.setTheme("dark")
@@ -628,7 +645,6 @@ const ChatView = function (params = {}) {
     const textareaElem = document.createElement("textarea");
     textareaElem.rows = 1;
     textareaElem.className = "chat-view-field";
-    textareaElem.style.padding = FIELD_PADDING_Y + "px 4px";
     box.fieldBox.elem.appendChild(textareaElem);
     box.textareaElem = textareaElem;
 
@@ -681,6 +697,11 @@ ChatView.DOT_DELAY = 0.16; // s: between the dots
 
 // The look of the MarkdownView of an answer over its package: no ground, no room around it (the column has it).
 ChatView.ANSWER_LOOK = { box: { color: "transparent" }, page: { padding: [0, 0] } };
+
+// The style of the MarkdownView of an answer: ANSWER_LOOK and the answer keys of a package (the sizes of minimal).
+ChatView.answerLookOf = function (style) {
+    return Object.assign({}, ChatView.ANSWER_LOOK, style.answer);
+};
 
 ChatView.getSendSvg = function (color, size) {
     return '<svg xmlns="http://www.w3.org/2000/svg" width="' + size + '" height="' + size + '" viewBox="0 0 24 24" fill="none" stroke="' + color + '" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5"/><path d="M5.5 11.5 12 5l6.5 6.5"/></svg>';
@@ -739,3 +760,63 @@ ChatView.styles = {
     },
 
 };
+
+// The minimal theme (_designs/minimal-theme.htm): small (a 13 px text, a 28 px button) and made of lines: the bubble of
+// the user and the field are lines on the ground of the window; the ink fills only Send. MinimalAccent makes the
+// packages of a color of the page from these colors.
+ChatView.createMinimalStyle = function (colors) {
+    return {
+        box: { color: colors.ground },
+        page: { padding: [14, 12], gap: 14, maxWidth: 760 },
+        user: { color: "transparent", textColor: colors.text, fontSize: 13, lineRatio: 1.55, round: 10, padding: [12, 7], maxWidth: "82%", border: 1, borderColor: colors.line },
+        system: { fontSize: 12, textColor: colors.softText },
+        answerStyleName: colors.answerStyleName,
+        // WHY the sizes of an answer here: MarkdownView has no minimal package; its text takes the 13 px of the theme.
+        answer: {
+            text: { fontSize: 13, lineRatio: 1.55 },
+            heading: { fontSizes: [20, 17, 15, 14, 13, 13] },
+            code: { color: "transparent", borderColor: colors.line, round: 4, fontSize: 12, lineHeight: 18 }, // a code is lines too
+        },
+        dots: { color: colors.softText, size: 5, gap: 4 },
+        field: {
+            margin: [12, 10],
+            padding: [8, 2],
+            gap: 6,
+            color: "transparent",
+            border: 1,
+            borderColor: colors.edge,
+            hoverBorderColor: colors.edgeHover,
+            focusBorderColor: colors.ink,
+            round: 4,
+            fontSize: 13,
+            lineHeight: 20,
+            lineSpace: 4,
+            textColor: colors.text,
+            placeholderColor: colors.faintText,
+        },
+        button: {
+            size: 28,
+            iconSize: 14,
+            round: 4,
+            color: colors.ink,
+            iconColor: colors.onInk,
+            disabledColor: "transparent",
+            disabledIconColor: colors.faintText,
+            stopColor: colors.ink,
+            stopIconColor: colors.onInk,
+        },
+        empty: { fontSize: 13, textColor: colors.softText },
+        focus: { ringColor: colors.focus },
+        scrollBar: { bar_color: colors.scrollBar, bar_mouseOverColor: colors.scrollBar, bar_width: 3, bar_mouseOverWidth: 4, bar_round: 3, showDots: 0 },
+    };
+};
+ChatView.MINIMAL_COLORS = {
+    ground: "#FFFFFF", text: Black(0.85), softText: Black(0.55), faintText: Black(0.54), line: Black(0.2), edge: Black(0.45),
+    edgeHover: Black(0.65), ink: "#1F1F1F", onInk: "#FFFFFF", focus: "#3D8BD9", scrollBar: "#373836", answerStyleName: "light",
+};
+ChatView.styles.minimal = ChatView.createMinimalStyle(ChatView.MINIMAL_COLORS);
+ChatView.MINIMAL_DARK_COLORS = {
+    ground: "#1A1A19", text: White(0.88), softText: White(0.55), faintText: White(0.48), line: White(0.18), edge: White(0.42),
+    edgeHover: White(0.62), ink: "#EDEDEB", onInk: "#1A1A19", focus: "#7FB6DE", scrollBar: "#CFCFCD", answerStyleName: "dark",
+};
+ChatView.styles.minimalDark = ChatView.createMinimalStyle(ChatView.MINIMAL_DARK_COLORS);

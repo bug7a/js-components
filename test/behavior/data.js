@@ -1794,6 +1794,22 @@ test("ChatView: the view follows a new answer until the reader scrolls up", asyn
     chat.remove();
 });
 
+test("ChatView: minimal: small and made of lines; setTheme() draws the answers again in the sizes of a package", async function () {
+    const chat = ChatView({ width: 400, height: 300, styleName: "minimal", messages: [{ role: "user", text: "Hi" }, { role: "assistant", text: "An answer" }] });
+    await wait(50);
+    const answerSize = function () {
+        return getComputedStyle(chat.messageGroup.elem.querySelector(".markdown-view-text")).fontSize;
+    };
+    const minimalLook = [answerSize(), chat.btnSend.height, chat.fieldGroup.color].join(" | ");
+    chat.setTheme("light");
+    await wait(50);
+    const lightLook = [answerSize(), chat.btnSend.height].join(" | ");
+    check("ChatView: minimal: small and made of lines; setTheme() draws the answers again in the sizes of a package",
+        minimalLook === "13px | 28 | transparent" && lightLook === "15px | 34" && chat.getMessages().length === 2,
+        minimalLook + " / light: " + lightLook);
+    chat.remove();
+});
+
 // *** JSON VIEW (comp/json-view.js)
 
 const jsonRowText = function (view, key) {

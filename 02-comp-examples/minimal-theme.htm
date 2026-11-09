@@ -56,6 +56,8 @@
     <script src="../comp/loading-screen.js" type="text/javascript" charset="utf-8"></script>
     <script src="../comp/graph-box.js" type="text/javascript" charset="utf-8"></script>
     <script src="../comp/scroll-area.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/markdown-view.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/chat-view.js" type="text/javascript" charset="utf-8"></script>
 
     <script>
 
@@ -67,7 +69,7 @@
     // The components that have it so far: SmartButton (and minimalDanger for a delete), CheckBox, RadioButton, Toggle,
     // TextField (EmailField, PasswordField, TextAreaField...), SearchInput, SelectBox, ItemList, Slider, RangeSlider,
     // ProgressBar, Tabs, Stepper, MenuBar (its menus: ContextMenu), ToolBar, StatusBar, TreeView, SmartTable,
-    // DataTable, JsonEditor, Tooltip, Dialog, Toast.
+    // DataTable, JsonEditor, ChatView, Tooltip, Dialog, Toast.
     // The pickers, the fields and the panels too: DatePicker, TimePicker, ColorPicker, SliderField, TagInput,
     // FilePicker, StepBar, TimeLine, Accordion, Splitter, SidePanel, LoadingScreen; GraphBox with theme: \"minimal\".
     // The same theme in a color of the page: MinimalAccent (comp/minimal-accent.js; the sample minimal-accent.htm).
@@ -88,6 +90,7 @@
     const CHART_HEIGHT = 220;
     const LOADING_TIME = 1500; // ms: the loading screen of the sample stays this long
     const JSON_EDITOR_HEIGHT = 280;
+    const CHAT_HEIGHT = 300;
     const ICON_LIGHT = Black(0.85);
     const DANGER_LIGHT = "#C24A36";
     const DANGER_DARK = "#FF9F93";
@@ -125,6 +128,10 @@
         { name: "Grace Hopper", city: "New York", orders: 21 },
     ];
     const TAGS = ["audio", "fitness", "guide", "travel"];
+    const CHAT_MESSAGES = [
+        { role: "user", text: "How do I count the lines of a file?" },
+        { role: "assistant", text: "Read the file and count its lines:\n\n```python\nlines = open(\"notes.txt\").read().splitlines()\nprint(len(lines))\n```" },
+    ];
     const SECTIONS = [
         { key: "general", text: "General", description: "3 settings", opened: 1 },
         { key: "advanced", text: "Advanced" },
@@ -254,6 +261,9 @@
                         Splitter({ styleName: "minimal", firstSize: 160 });
                     endBox();
 
+                    Label({ text: "CONVERSATION", fontSize: 11, bold: 1, textColor: LIGHT_CAPTION_COLOR });
+                    ChatView({ styleName: "minimal", width: "100%", height: CHAT_HEIGHT, messages: CHAT_MESSAGES });
+
                     Label({ text: "CHART", fontSize: 11, bold: 1, textColor: LIGHT_CAPTION_COLOR });
                     GraphBox({ theme: "minimal", width: "100%", height: CHART_HEIGHT, type: "line", titleText: "Visits", labels: MONTHS, datasets: VISITS });
 
@@ -373,6 +383,9 @@
                     startBox({ width: "100%", height: SPLIT_HEIGHT, color: "transparent", border: 1, borderColor: DARK_LINE_COLOR, round: 4 });
                         Splitter({ styleName: "minimalDark", firstSize: 160 });
                     endBox();
+
+                    Label({ text: "CONVERSATION", fontSize: 11, bold: 1, textColor: DARK_CAPTION_COLOR });
+                    ChatView({ styleName: "minimalDark", width: "100%", height: CHAT_HEIGHT, messages: CHAT_MESSAGES });
 
                     Label({ text: "CHART", fontSize: 11, bold: 1, textColor: DARK_CAPTION_COLOR });
                     GraphBox({ theme: "minimalDark", width: "100%", height: CHART_HEIGHT, type: "line", titleText: "Visits", labels: MONTHS, datasets: VISITS });
