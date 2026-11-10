@@ -5,6 +5,12 @@
 Tabs - v26.10
 
 UI COMPONENT TEMPLATE
+- THE CONTENT OF THE TABS (new pages): Tabs is the bar; the pages under it are a PageControl (comp/page-control.js),
+  one page for each tab with the same key, and the onChange of the tabs opens it:
+      const pages = PageControl({ width: "100%", height: 400, transition: "fade", pages: ["home", "orders"] });
+      Tabs({ tabs: ["home", "orders"], value: "home", onChange: (self) => pages.open(self.value) });
+  PageControl gives the pages their motion (slide, fade), hides the inactive ones from the keyboard and the screen
+  readers and can be swiped. (panels: 1 stays for the pages made with it.)
 - A tab bar: one tab is active, the others can be clicked. An animated indicator moves to the active tab.
 - Variants: "underline" (a line under the active tab, default) and "pill" (a filled shape behind the active tab,
   like a segmented control).
@@ -14,13 +20,13 @@ UI COMPONENT TEMPLATE
   and the active tab is scrolled into view.
 - fullWidth: 1 -> the tabs share the bar width equally.
 - vertical: 1 -> the tabs are stacked (Ex: settings sections). The indicator is on the left side.
-- panels: 1 -> a content Box for every tab under the bar. Only the active one is shown.
+- panels: 1 -> a content Box for every tab under the bar. Only the active one is shown. (New pages: a PageControl, above.)
   Fill a panel with setPanelContent(key, fn) or startPanel(key) ... endPanel(), or get it with getPanel(key).
 - Keyboard: ArrowLeft / ArrowRight (ArrowUp / ArrowDown when vertical), Home, End move between the tabs. Enter / Space
   activates, Delete closes a closable tab. Tab key moves the focus out of the bar (roving tabindex).
 - Accessibility: tablist / tab / tabpanel roles, aria-selected, aria-controls.
 - onChange is NOT called when the component is created or when the value is set with silent: 1.
-- Style packages: "classic" (default), "modern", "dark". Select with styleName. (Tabs.styles)
+- Style packages: "light" (default; the old name "classic" works too), "modern", "dark". Select with styleName. (Tabs.styles)
 - Everything is drawn with code (no image files needed).
 - scale: multiplies every size (the style, width / height / barWidth / panelHeight, the spaces in the code).
   Its default is basic.uiScale: on a page fitted with page.fit() (basic.uiScale = 1 / page.zoom) the tabs keep
@@ -57,9 +63,11 @@ Tabs({ variant: "pill", tabs: ["Day", "Week", "Month"] });
 Tabs({ vertical: 1, width: 200, tabs: ["General", "Security", "Billing"] });
 
 Started Date: September 2026
-Developer: Bugra Ozden
-Email: bugra.ozden@gmail.com
 Webpage: https://bug7a.github.io/js-components/
+
+Copyright 2020-2026 Bugra Ozden <bugra.ozden@gmail.com> (https://bug7a.github.io/)
+Licensed under the Apache License, Version 2.0
+SPDX-License-Identifier: Apache-2.0
 
 */
 
@@ -87,8 +95,8 @@ const TabsDefaults = {
     onChange: function (self) { }, // self.value, self.previousValue, self.getActiveTab()
     onClose: function (self, tab) { }, // Return false to keep the tab.
     onAdd: function (self) { },
-    styleName: "classic", // "classic", "modern", "dark" or a name added to Tabs.styles
-    style: { // Classic style package (default)
+    styleName: "light", // "light" ("classic": its old name), "modern", "dark", "minimal", "minimalDark" or a name added to Tabs.styles
+    style: { // Light style package (default)
         bar: { // Underline variant
             color: "transparent",
             padding: [0, 0], // [x, y]
@@ -196,7 +204,7 @@ const TabsDefaults = {
 
 const Tabs = function (params = {}) {
 
-    // Merge style package: params.style > Tabs.styles[styleName] > TabsDefaults.style (classic)
+    // Merge style package: params.style > Tabs.styles[styleName] > TabsDefaults.style (light)
     basic.applyStylePackage(params, Tabs.styles, TabsDefaults);
 
     // Merge params:
@@ -224,7 +232,9 @@ const Tabs = function (params = {}) {
     const isFullWidth = basic.isOn(box.fullWidth);
     let items = []; // [{ tab, group, label, countLabel, badgeDot, closeButton, icon, panel, isHovered }]
     let panelStack = []; // startPanel() / endPanel()
-    let isIndicatorReady = 0;
+    let isIndicatorMoving = 0; // the indicator moves with a motion (startIndicatorMotion: the first change of the tab)
+    let isFirstViewDone = 0; // the bar has been drawn once
+    let shownValue = null; // the tab the indicator shows
     const scale = box.scale; // The px of the code below are multiplied by it, like the style.
     const SCROLL_SPACE_X = 24 * scale; // Space next to the active tab when the strip scrolls to it.
     const SCROLL_SPACE_Y = 8 * scale;
@@ -360,13 +370,16 @@ const Tabs = function (params = {}) {
         indicator.color = item.tab.selectedColor || indicatorColor;
         indicator.opacity = 1;
 
-        // WHY: The first position must not be animated. (The indicator would fly in from the corner.)
-        if (!isIndicatorReady) {
-            isIndicatorReady = 1;
-            indicator.elem.offsetWidth;
-            indicator.setMotionNow(getIndicatorMotion());
-        }
+    };
 
+    // The indicator moves with a motion from one tab to another, after the first view.
+    // WHY not from its first place: the tab of the login pages grew with a motion when the
+    //     page opened: the first size was measured before the fonts and the page were ready, and the motion that was
+    //     on followed the right size. Its first place and the sizes before the first change are drawn at once.
+    const startIndicatorMotion = function () {
+        if (isIndicatorMoving || !isFirstViewDone) return;
+        isIndicatorMoving = 1;
+        box.indicator.setMotionNow(getIndicatorMotion());
     };
 
     const getIndicatorMotion = function () {
@@ -421,6 +434,8 @@ const Tabs = function (params = {}) {
     // WHY: One place, so a change can not forget its panel or its place in the Tab order.
     const showActiveTab = function () {
         paintTabs();
+        if (shownValue !== null && shownValue !== box.value) startIndicatorMotion();
+        shownValue = box.value;
         refreshLayout();
         showActivePanel();
         makeTabbable(findItem(box.value));
@@ -434,7 +449,7 @@ const Tabs = function (params = {}) {
 
     // WHY: New tabs: the indicator jumps to its first place, it does not fly from the old one.
     const resetIndicator = function () {
-        isIndicatorReady = 0;
+        isIndicatorMoving = 0;
         box.indicator.setMotionNow("none");
     };
 
@@ -672,9 +687,10 @@ const Tabs = function (params = {}) {
             paintTab(item);
         });
         group.on("keydown", function (self, event) { onTabKeyDown(item, event); });
-        group.on("focus", function () { group.boxShadow = focusRing; });
+        // WHY :focus-visible: the ring is for the keyboard. A click focuses the tab after its mousedown, so clearing the
+        //     ring at mousedown did not stop it (a click on a tab showed the ring).
+        group.on("focus", function () { group.boxShadow = group.elem.matches(":focus-visible") ? focusRing : "none"; });
         group.on("blur", function () { group.boxShadow = "none"; });
-        group.on("mousedown", function () { group.boxShadow = "none"; }); // WHY: No focus ring for mouse clicks.
 
         // Middle mouse button closes a closable tab (like a browser).
         group.on("auxclick", function (self, event) {
@@ -1183,6 +1199,9 @@ const Tabs = function (params = {}) {
     box.value = resolveActiveKey(initialValue);
     box.setEnabled(box.enabled);
     showActiveTab();
+    requestAnimationFrame(function () {
+        isFirstViewDone = 1; // (a change of the tab before it is not a move: startIndicatorMotion)
+    });
 
     return endObject(box);
 
@@ -1268,7 +1287,7 @@ Tabs.injectCss = function () {
 Tabs.styles = {
 
     // Dark text and a dark line on a light page.
-    classic: TabsDefaults.style,
+    light: TabsDefaults.style,
 
     // Cadetblue, same colors as the modern CheckBox, RadioButton, ProgressBar and TagInput.
     modern: {
@@ -1315,3 +1334,33 @@ Tabs.styles = {
     },
 
 };
+Tabs.styles.classic = Tabs.styles.light; // the old name of light: the pages made with it keep their look
+
+// The minimal theme (_designs/minimal-theme.htm): a 13 px text, a 2 px ink line under the selected tab on one thin
+// line, no fill under the mouse (the text gets darker); the pill variant: a line around the bar and an ink line
+// around the selected tab. minimalDark: the same on a dark window.
+Tabs.createMinimalStyle = function (colors) {
+    return {
+        bar: { color: "transparent", padding: [0, 0], gap: 2, round: 0, dividerColor: colors.line, dividerWidth: 1 },
+        pillBar: { color: "transparent", padding: [2, 2], gap: 2, round: 4, border: 1, borderColor: colors.line },
+        tab: { fontSize: 13, textColor: colors.softText, padding: [10, 6], round: 3, gap: 6, minHeight: 30 },
+        tabHover: { color: "transparent", textColor: colors.text },
+        tabActive: { color: "transparent", textColor: colors.ink },
+        pillActive: { textColor: colors.ink },
+        tabDisabled: { opacity: 0.4 },
+        indicator: { color: colors.ink, thickness: 2, round: 1, motion: 0.25 },
+        pillIndicator: { color: "transparent", round: 3, shadow: "inset 0 0 0 1px " + colors.ink, motion: 0.25 },
+        icon: { size: 14 },
+        count: { fontSize: 11, color: "transparent", textColor: colors.softText, activeColor: colors.ink, activeTextColor: colors.onInk, round: 8, padding: [5, 0] },
+        close: { color: colors.softText, hoverColor: colors.danger, size: 12 },
+        addButton: { color: colors.softText, hoverColor: colors.ink, hoverBackground: "transparent", size: 14 },
+        arrow: { color: colors.softText, background: colors.ground, size: 14 },
+        focus: { outlineColor: colors.focus },
+        panel: { color: "transparent", padding: [0, 12], round: 0, border: 0, borderColor: "transparent" },
+        disabled: { opacity: 0.4 },
+    };
+};
+Tabs.MINIMAL_COLORS = { ground: "#FFFFFF", ink: "#1F1F1F", onInk: "#FFFFFF", text: Black(0.85), softText: Black(0.55), line: Black(0.2), danger: "#C24A36", focus: "#3D8BD9" };
+Tabs.styles.minimal = Tabs.createMinimalStyle(Tabs.MINIMAL_COLORS);
+Tabs.MINIMAL_DARK_COLORS = { ground: "#1A1A19", ink: "#EDEDEB", onInk: "#1A1A19", text: White(0.88), softText: White(0.55), line: White(0.18), danger: "#FF9F93", focus: "#7FB6DE" };
+Tabs.styles.minimalDark = Tabs.createMinimalStyle(Tabs.MINIMAL_DARK_COLORS);

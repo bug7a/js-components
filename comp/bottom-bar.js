@@ -5,20 +5,21 @@
 Component: BottomBar - v26.11
 Description: Mobile application bottom bar component that creates buttons from a JSON list.
 Started Date: December 2025
-Developer: Bugra Ozden
-Email: bugra.ozden@gmail.com
-WebPage: https://bug7a.github.io/
+Webpage: https://bug7a.github.io/js-components/
+
+Copyright 2020-2026 Bugra Ozden <bugra.ozden@gmail.com> (https://bug7a.github.io/)
+Licensed under the Apache License, Version 2.0
+SPDX-License-Identifier: Apache-2.0
 
 - Design idea from an Instagram post by shahinurstk02
 
-NEEDS: comp/badge-v2.js (Badge), loaded before the first item is created.
-NOTE: Each item needs two icon files: "home.png" (normal) and "homes.png" (selected: the same name + "s").
+NEEDS: comp/badge.js (Badge), loaded before the first item is created.
+ITEMS: { iconFile, selectedIconFile, text, color }. selectedIconFile is the icon of the selected item ("": its iconFile).
 
 THE NAME OF THE SELECTED ITEM (labelMode):
 - "inline" (the default): next to its icon, in the selected box.
 - "float": the selected box is only around the icon; the name shows over it in a small pill (style.floatLabel) and
-  fades out after floatLabelTime ms. The pill follows the selected box. (The tab bar of the old
-  javascript-mobile-app-template; sample: 02-comp-examples/bottom-bar-2.htm)
+  fades out after floatLabelTime ms. The pill follows the selected box. (Sample: 02-comp-examples/bottom-bar-2.htm)
 - "none": no names.
 ITEM COLORS: items[i].color is the color of the selected box behind that item (else style.selectedBox.color).
 BADGES: the badge param goes to the Badge of every item (its style is the badgeStyle of Badge). An item shows its
@@ -31,20 +32,20 @@ KEYBOARD AND SCREEN READERS: every item is a button named by its text ("Tab 1"..
 USAGE:
 const bar = BottomBar({
     top: page.height - 100,
-    items: [{ icon: "home.png", text: "Home" }, { icon: "search.png", text: "Search" }],
-    onItemClick: function (item, index) { println(item.data.text); },
+    items: [{ iconFile: "home.png", selectedIconFile: "homes.png", text: "Home" }, { iconFile: "search.png", text: "Search" }],
+    onItemClick: function (self, item, index) { println(item.data.text); },
 });
 bar.setBadge(1, 5);
 bar.selectByIndex(0);
 bar.setLabelMode("float");
 
-// The tab bar of the old mobile app template: a white bar, a circle in the color of the item behind the selected
+// A tab bar: a white bar, a circle in the color of the item behind the selected
 // icon, its name over it for a moment, a number badge with a white ring (also "0" and "1").
 BottomBar({
     bottom: 0,
     height: 80,
     labelMode: "float",
-    items: [{ icon: "home.png", text: "Home", color: "#5ABB9F" }, { icon: "tasks.png", text: "Tasks" }],
+    items: [{ iconFile: "home.png", text: "Home", color: "#5ABB9F" }, { iconFile: "tasks.png", text: "Tasks" }],
     badge: {
         showZero: 1,
         dotForOne: 0,
@@ -69,12 +70,13 @@ const BottomBarDefaults = {
     left: 0,
     width: "100%",
     height: 100,
-    items: [], // JSON list for buttons: [{ icon: "file.png", text: "Home", color: "#5ABB9F" }] (color: optional)
-    onItemClick: function (item, index) { },
+    items: [], // [{ iconFile: "home.png", selectedIconFile: "homes.png", text: "Home", color: "#5ABB9F" }] (selectedIconFile, color: optional)
+    onItemClick: function (self, item, index) { },
     hoverEffect: true, // For desktop usage
     labelMode: "inline", // "inline": the name next to the selected icon, "float": over it for a moment, "none": no names
+    allowHtml: 0, // 1: the names of the items are HTML (only for your own texts)
     floatLabelTime: 600, // ms: from the moment the name shows over the selected item to its fade out ("float")
-    badge: { // The params of the Badge of every item (comp/badge-v2.js)
+    badge: { // The params of the Badge of every item (comp/badge.js)
         showZero: 0, // 1: a badge set to 0 shows "0" (0: hidden)
         dotForOne: 1, // 1: a dot for 1, 0: the number 1
         maxValue: 99, // More: "99+"
@@ -102,7 +104,7 @@ const BottomBarDefaults = {
             iconGap: 6,
             selectionPadding: 14,
             // px more after the name of the selected item: an icon file has an empty edge at its left, a name has none
-            // at its right, so the same padding looked smaller after the name (the user, 2026-11-02). 0: no more space
+            // at its right, so the same padding looked smaller after the name. 0: no more space
             labelEndSpace: 6,
         },
         icon: {
@@ -165,6 +167,12 @@ const BottomBar = function (params = {}) {
 
     // *** PRIVATE FUNCTIONS:
 
+    const setText = function (label, text) {
+        const value = (text === undefined || text === null) ? "" : String(text);
+        if (box.allowHtml == 1) label.text = value;
+        else label.plainText = value;
+    };
+
     const isFloatMode = function () {
         return box.labelMode === "float";
     };
@@ -174,9 +182,9 @@ const BottomBar = function (params = {}) {
         return box.labelMode !== "float" && box.labelMode !== "none";
     };
 
-    // WHY: The selected icon is a second file: "home.png" -> "homes.png".
-    const getSelectedIconFile = function (iconFile) {
-        return iconFile.replace(".png", "s.png");
+    // The icon of the selected item: a file of its own, or its icon again.
+    const getSelectedIconFile = function (itemData) {
+        return itemData.selectedIconFile || itemData.iconFile;
     };
 
     // The name of an item for a screen reader
@@ -284,7 +292,7 @@ const BottomBar = function (params = {}) {
     const showFloatLabel = function (item) {
         hideFloatLabel(); // WHY: Its timer starts again.
         if (!item.data.text) return; // No name: no pill
-        box.lblFloat.text = item.data.text;
+        setText(box.lblFloat, item.data.text);
         placeFloatLabel();
         box.lblFloat.opacity = 1;
         cancelFloatLabelHide = box.after(box.floatLabelTime, hideFloatLabel);
@@ -321,7 +329,7 @@ const BottomBar = function (params = {}) {
     const selectByUser = function (itemView, index) {
         box.selectedIndex = index;
         isFloatLabelWaiting = 1;
-        box.onItemClick(itemView, index);
+        box.onItemClick(box, itemView, index);
         box.refresh();
     };
 
@@ -386,7 +394,7 @@ const BottomBar = function (params = {}) {
                 position: "absolute",
             });
             itemView.icon.i1.center(); // WHY: An icon box bigger than the icon (layout.iconBoxSize).
-            itemView.icon.i1.load(itemData.icon);
+            itemView.icon.i1.load(itemData.iconFile);
             itemView.icon.i1.setMotion("opacity 0.3s");
 
             // ICON: selected (orange)
@@ -397,7 +405,7 @@ const BottomBar = function (params = {}) {
                 opacity: 0,
             });
             itemView.icon.i2.center();
-            itemView.icon.i2.load(getSelectedIconFile(itemData.icon));
+            itemView.icon.i2.load(getSelectedIconFile(itemData));
             itemView.icon.i2.setMotion("opacity 0.3s");
 
             // Hover effect for icons (for desktop usage)
@@ -423,11 +431,11 @@ const BottomBar = function (params = {}) {
             width: "auto",
             height: "auto",
             color: "transparent",
-            text: itemData.text,
             textColor: box.style.label.textColor,
             position: "absolute", // WHY: refresh() places the items itself (left), not a flex layout.
             opacity: 0,
         });
+        setText(itemView.label, itemData.text);
         itemView.label.css = { whiteSpace: "nowrap" }; // WHY: A name of two words broke while the bar was growing.
         box.innerBox.add(itemView.label);
         itemView.label.center("top");

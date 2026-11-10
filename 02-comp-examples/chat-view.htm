@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+
+        <title>ChatView</title>
+
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <!-- LIBRARY FILES -->
+        <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
+        <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../basic/scroll-bar.min.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- COMPONENT FILES -->
+        <script src="../comp/code-editor.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/markdown-view.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/scroll-area.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/chat-view.js" type="text/javascript" charset="utf-8"></script>
+
+        <script>
+
+        /* Bismillah */
+
+        // ChatView (comp/chat-view.js): a conversation with an AI.
+        // 1. Write a message and press Enter (Shift+Enter: a new line): an answer comes piece by piece, drawn as Markdown.
+        // 2. While it comes, the button is Stop. Scroll up: the view stays where you are; at the end it follows again.
+        // 3. The two themes: styleName "light" (with a conversation) and "dark" (empty: its emptyText).
+
+        // *** VARIABLES:
+        const PAGE_COLOR = "#ECEBE8";
+        const SOFT_TEXT = "#6F6E6B";
+        const CARD_MIN_WIDTH = 440;
+        const CARD_MAX_WIDTH = 620;
+        const CARD_ROUND = 12;
+        const CHAT_HEIGHT = 560;
+        const WRITE_INTERVAL = 45; // ms: between two words of an answer
+        const THINK_TIME = 700; // ms: before the first words (the dots)
+
+        // The answer of the sample to every message (an AI would write its own)
+        const ANSWER = [
+            "Here is a small plan for **{topic}**:",
+            "",
+            "1. Write down what you want to do",
+            "2. Split it into small steps",
+            "3. Do one step a day",
+            "",
+            "A table of the week:",
+            "",
+            "| Day | Step |",
+            "|:---|:---|",
+            "| Monday | The list |",
+            "| Tuesday | The first step |",
+            "",
+            "And a line of code to count the steps:",
+            "",
+            "```python",
+            "steps = [\"list\", \"first step\"]",
+            "print(len(steps), \"steps\")",
+            "```",
+            "",
+            "Ask again if something is not clear.",
+        ].join("\n");
+
+        const START_MESSAGES = [
+            { role: "system", text: "Today, 09:41" },
+            { role: "user", text: "Hello! Can you help me with a plan?" },
+            { role: "assistant", text: "Of course. Tell me the **topic**, and I write a plan of small steps." },
+        ];
+
+        // First running function. (basic.js calls it when the page is ready)
+        const start = function () {
+
+            page.color = PAGE_COLOR;
+
+            // SCROLL AREA: Page (it scrolls when the window is lower than the samples)
+            ScrollArea({ align: "center top", gap: 16, padding: [16, 28] });
+
+                Label({ text: "ChatView", fontSize: 24, bold: 1, textColor: Black(0.8) });
+
+                // GROUP: The samples side by side (one under the other on a narrow screen)
+                HGroup({ width: "100%", height: "auto", align: "center top", gap: 20, wrap: 1, clipContent: 0 });
+
+                    startCard("Light", "styleName: \"light\" (default)");
+                        ChatView({ width: "100%", height: CHAT_HEIGHT, messages: START_MESSAGES, round: CARD_ROUND, onSend: answer, onStop: stopAnswer });
+                    endGroup();
+
+                    startCard("Dark", "styleName: \"dark\", emptyText");
+                        ChatView({ width: "100%", height: CHAT_HEIGHT, styleName: "dark", emptyText: "Ask something", round: CARD_ROUND, onSend: answer, onStop: stopAnswer });
+                    endGroup();
+
+                endGroup();
+
+            endGroup();
+
+        };
+
+        // *** OTHER FUNCTIONS:
+
+        // GROUP: A card with a title and a note. endGroup() closes it.
+        const startCard = function (titleText, noteText) {
+            VGroup({
+                width: "auto",
+                height: "auto",
+                align: "left top",
+                gap: 10,
+                clipContent: 0,
+                css: { flex: "1 1 " + CARD_MIN_WIDTH + "px", maxWidth: CARD_MAX_WIDTH + "px", minWidth: "0" },
+            });
+            HGroup({ width: "100%", height: "auto", align: "left center", gap: 8 });
+                Label({ text: titleText, fontSize: 15, bold: 1, textColor: Black(0.75) });
+                Label({ text: noteText, fontSize: 13, textColor: SOFT_TEXT });
+            endGroup();
+        };
+
+        // The answer comes word by word: the dots first, then the pieces. (self.writeTimer: Stop ends it.)
+        const answer = function (self, text) {
+            const key = self.addMessage({ role: "assistant" });
+            const pieces = ANSWER.replace("{topic}", text).match(/\s*\S+|\s+$/g);
+            let position = 0;
+            self.setBusy(1);
+            self.writeTimer = setTimeout(function writeNext() {
+                if (position >= pieces.length) {
+                    self.setBusy(0);
+                    return;
+                }
+                self.appendText(key, pieces[position]);
+                position++;
+                self.writeTimer = setTimeout(writeNext, WRITE_INTERVAL);
+            }, THINK_TIME);
+        };
+
+        const stopAnswer = function (self) {
+            clearTimeout(self.writeTimer);
+        };
+
+        </script>
+    </head>
+
+    <body></body>
+
+</html>

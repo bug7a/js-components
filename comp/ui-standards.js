@@ -14,7 +14,6 @@ And the themes (light, dark, your own) of those colors.
 - Themes: "light" (default), "dark", "auto" (follows the operating system) and the themes you define.
 - Style presets: prop lists for labels, buttons and cards. Use them when you create an object or later.
 - Effects (hover, press, animations) are not here: use comp/ui-effects.js (UIEffects).
-- comp/ui-standards.js is the old version (other token names: COLOR_FIRST, WHITE, GRAY_300, TEXT_L...).
 
 LOAD ORDER: basic.css, basic.js, ui-standards.js, components, page code.
 Load it in <head>: the theme is set before the page is drawn, so there is no white flash in the dark theme.
@@ -48,10 +47,12 @@ UI.defineTheme("sepia", { page: "#F4ECD8", primary: "#8B5E3C" });  // Missing co
 UI.motion(["background-color", "opacity"]);                 // "background-color 0.2s ease, opacity 0.2s ease"
 UI.breakpoint();                                            // "XS", "SM", "MD", "LG" or "XL" (window width)
 
-Started Date: 2025 (v26.09: themes in one file, style presets, token names by their job)
-Developer: Bugra Ozden
-Email: bugra.ozden@gmail.com
+Started Date: 2025
 Webpage: https://bug7a.github.io/js-components/
+
+Copyright 2020-2026 Bugra Ozden <bugra.ozden@gmail.com> (https://bug7a.github.io/)
+Licensed under the Apache License, Version 2.0
+SPDX-License-Identifier: Apache-2.0
 
 */
 

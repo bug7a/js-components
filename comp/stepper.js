@@ -5,8 +5,8 @@
 Stepper - v26.09
 
 UI COMPONENT TEMPLATE
-- A number stepper: [ − ] value [ + ]. The new version of comp-m1/ui-stepper.js.
-- min, max, step and precision (decimals). Ex: 0.5 kg steps, 0.25 hours.
+- A number stepper: [ − ] value [ + ].
+- minValue, maxValue, step and precision (decimals). Ex: 0.5 kg steps, 0.25 hours.
 - Unit text after the value ("kg", "%", "pcs") and a valueFormat() for your own text ("1,250").
 - Editable: click the value and type a number. Enter or blur applies it, Escape cancels. (editable: 1)
 - Press and hold a button: the value keeps changing, faster after a while.
@@ -18,25 +18,27 @@ UI COMPONENT TEMPLATE
 - A line around the buttons: style.button.border and borderColor (0 and "transparent" by default: no line).
 - style.button.opacity (1) / disabledOpacity: a button that can / can not be clicked (at min / max). fadeDuration:
   the time of the fade between them (s). 0: at once (the default).
-- Style packages: "classic" (default), "modern", "dark", "ozden". Select with styleName. (Stepper.styles)
--- "ozden": the look of the old UIStepper (comp-m1/ui-stepper.js, javascript-mobile-app-template, a 600 px design).
+- Style packages: "light" (default; the old name "classic" works too), "modern", "dark", "ozden". Select with styleName. (Stepper.styles)
+-- "ozden": for a 600 px design.
    It is a package of params (basic.js v26.10.27): it also gives the size, 150 x 50.
 
 USAGE:
-const qty = Stepper({ value: 1, min: 1, max: 10, onChange: (self) => println(self.value) });
+const qty = Stepper({ value: 1, minValue: 1, maxValue: 10, onChange: (self) => println(self.value) });
 qty.setValue(5);                // onChange is called
 qty.setValue(5, 1);             // silent
-Stepper({ value: 2.5, min: 0, max: 20, step: 0.5, precision: 1, unitText: " kg" });
-Stepper({ value: 50, min: 0, max: 100, step: 5, unitText: "%", editable: 0 });
-Stepper({ value: 9, min: 0, max: 23, wrap: 1, valueFormat: (value) => String(value).padStart(2, "0") + ":00" });
+Stepper({ value: 2.5, minValue: 0, maxValue: 20, step: 0.5, precision: 1, unitText: " kg" });
+Stepper({ value: 50, minValue: 0, maxValue: 100, step: 5, unitText: "%", editable: 0 });
+Stepper({ value: 9, minValue: 0, maxValue: 23, wrap: 1, valueFormat: (value) => String(value).padStart(2, "0") + ":00" });
 Stepper({ layout: "compact", width: 140 });
 Stepper({ style: { button: { border: 1, borderColor: Black(0.3) } } }); // A line around the buttons
-Stepper({ styleName: "ozden", value: 1, min: 1, max: 10 });
+Stepper({ styleName: "ozden", value: 1, minValue: 1, maxValue: 10 });
 
 Started Date: September 2026
-Developer: Bugra Ozden
-Email: bugra.ozden@gmail.com
 Webpage: https://bug7a.github.io/js-components/
+
+Copyright 2020-2026 Bugra Ozden <bugra.ozden@gmail.com> (https://bug7a.github.io/)
+Licensed under the Apache License, Version 2.0
+SPDX-License-Identifier: Apache-2.0
 
 */
 
@@ -48,8 +50,8 @@ const StepperDefaults = {
     width: 150,
     height: 44,
     value: 1,
-    min: 0,
-    max: 10,
+    minValue: 0,
+    maxValue: 10,
     step: 1,
     precision: 0, // Decimals shown and used for rounding. (step: 0.5 -> precision: 1)
     unitText: "", // After the value. Ex: " kg" (with the space)
@@ -63,8 +65,8 @@ const StepperDefaults = {
     onChange: function (self) { }, // self.value
     onMinReached: function (self) { }, // Called when the value arrives at min
     onMaxReached: function (self) { }, // Called when the value arrives at max
-    styleName: "classic", // "classic", "modern", "dark", "ozden" or a name added to Stepper.styles
-    style: { // Classic style package (default)
+    styleName: "light", // "light" ("classic": its old name), "modern", "dark", "ozden", "minimal", "minimalDark" or a name added to Stepper.styles
+    style: { // Light style package (default)
         box: {
             color: White(1),
             border: 1,
@@ -107,7 +109,7 @@ const StepperDefaults = {
 
 const Stepper = function (params = {}) {
 
-    // Merge style package: params.style > Stepper.styles[styleName] > StepperDefaults.style (classic)
+    // Merge style package: params.style > Stepper.styles[styleName] > StepperDefaults.style (light)
     basic.applyStylePackage(params, Stepper.styles, StepperDefaults);
 
     // Merge params:
@@ -143,7 +145,7 @@ const Stepper = function (params = {}) {
     const BUTTON_COLOR_MOTION = "background-color 0.15s"; // The hover / press color of the buttons
 
     // *** PUBLIC VARIABLES:
-    // NOTE: Default values are also public variables. (box.value, box.min, box.max, box.step)
+    // NOTE: Default values are also public variables. (box.value, box.minValue, box.maxValue, box.step)
 
     // *** PRIVATE FUNCTIONS:
 
@@ -155,23 +157,23 @@ const Stepper = function (params = {}) {
     // Keeps the value in [min, max] (or wraps it).
     const clampValue = function (value) {
         value = Number(value);
-        if (isNaN(value)) value = box.min;
+        if (isNaN(value)) value = box.minValue;
         if (box.wrap == 1) {
-            const range = box.max - box.min + box.step;
+            const range = box.maxValue - box.minValue + box.step;
             if (range > 0) {
-                if (value > box.max) value = box.min + ((value - box.max - box.step) % range);
-                if (value < box.min) value = box.max - ((box.min - value - box.step) % range);
+                if (value > box.maxValue) value = box.minValue + ((value - box.maxValue - box.step) % range);
+                if (value < box.minValue) value = box.maxValue - ((box.minValue - value - box.step) % range);
             }
         }
-        return roundValue(Math.min(Math.max(value, box.min), box.max));
+        return roundValue(Math.min(Math.max(value, box.minValue), box.maxValue));
     };
 
     const canDecrease = function () {
-        return box.enabled == 1 && (box.wrap == 1 || box.value > box.min);
+        return box.enabled == 1 && (box.wrap == 1 || box.value > box.minValue);
     };
 
     const canIncrease = function () {
-        return box.enabled == 1 && (box.wrap == 1 || box.value < box.max);
+        return box.enabled == 1 && (box.wrap == 1 || box.value < box.maxValue);
     };
 
     const paintButton = function (button, isEnabled) {
@@ -188,8 +190,8 @@ const Stepper = function (params = {}) {
         paintButton(box.btnPlus, canIncrease());
         box.aria = {
             valuenow: String(box.value),
-            valuemin: String(box.min),
-            valuemax: String(box.max),
+            valuemin: String(box.minValue),
+            valuemax: String(box.maxValue),
             valuetext: valueText,
         };
     };
@@ -251,7 +253,9 @@ const Stepper = function (params = {}) {
 
     // apply: 1 -> The typed value is used. 0 -> Cancel.
     const endEdit = function (apply) {
-        if (!isEditing) return;
+        // WHY: Chrome fires blur when a focused field is removed: a half typed value went to onChange of a field that
+        //      was removed (a panel built again while the user typed)
+        if (!isEditing || box.isRemoved) return;
         isEditing = 0;
         box.input.visible = 0;
         box.lblValue.visible = 1;
@@ -316,11 +320,11 @@ const Stepper = function (params = {}) {
                 break;
             case "Home":
                 event.preventDefault();
-                box.setValue(box.min);
+                box.setValue(box.minValue);
                 break;
             case "End":
                 event.preventDefault();
-                box.setValue(box.max);
+                box.setValue(box.maxValue);
                 break;
             case "Enter":
             case " ":
@@ -348,8 +352,8 @@ const Stepper = function (params = {}) {
         updateView();
         if (changed && !silent) {
             box.onChange(box);
-            if (box.value === box.min) box.onMinReached(box);
-            if (box.value === box.max) box.onMaxReached(box);
+            if (box.value === box.minValue) box.onMinReached(box);
+            if (box.value === box.maxValue) box.onMaxReached(box);
         }
         return box.value;
     };
@@ -368,21 +372,21 @@ const Stepper = function (params = {}) {
         return stepValue(-steps);
     };
 
-    box.setMin = function (min) {
-        box.min = Number(min) || 0;
-        if (box.max < box.min) box.max = box.min;
+    box.setMinValue = function (value) {
+        box.minValue = Number(value) || 0;
+        if (box.maxValue < box.minValue) box.maxValue = box.minValue;
         box.setValue(box.value, 1);
     };
 
-    box.setMax = function (max) {
-        box.max = Number(max) || 0;
-        if (box.min > box.max) box.min = box.max;
+    box.setMaxValue = function (value) {
+        box.maxValue = Number(value) || 0;
+        if (box.minValue > box.maxValue) box.minValue = box.maxValue;
         box.setValue(box.value, 1);
     };
 
-    box.setRange = function (min, max) {
-        box.min = Number(min) || 0;
-        box.max = Math.max(box.min, Number(max) || 0);
+    box.setRange = function (minValue, maxValue) {
+        box.minValue = Number(minValue) || 0;
+        box.maxValue = Math.max(box.minValue, Number(maxValue) || 0);
         box.setValue(box.value, 1);
     };
     // USAGE: stepper.setRange(0, 100)
@@ -607,10 +611,10 @@ const Stepper = function (params = {}) {
     });
     // WHY: A click on the buttons must not open the edit. It is handled in bindButton with stopPropagation.
 
-    box.min = Number(box.min) || 0;
-    box.max = Number(box.max);
-    if (isNaN(box.max)) box.max = box.min;
-    if (box.max < box.min) box.max = box.min;
+    box.minValue = Number(box.minValue) || 0;
+    box.maxValue = Number(box.maxValue);
+    if (isNaN(box.maxValue)) box.maxValue = box.minValue;
+    if (box.maxValue < box.minValue) box.maxValue = box.minValue;
     box.step = Math.abs(Number(box.step)) || 1;
     box.precision = Math.max(0, Number(box.precision) || 0);
     box.value = clampValue(startValue);
@@ -647,7 +651,7 @@ Stepper.getMinusSvg = function (color, size) {
 Stepper.styles = {
 
     // Gray buttons in a white box.
-    classic: StepperDefaults.style,
+    light: StepperDefaults.style,
 
     // Round pill, cadetblue buttons. Same colors as the modern CheckBox, RadioButton, ProgressBar and Tabs.
     modern: {
@@ -669,9 +673,9 @@ Stepper.styles = {
         disabled: { opacity: 0.4 },
     },
 
-    // The look of the old UIStepper (comp-m1/ui-stepper.js, javascript-mobile-app-template, a 600 px design):
+    // For a 600 px design:
     // round white buttons with a dark line on a transparent box, the value between them; at min / max a button
-    // fades to 0.4. (Its name is not "classic": that is the default look, and LabelEditor asks for it by name.)
+    // fades to 0.4. (Its name is not "light": that is the default look, and LabelEditor asks for it by name.)
     ozden: {
         width: 150,
         height: 50, // WHY: 42 px buttons (50 - 2 x padding)
@@ -686,8 +690,8 @@ Stepper.styles = {
                 borderColor: "rgba(0, 0, 0, 0.8)",
                 round: 21,
                 iconColor: "rgba(0, 0, 0, 0.65)",
-                iconSize: 24, // WHY: the + of the old 32 px icon: 16 px long, a 2.7 px line
-                opacity: 0.9, // (the line and the icon are a little lighter, as in the old one)
+                iconSize: 24, // WHY: a + 16 px long, with a 2.7 px line
+                opacity: 0.9, // the line and the icon are a little lighter
                 disabledOpacity: 0.4,
                 fadeDuration: 0.2,
             },
@@ -697,3 +701,27 @@ Stepper.styles = {
     },
 
 };
+Stepper.styles.classic = Stepper.styles.light; // the old name of light: the pages made with it keep their look
+
+// The minimal theme (_designs/minimal-theme.htm): 96 x 28, a line around it (ink while it is focused), no fill; the
+// buttons have no fill either (a faint one under the mouse: a Stepper has no line of its own per button), a 12 px
+// icon, a 13 px value. minimalDark: the same on a dark window.
+Stepper.createMinimalStyle = function (colors) {
+    return {
+        width: 96,
+        height: 28,
+        style: {
+            box: { color: "transparent", border: 1, borderColor: colors.line, round: 4, padding: 0 },
+            boxFocus: { borderColor: colors.ink },
+            button: { width: 26, color: "transparent", hoverColor: colors.hover, activeColor: colors.active, border: 0, borderColor: "transparent", round: 3, iconColor: colors.text, iconSize: 12, opacity: 1, disabledOpacity: 0.3, fadeDuration: 0 },
+            value: { fontSize: 13, textColor: colors.text, fontFamily: "" },
+            input: { color: "transparent", textColor: colors.text, round: 0 },
+            disabled: { opacity: 0.4 },
+        },
+    };
+};
+// WHY a strong line: it shows the field of the stepper (3:1 at least, as WCAG asks of a control)
+Stepper.MINIMAL_COLORS = { ink: "#1F1F1F", text: Black(0.85), line: Black(0.45), hover: Black(0.04), active: Black(0.08) };
+Stepper.styles.minimal = Stepper.createMinimalStyle(Stepper.MINIMAL_COLORS);
+Stepper.MINIMAL_DARK_COLORS = { ink: "#EDEDEB", text: White(0.88), line: White(0.42), hover: White(0.06), active: White(0.1) };
+Stepper.styles.minimalDark = Stepper.createMinimalStyle(Stepper.MINIMAL_DARK_COLORS);

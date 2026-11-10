@@ -5,41 +5,43 @@
 RichTextEditor - v26.09
 
 UI COMPONENT TEMPLATE
-- A simple rich text editor: a toolbar and a writing area. (Basit editör nesnesi)
+- A simple rich text editor: a toolbar and a writing area.
 - Tools: bold, italic, underline, strike, heading (h2, h3), bullet / numbered list, quote, link,
   clear formatting, undo, redo. Choose them and their order with "tools" ("|" is a separator).
 - The toolbar shows the format at the cursor (Ex: B is pressed inside bold text).
 - Link: the link bar opens under the toolbar (no browser prompt). Ctrl / Cmd + K opens it too.
 - Keyboard: Ctrl / Cmd + B, I, U (the browser), Ctrl / Cmd + Z undo. Tab leaves the editor (accessibility).
 - Paste: "clean" (default) keeps only the allowed tags (the formats of the toolbar), "text" pastes plain text.
-- getHtml() is always cleaned: only b, strong, i, em, u, s, strike, del, h2, h3, p, div, br, ul, ol, li,
+- getHtmlText() is always cleaned: only b, strong, i, em, u, s, strike, del, h2, h3, p, div, br, ul, ol, li,
   blockquote and a (href: http, https, mailto, tel or a relative address). No scripts, styles or events.
-  setHtml() cleans its input the same way before it is shown.
+  setHtmlText() cleans its input the same way before it is shown.
 - maxLength (characters of the text, 0: no limit) and a counter at the bottom right (showCounter: 1).
-- placeholderText, readOnly, enabled. height: the whole editor. The writing area scrolls with
+- placeholder, readOnly, enabled. height: the whole editor. The writing area scrolls with
   basic/scroll-bar.js (if it is loaded).
-- onChange(self) is called while the user writes. It is NOT called when the component is created or by setHtml().
+- onChange(self) is called while the user writes. It is NOT called when the component is created or by setHtmlText().
 - Everything is drawn with code (no image files needed).
-- Style packages: "classic" (default), "modern", "dark". Select with styleName. (RichTextEditor.styles)
+- Style packages: "light" (default; the old name "classic" works too), "modern", "dark". Select with styleName. (RichTextEditor.styles)
 
 USAGE:
 const editor = RichTextEditor({
     width: 560,
     height: 300,
-    placeholderText: "Write the product description...",
-    onChange: function (self) { println(self.getHtml()); },
+    placeholder: "Write the product description...",
+    onChange: function (self) { println(self.getHtmlText()); },
 });
-editor.setHtml("<p>Hello <b>world</b></p>");
-editor.getHtml();       // "<p>Hello <b>world</b></p>"
+editor.setHtmlText("<p>Hello <b>world</b></p>");
+editor.getHtmlText();   // "<p>Hello <b>world</b></p>"
 editor.getText();       // "Hello world"
 editor.isEmpty();       // 0
 RichTextEditor({ tools: ["bold", "italic", "|", "ul", "ol"], maxLength: 500, showCounter: 1 });
 RichTextEditor({ styleName: "dark", pasteAs: "text" });
 
 Started Date: September 2026
-Developer: Bugra Ozden
-Email: bugra.ozden@gmail.com
 Webpage: https://bug7a.github.io/js-components/
+
+Copyright 2020-2026 Bugra Ozden <bugra.ozden@gmail.com> (https://bug7a.github.io/)
+Licensed under the Apache License, Version 2.0
+SPDX-License-Identifier: Apache-2.0
 
 */
 
@@ -51,7 +53,7 @@ const RichTextEditorDefaults = {
     width: 560,
     height: 300,
     htmlText: "", // Start content (HTML, it is cleaned)
-    placeholderText: "Write something...",
+    placeholder: "Write something...",
     tools: ["bold", "italic", "underline", "strike", "|", "h2", "h3", "|", "ul", "ol", "quote", "|", "link", "clear", "|", "undo", "redo"],
     pasteAs: "clean", // "clean": keeps the allowed formats, "text": plain text
     maxLength: 0, // Characters of the text. 0: no limit
@@ -81,11 +83,11 @@ const RichTextEditorDefaults = {
         counter: "{count} / {max}", // With maxLength
         counterNoLimit: "{count} characters", // Without maxLength
     },
-    onChange: function (self) { }, // self.getHtml(), self.getText()
+    onChange: function (self) { }, // self.getHtmlText(), self.getText()
     onFocus: function (self) { },
     onBlur: function (self) { },
-    styleName: "classic", // "classic", "modern", "dark" or a name added to RichTextEditor.styles
-    style: { // Classic style package (default)
+    styleName: "light", // "light" ("classic": its old name), "modern", "dark" or a name added to RichTextEditor.styles
+    style: { // Light style package (default)
         box: {
             color: White(1),
             border: 1,
@@ -156,7 +158,7 @@ const RichTextEditorDefaults = {
 
 const RichTextEditor = function (params = {}) {
 
-    // Merge style package: params.style > RichTextEditor.styles[styleName] > RichTextEditorDefaults.style (classic)
+    // Merge style package: params.style > RichTextEditor.styles[styleName] > RichTextEditorDefaults.style (light)
     basic.applyStylePackage(params, RichTextEditor.styles, RichTextEditorDefaults);
 
     // Merge params:
@@ -347,10 +349,10 @@ const RichTextEditor = function (params = {}) {
         updateToolbar();
         if (box.scrollBar) box.scrollBar.refreshScroll();
         if (!fireChange) {
-            lastHtml = box.getHtml();
+            lastHtml = box.getHtmlText();
             return;
         }
-        const html = box.getHtml();
+        const html = box.getHtmlText();
         if (html === lastHtml) return;
         lastHtml = html;
         box.onChange(box);
@@ -525,19 +527,19 @@ const RichTextEditor = function (params = {}) {
 
     // *** PUBLIC FUNCTIONS:
 
-    box.getHtml = function () {
+    box.getHtmlText = function () {
         if (box.isEmpty()) return "";
         return RichTextEditor.cleanHtml(box.editor.innerHTML);
     };
-    // USAGE: const html = editor.getHtml(); // "" when it is empty
+ // USAGE: const html = editor.getHtmlText(); // "" when it is empty
 
     // The content is cleaned before it is shown. onChange is not called.
-    box.setHtml = function (html) {
+    box.setHtmlText = function (html) {
         box.htmlText = RichTextEditor.cleanHtml(html || "");
         box.editor.innerHTML = box.htmlText || "<p><br></p>"; // WHY: The first line is a paragraph too, not a loose text.
         contentChanged(0);
     };
-    // USAGE: editor.setHtml("<p>Hello <b>world</b></p>")
+ // USAGE: editor.setHtmlText("<p>Hello <b>world</b></p>")
 
     box.getText = function () {
         return RichTextEditor.htmlToText(box.editor.innerHTML);
@@ -553,7 +555,7 @@ const RichTextEditor = function (params = {}) {
     };
 
     box.clear = function () {
-        box.setHtml("");
+        box.setHtmlText("");
     };
 
     // Inserts text at the cursor (at the end, when the editor does not have the focus). onChange is called.
@@ -590,9 +592,9 @@ const RichTextEditor = function (params = {}) {
         selectRange(range);
     };
 
-    box.setPlaceholderText = function (text) {
-        box.placeholderText = String(text ?? "");
-        box.editor.setAttribute("data-placeholder", box.placeholderText);
+    box.setPlaceholder = function (text) {
+        box.placeholder = String(text ?? "");
+        box.editor.setAttribute("data-placeholder", box.placeholder);
     };
 
     box.setMaxLength = function (maxLength) {
@@ -881,8 +883,8 @@ const RichTextEditor = function (params = {}) {
     box.btnLinkRemove.on("mousedown", keepEditorFocus);
     box.btnLinkRemove.on("click", removeLink);
 
-    box.setPlaceholderText(box.placeholderText);
-    box.setHtml(box.htmlText);
+    box.setPlaceholder(box.placeholder);
+    box.setHtmlText(box.htmlText);
     box.setMaxLength(box.maxLength);
     applyEditableState();
 
@@ -1029,7 +1031,7 @@ RichTextEditor.injectCss = function () {
 RichTextEditor.styles = {
 
     // White area, light gray toolbar.
-    classic: RichTextEditorDefaults.style,
+    light: RichTextEditorDefaults.style,
 
     // Rounder, cadetblue. Same colors as the modern Stepper, SortableList, CheckBox and Tabs.
     modern: {
@@ -1059,3 +1061,4 @@ RichTextEditor.styles = {
     },
 
 };
+RichTextEditor.styles.classic = RichTextEditor.styles.light; // the old name of light: the pages made with it keep their look

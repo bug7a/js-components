@@ -8,15 +8,24 @@
 
     <!-- LIBRARY FILES -->
     <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
-    <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
-    <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
+    <link rel="stylesheet" type="text/css" href="../basic/basic.css">
+    <script src="../basic/basic.js" type="text/javascript" charset="utf-8"></script>
 
     <!-- COMPONENT FILES -->
     <script src="../comp/progress-bar.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/smart-button.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/scroll-area.js" type="text/javascript" charset="utf-8"></script>
 
     <script>
 
         /* Bismillah */
+
+        // ProgressBar (comp/progress-bar.js): the default bar (light, the look of the kit), an upload (maxValue, valueFormat,
+        // status), indeterminate, the modern style, a style of your own, the dark style on a dark page.
+
+        const CARD_MAX_WIDTH = 420;
+        const LIGHT_CARD = { color: "white", line: Black(0.1), title: Black(0.45) };
+        const DARK_CARD = { color: "#1A1A19", line: White(0.1), title: White(0.5) };
 
         // *** VARIABLES:
         let prgBasic, lblBasic;
@@ -28,200 +37,244 @@
 
             page.color = "whitesmoke";
 
-            // BOX: Full screen scrollable container
-            // WHY: page does not scroll. Scrollable content must be inside a Box with scrollY: 1.
-            startBox(0, 0, "100%", "100%", {
-                color: "transparent",
-                scrollY: 1,
+            // SCROLL AREA: The page
+            // WHY: page does not scroll. A ScrollArea fills the window; its content scrolls when it is taller.
+            ScrollArea({
+                align: "center top",
+                gap: 30,
+                padding: [16, 50], // WHY 16 at the sides: the cards fill a phone (390 px)
             });
 
-                // GROUP: Page layout
-                VGroup({
-                    width: "100%",
-                    height: "auto", // Grows with content, so the Box can scroll.
-                    align: "center top",
-                    gap: 30,
-                    padding: 50,
+                // LABEL: Title
+                Label({
+                    text: "Progress Bar",
+                    fontSize: 26,
+                    fontFamily: "opensans-bold",
                 });
 
-                    // LABEL: Title
-                    Label({
-                        text: "Progress Bar",
-                        fontSize: 26,
-                        fontFamily: "opensans-bold",
+                // SAMPLE 1: Default (light)
+                startCard("1. Default (light)");
+
+                    prgBasic = ProgressBar({
+                        width: "100%",
+                        titleText: "Profile completed",
+                        value: 40,
+                        onChange: function (self) {
+                            lblBasic.text = "Value: " + self.value;
+                        },
+                        onComplete: function (self) {
+                            lblBasic.text = "Completed!";
+                        },
                     });
 
-                    // SAMPLE 1: Default (classic)
-                    startCard("1. Default");
-
-                        prgBasic = ProgressBar({
-                            width: "100%",
-                            titleText: "Profile completed",
-                            value: 40,
-                            onChange: function (self) {
-                                lblBasic.text = "Value: " + self.value;
-                            },
-                            onComplete: function (self) {
-                                lblBasic.text = "Completed!";
+                    // GROUP: Buttons
+                    startButtonRow();
+                        SmartButton({ labelText: "- 10", onClick: function () { prgBasic.addValue(-10); } });
+                        SmartButton({ labelText: "+ 10", onClick: function () { prgBasic.addValue(10); } });
+                        SmartButton({
+                            tone: "white",
+                            labelText: "Reset",
+                            onClick: function () {
+                                prgBasic.reset();
+                                lblBasic.text = "Value: 0";
                             },
                         });
+                    endGroup();
 
-                        // GROUP: Buttons
-                        HGroup({ width: "auto", height: "auto", gap: 8 });
-                            addSampleButton("- 10", function () { prgBasic.addValue(-10); });
-                            addSampleButton("+ 10", function () { prgBasic.addValue(10); });
-                            addSampleButton("Reset", function () { prgBasic.reset(); lblBasic.text = "Value: 0"; }, 1);
-                        endGroup();
+                    lblBasic = addInfoLabel("Value: 40");
 
-                        lblBasic = addInfoLabel("Value: 40");
+                endCard();
 
-                    endCard();
+                // SAMPLE 2: Custom maxValue, value text on the right, status
+                startCard("2. Upload (maxValue, valueFormat, status)");
 
-                    // SAMPLE 2: Custom max, value text on the right, status
-                    startCard("2. Upload (max, valueFormat, status)");
+                    prgUpload = ProgressBar({
+                        width: "100%",
+                        titleText: "Uploading photos",
+                        maxValue: 12,
+                        valuePosition: "right",
+                        valueFormat: function (self) {
+                            return self.value + " / " + self.maxValue;
+                        },
+                        onComplete: function (self) {
+                            stopUpload();
+                            self.setStatus("success");
+                            self.setTitleText("12 photos uploaded");
+                        },
+                    });
 
-                        prgUpload = ProgressBar({
-                            width: "100%",
-                            titleText: "Uploading photos",
-                            max: 12,
-                            valuePosition: "right",
-                            valueFormat: function (self) {
-                                return self.value + " / " + self.max;
-                            },
-                            onComplete: function (self) {
-                                stopUpload();
-                                self.setStatus("success");
-                                self.setTitleText("12 photos uploaded");
-                            },
-                        });
-
-                        // GROUP: Buttons
-                        HGroup({ width: "auto", height: "auto", gap: 8 });
-                            addSampleButton("Start", startUpload);
-                            addSampleButton("Fail", function () {
+                    // GROUP: Buttons
+                    startButtonRow();
+                        SmartButton({ tone: "cyan", labelText: "Start", onClick: startUpload });
+                        SmartButton({
+                            tone: "orange",
+                            labelText: "Fail",
+                            onClick: function () {
                                 stopUpload();
                                 prgUpload.setStatus("error");
                                 prgUpload.setTitleText("Upload failed");
-                            }, 1);
-                            addSampleButton("Reset", function () {
+                            },
+                        });
+                        SmartButton({
+                            tone: "white",
+                            labelText: "Reset",
+                            onClick: function () {
                                 stopUpload();
                                 prgUpload.reset();
                                 prgUpload.setTitleText("Uploading photos");
-                            }, 1);
-                        endGroup();
-
-                    endCard();
-
-                    // SAMPLE 3: Indeterminate
-                    startCard("3. Indeterminate");
-
-                        prgConnect = ProgressBar({
-                            width: "100%",
-                            titleText: "Connecting to the server...",
-                            indeterminate: 1,
+                            },
                         });
+                    endGroup();
 
-                        // GROUP: Buttons
-                        HGroup({ width: "auto", height: "auto", gap: 8 });
-                            addSampleButton("Connected", function () {
+                endCard();
+
+                // SAMPLE 3: Indeterminate
+                startCard("3. Indeterminate");
+
+                    prgConnect = ProgressBar({
+                        width: "100%",
+                        titleText: "Connecting to the server...",
+                        indeterminate: 1,
+                    });
+
+                    // GROUP: Buttons
+                    startButtonRow();
+                        SmartButton({
+                            labelText: "Connected",
+                            onClick: function () {
                                 prgConnect.setTitleText("Downloading data");
                                 prgConnect.setValue(25); // A known value ends the indeterminate mode.
-                            });
-                            addSampleButton("Waiting", function () {
+                            },
+                        });
+                        SmartButton({
+                            tone: "white",
+                            labelText: "Waiting",
+                            onClick: function () {
                                 prgConnect.setTitleText("Connecting to the server...");
                                 prgConnect.setIndeterminate(1);
-                            }, 1);
-                        endGroup();
-
-                    endCard();
-
-                    // SAMPLE 4: Modern style
-                    startCard("4. Modern Style");
-
-                        prgModern = ProgressBar({
-                            styleName: "modern",
-                            width: "100%",
-                            titleText: "Storage",
-                            max: 50,
-                            value: 32,
-                            valueFormat: function (self) {
-                                return self.value + " GB of " + self.max + " GB";
                             },
                         });
+                    endGroup();
 
-                        prgModernTasks = ProgressBar({
-                            styleName: "modern",
-                            width: "100%",
-                            valuePosition: "right",
-                            value: 70,
-                        });
+                endCard();
 
-                        ProgressBar({
-                            styleName: "modern",
-                            width: "100%",
-                            titleText: "Backup",
-                            value: 100,
-                            status: "success",
-                            valueFormat: function () { return "Done"; },
-                        });
+                // SAMPLE 4: Modern style
+                startCard("4. Modern Style");
 
-                        ProgressBar({
-                            styleName: "modern",
-                            width: "100%",
-                            titleText: "Sync",
-                            value: 45,
-                            status: "error",
-                            valueFormat: function () { return "Stopped at 45%"; },
-                        });
+                    prgModern = ProgressBar({
+                        styleName: "modern",
+                        width: "100%",
+                        titleText: "Storage",
+                        maxValue: 50,
+                        value: 32,
+                        valueFormat: function (self) {
+                            return self.value + " GB of " + self.maxValue + " GB";
+                        },
+                    });
 
-                        ProgressBar({
-                            styleName: "modern",
-                            width: "100%",
-                            titleText: "Searching for devices...",
-                            indeterminate: 1,
-                        });
+                    prgModernTasks = ProgressBar({
+                        styleName: "modern",
+                        width: "100%",
+                        valuePosition: "right",
+                        value: 70,
+                    });
 
-                        // GROUP: Buttons
-                        HGroup({ width: "auto", height: "auto", gap: 8 });
-                            addSampleButton("Random", function () {
+                    ProgressBar({
+                        styleName: "modern",
+                        width: "100%",
+                        titleText: "Backup",
+                        value: 100,
+                        status: "success",
+                        valueFormat: function () { return "Done"; },
+                    });
+
+                    ProgressBar({
+                        styleName: "modern",
+                        width: "100%",
+                        titleText: "Sync",
+                        value: 45,
+                        status: "error",
+                        valueFormat: function () { return "Stopped at 45%"; },
+                    });
+
+                    ProgressBar({
+                        styleName: "modern",
+                        width: "100%",
+                        titleText: "Searching for devices...",
+                        indeterminate: 1,
+                    });
+
+                    // GROUP: Buttons
+                    startButtonRow();
+                        SmartButton({
+                            labelText: "Random",
+                            onClick: function () {
                                 prgModern.setValue(random(0, 50));
                                 prgModernTasks.setValue(random(0, 100));
-                            });
-                        endGroup();
-
-                    endCard();
-
-                    // SAMPLE 5: Custom style
-                    startCard("5. Custom Style");
-
-                        ProgressBar({
-                            width: "100%",
-                            titleText: "Thick bar, no value text",
-                            valuePosition: "none",
-                            value: 60,
-                            style: {
-                                track: { height: 16, color: "#FFE0DA", round: 8 },
-                                bar: { color: "tomato" },
-                                title: { fontSize: 15, textColor: "tomato" },
                             },
                         });
+                    endGroup();
 
-                        ProgressBar({
-                            width: "100%",
-                            valuePosition: "right",
-                            value: 25,
-                            style: {
-                                track: { height: 4, color: Black(0.08), round: 2 },
-                                bar: { color: "#689BD2" },
-                                valueText: { fontSize: 12, textColor: "#689BD2" },
-                            },
-                        });
+                endCard();
 
-                    endCard();
+                // SAMPLE 5: Custom style
+                startCard("5. Custom Style");
 
-                endGroup();
+                    ProgressBar({
+                        width: "100%",
+                        titleText: "Thick bar, no value text",
+                        valuePosition: "none",
+                        value: 60,
+                        style: {
+                            track: { height: 16, color: "#FFE0DA", round: 8 },
+                            bar: { color: "tomato" },
+                            title: { fontSize: 15, textColor: "tomato" },
+                        },
+                    });
 
-            endBox();
+                    ProgressBar({
+                        width: "100%",
+                        valuePosition: "right",
+                        value: 25,
+                        style: {
+                            track: { height: 4, color: Black(0.08), round: 2 },
+                            bar: { color: "#689BD2" },
+                            valueText: { fontSize: 12, textColor: "#689BD2" },
+                        },
+                    });
+
+                endCard();
+
+                // SAMPLE 6: The dark style on a dark page
+                startCard("6. Dark Style", DARK_CARD);
+
+                    ProgressBar({
+                        styleName: "dark",
+                        width: "100%",
+                        titleText: "Uploading",
+                        value: 40,
+                    });
+
+                    ProgressBar({
+                        styleName: "dark",
+                        width: "100%",
+                        titleText: "Storage",
+                        value: 70,
+                        secondValue: 5,
+                        limits: [{ value: 90, text: "limit 90" }],
+                    });
+
+                    ProgressBar({
+                        styleName: "dark",
+                        width: "100%",
+                        titleText: "Saved",
+                        value: 100,
+                        status: "success",
+                    });
+
+                endCard();
+
+            endGroup();
 
         };
 
@@ -229,7 +282,7 @@
 
         const startUpload = function () {
             if (uploadTimer) return;
-            if (prgUpload.value >= prgUpload.max || prgUpload.status !== "normal") {
+            if (prgUpload.value >= prgUpload.maxValue || prgUpload.status !== "normal") {
                 prgUpload.reset();
                 prgUpload.setTitleText("Uploading photos");
             }
@@ -244,22 +297,23 @@
         };
 
         // GROUP: A white card with a title.
-        const startCard = function (title) {
+        const startCard = function (title, card = LIGHT_CARD) {
             VGroup({
-                width: 420,
+                width: "100%",
                 height: "auto",
                 align: "left top",
                 gap: 16,
                 padding: 20,
-                color: "white",
+                color: card.color,
                 round: 10,
                 border: 1,
-                borderColor: Black(0.1),
+                borderColor: card.line,
+                css: { maxWidth: CARD_MAX_WIDTH + "px" },
             });
             Label({
                 text: title,
                 fontSize: 14,
-                textColor: Black(0.45),
+                textColor: card.title,
             });
         };
 
@@ -267,16 +321,10 @@
             endGroup();
         };
 
-        const addSampleButton = function (text, onClick, isSecondary = 0) {
-            const btn = Button({
-                text: text,
-                width: 100,
-                height: 36,
-                fontSize: 14,
-            });
-            if (isSecondary) btn.color = "lightgray";
-            btn.on("click", onClick);
-            return btn;
+        // GROUP: SmartButtons side by side (endGroup() closes it)
+        const startButtonRow = function () {
+            // WHY clipContent 0: the focus ring of a SmartButton is not cut
+            HGroup({ width: "auto", height: "auto", align: "left center", gap: 8, wrap: 1, clipContent: 0 });
         };
 
         const addInfoLabel = function (text) {

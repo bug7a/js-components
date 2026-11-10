@@ -13,6 +13,7 @@
 
     <!-- COMPONENT FILES -->
     <script src="../comp/check-box.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/scroll-area.js" type="text/javascript" charset="utf-8"></script>
 
     <script>
 
@@ -51,101 +52,91 @@
 
             page.color = "whitesmoke";
 
-            // BOX: Full screen scrollable container
-            // WHY: page does not scroll. Scrollable content must be inside a Box with scrollY: 1.
-            startBox(0, 0, "100%", "100%", {
-                color: "transparent",
-                scrollY: 1,
+            // SCROLL AREA: The page
+            // WHY: page does not scroll. A ScrollArea fills the window; its content scrolls when it is taller.
+            ScrollArea({
+                align: "center top",
+                gap: 30,
+                padding: 50,
             });
 
-                // GROUP: Page layout
-                VGroup({
-                    width: "100%",
-                    height: "auto", // Grows with content, so the Box can scroll.
-                    align: "center top",
-                    gap: 30,
-                    padding: 50,
+                // LABEL: Title
+                Label({
+                    text: "Check Box 2",
+                    fontSize: 26,
+                    fontFamily: "opensans-bold",
                 });
 
-                    // LABEL: Title
-                    Label({
-                        text: "Check Box 2",
-                        fontSize: 26,
-                        fontFamily: "opensans-bold",
+                Label({
+                    text: "Custom style: light box, thin border; checked: the tick on a white square.",
+                    fontSize: 14,
+                    textColor: Black(0.5),
+                });
+
+                // SAMPLE 1: Task list (full width rows)
+                startCard("1. Task List");
+
+                    ["Buy groceries", "Call the dentist", "Finish the report", "Go for a walk"].forEach(function (name, index) {
+                        CheckBox({
+                            key: String(index),
+                            width: "100%",
+                            labelText: name,
+                            checked: (index == 1) ? 1 : 0,
+                            onChange: refreshTasks,
+                            styleName: "modern",
+                            style: getCustomStyle(),
+                        });
+                        taskList.push(that);
                     });
 
-                    Label({
-                        text: "Custom style: light box, thin border, only tick when checked.",
+                    lblTasks = Label({
+                        text: "",
                         fontSize: 14,
                         textColor: Black(0.5),
+                        padding: [12, 8],
                     });
 
-                    // SAMPLE 1: Task list (full width rows)
-                    startCard("1. Task List");
+                endCard();
 
-                        ["Buy groceries", "Call the dentist", "Finish the report", "Go for a walk"].forEach(function (name, index) {
-                            CheckBox({
-                                key: String(index),
-                                width: "100%",
-                                labelText: name,
-                                checked: (index == 1) ? 1 : 0,
-                                onChange: refreshTasks,
-                                styleName: "modern",
-                                style: getCustomStyle(),
-                            });
-                            taskList.push(that);
-                        });
+                // SAMPLE 2: States
+                startCard("2. States");
 
-                        lblTasks = Label({
-                            text: "",
-                            fontSize: 14,
-                            textColor: Black(0.5),
-                            padding: [12, 8],
-                        });
+                    chkDisabled = CheckBox({
+                        width: "100%",
+                        labelText: "Disabled (checked)",
+                        checked: 1,
+                        enabled: 0,
+                        styleName: "modern",
+                        style: getCustomStyle(),
+                    });
 
-                    endCard();
+                    CheckBox({
+                        width: "100%",
+                        labelText: "Enable the check box above",
+                        onChange: function (self) {
+                            chkDisabled.setEnabled(self.checked);
+                        },
+                        styleName: "modern",
+                        style: getCustomStyle(),
+                    });
 
-                    // SAMPLE 2: States
-                    startCard("2. States");
+                    CheckBox({
+                        width: "100%",
+                        labelText: "Label on the left",
+                        labelPosition: "left",
+                        styleName: "modern",
+                        style: getCustomStyle(),
+                    });
 
-                        chkDisabled = CheckBox({
-                            width: "100%",
-                            labelText: "Disabled (checked)",
-                            checked: 1,
-                            enabled: 0,
-                            styleName: "modern",
-                            style: getCustomStyle(),
-                        });
+                    // Without label (auto width)
+                    HGroup({ width: "auto", height: "auto", gap: 4 });
+                        CheckBox({ styleName: "modern", style: getCustomStyle() });
+                        CheckBox({ checked: 1, styleName: "modern", style: getCustomStyle() });
+                    endGroup();
 
-                        CheckBox({
-                            width: "100%",
-                            labelText: "Enable the check box above",
-                            onChange: function (self) {
-                                chkDisabled.setEnabled(self.checked);
-                            },
-                            styleName: "modern",
-                            style: getCustomStyle(),
-                        });
+                endCard();
 
-                        CheckBox({
-                            width: "100%",
-                            labelText: "Label on the left",
-                            labelPosition: "left",
-                            styleName: "modern",
-                            style: getCustomStyle(),
-                        });
-
-                        // Without label (auto width)
-                        HGroup({ width: "auto", height: "auto", gap: 4 });
-                            CheckBox({ styleName: "modern", style: getCustomStyle() });
-                            CheckBox({ checked: 1, styleName: "modern", style: getCustomStyle() });
-                        endGroup();
-
-                    endCard();
-
-                endGroup();
-
-            endBox();
+            endGroup();
 
             refreshTasks();
 
@@ -154,7 +145,8 @@
         // *** OTHER FUNCTIONS:
 
         // Returns a new style object for each check box.
-        // NOTE: Layout, sizes and borders come from the "modern" style package. Only the selection colors are set here.
+        // NOTE: Layout, sizes, borders and the white squares come from the "modern" style package. Only the selection
+        //       colors are set here.
         // WHY: CheckBox fills missing keys into the given object, so do not share one object.
         const getCustomStyle = function () {
             return {
@@ -163,9 +155,6 @@
                 },
                 hoverCheckedBox: {
                     color: ACCENT_20, // A bit darker, so mouse over is visible on checked rows too.
-                },
-                checkedMark: { // The square stays without border, behind the tick. Same color as hoverCheckedBox.
-                    color: ACCENT_20,
                 },
                 tick: {
                     color: ACCENT,

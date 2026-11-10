@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+
+        <title>TextField JS Component</title>
+
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"><!-- , user-scalable=no -->
+
+        <!-- LIBRARY FILES -->
+        <!-- <link rel="preload" href="image.png" as="image"> -->
+        <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+        <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
+        <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
+
+        <script src="../comp/tooltip.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/text-field.js" type="text/javascript" charset="utf-8"></script>
+
+        <script>
+
+        // TextField with units of your own: Labels added to its right box (XL, M...), one of them chosen.
+
+        const start = function () {
+
+            page.color = "white";
+
+            // GROUP: Centered content
+            HGroup();
+
+                // INPUT: #1
+                const myInput = TextField({
+                    styleName: "modern",
+                    key: "1",
+                    titleText: "TITLE",
+                    placeholder: "Placeholder",
+                    maxLength: 10,
+
+                    backgroundColor: "transparent",
+                    focusBackgroundColor: "transparent",
+                    lineColor: "#DDD",
+                    focusLineColor: "#373836",
+                    required: 0,
+                    showLeftBox: 0,
+                    showRightBox: 1,
+                    showUnit: 0,
+                    unitText: "",
+                    unitStyle: {
+                        padding: [12, 4],
+                        color: "#373836",
+                        textColor: "white",
+                        round: 40,
+                        fontSize: 14,
+                    },
+                });
+
+            endGroup();
+
+            // Space between units
+            myInput.rightBox.gap = 2;
+
+            // Custom units
+            addCustomUnit(myInput, "LIGHT");
+            addCustomUnit(myInput, "2+1");
+
+            const unitXL = addCustomUnit(myInput, "XL");
+            unitXL.color = "#F0DB4E";
+            unitXL.textColor = TextFieldDefaults.unitStyle.color;
+            unitXL.border = 2;
+            unitXL.padding = [8, 2];
+
+            // Get value
+            myInput.onChange = function () {
+                console.log(myInput.getValue());
+            };
+
+        };
+
+        // LABEL: A unit in the right box of the field
+        const addCustomUnit = function (input, text) {
+            const unit = Label(TextFieldDefaults.unitStyle);
+            unit.text = text;
+            unit.position = "relative";
+            input.rightBox.add(unit);
+            return unit;
+        };
+
+        </script>
+
+    </head>
+    <body>
+
+        <!-- HTML content -->
+
+    </body>
+</html>

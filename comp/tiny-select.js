@@ -9,9 +9,11 @@ UI COMPONENT TEMPLATE
 
 
 Started Date: June 2024
-Developer: Bugra Ozden
-Email: bugra.ozden@gmail.com
 Webpage: https://bug7a.github.io/js-components/
+
+Copyright 2020-2026 Bugra Ozden <bugra.ozden@gmail.com> (https://bug7a.github.io/)
+Licensed under the Apache License, Version 2.0
+SPDX-License-Identifier: Apache-2.0
 
 */
 
@@ -19,9 +21,9 @@ Webpage: https://bug7a.github.io/js-components/
 
 // Default values
 const TinySelectDefaults = {
-    title: "",
-    list: [], // [{ id: "1", label: "(none)" },]
-    onSelect: function(index, id, label, title) {}, // Not called at create time. setSelectedIndex(index) calls it, setSelectedIndex(index, 1) does not.
+    titleText: "",
+    list: [], // [{ value: "1", label: "(none)" },]
+    onChange: function(self) {}, // Another item is chosen: self.selectedIndex, self.getSelectedItem() ({ value, label }). Not at create time; setSelectedIndex(index) calls it, setSelectedIndex(index, 1) does not.
     selectedIndex: 0,
     fontSize: 20,
     border: 0,
@@ -30,8 +32,8 @@ const TinySelectDefaults = {
     width: "auto",
     height: 50,
     paddingX: 12,
-    disabled: 0,
-    arrowIcon: "data:image/svg+xml;utf8," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#141414"><path d="M480-344 240-584l56-56 184 184 184-184 56 56-240 240Z"/></svg>'),
+    enabled: 1, // 0: it can not be opened, a little transparent (setEnabled)
+    arrowIconFile: "data:image/svg+xml;utf8," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#141414"><path d="M480-344 240-584l56-56 184 184 184-184 56 56-240 240Z"/></svg>'),
     arrowBorder: 0, // 1
     arrowBorderColor: "rgba(0, 0, 0, 0.2)",
     arrowBackgroundColor: "transparent", // "white"
@@ -44,8 +46,9 @@ const TinySelectDefaults = {
     listBorder: 1,
     listBorderColor: "rgba(0, 0, 0, 0.6)",
     emptyText: "Empty",
+    allowHtml: 0, // 1: titleText, emptyText and the labels of the list are HTML (only for your own texts)
     invertIconColor: 0,
-    labelBoldFont: 1,
+    labelBold: 1,
     labelTextColor: "rgba(0,0,0,0.8)",
 };
 
@@ -60,18 +63,26 @@ const TinySelect = function(params = {}) {
     // *** PRIVATE VARIABLES:
     const DISABLED_OPACITY = 0.6;
 
+    // *** PRIVATE FUNCTIONS:
+
+    const setText = function (label, text) {
+        const value = (text === undefined || text === null) ? "" : String(text);
+        if (box.allowHtml == 1) label.text = value;
+        else label.plainText = value;
+    };
+
     // *** PUBLIC VARIABLES:
 
     // To close listBox if opened (when listBox created will also put a function in this)
     box.closeListBox = null;
 
     /*
-        - listeyi güncelle ve index i verileni seç
+        - the list again, and the item of the given index selected
 
-        list: [{ id: "1", label: "(none)" },]
+        list: [{ value: "1", label: "(none)" },]
         selectedIndex: 0
 
-        object.setList([{ id: "1", label: "(none)" },], 0);
+        object.setList([{ value: "1", label: "(none)" },], 0);
 
     */
     box.setList = function(list, selectedIndex = 0) {
@@ -81,43 +92,52 @@ const TinySelect = function(params = {}) {
 
     };
 
-    // Seçili olanı değiştir. silent: 1 -> onSelect is not called.
+    // Chooses the item at index; an index that is not in the list shows emptyText. silent: 1 -> onChange is not called.
     box.setSelectedIndex = function(index, silent = 0) {
 
         box.selectedIndex = index;
 
-        if (box.list.length > box.selectedIndex) {
-            box.lblLabel.text = box.list[box.selectedIndex].label;
-            if (!silent) box.onSelect(index, box.list[index].id, box.list[index].label, box.title);
+        // WHY not list.length > index: -1 (getIndexByValue of a value not in the list) passed it and threw.
+        const item = box.getSelectedItem();
+        if (item) {
+            setText(box.lblLabel, item.label);
+            if (!silent) box.onChange(box);
         } else {
-            box.lblLabel.text = box.emptyText;
+            setText(box.lblLabel, box.emptyText);
         }
 
         if (box.closeListBox != null) box.closeListBox();
 
     };
 
-    // Başlığı değiştir
-    box.setTitle = function(title) {
+    // Change the title
+    box.setTitleText = function(titleText) {
 
-        box.title = title;
-        box.lblTitle.text = (box.title) ? box.title + ":" : "";
-
-    };
-
-    // Nesneyi kullanılamaz yap.
-    box.setDisabled = function(value) {
-
-        box.disabled = value;
-        const isDisabled = (value == 1);
-        box.clickable = (isDisabled) ? 0 : 1;
-        box.opacity = (isDisabled) ? DISABLED_OPACITY : 1;
+        box.titleText = titleText;
+        setText(box.lblTitle, (box.titleText) ? box.titleText + ":" : "");
 
     };
 
-    box.getIndexById = function(id) {
-        return box.list.findIndex(item => item.id === id);
+    // 0: it can not be opened (a little transparent)
+    box.setEnabled = function(value) {
+
+        box.enabled = basic.isOn(value) ? 1 : 0;
+        box.clickable = box.enabled;
+        box.opacity = (box.enabled) ? 1 : DISABLED_OPACITY;
+
     };
+    // USAGE: tinySelect.setEnabled(0)
+
+    // The chosen item ({ value, label }), or null
+    box.getSelectedItem = function() {
+        return box.list[box.selectedIndex] || null;
+    };
+    // USAGE: const item = tinySelect.getSelectedItem();
+
+    box.getIndexByValue = function(value) {
+        return box.list.findIndex(item => item.value === value);
+    };
+    // USAGE: tinySelect.setSelectedIndex(tinySelect.getIndexByValue("tr"))
 
     box.setColor = function(color) {
         box.color = color;
@@ -125,8 +145,8 @@ const TinySelect = function(params = {}) {
     // USAGE: get: componentName.color, set: componentName.setColor("red")
 
     // *** OBJECT VIEW:
-    // WHY: In a row (the protocol of URLInputB), a box shrinks for its "100%" neighbour and cut "https://www.".
-    //      The old TinySelect was a flex group, and a group does not shrink (flexShrink 0): the same here.
+    // WHY: In a row (the protocol of UrlField), a box shrinks for its "100%" neighbour and cut "https://www.".
+    //      A flex group does not shrink (flexShrink 0): the same here.
     box.shrink = 0;
     box.css.whiteSpace = "nowrap";
     box.cursor = "pointer";
@@ -151,7 +171,7 @@ const TinySelect = function(params = {}) {
         fontSize: box.fontSize,
         textColor: box.labelTextColor,
     });
-    if (box.labelBoldFont == 1) that.css.fontFamily = "opensans-bold";
+    if (box.labelBold == 1) that.css.fontFamily = "opensans-bold";
     that.css = { marginLeft: "6px", marginRight: "4px" };
 
     // ICON: Arrow
@@ -164,7 +184,7 @@ const TinySelect = function(params = {}) {
         round: box.arrowRound,
         space: 0,
     });
-    that.load(box.arrowIcon);
+    that.load(box.arrowIconFile);
     that.setMotion("transform 0.3s");
     that.css = { marginTop: "2px", marginRight: box.paddingX + "px" };
     if (box.invertIconColor == 1) that.css.filter = "invert(100%)";
@@ -186,15 +206,19 @@ const TinySelect = function(params = {}) {
     box.on("click", function() {
         TinySelect.createList(box);
     });
-    box.setTitle(box.title);
-    // WHY: Silent: onSelect is a choice of the user, not the start value (2026-10-26; the pages that use it
+    box.setTitleText(box.titleText);
+    // WHY: Silent: onChange is a choice of the user, not the start value (the pages that use it
     //      guarded against this first call with isReady / isRendering).
     box.setSelectedIndex(box.selectedIndex, 1);
-    box.setDisabled(box.disabled);
+    box.setEnabled(box.enabled);
 
     return endObject(box);
 
 };
+
+TinySelect.Z_INDEX = 1000; // the list on page; over a Dialog or a SidePanel that holds the field (basic.zIndexAbove)
+TinySelect.PAGE_MARGIN = 8; // px: the list stays this far from the top and the bottom of the page
+TinySelect.MIN_LIST_HEIGHT = 80; // px: the list is not made shorter than this to fit the page (it scrolls)
 
 // Create a tiny list to user selection
 TinySelect.createList = function(connectedUI) {
@@ -213,6 +237,7 @@ TinySelect.createList = function(connectedUI) {
     that.color = "transparent";
     that.css.whiteSpace = "nowrap";
     page.add(that);
+    listBox.zIndex = basic.zIndexAbove(connectedUI, TinySelect.Z_INDEX); // WHY: it had none: under a Dialog or a SidePanel
 
         listBox.grp = startFlexBox({
             flexDirection: "column",
@@ -231,11 +256,13 @@ TinySelect.createList = function(connectedUI) {
             for (let i = 0; i < connectedUI.list.length; i++) {
                 const lbl = Label({
                     fontSize: connectedUI.listFontSize,
-                    text: connectedUI.list[i].label,
                     index: i,
                     spaceX: 6,
                     textColor: connectedUI.listTextColor,
                 });
+                if (connectedUI.allowHtml == 1) lbl.text = connectedUI.list[i].label;
+                else lbl.plainText = connectedUI.list[i].label;
+                lbl.elem.style.flexShrink = "0"; // WHY: in a list made shorter to fit the page, the items scroll, not shrink
 
                 if (connectedUI.selectedIndex != lbl.index) {
 
@@ -262,12 +289,25 @@ TinySelect.createList = function(connectedUI) {
 
     // WHY: totalLeft/totalTop do not count the scroll of parent boxes. In a scrolled page, the list was opened at a wrong place.
     const rect = connectedUI.elem.getBoundingClientRect();
+    const fieldTop = withPageZoom(rect.top);
+    const fieldBottom = withPageZoom(rect.bottom);
+    // WHY the room: the list was always under the field, with no limit: near the bottom of the page (it never scrolls)
+    //     its items were below the page and could not be chosen
+    const listHeight = listBox.grp.height;
+    const roomBelow = page.height - fieldBottom - TinySelect.PAGE_MARGIN;
+    const roomAbove = fieldTop - TinySelect.PAGE_MARGIN;
+    const isAbove = (listHeight > roomBelow && roomAbove > roomBelow);
+    const room = Math.max(TinySelect.MIN_LIST_HEIGHT, isAbove ? roomAbove : roomBelow);
+    if (listHeight > room) {
+        listBox.grp.height = room;
+        listBox.grp.scrollY = 1;
+    }
     listBox.grp.left = withPageZoom(rect.right) - listBox.grp.width;
-    listBox.grp.top = withPageZoom(rect.bottom);
+    listBox.grp.top = isAbove ? fieldTop - Math.min(listHeight, room) : fieldBottom;
 
     endFlexBox();
 
-    // Sayfa boyutu değiştiğinde; kutu açık ise otomatik kapat.
+    // When the size of the page changes, an open list closes.
     // NOTE: The first two calls are not a page resize: they come from opening the list.
     let resizeCount = 0;
 

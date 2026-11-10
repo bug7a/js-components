@@ -2,140 +2,181 @@
 <html lang="en">
 
 <head>
-    <title>LineProgressBar Component Sample</title>
+    <title>LineProgressBar</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <!-- LIBRARY FILES -->
-    <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
-    <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Bold.ttf" as="font" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="../basic/basic.css">
+    <script src="../basic/basic.js" type="text/javascript" charset="utf-8"></script>
 
-    <!-- COMPONENT FILES -->
+    <!-- COMPONENT FILES (the bubble of the value is a bubble of Tooltip) -->
+    <script src="../comp/tooltip.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/smart-button.js" type="text/javascript" charset="utf-8"></script>
     <script src="../comp/line-progress-bar.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/scroll-area.js" type="text/javascript" charset="utf-8"></script>
 
     <script>
 
-        let progressBar1;
-        let progressBar2;
+        /* Bismillah */
 
-        window.onload = function () {
+        // LineProgressBar: thick lines with round ends. An empty line is light gray, or nearly
+        // black (#242424: the checked color of CheckBox); the full lines take a tone of SmartButton. A bubble with an
+        // arrow (comp/tooltip.js) shows the value over the last full line; it slides to a new value (animated: 1).
 
-            page.color = "whitesmoke";
+        const LIGHT_LINE = "#E2E1DD";
+        const DARK_LINE = "#242424"; // the checked color of CheckBox
+        const BAR_HEIGHT = 36;
+        const LINE_WIDTH = 6;
+        const LINE_GAP = 4;
+        const BUBBLE_SPACE = 40; // px over a bar: the bubble stands there
+        const CARD_MAX_WIDTH = 460;
+        const ANIMATE_STEP_TIME = 40; // ms: one percent
+        const VALUES = [0, 25, 50, 75, 100];
+        const TONE_NAMES = ["cyan", "orange", "yellow", "green", "blue"]; // the tones of SmartButton
 
-            // PAGE LAYOUT
-            AutoLayout({
-                flow: "vertical",
-                align: "left top",
-                gap: 20,
-                padding: 50,
-            });
+        // The bars of the page: their title, the color of their empty lines, the tone of their full lines, their value
+        const BARS = [
+            { titleText: "Upload", lineColor: LIGHT_LINE, toneName: "green", progress: 64 },
+            { titleText: "Storage (dark lines)", lineColor: DARK_LINE, toneName: "blue", progress: 38 },
+            { titleText: "Profile", lineColor: LIGHT_LINE, toneName: "orange", progress: 82 },
+        ];
 
-            // TITLE
-            const title = Label({
-                text: "Progress Bar Component",
-                fontSize: 24,
-            });
-            title.elem.style.marginBottom = "10px";
+        // *** VARIABLES:
+        let pageBox, btnAnimate;
+        let bars = [];
+        let stopAnimation = null;
 
-            // SAMPLE 1: Default
-            const lbl1 = Label({ text: "Default Style" });
-            lbl1.elem.style.marginBottom = "5px";
+        const start = function () {
 
-            progressBar1 = LineProgressBar({
-                progress: 30,
-                height: 12,
-            });
-            progressBar1.elem.style.marginBottom = "20px";
+            page.color = "#F0F1EE";
 
-            // SAMPLE 2: Custom Colors
-            const lbl2 = Label({ text: "Custom Colors & Size" });
-            lbl2.elem.style.marginBottom = "5px";
+            // SCROLL AREA: Page (it scrolls when the window is lower than the samples)
+            pageBox = ScrollArea({ align: "center top", gap: 22, padding: [16, 40] });
 
-            progressBar2 = LineProgressBar({
-                width: 400,
-                height: 12,
-                progress: 75,
-                primaryColor: "dodgerblue",
-                secondaryColor: "rgba(0,0,0,0.1)",
-                showValueLabel: true,
-            });
-            progressBar2.elem.style.marginBottom = "20px";
+                Label({ text: "LineProgressBar", fontSize: 26, fontFamily: "opensans-bold", textColor: Black(0.8) });
+                Label({
+                    text: "Thick lines with round ends; the full lines in a tone of SmartButton, the value in a bubble.",
+                    fontSize: 14,
+                    textColor: Black(0.5),
+                    width: "100%",
+                    textAlign: "center",
+                    css: { whiteSpace: "normal", textWrap: "balance" },
+                });
 
-            // CONTROLS
-            const lbl3 = Label({ text: "Controls" });
-            lbl3.elem.style.marginBottom = "5px";
+                bars = BARS.map(createBar);
 
-            const btnStyle = {
-                width: "auto",
-                padding: [10, 20],
-                color: "white",
-                backgroundColor: "#333",
-                round: 4,
-                cursor: "pointer",
-            };
+                // CARD: the value of every bar
+                startCard("Value");
+                    createButtonRow(function () {
+                        VALUES.forEach(function (value) {
+                            SmartButton({ tone: "white", labelText: value + "%", onClick: function () { setAllBars(value); } });
+                        });
+                        SmartButton({ tone: "white", labelText: "Random", onClick: setRandomValues });
+                        btnAnimate = SmartButton({ tone: "cyan", labelText: "Animate", onClick: toggleAnimation });
+                    });
+                endCard();
 
-            // We are already inside an AutoLayout (vertical). 
-            // Let's make a horizontal one for buttons.
-            AutoLayout({
-                flow: "horizontal",
-                gap: 10,
-            });
+                // CARD: the tone of the first bar
+                startCard("Tone of the first bar");
+                    createButtonRow(function () {
+                        TONE_NAMES.forEach(function (toneName) {
+                            SmartButton({ tone: toneName, labelText: toneName, onClick: function () { setFirstBarTone(toneName); } });
+                        });
+                    });
+                endCard();
 
-            // Button 0%
-            const btn0 = Label({ text: "0%", ...btnStyle });
-            btn0.on("click", function () {
-                progressBar1.setProgress(0);
-                progressBar2.setProgress(0);
-            });
-
-            // Button 50%
-            const btn50 = Label({ text: "50%", ...btnStyle });
-            btn50.on("click", function () {
-                progressBar1.setProgress(50);
-                progressBar2.setProgress(50);
-            });
-
-            // Button 100%
-            const btn100 = Label({ text: "100%", ...btnStyle });
-            btn100.on("click", function () {
-                progressBar1.setProgress(100);
-                progressBar2.setProgress(100);
-            });
-
-            // Button Random
-            const btnRandom = Label({ text: "Random", ...btnStyle });
-            btnRandom.on("click", function () {
-                progressBar1.setProgress(Math.random() * 100);
-                progressBar2.setProgress(Math.random() * 100);
-            });
-
-            // Animation Loop
-            let animating = false;
-            let animInterval;
-            const btnAnim = Label({ text: "Animate", ...btnStyle });
-            btnAnim.on("click", function () {
-                if (animating) {
-                    clearInterval(animInterval);
-                    animating = false;
-                    btnAnim.text = "Animate";
-                } else {
-                    animating = true;
-                    btnAnim.text = "Stop";
-                    let p = 0;
-                    animInterval = setInterval(function () {
-                        p += 1;
-                        if (p > 100) p = 0;
-                        progressBar1.setProgress(p);
-                        progressBar2.setProgress(p);
-                    }, 50);
-                }
-            });
-
-            endAutoLayout(); // End controls row
-
-            endAutoLayout(); // End page layout
+            endGroup();
 
         };
+
+        // *** OTHER FUNCTIONS:
+
+        // A bar in a card: its empty lines in lineColor, its full lines and its bubble in its tone
+        const createBar = function (data) {
+            const tone = SmartButton.tones[data.toneName];
+            let bar;
+            startCard(data.titleText);
+                Box({ width: 1, height: BUBBLE_SPACE, color: "transparent" }); // (the room of the bubble)
+                bar = LineProgressBar({
+                    width: "100%",
+                    height: BAR_HEIGHT,
+                    progress: data.progress,
+                    lineWidth: LINE_WIDTH,
+                    lineGap: LINE_GAP,
+                    lineRound: "full", // WHY: the top and the bottom of a line are half circles
+                    headGrow: 0,
+                    primaryColor: tone.color,
+                    secondaryColor: data.lineColor,
+                    valueBubble: 1,
+                    valueBubbleLook: { textColor: tone.text, fontSize: 14, bold: 1, arrow: 10 }, // (its color: the tone)
+                    animated: 1, // the bubble slides to a new value
+                });
+            endCard();
+            return bar;
+        };
+
+        // GROUP: A white card with a title (endCard closes it)
+        const startCard = function (title) {
+            // WHY: basic.js has no maxWidth prop
+            VGroup({
+                width: "100%",
+                height: "auto",
+                align: "left top",
+                gap: 12,
+                padding: [20, 18],
+                color: "white",
+                round: 12,
+                border: 1,
+                borderColor: Black(0.08),
+                clipContent: 0,
+                css: { maxWidth: CARD_MAX_WIDTH + "px" },
+            });
+                Label({ text: title, fontSize: 14, textColor: Black(0.5) });
+        };
+
+        const endCard = function () {
+            endGroup();
+        };
+
+        // GROUP: buttons in a row that wraps on a narrow screen
+        const createButtonRow = function (createButtons) {
+            // WHY clipContent 0: a SmartButton lifts under the mouse
+            HGroup({ width: "100%", height: "auto", align: "left top", gap: 8, wrap: 1, clipContent: 0 });
+                createButtons();
+            endGroup();
+        };
+
+        const setAllBars = function (value) {
+            bars.forEach(function (bar) { bar.setProgress(value); });
+        };
+
+        const setRandomValues = function () {
+            bars.forEach(function (bar) { bar.setProgress(Math.round(Math.random() * 100)); });
+        };
+
+        const setFirstBarTone = function (toneName) {
+            bars[0].setPrimaryColor(SmartButton.tones[toneName].color);
+        };
+
+        // Every bar goes from 0 to 100, again and again; the button stops it
+        const toggleAnimation = function () {
+            if (stopAnimation) {
+                stopAnimation();
+                stopAnimation = null;
+                btnAnimate.setLabelText("Animate");
+                return;
+            }
+            let value = 0;
+            stopAnimation = pageBox.every(ANIMATE_STEP_TIME, function () {
+                value = (value >= 100) ? 0 : value + 1;
+                setAllBars(value);
+            });
+            btnAnimate.setLabelText("Stop");
+        };
+
     </script>
 </head>
 

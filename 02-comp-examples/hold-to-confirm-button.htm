@@ -2,142 +2,131 @@
 <html lang="en">
 
 <head>
-    <title>Hold to Confirm Button Component</title>
+    <title>HoldToConfirmButton</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <!-- LIBRARY FILES -->
-    <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
-    <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Bold.ttf" as="font" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="../basic/basic.css">
+    <script src="../basic/basic.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../basic/scroll-bar.js" type="text/javascript" charset="utf-8"></script>
 
     <!-- COMPONENT FILES -->
+    <script src="../comp/smart-button.js" type="text/javascript" charset="utf-8"></script>
     <script src="../comp/hold-to-confirm-button.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/scroll-area.js" type="text/javascript" charset="utf-8"></script>
 
     <script>
 
-        const UI_STATES = {
-            SHOW_FRUID: "show-fruid",
-            DELETE_FRUID: "delete-fruid",
-            DISABLE_DELETE: "disable-delete-button"
-        };
+        /* Bismillah */
 
-        window.onload = function () {
+        // HoldToConfirmButton (comp/hold-to-confirm-button.js): a delete that needs the button held until it fills
+        // (onConfirm); then it waits (onReset makes it ready again). Show brings the picture back.
 
-            page.color = "whitesmoke";
+        // *** THE COLORS AND SIZES OF THE PAGE
+        const PAGE_COLOR = "#F4F5F2";
+        const CARD_WIDTH = 420;
+        const PICTURE_SIZE = 80;
 
-            // Icon container
-            HGroup({
-                height: "50%",
-            });
+        let icoFruit, btnConfirm, btnShow;
 
-            // Icon
-            window.icoFruid = Icon({
-                width: 80,
-                height: 80,
-            });
-            that.load("../assets/fruids/yabanmersini.png");
-            that.setMotion("opacity 0.2s");
+        const start = function () {
+
+            page.color = PAGE_COLOR;
+
+            // SCROLL AREA: The page (comp/scroll-area.js)
+            ScrollArea({ align: "center top", gap: 20, padding: [16, 40] });
+
+                Label({ text: "HoldToConfirmButton", fontSize: 24, bold: 1, textColor: Black(0.8) });
+
+                // CARD: The picture, the buttons and what to try
+                startCard("Hold the button until it is full: the picture is deleted. A short click does nothing. Show brings it back.");
+
+                    // GROUP: The picture in the middle
+                    HGroup({ width: "100%", height: "auto", align: "center center", padding: [0, 16] });
+                        icoFruit = Icon({ width: PICTURE_SIZE, height: PICTURE_SIZE });
+                        icoFruit.load("../assets/fruids/yabanmersini.png");
+                        icoFruit.setMotion("opacity 0.2s");
+                    endGroup();
+
+                    // GROUP: The buttons
+                    HGroup({ width: "100%", height: "auto", align: "center center", gap: 8 });
+
+                        // HOLD TO CONFIRM BUTTON
+                        btnConfirm = HoldToConfirmButton({
+                            width: "auto",
+                            labelText: "Hold to Delete",
+                            completedText: "DELETED",
+                            style: {
+                                layout: { gap: 4, padding: [18, 5] },
+                                label: { fontSize: 20, textColor: Black(0.65) },
+                                box: { color: "white", border: 1, borderColor: Black(0.3), round: 8 },
+                                holdingBox: { color: "#FFD1CB" },
+                            },
+                            onConfirm: function (self) {
+                                icoFruit.opacity = 0;
+                            },
+                            onReset: function (self) {
+                                setDeleteUsable(0); // (after "DELETED": only Show can be used)
+                            },
+                        });
+
+                        // BUTTON: Show
+                        btnShow = SmartButton({
+                            labelText: "Show",
+                            tone: "white",
+                            enabled: 0,
+                            onClick: function () {
+                                icoFruit.opacity = 1;
+                                setDeleteUsable(1);
+                            },
+                        });
+
+                    endGroup();
+
+                endCard();
 
             endGroup();
 
-            // Buttons container
-            HGroup({
-                gap: 8,
-            });
+        };
 
-            const _assetsPath = "../comp/hold-to-confirm-button/";
+        // *** OTHER FUNCTIONS:
 
-            // Confirm Button
-            window.btnConfirm = HoldToConfirmButton({
-                width: "auto",
-                labelText: "Hold to Delete",
-                completedText: "DELETED",
-                iconFile: _assetsPath + "trash.png",
-                holdingIconFile: _assetsPath + "trash-red.png",
-                style: {
-                    layout: { gap: 4, padding: [18, 5], },
-                    label: { fontSize: 20, textColor: Black(0.65), },
-                    box: { color: "white", border: 1, borderColor: Black(0.3), round: 8, },
-                    holdingBox: { color: "#FFD1CB", },
-                }
-            });
+        // The delete button can be used (1) or not (0); Show is the other way around.
+        const setDeleteUsable = function (isUsable) {
+            btnConfirm.opacity = (isUsable) ? 1 : 0.5;
+            btnConfirm.clickable = isUsable;
+            btnShow.setEnabled(isUsable ? 0 : 1);
+        };
 
-            btnConfirm.onConfirm = function (self) {
-                console.log("Button held!");
-                refreshView(UI_STATES.DELETE_FRUID);
-            };
-
-            btnConfirm.onReset = function (self) {
-                refreshView(UI_STATES.DISABLE_DELETE);
-            };
-
-            // Show Button
-            window.btnShow = Button({
-                text: "Show",
+        // GROUP: A white card with a line that says what to try
+        const startCard = function (text) {
+            VGroup({
+                width: CARD_WIDTH,
+                height: "auto",
+                align: "left top",
+                gap: 14,
+                padding: 24,
                 color: "white",
-                minimal: 1,
-                round: 8,
+                round: 10,
                 border: 1,
+                borderColor: Black(0.08),
+                css: { maxWidth: "100%" }, // WHY maxWidth: on a phone the card is as wide as the screen
             });
-
-            btnShow.on("click", function () {
-                refreshView(UI_STATES.SHOW_FRUID);
-            });
-            //that.elem.style.fontFamily = "opensans-bold";
-
-            endGroup();
-
-            // FUNCTIONS:
-
-            const refreshView = function (state) {
-
-                switch (state) {
-
-                    case UI_STATES.SHOW_FRUID:
-
-                        // show icon
-                        icoFruid.opacity = 1;
-
-                        // delete button usable
-                        btnConfirm.opacity = 1;
-                        btnConfirm.clickable = 1;
-
-                        // show button disabled
-                        btnShow.opacity = 0.5;
-                        btnShow.clickable = 0;
-
-                        break;
-
-                    case UI_STATES.DELETE_FRUID:
-
-                        // show icon
-                        icoFruid.opacity = 0;
-
-                        break;
-
-                    case UI_STATES.DISABLE_DELETE:
-
-                        // delete button disabled
-                        btnConfirm.opacity = 0.5;
-                        btnConfirm.clickable = 0;
-
-                        // show button usable
-                        btnShow.opacity = 1;
-                        btnShow.clickable = 1;
-
-                        break;
-
-                }
-            };
-
-            // INIT CODE:
-
-            refreshView("show-fruid");
-
+            Label({ text: text, fontSize: 13, textColor: Black(0.55) });
         };
+
+        const endCard = function () {
+            endGroup();
+        };
+
     </script>
+
 </head>
 
-<body></body>
+<body>
+</body>
 
 </html>

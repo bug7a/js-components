@@ -6,13 +6,13 @@ MiniGraphBox - v26.09
 
 UI COMPONENT TEMPLATE
 - A small box with a title, a value text, an icon and a bar graph.
-- The title, value text and icon can be changed. (setTitle, setValueText, setIcon)
+- The title, value text and icon can be changed. (setTitleText, setValueText, setIcon)
 - The bar color can be changed. (setBarColor) A value can have its own color too. (addValue(12, "red"))
 - New values are added to the right. When the graph is full, the first value is removed
   and all the bars move one step to the left.
 - WHY: Bar objects are created one time. Only their heights and colors change. (Fast for live data)
 - Bar count: As many bars as fit in the width. It is calculated again when the size changes.
-- TOOLTIP (2026-10-28, the user: "at once, no delay"): the mouse over the bars shows the value of the bar under it in a
+- TOOLTIP ("at once, no delay"): the mouse over the bars shows the value of the bar under it in a
   small box over the bar. The bar is found from the mouse x (the bars are thin), the box follows live values.
   valueFormat(value, index, self) makes its text; showTooltip: 0 turns it off.
 
@@ -26,9 +26,11 @@ graph.setValues([10, 20, 15]);
 MiniGraphBox({ valueFormat: function (value) { return value + " items"; } });
 
 Started Date: September 2026
-Developer: Bugra Ozden
-Email: bugra.ozden@gmail.com
 Webpage: https://bug7a.github.io/js-components/
+
+Copyright 2020-2026 Bugra Ozden <bugra.ozden@gmail.com> (https://bug7a.github.io/)
+Licensed under the Apache License, Version 2.0
+SPDX-License-Identifier: Apache-2.0
 
 */
 
@@ -39,8 +41,9 @@ const MiniGraphBoxDefaults = {
     key: "0",
     width: 200,
     height: 80,
-    title: "Sold Items",
+    titleText: "Sold Items",
     valueText: "1.3K",
+    allowHtml: 0, // 1: titleText and valueText are HTML (only for your own texts)
     iconFile: "", // "": No icon
     barColor: "tomato",
     values: [], // [10, 20, { value: 15, color: "orange" }]
@@ -122,6 +125,12 @@ const MiniGraphBox = function (params = {}) {
     box.barCount = 0;
 
     // *** PRIVATE FUNCTIONS:
+
+    const setText = function (label, text) {
+        const value = (text === undefined || text === null) ? "" : String(text);
+        if (box.allowHtml == 1) label.text = value;
+        else label.plainText = value;
+    };
 
     const normalizeValue = function (item) {
         if (item !== null && typeof item == "object") {
@@ -351,14 +360,14 @@ const MiniGraphBox = function (params = {}) {
         updateBars();
     };
 
-    box.setTitle = function (text) {
-        box.title = text;
-        box.lblTitle.text = text;
+    box.setTitleText = function (text) {
+        box.titleText = text;
+        setText(box.lblTitle, text);
     };
 
     box.setValueText = function (text) {
         box.valueText = text;
-        box.lblValueText.text = text;
+        setText(box.lblValueText, text);
     };
 
     box.setIcon = function (iconFile) {
@@ -404,18 +413,18 @@ const MiniGraphBox = function (params = {}) {
     });
 
         box.lblTitle = Label({
-            text: box.title,
             fontSize: _s.title.fontSize,
             textColor: _s.title.textColor,
         });
+        setText(box.lblTitle, box.titleText);
         // WHY: marginBottom: Line heights of the two texts leave a big space between them.
         box.lblTitle.css = { whiteSpace: "nowrap", marginBottom: "-6px" };
 
         box.lblValueText = Label({
-            text: box.valueText,
             fontSize: _s.valueText.fontSize,
             textColor: _s.valueText.textColor,
         });
+        setText(box.lblValueText, box.valueText);
         box.lblValueText.css.whiteSpace = "nowrap";
 
     endGroup();

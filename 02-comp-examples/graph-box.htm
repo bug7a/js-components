@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Graph Box</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- LIBRARY FILES -->
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Bold.ttf" as="font" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
+    <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
+
+    <!-- COMPONENT FILES -->
+    <script src="../comp/graph-box.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/smart-button.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/scroll-area.js" type="text/javascript" charset="utf-8"></script>
+
+    <script>
+
+        /* Bismillah */
+
+        // *** VARIABLES:
+        const charts = [];
+        let chartDemo, chartLive;
+        let lblTitle, lblClicked;
+        let isDark = 0;
+        let isPaused = 0;
+        let liveSecond = 0;
+
+        const CHART_WIDTH = 520;
+        const CHART_HEIGHT = 320;
+        const PAGE_COLORS = { light: "#F9F9F7", dark: "#0D0D0D" };
+
+        const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun"];
+
+        const start = function () {
+
+            page.color = PAGE_COLORS.light;
+
+            // SCROLL AREA: The page (comp/scroll-area.js)
+            // WHY: page does not scroll. A ScrollArea fills the window; its content scrolls when it is taller.
+            // WHY 16 at the sides: the charts fill a phone (390 px)
+            ScrollArea({ align: "center top", gap: 24, padding: [16, 40] });
+
+                lblTitle = Label({ text: "Graph Box", fontSize: 26, fontFamily: "opensans-bold", textColor: "#0B0B0B" });
+
+                addButton("Dark theme", function (self) {
+                    isDark = (isDark) ? 0 : 1;
+                    self.setLabelText((isDark) ? "Light theme" : "Dark theme");
+                    applyPageTheme();
+                });
+
+                // SAMPLE 1: The charts people ask for most
+                startRow();
+
+                    // LINE: A soft gradient under the first line, a dashed target, a text for the values
+                    addChart({
+                        type: "line",
+                        curve: "smooth",
+                        titleText: "Monthly Revenue",
+                        subtitleText: "Actual vs. target, last 6 months",
+                        labels: MONTHS,
+                        datasets: [
+                            { label: "Actual", data: [42000, 58000, 51000, 69000, 83000, 94000], fill: "gradient" },
+                            { label: "Target", data: [40000, 50000, 60000, 70000, 80000, 90000], dashed: 1 },
+                        ],
+                        formatValue: function (value) { return "₺" + value.toLocaleString("tr-TR"); },
+                    });
+
+                    // BAR: One dataset (no legend), a target line with no dataset, a click
+                    addChart({
+                        type: "bar",
+                        titleText: "Sales by Category",
+                        subtitleText: "Units sold per product category, targetLines",
+                        labels: ["Electronics", "Clothing", "Home", "Cosmetics", "Books"],
+                        values: [1250, 2100, 840, 1600, 920],
+                        targetLines: [{ value: 1500, label: "Target" }],
+                        onClick: function (self, item) {
+                            lblClicked.text = "Clicked: <b>" + item.label + "</b> = " + item.value;
+                        },
+                    });
+
+                    // AREA: A value is missing in April: the area breaks there
+                    addChart({
+                        type: "area",
+                        titleText: "Active Users",
+                        subtitleText: "No data for April",
+                        labels: MONTHS,
+                        values: [1200, 1350, 1500, null, 1700, 1900],
+                    });
+
+                    // STACKED: The tooltip adds the total
+                    addChart({
+                        type: "bar",
+                        stacked: 1,
+                        titleText: "Support Tickets",
+                        subtitleText: "stacked: 1, showValues: 1 (only the ones that fit)",
+                        showValues: 1,
+                        labels: MONTHS,
+                        datasets: [
+                            { label: "Solved", data: [120, 140, 130, 160, 170, 190] },
+                            { label: "Waiting", data: [40, 35, 50, 30, 45, 25] },
+                            { label: "Closed", data: [20, 25, 15, 30, 20, 35] },
+                        ],
+                    });
+
+                    // HORIZONTAL: Long names read better so
+                    addChart({
+                        type: "bar",
+                        horizontal: 1,
+                        titleText: "Top Pages",
+                        subtitleText: "horizontal: 1, showValues: 1",
+                        showValues: 1,
+                        labels: ["Getting started", "Components", "Examples and templates", "Pricing", "A very long name of a page that is cut"],
+                        values: [8400, 6100, 4800, 2300, 1200],
+                    });
+
+                    // STACKED AREA: Every area is on the one before it
+                    addChart({
+                        type: "area",
+                        stacked: 1,
+                        curve: "smooth",
+                        titleText: "Traffic",
+                        subtitleText: "stacked: 1 on an area chart",
+                        labels: MONTHS,
+                        datasets: [
+                            { label: "Search", data: [420, 510, 470, 620, 680, 750] },
+                            { label: "Social", data: [210, 280, 260, 300, 340, 310] },
+                            { label: "Direct", data: [150, 170, 190, 180, 220, 240] },
+                        ],
+                    });
+
+                    // DOUGHNUT: The total in the hole
+                    addChart({
+                        type: "doughnut",
+                        titleText: "Traffic Sources",
+                        subtitleText: "How users come to the site",
+                        labels: ["Organic Search", "Social Media", "Direct", "E-Mail", "Referral"],
+                        values: [42, 28, 15, 10, 5],
+                        centerText: "12.4K",
+                        centerSubText: "Visits",
+                        formatValue: function (value) { return value + "%"; },
+                    });
+
+                    // PIE: A click on the legend hides a slice
+                    addChart({
+                        type: "pie",
+                        titleText: "Budget",
+                        subtitleText: "showValues: 1, the tooltip adds the share too",
+                        showValues: 1,
+                        labels: ["Salaries", "Rent", "Marketing", "Other"],
+                        values: [52000, 18000, 12500, 7500],
+                        formatValue: function (value) { return "₺" + value.toLocaleString("tr-TR"); },
+                    });
+
+                    // RADAR: Two datasets on the same rings
+                    addChart({
+                        type: "radar",
+                        titleText: "System Metrics",
+                        subtitleText: "Current vs. optimized server",
+                        legend: "bottom",
+                        labels: ["Speed", "Security", "Uptime", "Scaling", "Memory", "Cost"],
+                        datasets: [
+                            { label: "Optimized", data: [90, 85, 99, 92, 80, 88] },
+                            { label: "Current", data: [65, 70, 85, 60, 50, 60] },
+                        ],
+                    });
+
+                    // SCATTER: Two number axes, a name for a point
+                    addChart({
+                        type: "scatter",
+                        titleText: "Height and Weight",
+                        subtitleText: "Two groups, the titles of the axes",
+                        xAxisText: "Height (cm)",
+                        yAxisText: "Weight (kg)",
+                        datasets: [
+                            {
+                                label: "Group A",
+                                data: [{ x: 158, y: 52, label: "Ayşe" }, [162, 58], [165, 57], [168, 63], [171, 66], [174, 64], [176, 72]],
+                            },
+                            {
+                                label: "Group B",
+                                data: [[170, 74], [173, 78], [177, 81], [180, 80], [183, 88], [186, 91], [190, 95]],
+                            },
+                        ],
+                    });
+
+                    // BUBBLE: The area of a bubble follows its value
+                    addChart({
+                        type: "bubble",
+                        titleText: "Markets",
+                        subtitleText: "Price, sales and the size of the market",
+                        sizeText: "Market",
+                        xAxisText: "Price",
+                        yAxisText: "Sales",
+                        legend: "none",
+                        datasets: [
+                            {
+                                data: [
+                                    { x: 12, y: 40, r: 80, label: "North" },
+                                    { x: 18, y: 62, r: 30, label: "South" },
+                                    { x: 25, y: 35, r: 55, label: "East" },
+                                    { x: 31, y: 74, r: 12, label: "West" },
+                                    { x: 38, y: 50, r: 95, label: "Center" },
+                                ],
+                            },
+                        ],
+                    });
+
+                    // MANY SLICES: maxSlices: 8 by default: the smallest ones are "Other"
+                    addChart({
+                        type: "doughnut",
+                        titleText: "Visitors by Country",
+                        subtitleText: "14 countries: the tooltip of \"Other\" names the small ones",
+                        labels: [
+                            "Turkey", "Germany", "USA", "France", "Netherlands", "Azerbaijan", "UK",
+                            "Italy", "Spain", "Greece", "Japan", "Canada", "Brazil", "Egypt",
+                        ],
+                        values: [4200, 2600, 1900, 1200, 950, 800, 720, 300, 280, 210, 140, 120, 90, 60],
+                    });
+
+                    // TWO LIMITS: On a chart that grows to the right they stand up
+                    addChart({
+                        type: "bar",
+                        horizontal: 1,
+                        titleText: "Response Time",
+                        subtitleText: "targetLines with their own color",
+                        labels: ["Login", "Search", "Checkout", "Reports"],
+                        values: [120, 340, 480, 760],
+                        targetLines: [
+                            { value: 300, label: "Goal" },
+                            { value: 600, label: "Limit", color: "#E34948" },
+                        ],
+                        formatValue: function (value) { return value + " ms"; },
+                    });
+
+                    // MIXED: Bars and a line in one chart
+                    addChart({
+                        type: "bar",
+                        titleText: "Orders and Returns",
+                        subtitleText: "A line can go over the bars (type on a dataset)",
+                        labels: MONTHS,
+                        datasets: [
+                            { label: "Orders", data: [320, 410, 380, 450, 520, 610] },
+                            { label: "Returns", data: [40, 55, 38, 62, 48, 70] },
+                            { label: "Average", data: [180, 232, 209, 256, 284, 340], type: "line" },
+                        ],
+                    });
+
+                endGroup();
+
+                lblClicked = Label({ text: "Click a bar in \"Sales by Category\".", fontSize: 13, textColor: Black(0.55) });
+
+                // SAMPLE 2: Live data and functions
+                startRow();
+
+                    // LIVE: A new value every second, max 20 values
+                    chartLive = addChart({
+                        type: "line",
+                        titleText: "Live Data",
+                        subtitleText: "addValue() every second, maxCount: 20",
+                        maxCount: 20,
+                        labels: [],
+                        datasets: [
+                            { label: "CPU", data: [] },
+                            { label: "Memory", data: [] },
+                        ],
+                        maxValue: 100,
+                        emptyText: "",
+                        formatValue: function (value) { return value + "%"; },
+                    });
+
+                    // DEMO: Functions
+                    chartDemo = addChart({
+                        type: "bar",
+                        titleText: "Quarterly Results",
+                        subtitleText: "Change the chart with the buttons below",
+                        labels: ["Q1", "Q2", "Q3", "Q4"],
+                        datasets: [
+                            { label: "2025", data: [12, 19, 14, 21] },
+                            { label: "2026", data: [15, 22, 18, 25] },
+                        ],
+                    });
+
+                endGroup();
+
+                // GROUP: Buttons
+                HGroup({ width: "100%", height: "auto", align: "center center", gap: 8, wrap: 1, clipContent: 0 });
+
+                    addButton("Line", function () { chartDemo.setType("line"); });
+                    addButton("Area", function () { chartDemo.setType("area"); });
+                    addButton("Bar", function () { chartDemo.setType("bar"); });
+                    addButton("Stacked", function () { chartDemo.setStacked(chartDemo.stacked ? 0 : 1); });
+                    addButton("Horizontal", function () { chartDemo.setHorizontal(chartDemo.horizontal ? 0 : 1); });
+                    addButton("Random", function () {
+                        chartDemo.data.datasets.forEach(function (dataset) {
+                            dataset.data = dataset.data.map(function () { return random(5, 30); });
+                        });
+                        chartDemo.update();
+                    });
+                    addButton("Table", function (self) {
+                        chartDemo.setTableView(chartDemo.tableView ? 0 : 1);
+                        self.setLabelText((chartDemo.tableView) ? "Chart" : "Table");
+                    });
+                    addButton("Download", function () { chartDemo.download("quarterly.png"); });
+                    addButton("Pause live", function (self) {
+                        isPaused = (isPaused) ? 0 : 1;
+                        self.setLabelText((isPaused) ? "Continue live" : "Pause live");
+                    });
+
+                endGroup();
+
+            endGroup();
+
+            setLoopTimer(1000);
+
+        };
+
+        // Runs every second.
+        const loop = function () {
+            if (isPaused || !chartLive) return;
+            liveSecond++;
+            chartLive.addValue(liveSecond + "s", [random(30, 70), random(50, 65)]);
+        };
+
+        // *** OTHER FUNCTIONS:
+
+        const applyPageTheme = function () {
+            const theme = (isDark) ? "dark" : "light";
+            page.color = PAGE_COLORS[theme];
+            lblTitle.textColor = (isDark) ? "#FFFFFF" : "#0B0B0B";
+            lblClicked.textColor = (isDark) ? White(0.6) : Black(0.55);
+            charts.forEach(function (chart) { chart.setTheme(theme); });
+        };
+
+        // GROUP: Charts side by side (one under the other on a phone)
+        const startRow = function () {
+            HGroup({ width: "100%", height: "auto", align: "center top", gap: 20, wrap: 1 });
+        };
+
+        const addChart = function (params) {
+            const chart = GraphBox({
+                width: CHART_WIDTH,
+                height: CHART_HEIGHT,
+                css: { maxWidth: "100%" },
+                animated: 1,
+                ...params,
+            });
+            charts.push(chart);
+            return chart;
+        };
+
+        const addButton = function (text, func) {
+            return SmartButton({ labelText: text, onClick: func });
+        };
+
+    </script>
+</head>
+
+<body></body>
+
+</html>

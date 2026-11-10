@@ -6,12 +6,12 @@ SparkLineBox - v26.09
 
 UI COMPONENT TEMPLATE
 - An alternative to MiniGraphBox: a small KPI box with a title, a value text, an icon and a line graph (sparkline)
-  instead of bars. Same API: addValue, setValues, setTitle, setValueText, setIcon...
+  instead of bars. Same API: addValue, setValues, setTitleText, setValueText, setIcon...
 - The line is drawn with SVG (one path for the line, one for the area under it). Objects are created one time,
   only the path data changes. (Fast for live data)
 - Trend badge: "▲ 12%" or "▼ 3%", the last value compared with the first visible value. (showTrend, or your own trendText)
 - Last value dot, optional min / max dots, and marked values: addValue(95, "red") draws a dot in that color.
-- Mouse over: a tooltip shows the value of the nearest point. (hover: 1)
+- Mouse over: a tooltip shows the value of the nearest point. (showTooltip: 1)
 - maxPoints: How many values are kept. New values are added to the right, the first value is removed when it is full.
 - minValue / maxValue: 0 or null means auto (the smallest / biggest visible value). minValue: 0 keeps the base line at zero.
 - curve: "smooth" or "linear".
@@ -26,9 +26,11 @@ graph.setValues([10, 20, 15]);
 SparkLineBox({ title: "CPU", maxValue: 100, minValue: 0, valueFormat: (value) => value + "%" });
 
 Started Date: September 2026
-Developer: Bugra Ozden
-Email: bugra.ozden@gmail.com
 Webpage: https://bug7a.github.io/js-components/
+
+Copyright 2020-2026 Bugra Ozden <bugra.ozden@gmail.com> (https://bug7a.github.io/)
+Licensed under the Apache License, Version 2.0
+SPDX-License-Identifier: Apache-2.0
 
 */
 
@@ -39,8 +41,9 @@ const SparkLineBoxDefaults = {
     key: "0",
     width: 200,
     height: 80,
-    title: "Sold Items",
+    titleText: "Sold Items",
     valueText: "1.3K",
+    allowHtml: 0, // 1: titleText, valueText, trendText and the text of valueFormat are HTML (only for your own texts)
     iconFile: "", // "": No icon
     lineColor: "tomato",
     values: [], // [10, 20, { value: 15, color: "orange" }]
@@ -53,7 +56,7 @@ const SparkLineBoxDefaults = {
     showMinMax: 0, // 1: Dots on the smallest and the biggest value
     showTrend: 1, // 1: Trend badge (last value compared with the first visible value)
     trendText: "", // Your own badge text. "": Calculated. (Ex: "▲ 12%")
-    hover: 1, // 1: Tooltip with the value on mouse over
+    showTooltip: 1, // 1: Tooltip with the value on mouse over
     animated: 1, // 1: The line moves with a short motion when a value is added.
     valueFormat: function (value) { return String(value); }, // Tooltip text
     onClick: function (self) { },
@@ -143,6 +146,12 @@ const SparkLineBox = function (params = {}) {
     box.values = [];
 
     // *** PRIVATE FUNCTIONS:
+
+    const setText = function (label, text) {
+        const value = (text === undefined || text === null) ? "" : String(text);
+        if (box.allowHtml == 1) label.text = value;
+        else label.plainText = value;
+    };
 
     const normalizeValue = function (item) {
         if (item !== null && typeof item == "object") {
@@ -379,7 +388,7 @@ const SparkLineBox = function (params = {}) {
     const updateTrend = function () {
 
         if (box.trendText) {
-            box.lblTrend.text = box.trendText;
+            setText(box.lblTrend, box.trendText);
             paintTrend(0);
             box.lblTrend.visible = 1;
             return;
@@ -403,7 +412,7 @@ const SparkLineBox = function (params = {}) {
             text = getTrendArrow(direction) + percent + "%";
         }
 
-        box.lblTrend.text = text;
+        setText(box.lblTrend, text);
         paintTrend(direction);
         box.lblTrend.visible = 1;
 
@@ -445,7 +454,7 @@ const SparkLineBox = function (params = {}) {
         hoverDot.setAttribute("fill", p.item.color || box.lineColor);
         setShown(hoverDot, 1);
 
-        box.lblTooltip.text = box.valueFormat(p.item.value, p.item);
+        setText(box.lblTooltip, box.valueFormat(p.item.value, p.item));
         box.lblTooltip.visible = 1;
         // Above the point, inside the box
         const tipWidth = box.lblTooltip.elem.offsetWidth;
@@ -466,7 +475,7 @@ const SparkLineBox = function (params = {}) {
     };
 
     const onMouseMove = function (self, event) {
-        if (box.hover != 1 || points.length == 0) return;
+        if (box.showTooltip != 1 || points.length == 0) return;
         const rect = box.elem.getBoundingClientRect();
         const x = withPageZoom(event.clientX - rect.left) - _s.graph.padding;
         const slots = getSlotCount();
@@ -518,14 +527,14 @@ const SparkLineBox = function (params = {}) {
         draw(0);
     };
 
-    box.setTitle = function (text) {
-        box.title = text;
-        box.lblTitle.text = text;
+    box.setTitleText = function (text) {
+        box.titleText = text;
+        setText(box.lblTitle, text);
     };
 
     box.setValueText = function (text) {
         box.valueText = text;
-        box.lblValueText.text = text;
+        setText(box.lblValueText, text);
     };
 
     box.setIcon = function (iconFile) {
@@ -624,10 +633,10 @@ const SparkLineBox = function (params = {}) {
     });
 
         box.lblTitle = Label({
-            text: box.title,
             fontSize: _s.title.fontSize,
             textColor: _s.title.textColor,
         });
+        setText(box.lblTitle, box.titleText);
         // WHY: marginBottom: Line heights of the two texts leave a big space between them.
         box.lblTitle.css = { whiteSpace: "nowrap", marginBottom: "-6px" };
 
@@ -635,10 +644,10 @@ const SparkLineBox = function (params = {}) {
         HGroup({ width: "auto", height: "auto", align: "left center", gap: 6 });
 
             box.lblValueText = Label({
-                text: box.valueText,
                 fontSize: _s.valueText.fontSize,
                 textColor: _s.valueText.textColor,
             });
+            setText(box.lblValueText, box.valueText);
             box.lblValueText.css.whiteSpace = "nowrap";
 
             box.lblTrend = Label({

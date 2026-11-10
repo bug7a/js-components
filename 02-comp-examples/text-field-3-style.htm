@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+
+        <title>TextField JS Component</title>
+
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"><!-- , user-scalable=no -->
+
+        <!-- LIBRARY FILES -->
+        <!-- <link rel="preload" href="image.png" as="image"> -->
+        <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+        <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
+        <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
+
+        <script src="../comp/tooltip.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/text-field.js" type="text/javascript" charset="utf-8"></script>
+
+        <script>
+
+        // TextField in colors of a page: an edge in place of the bottom line, a gray field, the line only while typing.
+
+        const start = function () {
+
+            page.color = "white";
+
+            // GROUP: The fields, one under the other, in the middle
+            VGroup({
+                gap: 20,
+            });
+
+                // INPUT: #1
+                const myInput1 = TextField({
+                    styleName: "modern",
+                    key: "1",
+                    required: 1,
+                    placeholder: "Jack",
+                    leftPadding: 20,
+                    backgroundColor: "transparent",
+                    focusBackgroundColor: "whitesmoke",
+                    lineColor: "transparent",
+                    focusLineColor: "transparent",
+                    backBorderColor: "lightgray", // WHY params: TextField paints its edge at every focus and blur
+                    focusBackBorderColor: "lightgray",
+                });
+                myInput1.setTitleText("FIRST NAME");
+
+                // INPUT: #2
+                const myInput2 = TextField({
+                    styleName: "modern",
+                    key: "2",
+                    titleText: "HEIGHT",
+                    placeholder: "175",
+                    descriptionText: "The vertical size...",
+                    unitText: "cm",
+                    required: 0,
+                    backgroundColor: "whitesmoke",
+                    focusBackgroundColor: "whitesmoke",
+                    lineColor: "transparent",
+                    focusLineColor: "lightgray",
+                });
+                myInput2.onChange = function () {
+                    console.log(myInput2.getValue());
+                };
+
+                // INPUT: #3
+                const myInput3 = TextField({
+                    styleName: "modern",
+                    key: "3",
+                    placeholder: "Sample",
+                    titleText: "INPUT TITLE",
+                    descriptionText: "Its a style example for input fields.",
+                    required: 0,
+                    maxLength: 20,
+                    leftPadding: 20,
+                    rightPadding: 20,
+                    unitText: "",
+                    backgroundColor: "transparent",
+                    focusBackgroundColor: "transparent",
+                    lineColor: "transparent",
+                    focusLineColor: "transparent",
+                });
+                myInput3.inputGroup.gap = 4;
+                myInput3.input.color = "whitesmoke";
+                myInput3.input.border = 1;
+                myInput3.input.borderColor = "lightgray";
+                myInput3.input.inputElement.style.padding = "0px 12px";
+                myInput3.onChange = function () {
+                    console.log(myInput3.getValue());
+                };
+
+            endGroup();
+
+        };
+
+        </script>
+
+    </head>
+    <body>
+
+        <!-- HTML content -->
+
+    </body>
+</html>

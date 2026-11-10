@@ -5,18 +5,21 @@
 Tooltip - v26.10
 
 - A hint over an object: it follows the mouse while the mouse is on its target (Tooltip({ target, hintText })).
-- THE BUBBLE (2026-10-30, the user): an optional arrow (lbl_arrow, px) that points at the mouse / the target; the
+- THEMES: styleName "minimal" / "minimalDark" (Tooltip.looks: on the ground of the window with a line, no shadow,
+  no arrow); Tooltip.show(target, text, Tooltip.looks.minimal) for a bubble at an object.
+- THE BUBBLE: an optional arrow (lbl_arrow, px) that points at the mouse / the target; the
   edge of the bubble (lbl_border) goes around the arrow too, as one line. The bubble never goes out of the screen:
   it slides inside, or goes to the other side when there is no room (top <-> bottom, left <-> right); the arrow
   still points at its place.
 - Tooltip.show(target, text, look, side, content): a bubble at an object, not under the mouse (Ex: the "Click
   again" of a SmartButton ask); it returns the bubble, bubble.remove() takes it away. look: Tooltip.BUBBLE_LOOK keys.
-- CONTENT (2026-10-30): content: function (bubble) { ... } builds its own objects in the bubble in place of the text
+  It stays at its target while a box under it scrolls, and hides while the target is out of sight. The popover does the same.
+- CONTENT: content: function (bubble) { ... } builds its own objects in the bubble in place of the text
   (a title and a text, a shortcut, a user card...); they are made one under the other (look.contentGap).
-- POPOVER (2026-10-30): trigger: "click" (or Tooltip.openPopover()): a click on the target opens the bubble and it
+- POPOVER: trigger: "click" (or Tooltip.openPopover()): a click on the target opens the bubble and it
   stays; its content can be clicked (buttons, fields). A click outside, Escape or a second click on the target closes
   it. One popover at a time (Tooltip.closePopover()).
-- SCALE (2026-11-01): scale (the param of Tooltip(), look.scale of Tooltip.show() / openPopover()) multiplies every
+- SCALE: scale (the param of Tooltip(), look.scale of Tooltip.show() / openPopover()) multiplies every
   size of the bubble: its text, padding, round corners, edge, shadow, arrow and its gaps. null (default):
   basic.uiScale when the bubble opens (1; a page fitted with page.fit() sets 1 / page.zoom: the bubble keeps its
   size on the screen). The objects of content(bubble) are made by the page: bubble.look.scale is their scale.
@@ -33,9 +36,11 @@ bubble.remove();
 Tooltip.show(button, "Saved", { arrow: 10, scale: 1.5 }); // every size x 1.5 (default: basic.uiScale)
 
 Started Date: June 2024
-Developer: Bugra Ozden
-Email: bugra.ozden@gmail.com
 Webpage: https://bug7a.github.io/js-components/
+
+Copyright 2020-2026 Bugra Ozden <bugra.ozden@gmail.com> (https://bug7a.github.io/)
+Licensed under the Apache License, Version 2.0
+SPDX-License-Identifier: Apache-2.0
 
 */
 
@@ -59,6 +64,7 @@ const Tooltip = function(params = {}) {
         content: null, // function (bubble): its own objects in the bubble, in place of hintText
         trigger: "hover", // "hover": it follows the mouse; "click": a popover (it stays, its content can be clicked)
         look: null, // Tooltip.BUBBLE_LOOK keys over the lbl_ ones (Ex: { shadow, padding: [16, 14], contentGap })
+        styleName: "", // a look of Tooltip.looks under look ("minimal", "minimalDark"). "": the lbl_ params
         scale: null, // every size of the bubble multiplied (Ex: 1.5); null: basic.uiScale when the bubble opens
         visible: 0,
     };
@@ -98,12 +104,12 @@ const Tooltip = function(params = {}) {
             arrow: box.lbl_arrow,
             gap: MOUSE_GAPS[box.hintPosition] || MOUSE_GAPS.top,
             scale: box.scale,
-        }, box.look || {});
+        }, Tooltip.looks[box.styleName] || {}, box.look || {});
     };
 
     // The color of the bubble: the one of look wins over lbl_color (getLook)
     const getColor = function() {
-        return (box.look && box.look.color) || box.lbl_color;
+        return getLook().color;
     };
 
     const refreshPosition = function(event) {
@@ -137,9 +143,18 @@ const Tooltip = function(params = {}) {
 
     box.setHintText = function(text) {
         box.hintText = text;
-        if (window.lblHint && window.lblHint.label) {
-            window.lblHint.label.text = text;
-        }
+        // WHY owner: one bubble is shared; a late call must not write on the bubble of another object.
+        if (!window.lblHint || !window.lblHint.label || window.lblHint.owner !== box) return;
+        window.lblHint.label.plainText = text;
+        if (box.mouseX === undefined) return; // The mouse did not move yet: the first mousemove places it
+        // WHY: A new text changes the width of the bubble: the bubble and its arrow must go to the mouse again.
+        Tooltip.place(window.lblHint, { left: box.mouseX, top: box.mouseY, width: 0, height: 0 }, box.hintPosition);
+    }
+
+    // The bubble goes away until the mouse comes on the target again.
+    box.hideHint = function() {
+        // WHY owner: one bubble is shared; a late call must not remove the bubble of another object.
+        if (window.lblHint && window.lblHint.owner === box) removeHintLabel();
     }
 
     box.setLbl_color = function(color) {
@@ -159,16 +174,20 @@ const Tooltip = function(params = {}) {
     removeMouseOver = box.target.on("mouseover", function() {
         if (isClick() || window.lblHint) return;
         window.lblHint = Tooltip.createBubble(box.hintText, getLook(), box.content);
+        window.lblHint.owner = box;
     });
 
     removeMouseMove = box.target.on("mousemove", function(self, event) {
         if (isClick() || !window.lblHint) return;
+        window.lblHint.owner = box;
 
-        // WHY: Eğer mouse tooltip tetikleyen bir object üzerinde bırakılırsa ve
-        // başka bir olay, tooltip in text ve rengini değiştirirse; objeye giriş yapmadan hareket ettirilen mouse,
-        // diğer olayın metnini gösterebilir. O yüzden, metin kontrol ediliyor.
-        if (window.lblHint.label && window.lblHint.label.text != box.hintText) {
-            window.lblHint.label.text = box.hintText;
+        // WHY: when the mouse stays on an object that shows a tooltip, and
+        // another event changes the text and the color of the tooltip, a mouse moved without entering the object
+        // could show the text of the other event. So the text is checked.
+        // WHY plainText: the bubble is made with it (Tooltip.createBubble); text read the escaped HTML, so a hint with
+        //     "&" or "<" was never the same and was written again as HTML
+        if (window.lblHint.label && window.lblHint.label.plainText != box.hintText) {
+            window.lblHint.label.plainText = box.hintText;
         }
         // WHY getColor(): a color of look must stay (lbl_color painted a dark bubble of a content white)
         if (window.lblHint.look.color != getColor()) {
@@ -403,7 +422,43 @@ Tooltip.show = function(target, text, look, side = "top", content = null) {
         });
     }
     if (bubble.look.grow) Tooltip.grow(bubble);
+    Tooltip.followScroll(bubble, target, side);
     return bubble;
+};
+
+// The bubble goes with its target when a box scrolls, once a frame (bubble.remove() cleans the event)
+Tooltip.followScroll = function(bubble, target, side) {
+    let isPlaceWaiting = false;
+    const placeAgain = function() {
+        isPlaceWaiting = false;
+        if (bubble._isRemoved || target._isRemoved) return;
+        bubble.visible = Tooltip.isInSight(target) ? 1 : 0;
+        Tooltip.place(bubble, Tooltip.toPageRect(target), side);
+    };
+    // WHY on window in the capture phase: a scroll event does not bubble up; so it comes from every box that scrolls
+    bubble.listenTo(window, "scroll", function() {
+        if (isPlaceWaiting) return;
+        isPlaceWaiting = true;
+        requestAnimationFrame(placeAgain);
+    }, true);
+};
+
+// Is a part of the object seen: inside the screen and inside every box around it that cuts its content
+Tooltip.isInSight = function(obj) {
+    const rect = obj.elem.getBoundingClientRect();
+    let left = Math.max(rect.left, 0);
+    let top = Math.max(rect.top, 0);
+    let right = Math.min(rect.right, window.innerWidth);
+    let bottom = Math.min(rect.bottom, window.innerHeight);
+    for (let elem = obj.elem.parentElement; elem && elem !== document.body; elem = elem.parentElement) {
+        if (getComputedStyle(elem).overflow == "visible") continue;
+        const box = elem.getBoundingClientRect();
+        left = Math.max(left, box.left);
+        top = Math.max(top, box.top);
+        right = Math.min(right, box.right);
+        bottom = Math.min(bottom, box.bottom);
+    }
+    return (right > left) && (bottom > top);
 };
 // USAGE: const bubble = Tooltip.show(button, "Click again to delete.", { color: "#E8796D", textColor: "white", arrow: 12, grow: 1 });
 // USAGE: Tooltip.show(avatar, "", look, "bottom", function (bubble) { Label({ text: "Ayşe Kaya", bold: 1 }); });
@@ -468,4 +523,12 @@ Tooltip.grow = function(bubble) {
     bubble.setMotionNow("transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.2s"); // a little spring at the end
     bubble.opacity = 1;
     bubble.css = { transform: "none" };
+};
+
+// THE LOOKS OF THE THEMES (Tooltip.BUBBLE_LOOK keys): Tooltip({ styleName: "minimal" }), or the look of
+// Tooltip.show(target, text, Tooltip.looks.minimal). minimal (_designs/minimal-theme.htm): on the ground of the window
+// with a line, no shadow, no arrow, a 12 px text. minimalDark: the same on a dark window.
+Tooltip.looks = {
+    minimal: { fontSize: 12, padding: [8, 4], color: "#FFFFFF", textColor: Black(0.85), round: 4, border: 1, borderColor: Black(0.2), shadow: "", arrow: 0 },
+    minimalDark: { fontSize: 12, padding: [8, 4], color: "#1A1A19", textColor: White(0.88), round: 4, border: 1, borderColor: White(0.18), shadow: "", arrow: 0 },
 };

@@ -4,15 +4,18 @@
 
 JS Components Website - Home View - v26.09
 
-- Ana sayfa: başlık, arama ve filtreler, kategori kategori bileşen kartları.
+- Ana sayfa: başlık, arama ve filtreler, öne çıkanlar (seçtiğimiz bileşenler), kategori kategori bileşen kartları.
 - Kartlardaki önizlemeler resim değildir: örnek sayfanın kendisi, küçültülmüş bir WebView (iframe) içinde çalışır.
   Sadece ekrana yaklaşan kartlar yüklenir (aynı anda CONFIG.previewConcurrency kadar), ekrandan çok
   uzaklaşanların sayfası kapatılır.
-- The home page: header, search and filters, component cards by category.
+- The home page: header, search and filters, the featured components (our picks), component cards by category.
   The previews are not images: the sample page itself runs in a scaled WebView (iframe).
 
-Developer: Bugra Ozden
-Email: bugra.ozden@gmail.com
+Webpage: https://bug7a.github.io/js-components/
+
+Copyright 2020-2026 Bugra Ozden <bugra.ozden@gmail.com> (https://bug7a.github.io/)
+Licensed under the Apache License, Version 2.0
+SPDX-License-Identifier: Apache-2.0
 
 */
 
@@ -23,6 +26,7 @@ const HomeView = {
     box: null,              // Kaydırılan tam ekran kutu
     items: [],              // { comp, card, view, searchText, state, visible, section }
     sections: [],           // { cat, box, items }
+    featured: null,         // { box, grid, items }: öne çıkanlar (listenin başında)
     contentBoxes: [],       // Genişliği L.content olan gruplar (yeniden boyutlamada güncellenir)
     heroTexts: [],          // Genişliği en fazla 760 olan yazılar
 
@@ -71,6 +75,8 @@ HomeView.build = function () {
             VGroup({ width: "100%", height: "auto", align: "center top", gap: 0, padding: [L.gutter, 8] });
             that.clipContent = 0;
 
+                HomeView.createFeatured();
+
                 CATALOG.CATEGORIES.forEach(function (cat) {
                     HomeView.createSection(cat);
                 });
@@ -117,10 +123,13 @@ HomeView.createHeader = function () {
 
     HomeView.startContent({ flow: "horizontal", height: 76, align: "left center", gap: 12 });
 
-        // ICON: Logo (341 x 81)
+        // ICON: Logo (360 x 130: the oregano, OzdenUI, COMPONENTS)
+        // WHY this high: the drawing is taller than the words, and the words keep the size they had (44 px of 83)
+        // WHY lower on a phone: a wider logo pushed the language button out of a 390 px screen
+        const logoHeight = L.mobile ? 60 : 68;
         Icon({
-            width: 185,
-            height: 44,
+            width: Math.round(logoHeight * 360 / 130),
+            height: logoHeight,
             color: "transparent",
         });
         that.load(CONFIG.logoFile);
@@ -436,6 +445,44 @@ HomeView.createSection = function (cat) {
 
 };
 
+// *** FEATURED: (Seçtiğimiz bileşenler, listenin en başında. Sadece "Tümü" sekmesinde ve arama yokken görünür.)
+// WHY: the components that show the kit best came late, in the order of the categories (the first screen showed
+//     small form fields)
+HomeView.createFeatured = function () {
+
+    const L = SITE.L;
+    const T = SITE.T;
+    const featured = { box: null, grid: null, items: [] };
+
+    featured.box = HomeView.startContent({ gap: 16, padding: [0, 20] });
+    that.clipContent = 0;
+
+        // GROUP: Başlık
+        HGroup({ width: "100%", height: "auto", align: "left center", gap: 10, wrap: 1 });
+
+            SITE.label(T.featuredTitle, { bold: 1, fontSize: L.h2, textColor: SITE.INK });
+            SITE.label(T.featuredNote, { fontSize: 14, textColor: SITE.TEXT_FAINT });
+
+        endGroup();
+
+        // GROUP: Kartlar (aynı satırdaki kartlar aynı boyda)
+        featured.grid = HGroup({ width: "100%", height: "auto", align: "left top", gap: L.gap, wrap: 1, stretch: 1 });
+        featured.grid.clipContent = 0;
+
+            CATALOG.getFeatured().forEach(function (comp) {
+                const item = HomeView.createCard(comp);
+                featured.items.push(item);
+                HomeView.items.push(item);
+            });
+
+        endGroup();
+
+    endGroup();
+
+    HomeView.featured = featured;
+
+};
+
 // *** CARD:
 HomeView.createCard = function (comp) {
 
@@ -473,8 +520,8 @@ HomeView.createCard = function (comp) {
             height: L.previewHeight,
             scale: L.previewScale,
             interactive: 0, // Tıklama karta gider, önizleme kaydırılmaz.
-            title: comp.name,
-            placeholderText: "",
+            ariaLabel: comp.name,
+            emptyText: "",
             loadTimeout: CONFIG.previewTimeout,
             style: {
                 box: { color: "#FFFFFF", border: 0, round: 0 },
@@ -602,7 +649,7 @@ HomeView.createFooter = function () {
 
                 SITE.label("© 2020–" + new Date().getFullYear(), { fontSize: 13, textColor: SITE.TEXT_SOFT });
 
-                const lblAuthor = SITE.label("Bugra Ozden", { fontSize: 13, textColor: SITE.TEXT_SOFT });
+                const lblAuthor = SITE.label("Buğra Özden", { fontSize: 13, textColor: SITE.TEXT_SOFT });
                 lblAuthor.elem.style.cursor = "pointer";
                 lblAuthor.elem.style.textDecoration = "underline";
                 lblAuthor.on("mouseenter", function () { lblAuthor.textColor = SITE.INK; });
@@ -610,7 +657,7 @@ HomeView.createFooter = function () {
                 lblAuthor.on("click", function () { window.open(CONFIG.authorURL, "_blank", "noopener"); });
 
             endGroup();
-            SITE.text(T.footerText + " " + T.footerMade, "auto", 13, SITE.TEXT_FAINT);
+            SITE.text(T.footerText + " " + T.footerMade + " " + T.footerHelp, "auto", 13, SITE.TEXT_FAINT);
             that.elem.style.flex = "1 1 300px";
 
         endGroup();
@@ -665,6 +712,10 @@ HomeView.applyFilter = function () {
     });
 
     HomeView.emptyBox.visible = (shownCount == 0) ? 1 : 0;
+
+    // Öne çıkanlar: sadece "Tümü" sekmesinde ve arama yokken.
+    // WHY: they are in their categories too; with a search or a category every component is shown once
+    HomeView.featured.box.visible = (!query && HomeView.category == "all") ? 1 : 0;
 
 };
 
@@ -796,6 +847,7 @@ HomeView.relayout = function () {
     HomeView.sections.forEach(function (section) {
         section.grid.gap = L.gap;
     });
+    HomeView.featured.grid.gap = L.gap;
 
     HomeView.items.forEach(function (item) {
         item.card.width = L.cardWidth;

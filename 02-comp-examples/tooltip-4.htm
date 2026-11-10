@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <title>Tooltip - pill bubbles</title>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Bold.ttf" as="font" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="../basic/basic.css">
+    <script src="../basic/basic.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../basic/scroll-bar.js" type="text/javascript" charset="utf-8"></script>
+
+    <script src="../comp/tooltip.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/scroll-area.js" type="text/javascript" charset="utf-8"></script>
+
+    <script>
+
+    /* Bismillah */
+
+    // Tooltip: pill bubbles with small tags in a row. content(bubble) builds the row, the look gives the pill.
+    // - Tooltip.show(target, "", look, "top", content): a bubble that stays at an object
+    // - Tooltip({ target, look, content }): the same bubble while the mouse is on its target
+    // TRY: move the mouse on the talks at the bottom, and make the window narrow.
+
+    // *** VARIABLES:
+
+    const INK = "#232323";
+    const PAGE_COLOR = "#F2F2F2";
+    const PAGE_MAX_WIDTH = 900;
+    const SLOT_HEIGHT = 74;
+    const DOT_SIZE = 8;
+    const HOVER_GAP = 8; // px: from a talk to the point of its bubble
+    const BUBBLE_HEIGHT = 44;
+    const SHADOW = "0 8px 24px rgba(0, 0, 0, 0.08)";
+
+    // The two looks: the bubble (Tooltip.BUBBLE_LOOK keys), and the colors of the tags in it
+    const LIGHT = {
+        bubble: { color: "white", textColor: INK },
+        text: INK,
+        placeTag: { color: "#EDEDED", textColor: INK },
+        timeTag: { color: INK, textColor: "white" },
+        sign: Black(0.55),
+    };
+    const DARK = {
+        bubble: { color: INK, textColor: "white" },
+        text: "white",
+        placeTag: { color: White(0.22), textColor: "white" },
+        timeTag: { color: "white", textColor: INK },
+        sign: White(0.8),
+    };
+
+    // The rows of the page. from, to: a change of room (optional). slot: the room of the bubble on the row (px)
+    const ROWS = [
+        [
+            { text: "Room change", from: "A3", to: "B7", time: "20 min", tone: LIGHT, slot: 400 },
+        ],
+        [
+            { text: "Coffee break", time: "45 min", tone: DARK, slot: 270 },
+            { text: "Design review", time: "1h 15m", tone: LIGHT, slot: 290 },
+            { text: "Design review", time: "1h 15m", tone: DARK, slot: 290 },
+        ],
+        [
+            { text: "Coffee break", time: "45 min", tone: LIGHT, slot: 270 },
+            { text: "Room change", from: "A3", to: "B7", time: "20 min", tone: DARK, slot: 400 },
+        ],
+    ];
+
+    // The talks at the bottom: their bubble opens with the mouse
+    const TALKS = [
+        { title: "Opening", text: "Main hall", time: "30 min", tone: DARK },
+        { title: "Keynote", text: "Keynote talk", time: "1h 10m", tone: LIGHT },
+        { title: "Workshop", text: "Workshop", from: "B7", to: "C2", time: "2h", tone: DARK },
+    ];
+
+    const stopList = []; // { dot, stop }: the bubbles that stay on the page; dot: the point they show
+    let bubbleList = [];
+
+    // *** START:
+
+    const start = function () {
+
+        page.color = PAGE_COLOR;
+
+        // SCROLL AREA: Scrolling page
+        // WHY onScroll: the bubbles are on page, over the area: they go to their dots again when the dots move.
+        const pageArea = ScrollArea({ align: "center top", gap: 8, padding: [16, 40], onScroll: showBubbles });
+
+            Label({ text: "Conference day", fontSize: 26, fontFamily: "opensans-bold", textColor: INK });
+            Label({ text: "Pill bubbles with tags in them", fontSize: 15, textColor: Black(0.5) });
+
+            ROWS.forEach(createRow);
+            createTalkRow();
+
+        endGroup();
+
+        pageArea.onPageResize(showBubbles); // WHY: the dots move with the size of the page too.
+        document.fonts.ready.then(showBubbles); // WHY: The width of a bubble depends on its font.
+
+    };
+
+    // *** FUNCTIONS:
+
+    // GROUP: A row of places for bubbles, each with a dot under the arrow (they wrap on a narrow screen)
+    const createRow = function (row) {
+        HGroup({
+            width: "100%",
+            height: "auto",
+            align: "center center",
+            wrap: 1,
+            clipContent: 0,
+            css: { maxWidth: PAGE_MAX_WIDTH + "px" },
+        });
+            row.forEach(createSlot);
+        endGroup();
+    };
+
+    const createSlot = function (stop) {
+        VGroup({ width: stop.slot, height: SLOT_HEIGHT, align: "center bottom", css: { maxWidth: "100%" } });
+            const dot = Box({ width: DOT_SIZE, height: DOT_SIZE, color: "transparent" }); // Only the place of the arrow
+        endGroup();
+        stopList.push({ dot: dot, stop: stop });
+    };
+
+    // The bubbles again, at the places of their dots
+    const showBubbles = function () {
+        bubbleList.forEach((bubble) => bubble.remove());
+        bubbleList = stopList.map(function (item) {
+            return Tooltip.show(item.dot, "", getBubbleLook(item.stop.tone), "top", (bubble) => createBubbleRow(item.stop));
+        });
+    };
+
+    const getBubbleLook = function (tone) {
+        return Object.assign({}, tone.bubble, {
+            round: BUBBLE_HEIGHT / 2,
+            padding: [16, 8],
+            border: 0,
+            arrow: 12,
+            shadow: SHADOW,
+            gap: 2,
+            contentGap: 0,
+        });
+    };
+
+    // GROUP: The content of a bubble: a text, the rooms when there is a change, the time
+    const createBubbleRow = function (stop) {
+        const tone = stop.tone;
+        HGroup({ hug: 1, align: "left center", gap: 8 });
+
+            Label({ plainText: stop.text, fontSize: 15, textColor: tone.text });
+
+            if (stop.from) {
+                createTag(stop.from, tone.placeTag);
+                Label({ text: "›", fontSize: 18, textColor: tone.sign });
+                createTag(stop.to, tone.placeTag);
+            }
+
+            createTag(stop.time, tone.timeTag);
+
+        endGroup();
+    };
+
+    const createTag = function (text, colors) {
+        return Label({
+            plainText: text,
+            fontSize: 14,
+            round: 8,
+            padding: [9, 3],
+            color: colors.color,
+            textColor: colors.textColor,
+        });
+    };
+
+    // GROUP: The talks: the same bubble, while the mouse is on them
+    const createTalkRow = function () {
+        Label({ text: "Move the mouse on a talk", fontSize: 13, textColor: Black(0.45), css: { marginTop: "32px" } });
+
+        HGroup({
+            width: "100%",
+            height: "auto",
+            align: "center center",
+            gap: 10,
+            wrap: 1,
+            clipContent: 0,
+            css: { maxWidth: PAGE_MAX_WIDTH + "px" },
+        });
+
+            TALKS.forEach(function (talk) {
+                const lblTalk = Label({
+                    plainText: talk.title,
+                    fontSize: 15,
+                    round: 8,
+                    padding: [14, 8],
+                    color: "white",
+                    textColor: INK,
+                    clickable: 1,
+                });
+                lblTalk.tooltip = Tooltip({
+                    target: lblTalk,
+                    lbl_border: 0,
+                    look: Object.assign(getBubbleLook(talk.tone), { gap: HOVER_GAP }),
+                    content: () => createBubbleRow(talk),
+                });
+            });
+
+        endGroup();
+    };
+
+    </script>
+
+</head>
+
+<body></body>
+
+</html>

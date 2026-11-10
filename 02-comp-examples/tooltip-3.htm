@@ -14,13 +14,14 @@
 
     <script src="../comp/tooltip.js" type="text/javascript" charset="utf-8"></script>
     <script src="../comp/smart-button.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/scroll-area.js" type="text/javascript" charset="utf-8"></script>
 
     <script>
 
     /* Bismillah */
 
-    // Tooltip (comp-m2), 2026-10-30: content(bubble) puts your own objects in the bubble; trigger: "click" (or
-    // Tooltip.openPopover()) makes a popover: it stays, its buttons can be clicked, a click outside or Escape closes it.
+    // Tooltip: content(bubble) puts your own objects in the bubble; trigger: "click" (or Tooltip.openPopover()) makes
+    // a popover: it stays, its buttons can be clicked, a click outside or Escape closes it.
 
     const INK = "#232323";
     const SOFT_INK = "rgba(35, 35, 35, 0.6)";
@@ -30,10 +31,21 @@
 
     // The bubbles (Tooltip.BUBBLE_LOOK keys)
     const HINT_LOOK = { color: INK, textColor: "white", border: 0, round: 8, padding: [12, 10], arrow: 10, contentGap: 6 };
-    const POPOVER_LOOK = { color: "white", textColor: INK, border: 1, borderColor: Black(0.2), round: 10, padding: [16, 14], arrow: 12, contentGap: 12, shadow: "0 10px 30px rgba(0, 0, 0, 0.12)", grow: 1 };
+    const POPOVER_LOOK = {
+        color: "white",
+        textColor: INK,
+        border: 1,
+        borderColor: Black(0.2),
+        round: 10,
+        padding: [16, 14],
+        arrow: 12,
+        contentGap: 12,
+        shadow: "0 10px 30px rgba(0, 0, 0, 0.12)",
+        grow: 1,
+    };
 
-    // The white plain button of the page (the hover of ozdenType2 stays gray)
-    const PLAIN = { styleName: "ozdenType2", style: { box: { color: "white" } } };
+    // The white plain button of the page (the hover of ozden2 stays gray)
+    const PLAIN = { styleName: "ozden2", style: { box: { color: "white" } } };
 
     let lblResult;
 
@@ -43,10 +55,27 @@
 
     // GROUP: A card with a title and a short description
     const startCard = function (title, description) {
-        VGroup({ width: 640, height: "auto", align: "left top", gap: 14, padding: 20, color: "white", round: 12, border: 1, borderColor: Black(0.08), clipContent: 0 });
-        that.css = { maxWidth: "100%" };
+        VGroup({
+            width: 640,
+            height: "auto",
+            align: "left top",
+            gap: 14,
+            padding: 20,
+            color: "white",
+            round: 12,
+            border: 1,
+            borderColor: Black(0.08),
+            clipContent: 0,
+            css: { maxWidth: "100%" },
+        });
         Label({ plainText: title, fontSize: 15, bold: 1, textColor: Black(0.8) });
-        Label({ plainText: description, width: "100%", fontSize: 13, textColor: Black(0.5), css: { lineHeight: "1.4", whiteSpace: "normal" } });
+        Label({
+            plainText: description,
+            width: "100%",
+            fontSize: 13,
+            textColor: Black(0.5),
+            css: { lineHeight: "1.4", whiteSpace: "normal" },
+        });
         HGroup({ width: "100%", height: "auto", align: "left center", gap: 12, wrap: 1, clipContent: 0 });
     };
 
@@ -71,7 +100,18 @@
     // A user card: the first letters in a circle, the name and the role
     const userCard = function () {
         HGroup({ hug: 1, align: "left center", gap: 10 });
-            Label({ width: 40, height: 40, text: "AK", fontSize: 15, bold: 1, textColor: "white", color: "#5BBAC1", round: 20, textAlign: "center", css: { lineHeight: "40px" } });
+            Label({
+                width: 40,
+                height: 40,
+                text: "AK",
+                fontSize: 15,
+                bold: 1,
+                textColor: "white",
+                color: "#5BBAC1",
+                round: 20,
+                textAlign: "center",
+                css: { lineHeight: "40px" },
+            });
             VGroup({ hug: 1, align: "left top", gap: 0 });
                 Label({ text: "Ayşe Kaya", fontSize: 14, bold: 1, textColor: "white" });
                 Label({ text: "Designer · online", fontSize: 12, textColor: White(0.7) });
@@ -87,7 +127,9 @@
             { text: "a number", isOk: 1 },
             { text: "a capital letter", isOk: 0 },
         ].forEach(function (rule) {
-            Label({ text: (rule.isOk ? "✓ " : "✗ ") + rule.text, fontSize: 13, textColor: rule.isOk ? "#7FD6A3" : "#FF9A8F" });
+            const mark = rule.isOk ? "✓ " : "✗ ";
+            const markColor = rule.isOk ? "#7FD6A3" : "#FF9A8F";
+            Label({ text: mark + rule.text, fontSize: 13, textColor: markColor });
         });
     };
 
@@ -95,13 +137,22 @@
     const sharePopover = function () {
         Label({ text: "Share the link", fontSize: 14, bold: 1, textColor: INK });
         HGroup({ hug: 1, align: "left center", gap: 8 });
-            Label({ width: 230, text: SHARE_LINK, fontSize: 13, textColor: SOFT_INK, color: "#F4F4F4", round: 6, padding: [10, 8], ellipsis: 1 });
+            Label({
+                width: 230,
+                text: SHARE_LINK,
+                fontSize: 13,
+                textColor: SOFT_INK,
+                color: "#F4F4F4",
+                round: 6,
+                padding: [10, 8],
+                ellipsis: 1,
+            });
             SmartButton({
                 labelText: "Copy",
                 height: 36,
                 onClick: function (self) {
                     if (navigator.clipboard) navigator.clipboard.writeText(SHARE_LINK).catch(function () { });
-                    self.setText("Copied");
+                    self.setLabelText("Copied");
                     showResult("The link is copied.");
                 },
             });
@@ -116,7 +167,7 @@
                 labelText: choice,
                 width: 200,
                 height: 36,
-                styleName: "ozdenType4",
+                styleName: "ozden4",
                 style: { layout: { align: "left center", padding: [10, 0] }, label: { fontSize: 15 } },
                 onClick: function () {
                     showResult("Sorted: " + choice);
@@ -135,7 +186,12 @@
             SmartButton({
                 labelText: "Delete",
                 height: 36,
-                style: { box: { color: RED, borderColor: RED }, hover: { color: "#E0695C" }, active: { color: "#E0695C" }, label: { textColor: "white" } },
+                style: {
+                    box: { color: RED, borderColor: RED },
+                    hover: { color: "#E0695C" },
+                    active: { color: "#E0695C" },
+                    label: { textColor: "white" },
+                },
                 onClick: function () {
                     showResult("report.pdf is deleted.");
                     Tooltip.closePopover();
@@ -148,58 +204,61 @@
 
         page.color = "#F0F2F5";
 
-        const pageBox = startBox(0, 0, "100%", "100%", { color: "transparent", scrollY: 1 });
+        // WHY onScroll: the bubbles are on the page; the content under them moves when the page scrolls
+        ScrollArea({ align: "center top", gap: 24, padding: [50, 40], onScroll: Tooltip.closePopover });
 
-            VGroup({ width: "100%", height: "auto", align: "center top", gap: 24, padding: [50, 40], clipContent: 0 });
+            Label({ text: "Tooltip: content and popover", fontSize: 26, bold: 1, textColor: Black(0.8) });
 
-                Label({ text: "Tooltip: content and popover", fontSize: 26, bold: 1, textColor: Black(0.8) });
+            startCard(
+                "1. Your own content (under the mouse)",
+                "content: function (bubble) { ... } builds its objects in the bubble, one under the other (look.contentGap), in place of hintText. It follows the mouse like a hint."
+            );
+                const btnSave = SmartButton({ labelText: "Save", ...PLAIN });
+                btnSave.tooltip = Tooltip({ target: btnSave, content: saveHint, lbl_arrow: 10, look: HINT_LOOK });
 
-                startCard("1. Your own content (under the mouse)", "content: function (bubble) { ... } builds its objects in the bubble, one under the other (look.contentGap), in place of hintText. It follows the mouse like a hint.");
-                    const btnSave = SmartButton({ labelText: "Save", ...PLAIN });
-                    btnSave.tooltip = Tooltip({ target: btnSave, content: saveHint, lbl_arrow: 10, look: HINT_LOOK });
+                const btnUser = SmartButton({ labelText: "Ayşe K.", ...PLAIN });
+                btnUser.tooltip = Tooltip({ target: btnUser, content: userCard, hintPosition: "bottom", lbl_arrow: 10, look: HINT_LOOK });
 
-                    const btnUser = SmartButton({ labelText: "Ayşe K.", ...PLAIN });
-                    btnUser.tooltip = Tooltip({ target: btnUser, content: userCard, hintPosition: "bottom", lbl_arrow: 10, look: HINT_LOOK });
+                const btnPassword = SmartButton({ labelText: "Password rules", ...PLAIN });
+                btnPassword.tooltip = Tooltip({ target: btnPassword, content: passwordRules, hintPosition: "right", lbl_arrow: 10, look: HINT_LOOK });
+            endCard();
 
-                    const btnPassword = SmartButton({ labelText: "Password rules", ...PLAIN });
-                    btnPassword.tooltip = Tooltip({ target: btnPassword, content: passwordRules, hintPosition: "right", lbl_arrow: 10, look: HINT_LOOK });
-                endCard();
+            startCard(
+                "2. A popover (a click)",
+                "trigger: \"click\": a click opens the bubble and it stays; its buttons can be clicked. A click outside, Escape or a second click on the button closes it; one popover at a time."
+            );
+                const btnShare = SmartButton({ labelText: "Share", ...PLAIN });
+                btnShare.tooltip = Tooltip({ target: btnShare, trigger: "click", content: sharePopover, hintPosition: "bottom", look: POPOVER_LOOK });
 
-                startCard("2. A popover (a click)", "trigger: \"click\": a click opens the bubble and it stays; its buttons can be clicked. A click outside, Escape or a second click on the button closes it; one popover at a time.");
-                    const btnShare = SmartButton({ labelText: "Share", ...PLAIN });
-                    btnShare.tooltip = Tooltip({ target: btnShare, trigger: "click", content: sharePopover, hintPosition: "bottom", look: POPOVER_LOOK });
+                const btnSort = SmartButton({ labelText: "Sort", ...PLAIN });
+                btnSort.tooltip = Tooltip({ target: btnSort, trigger: "click", content: sortPopover, hintPosition: "bottom", look: POPOVER_LOOK });
 
-                    const btnSort = SmartButton({ labelText: "Sort", ...PLAIN });
-                    btnSort.tooltip = Tooltip({ target: btnSort, trigger: "click", content: sortPopover, hintPosition: "bottom", look: POPOVER_LOOK });
+                const btnDelete = SmartButton({ labelText: "Delete", ...PLAIN });
+                btnDelete.tooltip = Tooltip({ target: btnDelete, trigger: "click", content: deletePopover, hintPosition: "top", look: POPOVER_LOOK });
+            endCard();
 
-                    const btnDelete = SmartButton({ labelText: "Delete", ...PLAIN });
-                    btnDelete.tooltip = Tooltip({ target: btnDelete, trigger: "click", content: deletePopover, hintPosition: "top", look: POPOVER_LOOK });
-                endCard();
+            startCard(
+                "3. A popover from the code",
+                "Tooltip.openPopover(target, content, look, side, text, { onClose }) opens one at any object (here at the text under the button); Tooltip.closePopover() closes it."
+            );
+                VGroup({ hug: 1, align: "left top", gap: 12, clipContent: 0 });
+                    const lblTarget = Label({ text: "The popover opens here", fontSize: 14, textColor: SOFT_INK });
+                    SmartButton({
+                        labelText: "Open from the code",
+                        onClick: function () {
+                            Tooltip.openPopover(lblTarget, deletePopover, POPOVER_LOOK, "right", "", {
+                                onClose: function () { lblTarget.text = "It closed (onClose)"; },
+                            });
+                            lblTarget.text = "The popover opens here";
+                        },
+                    });
+                endGroup();
+            endCard();
 
-                startCard("3. A popover from the code", "Tooltip.openPopover(target, content, look, side, text, { onClose }) opens one at any object (here at the text under the button); Tooltip.closePopover() closes it.");
-                    VGroup({ hug: 1, align: "left top", gap: 12, clipContent: 0 });
-                        const lblTarget = Label({ text: "The popover opens here", fontSize: 14, textColor: SOFT_INK });
-                        SmartButton({
-                            labelText: "Open from the code",
-                            onClick: function () {
-                                Tooltip.openPopover(lblTarget, deletePopover, POPOVER_LOOK, "right", "", {
-                                    onClose: function () { lblTarget.text = "It closed (onClose)"; },
-                                });
-                                lblTarget.text = "The popover opens here";
-                            },
-                        });
-                    endGroup();
-                endCard();
+            // LABEL: What the buttons of the popovers did
+            lblResult = Label({ text: "-", fontSize: 14, textColor: GREEN });
 
-                // LABEL: What the buttons of the popovers did
-                lblResult = Label({ text: "-", fontSize: 14, textColor: GREEN });
-
-            endGroup();
-
-        endBox();
-
-        // WHY: the bubbles are on the page; the content under them moves when the page box scrolls
-        pageBox.on("scroll", Tooltip.closePopover);
+        endGroup();
 
     };
 

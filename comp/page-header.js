@@ -4,8 +4,7 @@
 
 PageHeader - v26.11
 
-THE HEADER OF A PAGE THAT SLIDES IN OVER THE TABS of a mobile app, with the look of the old
-javascript-mobile-app-template (components/ui-title.js, UITitle: the header of its "second view" pages).
+THE HEADER OF A PAGE THAT SLIDES IN OVER THE TABS of a mobile app.
 - The sizes are px of a 600 px design: the page is fitted with page.fit(600, 800), like the mobile template
   (04-templates/mobile-app-template/classic).
 - A white header, 105 px high, a thin soft line at the bottom.
@@ -22,10 +21,12 @@ header.setBackText("Back");
 header.setBackVisible(0);
 PageHeader({ titleText: "Details", backColor: "indianred", color: "whitesmoke" });
 
-Started Date: November 2026 (the look of bug7a/javascript-mobile-app-template)
-Developer: Bugra Ozden
-Email: bugra.ozden@gmail.com
+Started Date: November 2026
 Webpage: https://bug7a.github.io/js-components/
+
+Copyright 2020-2026 Bugra Ozden <bugra.ozden@gmail.com> (https://bug7a.github.io/)
+Licensed under the Apache License, Version 2.0
+SPDX-License-Identifier: Apache-2.0
 
 */
 
@@ -183,7 +184,7 @@ PageHeader.toSvgFile = function (svg) {
     return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
 };
 
-// A chevron to the left (24 x 24; the shape of the back link of the old template)
+// A chevron to the left (24 x 24)
 PageHeader.drawChevron = function (color) {
     return '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="' + color +
         '" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.6 6L8.9 12l5.7 6"/></svg>';

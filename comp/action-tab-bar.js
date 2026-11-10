@@ -6,16 +6,14 @@ ActionTabBar - v26.11
 
 UI COMPONENT
 - A tab bar for the bottom of a mobile app, with a big round "+" button at its right end: the tabs (an icon over a
-  text) change the page, the "+" runs the main action of the app (Ex: add a spending). The new version of the bottom
-  tab bar of javascript-mobile-app-template (custom-tab-bar.htm, js/custom/custom-tab-bar/ui-bottom-tab-bar.js), with
-  the same look and the same motion.
+  text) change the page, the "+" runs the main action of the app (Ex: add a spending).
 - The selected tab is clear (opacity 1), the others are faded. A short line under the selected tab slides to it
   (0.2 s). Only transform moves; no motion at the first view; none when the system asks for reduced motion.
 - The "+" is drawn in SVG (no image file) and calls onAction. A tap on a tab selects it and calls onChange.
 - KEYBOARD AND ACCESSIBILITY: the tabs are a tablist (role "tab", aria-selected) with one Tab stop (roving tabindex):
   Left / Right arrows, Home, End move between them, Enter / Space select. The "+" is a button (Tab reaches it,
   Enter / Space; its name: actionAriaLabel). A focus ring only for the keyboard.
-- THE SIZES are px of a 600 px design (the page is fitted with page.fit(600, 800)), like the old template: the tabs
+- THE SIZES are px of a 600 px design (the page is fitted with page.fit(600, 800)): the tabs
   are 130 px wide from x 30, so three tabs fit next to the "+".
 - onChange is NOT called when the component is created or when the value is set with silent: 1.
 - NEEDS basic.js v26.10.23 (role, aria, tabIndex, setFocusRing).
@@ -36,10 +34,12 @@ tabBar.setValue("tools");        // onChange is called
 tabBar.setValue("status", 1);    // silent: onChange is not called
 tabBar.getIndex();               // 0: the index of the selected tab
 
-Started Date: November 2026 (the old bottomTabBar: 2022)
-Developer: Bugra Ozden
-Email: bugra.ozden@gmail.com
+Started Date: November 2026
 Webpage: https://bug7a.github.io/js-components/
+
+Copyright 2020-2026 Bugra Ozden <bugra.ozden@gmail.com> (https://bug7a.github.io/)
+Licensed under the Apache License, Version 2.0
+SPDX-License-Identifier: Apache-2.0
 
 */
 
@@ -374,7 +374,7 @@ ActionTabBar.normalizeItems = function (items) {
 ActionTabBar.getPlusSvg = function (color, size, line, opacity) {
     const GRID_SIZE = 24;
     const middle = GRID_SIZE / 2;
-    const start = line / 2; // WHY: The round ends touch the edges of the grid, like the icon of the old template.
+    const start = line / 2; // WHY: The round ends touch the edges of the grid.
     const end = GRID_SIZE - line / 2;
     const path = "M" + middle + " " + start + "V" + end + "M" + start + " " + middle + "H" + end;
     return '<svg xmlns="http://www.w3.org/2000/svg" width="' + size + '" height="' + size + '" viewBox="0 0 24 24"' +

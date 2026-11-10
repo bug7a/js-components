@@ -12,8 +12,11 @@
         <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
         <script src="../basic/scroll-bar.min.js" type="text/javascript" charset="utf-8"></script>
 
-        <!-- COMPONENT FILES -->
+        <!-- COMPONENT FILES (Filters takes its search field and its check boxes from SearchInput and CheckBox) -->
+        <script src="../comp/search-input.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/check-box.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/filters.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/scroll-area.js" type="text/javascript" charset="utf-8"></script>
 
         <script>
 
@@ -22,44 +25,52 @@
         // Filters (comp/filters.js):
         // 1. The panel is open, in the layout of the page.
         // 2. A popup (panelMode: "popup"): only the button; the panel opens over the page. Another accent color and other data.
+        // Both are animated (animated: 1): the panel and an opened section come with a fade and a short slide, the arrows turn.
 
         const PAGE_COLOR = "#ECEBE8";
         const SOFT_TEXT = "#8C8B88";
 
         const VEHICLE_SECTIONS = [
-            { key: "type", titleText: "Type", opened: 1, options: [
-                { key: "car", labelText: "Car" },
-                { key: "truck", labelText: "Truck", checked: 1 },
-                { key: "construction", labelText: "Construction Equipment" },
-                { key: "bus", labelText: "Bus" },
+            { key: "type", text: "Type", opened: 1, options: [
+                { key: "car", text: "Car" },
+                { key: "truck", text: "Truck", checked: 1 },
+                { key: "construction", text: "Construction Equipment" },
+                { key: "bus", text: "Bus" },
             ] },
-            { key: "fleet", titleText: "Fleet", opened: 0, options: ["North", "South", "East", "West"] },
-            { key: "status", titleText: "Status", opened: 1, options: [
-                { key: "online", labelText: "Online" },
-                { key: "transit", labelText: "In transit", checked: 1 },
-                { key: "repair", labelText: "Under repair", checked: 1 },
-                { key: "offline", labelText: "Offline" },
+            { key: "fleet", text: "Fleet", opened: 0, options: ["North", "South", "East", "West"] },
+            { key: "status", text: "Status", opened: 1, options: [
+                { key: "online", text: "Online" },
+                { key: "transit", text: "In transit", checked: 1 },
+                { key: "repair", text: "Under repair", checked: 1 },
+                { key: "offline", text: "Offline" },
             ] },
         ];
 
         const PRODUCT_SECTIONS = [
-            { key: "color", titleText: "Color", opened: 1, options: ["Red", "Green", "Blue", "Black"] },
-            { key: "size", titleText: "Size", opened: 0, options: ["S", "M", "L", "XL"] },
+            { key: "color", text: "Color", opened: 1, options: ["Red", "Green", "Blue", "Black"] },
+            { key: "size", text: "Size", opened: 0, options: ["S", "M", "L", "XL"] },
         ];
 
         // *** VARIABLES:
-        let pageBox, vehicleFilters, productFilters, lblResult;
+        let vehicleFilters, lblResult;
 
         // First running function. (basic.js calls it when the page is ready)
         const start = function () {
 
             page.color = PAGE_COLOR;
 
-            // BOX: Page (it scrolls when the window is lower than the samples)
-            pageBox = startBox(0, 0, "100%", "100%", { color: "transparent", scrollY: 1 });
+            // SCROLL AREA: Page (it scrolls when the window is lower than the samples)
+            ScrollArea({ align: "center top", gap: 20, padding: [16, 40] });
+
+            Label({ text: "Filters", fontSize: 24, bold: 1, textColor: Black(0.8) });
+            Label({
+                text: "Check an option: the count of its section and the list of the chosen ones change (onChange).",
+                fontSize: 13,
+                textColor: SOFT_TEXT,
+            });
 
             // GROUP: The samples side by side (one under the other on a narrow screen)
-            HGroup({ width: "100%", height: "auto", align: "center top", gap: 40, padding: 40, wrap: 1 });
+            HGroup({ width: "100%", height: "auto", align: "center top", gap: 40, wrap: 1 });
             that.clipContent = 0; // WHY: The shadow of the panel stands out of the group.
 
                 // GROUP: 1. The panel in the page
@@ -67,6 +78,7 @@
                 that.clipContent = 0;
                     Label({ text: "1. The panel in the page", fontSize: 14, textColor: SOFT_TEXT });
                     vehicleFilters = Filters({
+                        animated: 1,
                         sections: VEHICLE_SECTIONS,
                         onChange: showSelected,
                     });
@@ -77,7 +89,8 @@
                 VGroup({ hug: 1, align: "left top", gap: 10 });
                 that.clipContent = 0;
                     Label({ text: "2. panelMode: popup, accentColor, panelHeight", fontSize: 14, textColor: SOFT_TEXT });
-                    productFilters = Filters({
+                    Filters({
+                        animated: 1,
                         width: 320,
                         panelHeight: 360,
                         panelMode: "popup",
@@ -91,9 +104,7 @@
 
             endGroup();
 
-            endBox();
-
-            if (typeof ScrollBar !== "undefined") ScrollBar({ scrollableBox: pageBox });
+            endGroup();
 
             showSelected(vehicleFilters);
 

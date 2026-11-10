@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+
+        <title>RangeSlider</title>
+
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <!-- LIBRARY FILES -->
+        <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
+        <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../basic/scroll-bar.min.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- COMPONENT FILES -->
+        <script src="../comp/tooltip.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/smart-button.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/range-slider.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/scroll-area.js" type="text/javascript" charset="utf-8"></script>
+
+        <script>
+
+        /* Bismillah */
+
+        // RangeSlider (comp/range-slider.js): a range of values on a thin bar, with two knobs.
+        // 1. A price: its text in the bubble (formatValue), a step, the smallest distance between the knobs (minGap).
+        // 2. The hours of a day: a step of half an hour; two buttons give new values (setValues).
+        // 3. On a dark page; two knobs at one place: the direction of the first move chooses one of them.
+        // 4. Not enabled.
+
+        // *** VARIABLES:
+        const PAGE_COLOR = "#ECEBE8";
+        const CARD_COLOR = "#FFFFFF";
+        const DARK_CARD_COLOR = "#1A1A19";
+        const SOFT_TEXT = "#6F6E6B";
+        const DARK_SOFT_TEXT = White(0.55);
+        const CARD_MIN_WIDTH = 440;
+        const CARD_MAX_WIDTH = 480;
+        const CARD_ROUND = 12;
+
+        // First running function. (basic.js calls it when the page is ready)
+        const start = function () {
+
+            page.color = PAGE_COLOR;
+
+            // SCROLL AREA: Page (it scrolls when the window is lower than the samples)
+            ScrollArea({ align: "center top", gap: 16, padding: [16, 28] });
+
+                Label({ text: "RangeSlider", fontSize: 24, bold: 1, textColor: Black(0.8) });
+
+                // GROUP: The samples side by side (one under the other on a narrow screen)
+                HGroup({ width: "100%", height: "auto", align: "center top", gap: 20, wrap: 1, clipContent: 0 });
+                    createPrice();
+                    createHours();
+                    createDark();
+                    createDisabled();
+                endGroup();
+
+            endGroup();
+
+        };
+
+        // *** OTHER FUNCTIONS:
+
+        // GROUP: A card with a title and a note. endGroup() closes it.
+        const startCard = function (titleText, noteText, color, textColor, softColor) {
+            VGroup({
+                width: "auto",
+                height: "auto",
+                align: "left top",
+                gap: 12,
+                padding: 20,
+                color: color,
+                round: CARD_ROUND,
+                clipContent: 0,
+                css: { flex: "1 1 " + CARD_MIN_WIDTH + "px", maxWidth: CARD_MAX_WIDTH + "px", minWidth: "0" },
+            });
+            Label({ text: titleText, fontSize: 15, bold: 1, textColor: textColor });
+            Label({ width: "100%", text: noteText, fontSize: 13, textColor: softColor });
+        };
+
+        const moneyText = function (value) {
+            return value.toLocaleString("en-US") + " TL";
+        };
+
+        const createPrice = function () {
+
+            startCard("A price", "step: 50, minGap: 100, formatValue", CARD_COLOR, Black(0.75), SOFT_TEXT);
+
+                const lblPrice = Label({ text: "", fontSize: 20, bold: 1, textColor: Black(0.8) });
+                const showPrice = function (self) {
+                    lblPrice.plainText = moneyText(self.lowValue) + " - " + moneyText(self.highValue);
+                };
+                const price = RangeSlider({
+                    width: "100%",
+                    maxValue: 1000,
+                    step: 50,
+                    lowValue: 200,
+                    highValue: 800,
+                    minGap: 100,
+                    formatValue: moneyText,
+                    onChange: showPrice,
+                });
+                showPrice(price);
+
+            endGroup();
+
+        };
+
+        const createHours = function () {
+
+            startCard("The hours of a day", "minValue: 8, maxValue: 20, step: 0.5, setValues()", CARD_COLOR, Black(0.75), SOFT_TEXT);
+
+                const lblHours = Label({ text: "", fontSize: 20, bold: 1, textColor: Black(0.8) });
+                const showHours = function (self) {
+                    lblHours.plainText = self.lowValue + " - " + self.highValue;
+                };
+                const hours = RangeSlider({ width: "100%", minValue: 8, maxValue: 20, step: 0.5, lowValue: 9, highValue: 17.5, onChange: showHours });
+                showHours(hours);
+
+                // GROUP: The buttons
+                HGroup({ width: "100%", height: "auto", align: "left center", gap: 8, wrap: 1, clipContent: 0 });
+                    SmartButton({ labelText: "Morning", onClick: function () {
+                        hours.setValues(8, 12);
+                        showHours(hours);
+                    } });
+                    SmartButton({ labelText: "All day", onClick: function () {
+                        hours.setValues(8, 20);
+                        showHours(hours);
+                    } });
+                endGroup();
+
+            endGroup();
+
+        };
+
+        const createDark = function () {
+
+            startCard("On a dark page", "styleName: \"roundDark\"; the two knobs are at one place", DARK_CARD_COLOR, White(0.85), DARK_SOFT_TEXT);
+
+                const lblDark = Label({ text: "50 - 50", fontSize: 20, bold: 1, textColor: White(0.85) });
+                RangeSlider({
+                    width: "100%",
+                    styleName: "roundDark",
+                    lowValue: 50,
+                    highValue: 50,
+                    onChange: function (self) { lblDark.plainText = self.lowValue + " - " + self.highValue; },
+                });
+
+            endGroup();
+
+        };
+
+        const createDisabled = function () {
+
+            startCard("Not enabled", "enabled: 0, setEnabled()", CARD_COLOR, Black(0.75), SOFT_TEXT);
+
+                const off = RangeSlider({ width: "100%", lowValue: 30, highValue: 60, enabled: 0 });
+                SmartButton({ labelText: "On or off", onClick: function () { off.setEnabled(off.enabled != 1); } });
+
+            endGroup();
+
+        };
+
+        </script>
+    </head>
+
+    <body></body>
+
+</html>

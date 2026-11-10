@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <title>LeftMenu: light</title>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Bold.ttf" as="font" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="../basic/basic.css">
+    <script src="../basic/basic.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../basic/scroll-bar.js" type="text/javascript" charset="utf-8"></script>
+
+    <script src="../comp/left-menu.js" type="text/javascript" charset="utf-8"></script>
+
+    <script>
+
+    /* Bismillah */
+
+    // LeftMenu: the "light" package for a light page. The dark one: left-menu.htm.
+    // Rest the mouse on the menu (a tap on a touch screen): it opens over the page.
+
+    const TOP_BAR_HEIGHT = 40;
+    const MENU_WIDTH = 40; // the closed menu: only its icons
+    const PAGE_COLOR = "white"; // (the menu is a little gray: a side panel)
+
+    const MENU_ITEMS = [
+        { key: "home", type: "button", text: "Home", iconFile: "../comp/left-menu/home.png" },
+        { key: "report", type: "button", text: "Reports", iconFile: "../comp/left-menu/reports.png" },
+        { key: "contents", type: "header", text: "CONTENTS" },
+        { key: "user", type: "button", text: "Users", iconFile: "../comp/left-menu/data-table.png" },
+        { key: "content", type: "button", text: "Contents", iconFile: "../comp/left-menu/data-table.png" },
+    ];
+
+    let menu, lblPageTitle;
+
+    const start = function () {
+
+        page.color = PAGE_COLOR;
+
+        // BOX: Top bar
+        startBox(0, 0, "100%", TOP_BAR_HEIGHT, { color: "white", css: { borderBottom: "1px solid " + Black(0.08) } });
+            Label({ left: 16, text: "Workspace", fontSize: 15, bold: 1, textColor: Black(0.75) });
+            that.center("top");
+        endBox();
+
+        // GROUP: The page, on the right of the closed menu
+        VGroup({
+            left: MENU_WIDTH,
+            top: TOP_BAR_HEIGHT,
+            width: "calc(100% - " + MENU_WIDTH + "px)",
+            height: "calc(100% - " + TOP_BAR_HEIGHT + "px)",
+            align: "left top",
+            gap: 8,
+            padding: 32,
+        });
+            lblPageTitle = Label({ text: "Home", fontSize: 26, bold: 1, textColor: Black(0.8) });
+            Label({
+                text: "Rest the mouse on the menu: it opens over the page.",
+                width: "100%",
+                fontSize: 15,
+                textColor: Black(0.5),
+            });
+        endGroup();
+
+        // MENU: Left menu (made last: it opens over the page)
+        menu = LeftMenu({
+            styleName: "light",
+            topBarHeight: TOP_BAR_HEIGHT,
+            items: MENU_ITEMS,
+            onItemClick: function (self, item) {
+                lblPageTitle.text = item.text;
+            },
+        });
+        menu.addItemToBottom({
+            key: "settings",
+            type: "button",
+            text: "Settings",
+            iconFile: "../comp/left-menu/setting.png",
+        });
+        menu.setSelectedItem("home");
+
+    };
+
+    </script>
+
+</head>
+<body>
+</body>
+</html>

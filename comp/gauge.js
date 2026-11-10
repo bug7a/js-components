@@ -30,9 +30,11 @@ const nozzle = Gauge({
 nozzle.setMarkerValue(240);
 
 Started Date: September 2026
-Developer: Bugra Ozden
-Email: bugra.ozden@gmail.com
 Webpage: https://bug7a.github.io/js-components/
+
+Copyright 2020-2026 Bugra Ozden <bugra.ozden@gmail.com> (https://bug7a.github.io/)
+Licensed under the Apache License, Version 2.0
+SPDX-License-Identifier: Apache-2.0
 
 */
 
@@ -57,9 +59,9 @@ const GaugeDefaults = {
     titleText: "", // Under the whole gauge.
     duration: 600, // Length of the animation, in milliseconds.
     ariaLabel: "Gauge",
-    onValueChange: function (self) { },
-    styleName: "classic", // "classic", "dark", "modern" or a name added to Gauge.styles
-    style: { // Classic style package (default)
+    onChange: function (self) { },
+    styleName: "light", // "light" ("classic": its old name), "dark", "modern" or a name added to Gauge.styles
+    style: { // Light style package (default)
         track: {
             color: Black(0.08),
             width: 12,
@@ -95,7 +97,7 @@ const GaugeDefaults = {
 
 const Gauge = function (params = {}) {
 
-    // Merge style package: params.style > Gauge.styles[styleName] > GaugeDefaults.style (classic)
+    // Merge style package: params.style > Gauge.styles[styleName] > GaugeDefaults.style (light)
     basic.applyStylePackage(params, Gauge.styles, GaugeDefaults);
 
     // Merge params:
@@ -323,9 +325,10 @@ const Gauge = function (params = {}) {
     // *** PUBLIC FUNCTIONS:
 
     box.setValue = function (value, silent = 0) {
+        if (value === box.value) return; // the same value: nothing to draw, no onChange
         box.value = value;
         paint();
-        if (!silent) box.onValueChange(box);
+        if (!silent) box.onChange(box);
     };
     // USAGE: get: gauge.value, set: gauge.setValue(72)
 
@@ -410,7 +413,7 @@ const Gauge = function (params = {}) {
 Gauge.styles = {
 
     // On a light card.
-    classic: GaugeDefaults.style,
+    light: GaugeDefaults.style,
 
     // On a dark card. The same colors as the "dark" Tabs, Stepper and SidePanel.
     dark: {
@@ -433,3 +436,4 @@ Gauge.styles = {
     },
 
 };
+Gauge.styles.classic = Gauge.styles.light; // the old name of light: the pages made with it keep their look

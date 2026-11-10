@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Search Input: light</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- LIBRARY FILES -->
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="../basic/basic.css">
+    <script src="../basic/basic.js" type="text/javascript" charset="utf-8"></script>
+
+    <!-- COMPONENT FILES -->
+    <script src="../comp/search-input.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/scroll-area.js" type="text/javascript" charset="utf-8"></script>
+
+    <script>
+
+        /* Bismillah */
+
+        // DESIGN PAGE: SearchInput with styleName "light", the light look of the kit (_designs/search-input.htm): a
+        // white field with one thin line and round 10 corners, a line search icon on the left, a soft round clear button;
+        // while typing the edge is in the accent of the kit and 2 px (focusBorderColor). The look comes only from the
+        // package (SearchInput.styles.light): the samples give no look params. Without a styleName a SearchInput has
+        // the "ozden" look (the default). On a dark page: search-input-3-dark.htm.
+
+        // *** THE COLORS AND SIZES OF THE PAGE
+        const PAGE_COLOR = "#F4F5F2";
+        const CARD_WIDTH = 520;
+
+        // *** VARIABLES:
+        let lblSearched;
+
+        const start = function () {
+
+            page.color = PAGE_COLOR;
+
+            // SCROLL AREA: The page (comp/scroll-area.js)
+            // WHY: page does not scroll. A ScrollArea fills the window; its content scrolls when it is taller.
+            // WHY 16 at the sides: the white card fills a phone (390 px)
+            ScrollArea({ align: "left top", gap: 24, padding: [16, 40] });
+
+                Label({ text: "SearchInput: light", fontSize: 24, bold: 1, textColor: Black(0.8) });
+
+                caption("light · empty (click it: the edge while typing)");
+                SearchInput({
+                    styleName: "light",
+                    onChange: showSearched,
+                });
+
+                caption("light · with text (value shows the clear icon)");
+                SearchInput({
+                    styleName: "light",
+                    placeholder: "Search products",
+                    value: "running shoes",
+                    onChange: showSearched,
+                });
+
+                // GROUP: A white card with a search box as wide as the card
+                VGroup({
+                    width: "100%",
+                    height: "auto",
+                    align: "left top",
+                    gap: 12,
+                    padding: 20,
+                    color: "white",
+                    round: 10,
+                    border: 1,
+                    borderColor: Black(0.1),
+                    css: { maxWidth: CARD_WIDTH + "px" },
+                });
+                    caption("light · on a white card, as wide as the card (width: \"100%\")");
+                    SearchInput({
+                        styleName: "light",
+                        width: "100%",
+                        placeholder: "Search in all pages",
+                        onChange: showSearched,
+                    });
+                endGroup();
+
+                lblSearched = Label({ text: "Searched: -", fontSize: 13, textColor: Black(0.5) });
+
+                caption("original · the first look, to compare");
+                SearchInput({
+                    styleName: "original",
+                    onChange: showSearched,
+                });
+
+            endGroup();
+
+        };
+
+        // *** OTHER FUNCTIONS:
+
+        const showSearched = function (self) {
+            lblSearched.plainText = "Searched: " + (self.getSearchText() || "-");
+        };
+
+        const caption = function (text) {
+            return Label({ text: text, fontSize: 12, textColor: Black(0.4) });
+        };
+
+    </script>
+
+</head>
+
+<body>
+</body>
+
+</html>

@@ -5,9 +5,9 @@
 Numeric Keyboard - v26.10
 
 Number keys on the screen (a PIN, an amount, a kiosk, a touch screen): a title, the typed value, the keys.
-The new version of comp-m1/ui-numeric-keyboard.js (UINumericKeyboard) with the same look: white keys with a thin
+The look: white keys with a thin
 dark line and round corners, a big bold value, a small gray title.
-- keyLayout "wide": two rows (1 2 3 4 5 ⌫ / 6 7 8 9 0), the old one. "phone": 1-9 in three rows, then ⌫ 0 ✓ (onEnter).
+- keyLayout "wide": two rows (1 2 3 4 5 ⌫ / 6 7 8 9 0). "phone": 1-9 in three rows, then ⌫ 0 ✓ (onEnter).
 - maxLength: the most digits; mask: 1 shows • for each digit (a PIN).
 - The keyboard of the computer works too while the component has the focus: the digits, Backspace, Enter.
 - The backspace key is drawn with SVG (no image file).
@@ -19,10 +19,12 @@ NumericKeyboard({ keyLayout: "phone", titleText: "AMOUNT", maxLength: 8, onEnter
 pin.setValue("12");
 pin.clear();
 
-Started Date: 1 September 2022 (UINumericKeyboard), October 2026 (NumericKeyboard)
-Developer: Bugra Ozden
-Email: bugra.ozden@gmail.com
+Started Date: October 2026
 Webpage: https://bug7a.github.io/js-components/
+
+Copyright 2020-2026 Bugra Ozden <bugra.ozden@gmail.com> (https://bug7a.github.io/)
+Licensed under the Apache License, Version 2.0
+SPDX-License-Identifier: Apache-2.0
 
 */
 
@@ -32,7 +34,7 @@ Webpage: https://bug7a.github.io/js-components/
 const NumericKeyboardDefaults = {
     width: "auto", // As wide as the keys
     height: "auto",
-    keyLayout: "wide", // "wide": two rows (the old one); "phone": a 3 x 4 grid with an enter key
+    keyLayout: "wide", // "wide": two rows; "phone": a 3 x 4 grid with an enter key
     titleText: "PIN", // "": no title
     value: "",
     maxLength: 4,
@@ -40,8 +42,8 @@ const NumericKeyboardDefaults = {
     showValue: 1, // 0: only the keys (the value is shown somewhere else)
     onChange: function (self) {},
     onEnter: function (self) {},
-    styleName: "classic", // "classic", "dark" or a name added to NumericKeyboard.styles
-    style: { // Classic style package: the look of UINumericKeyboard
+    styleName: "light", // "light" ("classic": its old name), "dark" or a name added to NumericKeyboard.styles
+    style: { // Classic style package
         box: { color: "transparent" },
         layout: { gap: 10, padding: [35, 20] },
         title: { fontSize: 18, textColor: "rgba(20, 20, 20, 0.5)" },
@@ -206,7 +208,7 @@ const NumericKeyboard = function (params = {}) {
         changeValue("", silent);
     };
 
-    box.setTitle = function (text) {
+    box.setTitleText = function (text) {
         box.titleText = text;
         box.aria = { label: text || "Numeric keyboard" };
         if (!box.lblTitle) return;
@@ -232,7 +234,7 @@ const NumericKeyboard = function (params = {}) {
 
             // LABEL: Title
             box.lblTitle = Label({ ..._s.title, textAlign: "center" });
-            box.setTitle(box.titleText);
+            box.setTitleText(box.titleText);
 
             // LABEL: Value
             // WHY a fixed height: the keys must not move when the first digit comes (an empty label is lower)
@@ -276,11 +278,10 @@ const NumericKeyboard = function (params = {}) {
 
 // *** STYLE PACKAGES:
 // USAGE: NumericKeyboard({ styleName: "dark" })
-// NOTE: A new package needs only the keys that differ from the classic style.
+// NOTE: A new package needs only the keys that differ from the light style.
 NumericKeyboard.styles = {
 
-    // The look of UINumericKeyboard.
-    classic: NumericKeyboardDefaults.style,
+    light: NumericKeyboardDefaults.style,
 
     // For a dark page.
     dark: {
@@ -294,3 +295,4 @@ NumericKeyboard.styles = {
     },
 
 };
+NumericKeyboard.styles.classic = NumericKeyboard.styles.light; // the old name of light: the pages made with it keep their look

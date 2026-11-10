@@ -13,14 +13,18 @@
     <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
 
     <!-- COMPONENT FILES -->
+    <script src="../comp/smart-button.js" type="text/javascript" charset="utf-8"></script>
     <script src="../comp/time-line.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/scroll-area.js" type="text/javascript" charset="utf-8"></script>
 
     <script>
 
         /* Bismillah */
 
         // *** VARIABLES:
-        let lineDefault, lineOrder, lineStyle, lineLive;
+        const DARK_CARD_COLOR = "#1A1A19";
+        const CARD_MAX_WIDTH = 460;
+        let lineLive;
         let lblDefault, lblLive;
         let liveCount = 0;
 
@@ -28,141 +32,183 @@
 
             page.color = "whitesmoke";
 
-            // BOX: Full screen scrollable container
-            // WHY: page does not scroll. Scrollable content must be inside a Box with scrollY: 1.
-            startBox(0, 0, "100%", "100%", {
-                color: "transparent",
-                scrollY: 1,
+            // SCROLL AREA: The page
+            // WHY: page does not scroll. A ScrollArea fills the window; its content scrolls when it is taller.
+            ScrollArea({
+                align: "center top",
+                gap: 30,
+                padding: [16, 50], // WHY 16 at the sides: the cards fill a phone.
             });
 
-                // GROUP: Page layout
-                VGroup({
-                    width: "100%",
-                    height: "auto", // Grows with content, so the Box can scroll.
-                    align: "center top",
-                    gap: 30,
-                    padding: 50,
+                // LABEL: Title
+                Label({
+                    text: "Time Line",
+                    fontSize: 26,
+                    bold: 1,
                 });
 
-                    // LABEL: Title
-                    Label({
-                        text: "Time Line",
-                        fontSize: 26,
-                        bold: 1,
+                // SAMPLE 1: Default
+                startCard("1. Default");
+
+                    TimeLine({
+                        width: "100%",
+                        items: [
+                            { time: "09:30", text: "Order created", description: "Order #1024 was created by Ayşe Yılmaz." },
+                            { time: "10:05", text: "Payment received", description: "1.240,00 TL, credit card." },
+                            { time: "13:40", text: "Packed" },
+                            { time: "17:15", text: "Sent", description: "Cargo no: 7712 4455 90" },
+                        ],
                     });
 
-                    // SAMPLE 1: Default
-                    startCard("1. Default");
+                    lblDefault = infoLabel("4 items. The line grows with the texts.");
 
-                        lineDefault = TimeLine({
-                            width: "100%",
-                            items: [
-                                { time: "09:30", title: "Order created", text: "Order #1024 was created by Ayşe Yılmaz." },
-                                { time: "10:05", title: "Payment received", text: "1.240,00 TL, credit card." },
-                                { time: "13:40", title: "Packed" },
-                                { time: "17:15", title: "Sent", text: "Cargo no: 7712 4455 90" },
-                            ],
+                endCard();
+
+                // SAMPLE 2: Item colors, no time
+                startCard("2. Item colors (color), without time");
+
+                    TimeLine({
+                        width: "100%",
+                        items: [
+                            { text: "Opened", description: "The ticket is waiting for an answer.", color: "#5DB182" },
+                            { text: "Answered", description: "Support wrote an answer.", color: "#3871E0" },
+                            { text: "Waiting", description: "The customer was asked for the invoice.", color: "#E0A038" },
+                            { text: "Closed", color: Black(0.3) },
+                        ],
+                    });
+
+                endCard();
+
+                // SAMPLE 3: Style and clickable items
+                startCard("3. Your own style and clickableItems");
+
+                    TimeLine({
+                        width: "100%",
+                        itemGap: 26,
+                        dotSize: 16,
+                        lineWidth: 3,
+                        clickableItems: 1,
+                        items: [
+                            { time: "Mon", text: "Design", description: "Screens of the new panel.", key: "design" },
+                            { time: "Tue", text: "Coding", description: "Components and the pages.", key: "code" },
+                            { time: "Wed", text: "Test", description: "Click an item.", key: "test" },
+                        ],
+                        onClick: function (self, item, index) {
+                            lblDefault.text = "Clicked: <b>" + item.text + "</b> (index: " + index + ", key: \"" + item.key + "\")";
+                        },
+                        style: {
+                            row: { gap: 16 },
+                            dot: { color: "#5DB182", border: 3, borderColor: White(1), topSpace: 2 },
+                            line: { color: "#CFE2D8" },
+                            time: { fontSize: 13, textColor: "#3E8E62" },
+                            title: { fontSize: 17 },
+                        },
+                    });
+
+                endCard();
+
+                // SAMPLE 4: Functions
+                startCard("4. Functions");
+
+                    lineLive = TimeLine({
+                        width: "100%",
+                        items: [
+                            { time: nowText(), text: "Page opened" },
+                        ],
+                    });
+
+                    // GROUP: Buttons
+                    HGroup({ width: "100%", height: "auto", align: "left center", gap: 8, wrap: 1 });
+
+                        smallButton("addItem()", function () {
+                            liveCount++;
+                            lineLive.addItem({
+                                time: nowText(),
+                                text: "Event " + liveCount,
+                                description: "This item was added with addItem().",
+                            });
+                            refreshLive();
                         });
 
-                        lblDefault = infoLabel("4 items. The line grows with the texts.");
-
-                    endCard();
-
-                    // SAMPLE 2: Item colors, no time
-                    startCard("2. Item colors (color), without time");
-
-                        lineOrder = TimeLine({
-                            width: "100%",
-                            items: [
-                                { title: "Opened", text: "The ticket is waiting for an answer.", color: "#5DB182" },
-                                { title: "Answered", text: "Support wrote an answer.", color: "#3871E0" },
-                                { title: "Waiting", text: "The customer was asked for the invoice.", color: "#E0A038" },
-                                { title: "Closed", color: Black(0.3) },
-                            ],
+                        smallButton("setItems([...])", function () {
+                            liveCount = 0;
+                            lineLive.setItems([
+                                { time: nowText(), text: "New list", description: "setItems() writes the items again." },
+                                "A text is also an item.",
+                            ]);
+                            refreshLive();
                         });
 
-                    endCard();
-
-                    // SAMPLE 3: Style and clickable items
-                    startCard("3. Style package and clickableItems");
-
-                        lineStyle = TimeLine({
-                            width: "100%",
-                            itemGap: 26,
-                            dotSize: 16,
-                            lineWidth: 3,
-                            clickableItems: 1,
-                            items: [
-                                { time: "Mon", title: "Design", text: "Screens of the new panel.", key: "design" },
-                                { time: "Tue", title: "Coding", text: "Components and the pages.", key: "code" },
-                                { time: "Wed", title: "Test", text: "Click an item.", key: "test" },
-                            ],
-                            onClick: function (self, item, index) {
-                                lblDefault.text = "Clicked: <b>" + item.title + "</b> (index: " + index + ", key: \"" + item.key + "\")";
-                            },
-                            style: {
-                                row: { gap: 16 },
-                                dot: { color: "#5DB182", border: 3, borderColor: White(1), topSpace: 2 },
-                                line: { color: "#CFE2D8" },
-                                time: { fontSize: 13, textColor: "#3E8E62" },
-                                title: { fontSize: 17 },
-                            },
+                        smallButton("clear()", function () {
+                            liveCount = 0;
+                            lineLive.clear();
+                            refreshLive();
                         });
 
-                    endCard();
-
-                    // SAMPLE 4: Functions
-                    startCard("4. Functions");
-
-                        lineLive = TimeLine({
-                            width: "100%",
-                            items: [
-                                { time: nowText(), title: "Page opened" },
-                            ],
+                        smallButton("Disable", function (self) {
+                            lineLive.setEnabled(lineLive.enabled ? 0 : 1);
+                            self.setLabelText((lineLive.enabled) ? "Disable" : "Enable");
                         });
 
-                        // GROUP: Buttons
-                        HGroup({ width: "100%", height: "auto", align: "left center", gap: 8, wrap: 1 });
+                        smallButton("setTheme(\"minimal\")", function (self) {
+                            const isMinimal = (lineLive.styleName === "minimal");
+                            lineLive.setTheme(isMinimal ? "light" : "minimal");
+                            self.setLabelText((isMinimal) ? "setTheme(\"minimal\")" : "setTheme(\"light\")");
+                        });
 
-                            smallButton("addItem()", function () {
-                                liveCount++;
-                                lineLive.addItem({
-                                    time: nowText(),
-                                    title: "Event " + liveCount,
-                                    text: "This item was added with addItem().",
-                                });
-                                refreshLive();
-                            });
+                    endGroup();
 
-                            smallButton("setItems([...])", function () {
-                                liveCount = 0;
-                                lineLive.setItems([
-                                    { time: nowText(), title: "New list", text: "setItems() writes the items again." },
-                                    "A text is also an item.",
-                                ]);
-                                refreshLive();
-                            });
+                    lblLive = infoLabel("Items: 1");
 
-                            smallButton("clear()", function () {
-                                liveCount = 0;
-                                lineLive.clear();
-                                refreshLive();
-                            });
+                endCard();
 
-                            smallButton("Disable", function (self) {
-                                lineLive.setEnabled(lineLive.enabled ? 0 : 1);
-                                self.text = (lineLive.enabled) ? "Disable" : "Enable";
-                            });
+                // SAMPLE 5: A dark page
+                startDarkCard("5. On a dark page: styleName \"dark\"");
 
-                        endGroup();
+                    TimeLine({
+                        styleName: "dark",
+                        width: "100%",
+                        items: [
+                            { time: "09:30", text: "Order created", description: "Order #1024 was created by Ayşe Yılmaz." },
+                            { time: "10:05", text: "Payment received", description: "1.240,00 TL, credit card." },
+                            { time: "13:40", text: "Packed" },
+                            { time: "17:15", text: "Sent", description: "Cargo no: 7712 4455 90" },
+                        ],
+                    });
 
-                        lblLive = infoLabel("Items: 1");
+                endCard();
 
-                    endCard();
+                // SAMPLE 6: The minimal theme
+                startCard("6. The minimal theme: styleName \"minimal\"");
 
-                endGroup();
+                    TimeLine({
+                        styleName: "minimal",
+                        width: "100%",
+                        items: [
+                            { time: "Today, 14:02", text: "Saved", description: "report.md, 2.4 KB" },
+                            { time: "Today, 11:30", text: "Renamed", description: "notes.md is report.md now." },
+                            { time: "Yesterday", text: "Created" },
+                        ],
+                    });
 
-            endBox();
+                endCard();
+
+                // SAMPLE 7: The minimal theme on a dark window
+                startDarkCard("7. On a dark window: styleName \"minimalDark\"");
+
+                    TimeLine({
+                        styleName: "minimalDark",
+                        width: "100%",
+                        items: [
+                            { time: "Today, 14:02", text: "Saved", description: "report.md, 2.4 KB" },
+                            { time: "Today, 11:30", text: "Renamed", description: "notes.md is report.md now." },
+                            { time: "Yesterday", text: "Created" },
+                        ],
+                    });
+
+                endCard();
+
+            endGroup();
 
         };
 
@@ -180,7 +226,7 @@
         // GROUP: A white card with a title.
         const startCard = function (title) {
             VGroup({
-                width: 460,
+                width: "100%",
                 height: "auto",
                 align: "left top",
                 gap: 16,
@@ -189,11 +235,31 @@
                 round: 10,
                 border: 1,
                 borderColor: Black(0.1),
+                css: { maxWidth: CARD_MAX_WIDTH + "px" },
             });
             Label({
                 text: title,
                 fontSize: 14,
                 textColor: Black(0.45),
+            });
+        };
+
+        // GROUP: A dark card with a title, for the dark packages.
+        const startDarkCard = function (title) {
+            VGroup({
+                width: "100%",
+                height: "auto",
+                align: "left top",
+                gap: 16,
+                padding: 20,
+                color: DARK_CARD_COLOR,
+                round: 10,
+                css: { maxWidth: CARD_MAX_WIDTH + "px" },
+            });
+            Label({
+                text: title,
+                fontSize: 14,
+                textColor: White(0.5),
             });
         };
 
@@ -210,11 +276,9 @@
             });
         };
 
-        const smallButton = function (text, func) {
-            const btn = Button({ text: text, width: "auto", height: 34, fontSize: 13, color: "#E8E8E8", textColor: Black(0.75), round: 6 });
-            btn.elem.style.padding = "0 14px";
-            btn.on("click", function (self) { func(self); });
-            return btn;
+        // A button of the sample (SmartButton, its gray)
+        const smallButton = function (text, onClick) {
+            return SmartButton({ labelText: text, onClick: onClick });
         };
 
     </script>

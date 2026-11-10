@@ -6,7 +6,7 @@ TreeView - v26.10
 
 UI COMPONENT TEMPLATE
 - A tree of nested items: a file explorer, a category tree, the menu of an admin panel, the layers of a design tool.
-- One row is one Label (an arrow, an optional icon, the text, a tag and a soft note in it), so a tree of
+- One row is one Label (an arrow, an optional icon, the text, a tag and a soft description in it), so a tree of
   thousands of rows stays light.
 - Only the changed branch is drawn again: the children of a closed item are created the first time it opens,
   closing only hides them. updateNode() paints one row, setChildren() draws one branch.
@@ -15,16 +15,19 @@ UI COMPONENT TEMPLATE
 - Keyboard (the tree takes the focus): ArrowUp / ArrowDown move the selection, ArrowRight opens (or goes to the
   first child), ArrowLeft closes (or goes to the parent), Home, End, PageUp, PageDown, Enter -> onActivate,
   Space opens / closes, typing a letter jumps to the next row that starts with it (typeAhead).
-- Mouse: click selects, a click on the arrow opens / closes, a double click -> onActivate (and opens / closes).
+- Mouse: click selects, a click on the arrow opens / closes, a double click -> onActivate (and opens / closes;
+  toggleOnDoubleClick: 0 -> it only activates). onActivate(self, node, event): event.type "dblclick" or "keydown".
+- getRowElem(key): the element of a row (its text: [data-part=text]), Ex: to put a field over it.
 - Accessibility: tree / treeitem / group roles, aria-level, aria-expanded, aria-selected, aria-activedescendant.
 - onSelect is NOT called when the component is created or when the value is set with silent: 1.
-- Style packages: "classic" (default), "modern", "dark". Select with styleName. (TreeView.styles)
+- Style packages: "light" (default; the old name "classic" works too), "modern", "dark", "minimal", "minimalDark". Select with styleName. (TreeView.styles)
 - Everything is drawn with code (no image files needed).
 
-NODE: { key, text, iconFile, tag, tagColor, note, textColor, children, expanded, hasChildren, disabled, data }
+NODE: { key, text, iconFile, tag, tagColor, description, descriptionColor, textColor, children, expanded, hasChildren, enabled, data }
 - text: Plain text (never read as HTML).
 - tag: A short second text after the text, in the accent color (Ex: the type of a layer). tagColor: its own color.
-- note: A soft text at the end (Ex: a size, a count, a preview).
+- description: A soft text at the end (Ex: a size, a count, a preview). descriptionColor: its own color. style.note is
+  its look. enabled: 0 -> it can not be selected or opened.
 - iconFile: An image (a file or a data:image/svg+xml URI).
 - children: [NODE]. expanded: 1 -> open. hasChildren: 1 -> an arrow without children (lazy, see onLoadChildren).
 - data: Anything of yours. It is kept by reference.
@@ -36,7 +39,7 @@ const tree = TreeView({
     height: 400,
     items: [
         { key: "src", text: "src", expanded: 1, children: [
-            { key: "src/app.js", text: "app.js", note: "4 KB" },
+            { key: "src/app.js", text: "app.js", description: "4 KB" },
             { key: "src/lib", text: "lib", children: ["a.js", "b.js"] },
         ] },
         { key: "readme", text: "readme.md" },
@@ -46,16 +49,18 @@ const tree = TreeView({
     onActivate: function (self, node) { println("open " + node.key); },
 });
 tree.setValue("readme");                         // onSelect is called
-tree.updateNode("readme", { note: "changed" });  // paints one row
+tree.updateNode("readme", { description: "changed" });  // paints one row
 tree.setChildren("src/lib", ["c.js"]);           // draws one branch
 tree.addNode("src", { key: "src/new.js", text: "new.js" });
 tree.removeNode("readme");
 tree.reveal("src/lib");                          // opens the parents and scrolls to it
 
 Started Date: October 2026
-Developer: Bugra Ozden
-Email: bugra.ozden@gmail.com
 Webpage: https://bug7a.github.io/js-components/
+
+Copyright 2020-2026 Bugra Ozden <bugra.ozden@gmail.com> (https://bug7a.github.io/)
+Licensed under the Apache License, Version 2.0
+SPDX-License-Identifier: Apache-2.0
 
 */
 
@@ -74,12 +79,13 @@ const TreeViewDefaults = {
     enabled: 1,
     ariaLabel: "Tree",
     onSelect: function (self, node) { }, // self.value, self.previousValue
-    onActivate: function (self, node) { }, // Double click or Enter
+    onActivate: function (self, node, event) { }, // Double click or Enter (event.type: "dblclick" or "keydown")
+    toggleOnDoubleClick: 1, // 0: a double click does not open / close the row (Ex: it renames it)
     onToggle: function (self, node) { }, // node.expanded: 1 or 0
     onHover: function (self, node) { }, // node: null when the mouse leaves the rows
     onLoadChildren: function (self, node) { }, // hasChildren: 1 and no children. Call self.setChildren(node.key, [...]).
-    styleName: "classic", // "classic", "modern", "dark" or a name added to TreeView.styles
-    style: { // Classic style package (default)
+    styleName: "light", // "light" ("classic": its old name), "modern", "dark", "minimal", "minimalDark" or a name added to TreeView.styles
+    style: { // Light style package (default)
         box: {
             color: "transparent",
             border: 0,
@@ -94,17 +100,22 @@ const TreeViewDefaults = {
             indent: 16, // Per level
             paddingLeft: 4,
             paddingRight: 8,
-            gap: 6, // Between the arrow, the icon, the text, the tag and the note
+            gap: 6, // Between the arrow, the icon, the text, the tag and the description
             round: 5,
+            border: 0, // px: an edge around every row (its color: borderColor, rowHover / rowSelected.borderColor). 0: none
+            borderColor: "transparent",
+            space: 0, // px between two rows (Ex: 2: the edges of two rows do not meet)
         },
         rowHover: {
             color: Black(0.05),
+            borderColor: "", // the edge of the row under the mouse (row.border). "": its own
         },
         rowSelected: {
             color: Black(0.09),
             textColor: "#141414",
+            borderColor: "", // the edge of the selected row (row.border). "": its own
         },
-        rowFocus: { // Ring of the selected row while the tree has the focus (keyboard)
+        rowFocus: { // Ring of the selected row while the tree has the focus of the keyboard (not after a click)
             outlineColor: Black(0.25),
         },
         arrow: {
@@ -136,7 +147,7 @@ const TreeViewDefaults = {
 
 const TreeView = function (params = {}) {
 
-    // Merge style package: params.style > TreeView.styles[styleName] > TreeViewDefaults.style (classic)
+    // Merge style package: params.style > TreeView.styles[styleName] > TreeViewDefaults.style (light)
     basic.applyStylePackage(params, TreeView.styles, TreeViewDefaults);
 
     // Merge params:
@@ -161,6 +172,7 @@ const TreeView = function (params = {}) {
     let nodeIndex = new Map(); // key -> { node, parent } (every node, also inside closed branches)
     let hoverRec = null;
     let hasFocus = 0;
+    let isKeyFocus = 0; // 1: the focus came with the keyboard (Tab) or a key was used in the tree; 0: a click
     let typeBuffer = "";
     let cancelTypeTimer = null; // (box.after: the timer is stopped by remove())
     let keyCounter = 1;
@@ -183,6 +195,11 @@ const TreeView = function (params = {}) {
 
     const isFilled = function (value) {
         return value !== undefined && value !== null && value !== "";
+    };
+
+    // enabled: 0 -> the node can not be selected or opened (a node without it is enabled)
+    const isNodeDisabled = function (node) {
+        return node.enabled !== undefined && !basic.isOn(node.enabled);
     };
 
     // A <span> with inline styles. styles: ["flex:0 0 auto", "color:red"]
@@ -255,7 +272,7 @@ const TreeView = function (params = {}) {
             "text-overflow:ellipsis",
         ];
         if (node.textColor) styles.push("color:" + escapeText(node.textColor));
-        return span(styles, escapeText(node.text));
+        return span(styles, escapeText(node.text), ' data-part="text"');
     };
 
     const getTagHtml = function (node) {
@@ -268,20 +285,20 @@ const TreeView = function (params = {}) {
         return span(styles, escapeText(node.tag));
     };
 
-    const getNoteHtml = function (node) {
+    const getDescriptionHtml = function (node) {
         const styles = [
             "margin-left:" + _s.row.gap + "px",
             "flex:0 1 auto",
             "min-width:0",
             "overflow:hidden",
             "text-overflow:ellipsis",
-            "color:" + _s.note.textColor,
+            "color:" + escapeText(node.descriptionColor || _s.note.textColor),
             "font-size:" + _s.note.fontSize + "px",
         ];
-        return span(styles, escapeText(node.note));
+        return span(styles, escapeText(node.description));
     };
 
-    // The inside of a row: arrow, icon, text, tag, note.
+    // The inside of a row: arrow, icon, text, tag, description.
     // WHY: One Label with HTML, not one object for each part: a tree of thousands of rows stays light.
     const getRowHtml = function (rec) {
         const node = rec.node;
@@ -289,8 +306,14 @@ const TreeView = function (params = {}) {
         if (node.iconFile) html += getIconHtml(node);
         html += getTextHtml(node);
         if (isFilled(node.tag)) html += getTagHtml(node);
-        if (isFilled(node.note)) html += getNoteHtml(node);
+        if (isFilled(node.description)) html += getDescriptionHtml(node);
         return html;
+    };
+
+    const getRowEdge = function (isSelected, isHover) {
+        if (isSelected && _s.rowSelected.borderColor) return _s.rowSelected.borderColor;
+        if (isHover && _s.rowHover.borderColor) return _s.rowHover.borderColor;
+        return _s.row.borderColor;
     };
 
     const getRowColor = function (isSelected, isHover) {
@@ -307,16 +330,17 @@ const TreeView = function (params = {}) {
         const node = rec.node;
         const row = rec.row;
         const isSelected = (node.key === box.value);
-        const isHover = (rec === hoverRec) && !isSelected && !node.disabled;
+        const isHover = (rec === hoverRec) && !isSelected && !isNodeDisabled(node);
 
         row.color = getRowColor(isSelected, isHover);
+        if (_s.row.border) row.borderColor = getRowEdge(isSelected, isHover);
         row.textColor = (isSelected) ? _s.rowSelected.textColor : _s.row.textColor;
-        row.opacity = (node.disabled) ? _s.disabled.opacity : 1;
-        row.boxShadow = (isSelected && hasFocus) ? "inset 0 0 0 1px " + _s.rowFocus.outlineColor : "none";
+        row.opacity = (isNodeDisabled(node)) ? _s.disabled.opacity : 1;
+        row.boxShadow = (isSelected && hasFocus && isKeyFocus) ? "inset 0 0 0 1px " + _s.rowFocus.outlineColor : "none";
 
         row.aria = {
             selected: isSelected,
-            disabled: (node.disabled) ? true : false,
+            disabled: (isNodeDisabled(node)) ? true : false,
             expanded: (canExpand(rec)) ? isOpen(rec) : null, // null: a leaf has no aria-expanded
         };
 
@@ -361,6 +385,7 @@ const TreeView = function (params = {}) {
             role: "treeitem",
             aria: { level: level + 1 },
         });
+        if (rowStyle.border) rec.row.props({ border: rowStyle.border, borderColor: rowStyle.borderColor });
         rec.row.elem.id = getRowId(rec);
         rec.row.elem._treeRec = rec; // WHY: One click listener for all the rows finds the rec of a row with it.
         rec.row.clickable = 1;
@@ -384,7 +409,7 @@ const TreeView = function (params = {}) {
                 width: "100%",
                 height: "auto",
                 align: "left top",
-                gap: 0,
+                gap: _s.row.space,
                 color: "transparent",
                 position: "relative",
                 css: { alignItems: "stretch" },
@@ -482,7 +507,7 @@ const TreeView = function (params = {}) {
     };
 
     const getEnabledVisibleRecs = function () {
-        return getVisibleRecs().filter(function (rec) { return !rec.node.disabled; });
+        return getVisibleRecs().filter(function (rec) { return !isNodeDisabled(rec.node); });
     };
 
     const scrollRowIntoView = function (rec) {
@@ -548,7 +573,7 @@ const TreeView = function (params = {}) {
 
     // fromUser: onSelect is called. (Not for silent.)
     const selectRec = function (rec, fromUser) {
-        if (!rec || rec.node.disabled) return;
+        if (!rec || isNodeDisabled(rec.node)) return;
         if (rec.node.key === box.value) return;
         const oldRec = recs.get(box.value);
         box.previousValue = box.value;
@@ -560,9 +585,9 @@ const TreeView = function (params = {}) {
         if (fromUser) box.onSelect(box, rec.node);
     };
 
-    const activateRec = function (rec) {
-        if (!rec || rec.node.disabled) return;
-        box.onActivate(box, rec.node);
+    const activateRec = function (rec, event) {
+        if (!rec || isNodeDisabled(rec.node)) return;
+        box.onActivate(box, rec.node, event);
     };
 
     // step: +1 down, -1 up; Infinity / -Infinity: the last / the first row.
@@ -591,7 +616,7 @@ const TreeView = function (params = {}) {
             return;
         }
         if (!isOpen(current) || !current.children) return;
-        const firstChild = current.children.find(function (child) { return !child.node.disabled; });
+        const firstChild = current.children.find(function (child) { return !isNodeDisabled(child.node); });
         selectRec(firstChild, 1);
     };
 
@@ -621,7 +646,7 @@ const TreeView = function (params = {}) {
             case "End": moveSelection(Infinity); return 1;
             case "ArrowRight": goRight(current); return 1;
             case "ArrowLeft": goLeft(current); return 1;
-            case "Enter": activateRec(current); return 1;
+            case "Enter": activateRec(current, event); return 1;
             case " ":
                 if (current && canExpand(current)) setExpanded(current, !isOpen(current), 1);
                 return 1;
@@ -704,8 +729,16 @@ const TreeView = function (params = {}) {
         indexNodes([node], parentNode);
         parentNode.children.splice(at, 0, node);
 
-        // Not drawn yet (closed or not created): drawn when it opens. Only the arrow of the parent can change.
         const parent = recs.get(parentNode.key);
+        // WHY: an open parent with no group of children yet (it was empty, lazy, or emptied by setChildren): the new
+        //      child was not drawn, and setValue() and the keys could not reach it
+        if (parent && !parent.built && isOpen(parent)) {
+            buildChildren(parent);
+            drawRow(parent);
+            return;
+        }
+
+        // Not drawn yet (closed or not created): drawn when it opens. Only the arrow of the parent can change.
         if (!parent || !parent.built) {
             if (parent) drawRow(parent);
             return;
@@ -773,8 +806,20 @@ const TreeView = function (params = {}) {
         return out;
     };
 
+    // The element of a row, or null (a closed parent: the row is not made). Its text: [data-part=text]
+    box.getRowElem = function (key) {
+        const rec = recs.get(key);
+        return (rec && rec.row) ? rec.row.elem : null;
+    };
+
     box.getSelectedNode = function () {
         return box.getNode(box.value);
+    };
+
+    // The node of the row under an event of the mouse, or null. (Ex: a right click selects its row.)
+    box.getNodeOfEvent = function (event) {
+        const rec = getRecOfEvent(event);
+        return (rec) ? rec.node : null;
     };
 
     // silent: 1 -> onSelect is not called. null: nothing is selected.
@@ -963,7 +1008,7 @@ const TreeView = function (params = {}) {
             width: "100%",
             height: "auto",
             align: "left top",
-            gap: 0,
+            gap: _s.row.space,
             padding: _s.box.padding,
             color: "transparent",
             position: "relative",
@@ -974,6 +1019,7 @@ const TreeView = function (params = {}) {
         // LABEL: Empty text
         box.lblEmpty = Label({
             plainText: box.emptyText,
+            left: 0,
             width: "100%",
             top: EMPTY_TEXT_TOP,
             fontSize: _s.empty.fontSize,
@@ -1010,18 +1056,30 @@ const TreeView = function (params = {}) {
     box.listArea.on("dblclick", function (self, event) {
         if (box.enabled != 1) return;
         const rec = getRecOfEvent(event);
-        if (!rec || isArrowEvent(event) || rec.node.disabled) return;
-        if (canExpand(rec)) setExpanded(rec, !isOpen(rec), 1);
-        activateRec(rec);
+        if (!rec || isArrowEvent(event) || isNodeDisabled(rec.node)) return;
+        if (canExpand(rec) && box.toggleOnDoubleClick == 1) setExpanded(rec, !isOpen(rec), 1);
+        activateRec(rec, event);
     });
     box.listArea.on("mousemove", function (self, event) {
         if (box.enabled != 1) return;
         setHover(getRecOfEvent(event));
     });
     box.listArea.on("mouseleave", function () { setHover(null); });
-    box.listArea.on("keydown", function (self, event) { onKeyDown(event); });
+    // WHY isKeyFocus: the ring of the selected row is for the keyboard; a click focused the tree and showed it too
+    box.listArea.on("keydown", function (self, event) {
+        if (!isKeyFocus) {
+            isKeyFocus = 1;
+            repaintSelected();
+        }
+        onKeyDown(event);
+    });
+    box.listArea.on("mousedown", function () {
+        isKeyFocus = 0;
+        repaintSelected();
+    });
     box.listArea.on("focus", function () {
         hasFocus = 1;
+        isKeyFocus = box.listArea.elem.matches(":focus-visible") ? 1 : 0;
         repaintSelected();
     });
     box.listArea.on("blur", function () {
@@ -1059,7 +1117,7 @@ TreeView.getChevronSvg = function (color, size) {
 TreeView.styles = {
 
     // Dark text, gray hover and selection on a light page.
-    classic: TreeViewDefaults.style,
+    light: TreeViewDefaults.style,
 
     // Cadetblue, same colors as the modern Tabs, CheckBox, RadioButton and TagInput.
     modern: {
@@ -1077,7 +1135,7 @@ TreeView.styles = {
         scrollBar: { bar_color: "#9A9A98", bar_mouseOverColor: "#6A6A68", bar_width: 4, bar_round: 3, bar_opacity: 0.4, bar_mouseOverOpacity: 0.9, bar_padding: 2 },
     },
 
-    // Dark theme, same colors as PropertyPanel (the layers of a design tool).
+    // Dark theme: the grays and the blue of a design tool (its layers).
     dark: {
         box: { color: "#2C2C2C", border: 0, borderColor: "transparent", round: 0, padding: [4, 4] },
         row: { height: 24, fontSize: 12, textColor: "#E6E6E6", indent: 12, paddingLeft: 2, paddingRight: 8, gap: 6, round: 4 },
@@ -1094,3 +1152,28 @@ TreeView.styles = {
     },
 
 };
+TreeView.styles.classic = TreeView.styles.light; // the old name of light: the pages made with it keep their look
+
+// The minimal theme (_designs/minimal-theme.htm): a line around the tree, the rows of ItemList minimal moved in by their level: 28 px, a
+// 13 px text, no fill; a line around the row under the mouse, an ink line around the selected one (with the focus of
+// the keys: a blue line inside it). minimalDark: the same on a dark window.
+TreeView.createMinimalStyle = function (colors) {
+    return {
+        box: { color: "transparent", border: 1, borderColor: colors.line, round: 4, padding: [4, 4] },
+        row: { height: 28, fontSize: 13, textColor: colors.text, indent: 16, paddingLeft: 6, paddingRight: 8, gap: 6, round: 3, border: 1, borderColor: "transparent", space: 2 },
+        rowHover: { color: "transparent", borderColor: colors.lineHover },
+        rowSelected: { color: "transparent", textColor: colors.ink, borderColor: colors.ink },
+        rowFocus: { outlineColor: colors.focus },
+        arrow: { color: colors.softText, size: 12, motion: 0.15 },
+        icon: { size: 14 },
+        tag: { textColor: colors.softText, fontSize: 11 },
+        note: { textColor: colors.faintText, fontSize: 12 },
+        disabled: { opacity: 0.4 },
+        empty: { textColor: colors.softText, fontSize: 12 },
+        scrollBar: { bar_color: colors.scrollBar, bar_mouseOverColor: colors.scrollBar, bar_width: 3, bar_round: 2, bar_opacity: 0.45, bar_mouseOverOpacity: 0.9, bar_padding: 2 },
+    };
+};
+TreeView.MINIMAL_COLORS = { line: Black(0.2), text: Black(0.85), softText: Black(0.55), faintText: Black(0.54), lineHover: Black(0.45), ink: "#1F1F1F", focus: "#3D8BD9", scrollBar: "#373836" };
+TreeView.styles.minimal = TreeView.createMinimalStyle(TreeView.MINIMAL_COLORS);
+TreeView.MINIMAL_DARK_COLORS = { line: White(0.18), text: White(0.88), softText: White(0.55), faintText: White(0.48), lineHover: White(0.42), ink: "#EDEDEB", focus: "#7FB6DE", scrollBar: "#CFCFCD" };
+TreeView.styles.minimalDark = TreeView.createMinimalStyle(TreeView.MINIMAL_DARK_COLORS);

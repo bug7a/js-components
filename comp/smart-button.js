@@ -2,64 +2,78 @@
 
 /*
 
-Smart Button - v26.10
+Smart Button - v26.11
 
-THE DEFAULT BUTTON of new pages and projects (the user, 2026-10-30). It was ButtonWithIcon
-(comp/button-with-icon.js) until 2026-10-30: renamed and moved to comp-m4.
+THE DEFAULT BUTTON of new pages and projects.
+
+THE MODEL PAGE: 02-comp-examples/smart-button.htm: new pages and projects take their buttons from it.
+The other samples: smart-button-alternatif.htm (pill and outlined with the colors of the page), smart-button-3-ozden.htm
+(the templates), smart-button-4-dark.htm (the dark templates and tones), smart-button-5-features.htm.
 
 - A button with an icon and a text (or only one of them); the icon on the left or on top (iconPosition).
-- STYLE PACKAGES (SmartButton.styles; sample 02-comp-examples/smart-button-3-ozden.htm; the draft
-  _designs/smart-button.htm): "ozdenType1" (THE DEFAULT: SmartButtonDefaults.style): #E3E3E3, a thin dark edge and
-  a darker line at the bottom; "ozdenType2": no bottom line; "ozdenType3": a faint edge; "ozdenType4": a ghost (no
-  surface, no edge, only its hover is gray); "classic": the look of before 2026-10-30 (a white button, a bold 16 px
-  text). A page gives its own color in style.box / hover / active.
-  DARK (2026-10-31, the draft _designs/smart-button-dark.htm): "ozdenType1Dark" ... "ozdenType4Dark": the same shapes
-  for a dark page (#2E2E2C, a light edge, a white text and icon, the dark waiting clock, yellow dots).
-  SITUATIONS (2026-10-31, the draft _designs/smart-button-colors.htm): ozdenType1 in the color of a situation:
-  "primary" #5BBAC1, "danger" #E8796D (a white text), "warning" #F1C74A, "success" #7BC362, "info" #52A8D0. The Dialog
-  uses them for its button types.
-  PILL AND OUTLINED (2026-11-02, the user; sample 02-comp-examples/smart-button.htm): 52 px high with a 30 px icon.
-  "pill": round, no edge, a bold text on a soft tint; "pillSolid": the full color with a white text; "outlined": a
-  colored edge with a thicker line at the bottom. Without a tone they are gray.
-- TONE (2026-11-02, the user): the shape comes from styleName, the color from tone: styleName: "outlined", tone: "blue".
-  Any shape works with any name of SmartButton.TONES: gray, blue, green, purple, orange, red, yellow, teal, sky, navy,
-  pink, primary, danger, warning, success, info. A new color is one new row there. The order: style > tone > package.
-  ozdenType4 stays a ghost: its text and its hover take the color. setTone(name, styleName): after create (the look of
-  the package again, then the tone; style given with params goes).
+- THE LOOK IN THREE STEPS. The order: style > tone > the template.
+  1. styleName: the template (the shape), gray. "ozden" (THE DEFAULT: #E3E3E3, a thin dark edge and a darker
+     line at the bottom), "ozden2" (no bottom line), "ozden3" (a faint edge), "ozden4" (a ghost: no
+     surface, no edge, only its hover is gray), "pill" (round, no edge, a bold text), "outlined" (round, a thicker
+     edge with a line at its bottom). For a dark page (the draft _designs/smart-button-dark.htm):
+     "ozdenDark" ... "ozden4Dark" (#2E2E2C, a white text and icon, the dark waiting clock).
+     "minimal" / "minimalDark" (the minimal theme, _designs/minimal-theme.htm): 28 px high, a 13 px text, only a line
+     that gets darker under the mouse; the main action takes the tone "ink" / "inkDark"; a delete "minimalDanger" /
+     "minimalDangerDark" (the line and the text in the danger color).
+     A template is only a style (SmartButton.styles); the minimal ones also give the height.
+  2. tone: a color of the kit (SmartButton.tones), three colors: the button, the button under the mouse, its text.
+     "white", "cyan" (the main action), "orange" (a delete, a reject), "yellow" (go on, but look first), "green"
+     (after a good result), "blue" (nothing changes). For a dark page: "cyanDark", "orangeDark", "yellowDark",
+     "greenDark", "blueDark" (deeper, a light text and a white icon). "": the gray of the template. setTone().
+     "ink" / "inkDark" (the main action of the minimal templates) color the edge too (a tone with edge / hoverEdge).
+     A tone looks the same on every template: its text (and its icon) come with it.
+  3. style: your own look, only the keys you change. A color is two colors: the button and the button under the mouse.
+     style: { box: { color: "#9DC7B5" }, hover: { color: "#91BCA9" } }
+  Pressed, a button gets a little smaller and darker (animated: 1, style.press): a press has no color of its own.
+- AN ICON BUTTON: labelText: "" -> the icon in the middle, no room at the sides; with no width it is a square
+  (44 x 44). The same template and tone as a text button. Give it an ariaLabel.
+  An "auto" height keeps the room of style.layout.padding (Ex: padding [10, 10] -> 44 x 44).
+- HEIGHT: 44 by default (40 looked narrow); every template, pill and outlined too. An icon on
+  top of a text makes it "auto" (as high as its padding and content).
 - KEYBOARD AND ACCESSIBILITY: role "button", Tab reaches it, Enter / Space press it (Space when it goes up), a focus
   ring only for the keyboard; ariaLabel for a button with only an icon (else labelText is read).
 - setEnabled(0): no click, no hover, out of the Tab order (aria-disabled): a flat light gray button, a faint edge, no
   bottom line, the text and the icon faint gray (the same for every color; chosen on
   experimental/smart-button-bench.htm).
-- ASK (two clicks): ask: "Click again to delete." -> the first click turns the button red (style.ask.button) and
+- ASK (two clicks): ask: "Click again to delete." -> the first click turns the button orange (style.ask.button) and
   shows the text in a bubble over it (comp/tooltip.js, Tooltip.show(): it stays inside the screen; without
-  tooltip.js only the red button); the second click runs onClick. It forgets after style.ask.time. One button asks
+  tooltip.js only the orange button); the second click runs onClick. It forgets after style.ask.time. One button asks
   at a time. setAsk(text), cancelAsk(), isAsking. onBeforeClick(self) returns false: no ask and no onClick (Ex: a
   form with an error must not ask "Sure?" first). press(): a press like a click (the ask too), Ex: Enter in a field.
 - WAITING: setWaiting(1) while a job runs (a download, a save): the text and the icon fade and a small animation is
   in the middle; the button can not be clicked. waitingType: "clock" (the default: the clock of the waiting views
-  with moving hands; waitingClock "ozden" or "ozdenDark") or "dots" (three dots one after the other).
+  with moving hands; style.waiting.clock "ozden", or "ozdenDark" in the dark templates) or "dots" (three dots one
+  after the other).
   setWaiting(0) ends it (after delay ms, if given). Nothing turns with prefers-reduced-motion.
   (comp/loading-screen.js draws its clock and its dots with SmartButton.createClockSvg / createDots)
-- MOTION: animated: 1 (default): pressed 0.94 and a little darker. ripple: 1 (default): a wave from the pressed
-  point (from the middle for the keyboard); its color fits the button. setAnimated(0/1), setRipple(0/1).
+- MOTION: animated: 1 (default): pressed 0.94 and a little darker. ripple: 0 (default; 1 gives a wave from the
+  pressed point, from the middle for the keyboard; its color fits the button). setAnimated(0/1), setRipple(0/1).
 - setStyle(style): changes the look after create with only the keys it gets.
 
 USAGE:
-SmartButton({ labelText: "Send", iconFile: "../assets/icons/send.png", onClick: function (self) { } });
+SmartButton({ labelText: "Cancel", onClick: function (self) { } }); // the default: ozden, gray
+SmartButton({ tone: "cyan", labelText: "Send", iconFile: "../assets/icons/send.png", onClick: send });
+SmartButton({ styleName: "pill", tone: "blue", labelText: "Follow" });
+SmartButton({ styleName: "ozdenDark", tone: "blueDark", labelText: "Send" }); // on a dark page
+SmartButton({ styleName: "ozden2", tone: "white", labelText: "", iconFile: "trash.svg", ariaLabel: "Delete", ask: "Click again to delete.", onClick: deleteFile });
+SmartButton({ labelText: "Archive", style: { box: { color: "#C3DBCE" }, hover: { color: "#B5D0C1" } } }); // your own color
 const btnDownload = SmartButton({ labelText: "Download", onClick: function (self) {
     self.setWaiting(1);
     download().then(function () { self.setWaiting(0); });
 } });
-SmartButton({ styleName: "ozdenType4", labelText: "Delete", ask: "Click again to delete.", onClick: deleteFile });
-SmartButton({ styleName: "pill", tone: "green", labelText: "Accepted", iconFile: "check.svg" });
-button.setTone("blue", "pillSolid"); // another color and shape after create
-btnSave.setStyle({ box: { color: "#9DC7B5" }, hover: { color: "#91BCA9" }, active: { color: "#91BCA9" } });
+btnSave.setTone("green"); // another color after create ("": the gray of its template)
 
 Started Date: January 2026
-Developer: Bugra Ozden
-Email: bugra.ozden@gmail.com
 Webpage: https://bug7a.github.io/js-components/
+
+Copyright 2020-2026 Bugra Ozden <bugra.ozden@gmail.com> (https://bug7a.github.io/)
+Licensed under the Apache License, Version 2.0
+SPDX-License-Identifier: Apache-2.0
 
 */
 
@@ -68,38 +82,38 @@ Webpage: https://bug7a.github.io/js-components/
 // Default values:
 const SmartButtonDefaults = {
     key: "0",
-    styleName: "ozdenType1", // SmartButton.styles: "ozdenType1" (the default), "ozdenType2", "ozdenType3", "ozdenType4", "classic", "pill", "pillSolid", "outlined"...
-    tone: "", // the color: a name of SmartButton.TONES (Ex: "blue", "primary"). "": the colors of the package. setTone()
-    width: "auto",
-    height: "auto",
-    labelText: "Button",
+    styleName: "ozden", // the template (SmartButton.styles): "ozden" (the default) ... "ozden4", "pill", "outlined", "ozdenDark" ... "ozden4Dark", "minimal", "minimalDark", "minimalDanger", "minimalDangerDark"
+    tone: "", // a color of the kit (SmartButton.tones): "white", "cyan", "orange", "yellow", "green", "blue", "cyanDark"..., "ink" / "inkDark" (minimal). "": the gray of the template. setTone()
+    width: "auto", // an icon button (labelText: "") is a square
+    height: 44, // "auto": as high as its padding and content (an icon on top of a text is "auto")
+    labelText: "Button", // "": an icon button
+    allowHtml: 0, // 1: labelText is HTML (only for your own texts)
     iconFile: "", // "": no icon (Ex: "../comp/smart-button/alert-black.png")
     iconPosition: "left", // "left", "top"
     enabled: 1, // 0: gray, can not be pressed (set later with setEnabled)
-    ariaLabel: "", // "": labelText is read. A button with only an icon needs it (Ex: "Delete")
+    ariaLabel: "", // "": labelText is read. An icon button needs it (Ex: "Delete")
     waiting: 0, // 1: it waits (set later with setWaiting)
     waitingType: "clock", // "clock" (the default wait) or "dots"
-    waitingClock: "ozden", // the look of the clock: "ozden" (a white face, dark lines) or "ozdenDark" (SmartButton.clocks)
-    animated: 1, // 1: the press effect (smaller and darker while pressed). setAnimated()
-    ripple: 1, // 1: a wave from the pressed point (it works with animated: 0 too). setRipple()
-    ask: "", // "Click again to delete.": two clicks (the first one asks with a red button and this text in a bubble). setAsk()
+    animated: 1, // 1: pressed it gets smaller and darker (style.press). setAnimated()
+    ripple: 0, // 1: a wave from the pressed point (it works with animated: 0 too). setRipple()
+    ask: "", // "Click again to delete.": two clicks (the first one asks with an orange button and this text in a bubble). setAsk()
     onBeforeClick: null, // function (self): false stops the press, with no ask either
     onClick: function (self) { }, // Not called while waiting
     onWaitingEnd: function (self) { }, // The wait ended (setWaiting(0))
-    style: { // ozdenType1 (the default package)
+    style: { // ozden (the default template)
         layout: {
             gap: 8,
             padding: [16, 0],
             align: "center center",
             // px less space on the side of the icon (an icon left of a text): the empty edge in an icon file and its
-            // thin lines made that side look wider (measured 1 - 3 px; the user, 2026-10-30). 0: the same on both sides
+            // thin lines made that side look wider (measured 1 - 3 px). 0: the same on both sides
             iconSideTrim: 2,
         },
         icon: {
             width: 24,
             height: 24,
             opacity: 0.8,
-            filter: "none", // a CSS filter: the dark packages turn the icon white ("brightness(0) invert(1)")
+            filter: "none", // a CSS filter: the dark templates turn the icon white ("brightness(0) invert(1)")
         },
         label: {
             fontSize: 20,
@@ -114,22 +128,23 @@ const SmartButtonDefaults = {
             boxShadow: "inset 0 -2px 0 rgba(0, 0, 0, 0.25)",
         },
         hover: {
-            color: "#D9D9D9",
+            color: "#D9D9D9", // under the mouse (pressed: this color, darker)
+            borderColor: "", // the edge under the mouse. "": the edge of box (the minimal templates darken it)
         },
-        active: {
-            color: "#D9D9D9",
-        },
-        // ask: the red look of the button while it asks, and the bubble over it (Tooltip.BUBBLE_LOOK keys)
+        // ask: the look of the button while it asks, and the bubble over it (Tooltip.BUBBLE_LOOK keys).
+        // #DE815B (the orange of danger); its own value, not the orange tone,
+        // so the two can be changed apart.
         ask: {
             button: {
-                color: "#E8796D", // also under the mouse and pressed
-                border: 1,
-                borderColor: "#E8796D",
+                color: "#DE815B", // also under the mouse and pressed
+                // WHY no border width: the edge of the template stays, so a pill (0) or an outlined (2) button keeps
+                //     its size while it asks (border: 1 made an "auto" pill 2 px wider)
+                borderColor: "#DE815B",
                 boxShadow: "none",
                 textColor: "white",
                 iconFilter: "brightness(0) invert(1)", // the icon turns white, whatever color its file has
             },
-            bubble: { color: "#E8796D", textColor: "white", fontSize: 13, bold: 1, round: 8, padding: [12, 7], border: 0, borderColor: "", shadow: "0 6px 16px rgba(0, 0, 0, 0.18)", arrow: 12, gap: 6, edge: 8, grow: 1 },
+            bubble: { color: "#DE815B", textColor: "white", fontSize: 13, bold: 1, round: 8, padding: [12, 7], border: 0, borderColor: "", shadow: "0 6px 16px rgba(0, 0, 0, 0.18)", arrow: 12, gap: 6, edge: 8, grow: 1 },
             time: 5000, // ms: it forgets the question
         },
         focus: {
@@ -141,9 +156,10 @@ const SmartButtonDefaults = {
             textColor: "rgba(0, 0, 0, 0.3)",
             iconOpacity: 0.25, // (and no color)
         },
+        // The press (animated: 1). WHY no color for it: two colors are enough, the press
+        // only darkens the color of the moment
         press: {
             scale: 0.94, // while pressed
-            removeShadow: 0, // 1: while pressed the box shadow (Ex: the inset bottom line) goes away, as if pushed in
             brightness: 0.92, // while pressed
             time: 0.15, // s
         },
@@ -154,6 +170,7 @@ const SmartButtonDefaults = {
             time: 0.6, // s
         },
         waiting: {
+            clock: "ozden", // the look of the clock: "ozden" (a white face, dark lines), "ozdenDark", or the ring of "minimal" / "minimalDark" (SmartButton.clocks)
             contentOpacity: 0.18, // the text and the icon while waiting
             clockSize: 30, // at most; a small button gets a smaller clock
             space: 14, // the room around the clock in a small button
@@ -164,74 +181,76 @@ const SmartButtonDefaults = {
 
 const SmartButton = function (params = {}) {
 
-    // Merge params:
-    SmartButton.applyTone(params);
-    basic.applyStylePackage(params, SmartButton.styles, SmartButtonDefaults);
+    // Merge params: style > tone > the template (styleName) > the defaults
+    SmartButton.applyLook(params);
+    const hasText = (params.labelText !== "");
+    // WHY: 44 is the height of a row; an icon above its text needs more (about 60)
+    if (params.iconPosition === "top" && hasText && params.height === undefined) params.height = "auto";
     mergeIntoIfMissing(params, SmartButtonDefaults);
+    // AN ICON BUTTON (no text): a square when no width is given.
+    // WHY only with a number height: an "auto" one is as big as its padding and its icon (Ex: 10 + 24 + 10)
+    const isIconButton = !hasText && (typeof params.height === "number");
+    if (isIconButton && params.width === "auto") params.width = params.height;
 
     // BOX: Component container
     const box = startObject(params);
 
     // *** PRIVATE VARIABLES:
     const WAITING_MOTION = "opacity 0.2s"; // the content fades while waiting
-    const STILL_MOTION = "background-color 0.2s"; // the colors of hover / pressed (animated: 0 too)
+    const ASK_ANSWER_DELAY = 400; // ms: a click this soon after the question is the second click of a double click
+    const STILL_MOTION = "background-color 0.2s"; // the color under the mouse (animated: 0 too)
     let cancelWaitingEnd = null;
     let cancelAskTimer = null;
     let askBubble = null;
+    let askStartTime = 0; // when the question was shown (isAnswerTooSoon)
     let isHover = 0;
     let isPressed = 0;
     let isSpaceDown = 0; // Space went down on this button (it presses when it goes up, like a real button)
-    let wasAnimated = 0; // the press look was written (setAnimated(0) writes the still look back)
+    let isMotionStarted = 0; // the transitions are on after the first view (startMotion)
 
     // *** PRIVATE FUNCTIONS:
+
+    const setText = function (label, text) {
+        const value = (text === undefined || text === null) ? "" : String(text);
+        if (box.allowHtml == 1) label.text = value;
+        else label.plainText = value;
+    };
 
     const canPress = function () {
         return box.enabled == 1 && box.waiting != 1;
     };
 
     const isReducedMotion = function () {
-        return window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        return SmartButton.isReducedMotion();
     };
 
     const isMotionOn = function () {
         return box.animated == 1 && !isReducedMotion();
     };
 
-    // THE LOOK OF THE STATE: disabled > asking > pressed > under the mouse > normal
-    const getBoxColor = function () {
+    // THE LOOK OF THE STATE: the normal look, and over it the keys of the state: disabled > asking > under the mouse.
+    // (style.disabled and style.ask.button have the key names of the look; pressed: getPressCss darkens it)
+    // WHY one order: an ask never meets a disabled or waiting button (setEnabled(0) and setWaiting(1) end it)
+    const getLook = function () {
         const _s = box.style;
-        if (box.enabled != 1) return _s.disabled.color;
-        if (box.isAsking == 1) return _s.ask.button.color;
+        const look = {
+            color: _s.box.color,
+            border: _s.box.border,
+            borderColor: _s.box.borderColor,
+            boxShadow: _s.box.boxShadow,
+            textColor: _s.label.textColor,
+            iconOpacity: _s.icon.opacity,
+            iconFilter: _s.icon.filter,
+        };
+        // WHY no shadow when disabled: a flat button is not one that can be pressed in
+        if (box.enabled != 1) return Object.assign(look, _s.disabled, { boxShadow: "none" });
+        if (box.isAsking == 1) return Object.assign(look, _s.ask.button);
         // WHY not while waiting: the button stays in its own color under the animation
-        if (box.waiting == 1) return _s.box.color;
-        if (isPressed) return _s.active.color;
-        if (isHover) return _s.hover.color;
-        return _s.box.color;
-    };
-
-    const getBorderColor = function () {
-        if (box.enabled != 1) return box.style.disabled.borderColor;
-        if (box.isAsking == 1) return box.style.ask.button.borderColor;
-        return box.style.box.borderColor;
-    };
-
-    // WHY none when disabled: a flat button is not one that can be pressed in
-    const getBoxShadow = function () {
-        if (box.enabled != 1) return "none";
-        if (box.isAsking == 1) return box.style.ask.button.boxShadow;
-        if (isPressed && canPress() && box.style.press.removeShadow == 1) return "none";
-        return box.style.box.boxShadow || "";
-    };
-
-    const getTextColor = function () {
-        if (box.enabled != 1) return box.style.disabled.textColor;
-        if (box.isAsking == 1) return box.style.ask.button.textColor;
-        return box.style.label.textColor;
-    };
-
-    const getIconOpacity = function () {
-        if (box.enabled != 1) return box.style.disabled.iconOpacity;
-        return (box.style.icon.opacity === undefined) ? 1 : box.style.icon.opacity;
+        if (isHover && box.waiting != 1) {
+            look.color = _s.hover.color;
+            if (_s.hover.borderColor) look.borderColor = _s.hover.borderColor;
+        }
+        return look;
     };
 
     // The press: smaller and darker while pressed (only with animated: 1)
@@ -243,22 +262,19 @@ const SmartButton = function (params = {}) {
         };
     };
 
-    const getIconFilter = function () {
-        if (box.isAsking == 1 && box.enabled == 1) return box.style.ask.button.iconFilter;
-        return box.style.icon.filter || "none";
-    };
-
     // Everything that changes with the state: the box, the content, the press, the keyboard and the screen reader
     const render = function () {
         const isEnabled = (box.enabled == 1);
-        box.color = getBoxColor();
-        box.border = (box.isAsking == 1) ? box.style.ask.button.border : box.style.box.border;
-        box.borderColor = getBorderColor();
-        box.css = Object.assign({ boxShadow: getBoxShadow() }, getPressCss());
-        if (box.label) box.label.textColor = getTextColor();
+        const look = getLook();
+        box.color = look.color;
+        box.border = look.border;
+        box.borderColor = look.borderColor;
+        box.boxShadow = look.boxShadow;
+        box.css = getPressCss();
+        if (box.label) box.label.textColor = look.textColor;
         if (box.icon) {
-            box.icon.opacity = getIconOpacity();
-            box.icon.css = { filter: getIconFilter() };
+            box.icon.opacity = look.iconOpacity;
+            box.icon.css = { filter: look.iconFilter };
         }
         box.layout.css = { filter: isEnabled ? "none" : "grayscale(1)" };
         box.layout.opacity = (box.waiting == 1) ? box.style.waiting.contentOpacity : 1;
@@ -267,8 +283,42 @@ const SmartButton = function (params = {}) {
         box.aria = { disabled: !isEnabled, label: box.ariaLabel || box.labelText || "" };
     };
 
+    // The room inside: an icon button has none (its icon in the middle); an icon left of a text has a little less
+    // on its side (style.layout.iconSideTrim)
+    const paintPadding = function () {
+        if (isIconButton) {
+            box.layout.padding = 0;
+            return;
+        }
+        const _l = box.style.layout;
+        const isIconLeft = box.icon && box.label && box.iconPosition !== "top";
+        const padding = Array.isArray(_l.padding) ? _l.padding[0] : _l.padding;
+        const trim = isIconLeft ? _l.iconSideTrim : 0;
+        box.layout.css = { paddingLeft: Math.max(0, padding - trim) + "px" };
+    };
+
+    // The style on the objects (box, layout, icon, label, focus ring); render() gives the colors of the state.
+    const applyStyle = function () {
+        const _s = box.style;
+        box.props(_s.box);
+        box.layout.props(_s.layout);
+        paintPadding();
+        if (box.icon) box.icon.props(_s.icon);
+        if (box.label) box.label.props(_s.label);
+        box.setFocusRing(_s.focus.ringColor);
+        render();
+    };
+
+    // WHY: the second click of a double click answered the ask before it was read (SmartButton({ ask }) and a
+    //      Dialog.confirm with danger and ask ran at once)
+    const isAnswerTooSoon = function (event) {
+        if (event && event.detail > 1) return true;
+        return (Date.now() - askStartTime < ASK_ANSWER_DELAY);
+    };
+
     const press = function (event) {
         if (!canPress()) return;
+        if (box.isAsking == 1 && isAnswerTooSoon(event)) return;
         if (typeof box.onBeforeClick === "function" && box.onBeforeClick(box) === false) return;
         if (box.ask && box.isAsking != 1) {
             startAsk();
@@ -278,14 +328,14 @@ const SmartButton = function (params = {}) {
         if (box.onClick) box.onClick(box, event);
     };
 
-    // *** ASK (two clicks): the red look (render) and the bubble (Tooltip.show)
+    // *** ASK (two clicks): the orange look (render) and the bubble (Tooltip.show)
 
     const startAsk = function () {
         // WHY one at a time: the bubble of another button would stay over this one
-        const other = SmartButton.askingButton;
-        if (other && other !== box) other.cancelAsk();
+        if (SmartButton.askingButton) SmartButton.askingButton.cancelAsk();
         SmartButton.askingButton = box;
         box.isAsking = 1;
+        askStartTime = Date.now();
         render();
         if (typeof Tooltip !== "undefined") askBubble = Tooltip.show(box, box.ask, box.style.ask.bubble);
         cancelAskTimer = box.after(box.style.ask.time, box.cancelAsk);
@@ -322,7 +372,8 @@ const SmartButton = function (params = {}) {
         dot.style.cssText = "position: absolute; border-radius: 50%; pointer-events: none; background: " + getRippleColor() + ";" +
             " left: " + (point.x - radius) + "px; top: " + (point.y - radius) + "px; width: " + (radius * 2) + "px; height: " + (radius * 2) + "px;";
         layer.appendChild(dot);
-        elem.insertBefore(layer, box.waitingCover.elem); // WHY: under the waiting cover (onClick often starts it)
+        // WHY under the waiting cover: onClick often starts it (no cover yet: the layer goes last, the cover comes over it)
+        elem.insertBefore(layer, box.waitingCover ? box.waitingCover.elem : null);
         const wave = dot.animate([
             { transform: "scale(0)", opacity: 1 },
             { transform: "scale(1)", opacity: 0.7, offset: 0.6 },
@@ -331,33 +382,78 @@ const SmartButton = function (params = {}) {
         wave.onfinish = function () { layer.remove(); };
     };
 
-    // *** WAITING
+    // *** THE MOTION
 
-    // The press transitions, or the still look back (only when it was animated before)
+    // The transitions: the press (animated: 1, not with reduced motion) and the color under the mouse (always)
+    // WHY not setMotion(): it starts after a timer, and the press must answer the first click
     const applyAnimated = function () {
-        if (!isMotionOn()) {
-            if (!wasAnimated) return;
-            wasAnimated = 0;
-            render();
-            box.setMotionNow(STILL_MOTION);
-            return;
-        }
-        wasAnimated = 1;
+        if (!isMotionStarted) return; // (startMotion turns them on)
         const time = box.style.press.time + "s";
-        // WHY not setMotion(): it starts after a timer, and the press must answer the first click
-        box.setMotionNow("transform " + time + ", filter " + time + ", box-shadow " + time + ", " + STILL_MOTION);
-        render();
+        const pressMotion = isMotionOn() ? "transform " + time + ", filter " + time + ", box-shadow " + time + ", " : "";
+        box.setMotionNow(pressMotion + STILL_MOTION);
     };
+
+    // The transitions start after the first view: a state set while the button is made (Ex: setEnabled(0) right
+    // after a Dialog is made) is drawn at once, not as a move from its first look (the Save
+    // button of a dialog turned from blue to gray when the dialog opened)
+    // WHY the frame and the read: the look of now must be the start of a transition, not the look before it
+    const startMotion = function () {
+        requestAnimationFrame(function () {
+            if (box._isRemoved) return;
+            void box.elem.offsetWidth; // (the browser takes the look of now)
+            isMotionStarted = 1;
+            box.layout.setMotionNow(WAITING_MOTION);
+            applyAnimated();
+        });
+    };
+
+    // *** WAITING
 
     // The clock fits the button: at most its size, smaller in a small button (the dots keep their size)
     const fitWaitingIcon = function () {
         const icon = box.waitingCover.icon;
         if (box.waitingType == "clock") {
             const _w = box.style.waiting;
-            const size = Math.max(0, Math.min(_w.clockSize, Math.min(box.width, box.height) - _w.space));
+            const room = Math.min(box.width, box.height) - _w.space;
+            const size = basic.clamp(room, 0, _w.clockSize);
             icon.setSize(size, size);
         }
         icon.center();
+    };
+
+    // BOX: Waiting cover, made at the first wait: most buttons never wait (it is 2/3 of the objects of a button).
+    // Clear: the content fades under it; it holds the animation and takes the mouse.
+    const createWaitingCover = function () {
+        saveCurrentThat(); // WHY: a wait must not change `that` (Ex: that.setWaiting(1) right after create)
+        box.waitingCover = createIn(box, function () {
+            const cover = startBox(0, 0, "100%", "100%", {
+                color: "transparent",
+                clickable: 1, // WHY: it takes the mouse, so its "progress" cursor shows (the hover color: render())
+                cursor: "progress",
+            });
+                if (box.waitingType == "dots") {
+                    cover.icon = SmartButton.createDots(box.style.waiting.dots);
+                } else {
+                    const clockStyle = SmartButton.clocks[box.style.waiting.clock] || SmartButton.clocks.ozden;
+                    cover.icon = Box(0, 0, 0, 0, { color: "transparent", html: SmartButton.createClockSvg(clockStyle) });
+                }
+            endBox();
+            return cover;
+        });
+        restoreThatFromSaved();
+        box.onResize(function () {
+            if (box.waiting == 1) fitWaitingIcon();
+        });
+    };
+
+    const startWaiting = function () {
+        box.cancelAsk();
+        box.waiting = 1;
+        box.aria = { busy: true };
+        if (!box.waitingCover) createWaitingCover();
+        box.waitingCover.visible = 1;
+        fitWaitingIcon();
+        render();
     };
 
     const endWaiting = function () {
@@ -365,19 +461,19 @@ const SmartButton = function (params = {}) {
         box.aria = { busy: false };
         box.waitingCover.visible = 0;
         render();
-        box.onWaitingEnd(box);
+        if (typeof box.onWaitingEnd === "function") box.onWaitingEnd(box);
     };
 
     // *** PUBLIC FUNCTIONS:
 
     box.isAsking = 0; // 1: the first click of ask was made, the button is red
 
-    box.setText = function (text) {
+    box.setLabelText = function (text) {
         box.labelText = text;
-        if (box.label) box.label.text = text;
+        if (box.label) setText(box.label, text);
         render(); // (the label read by a screen reader)
     };
-    // USAGE: button.setText("Save")
+ // USAGE: button.setLabelText("Save")
 
     box.setIcon = function (file) {
         box.iconFile = file;
@@ -388,6 +484,7 @@ const SmartButton = function (params = {}) {
     box.setAnimated = function (value) {
         box.animated = basic.isOn(value) ? 1 : 0;
         applyAnimated();
+        render(); // WHY: a button pressed now loses its press look with animated: 0
     };
     // USAGE: get: button.animated, set: button.setAnimated(0)
 
@@ -400,11 +497,8 @@ const SmartButton = function (params = {}) {
         box.enabled = basic.isOn(value) ? 1 : 0;
         if (box.enabled != 1) {
             box.cancelAsk();
-            isHover = 0;
             isPressed = 0;
             isSpaceDown = 0;
-        } else {
-            isHover = box.elem.matches(":hover") ? 1 : 0; // WHY: the mouse may have stayed on it while it was off
         }
         render();
     };
@@ -439,61 +533,40 @@ const SmartButton = function (params = {}) {
     const superRemove = box.remove;
     box.superRemove = superRemove;
     box.remove = function () {
+        if (box.isRemoved) return;
         box.cancelAsk();
         superRemove.call(box);
     };
 
-    // Only the given keys change; the other keys of the style stay.
+    // Only the given keys change; the other keys of the style stay, inside a part too (ask.button, waiting.dots).
     // WHY a new object for each part: the old one can be shared with other buttons (the same style object of a page)
+    // WHY not Object.assign: it replaces ask.button whole, so { ask: { button: { color } } } would lose
+    //     the white text and the white icon of the ask
     box.setStyle = function (style) {
         Object.keys(style || {}).forEach(function (part) {
-            box.style[part] = Object.assign({}, box.style[part], style[part]);
+            const merged = {};
+            mergeIntoIfMissing(merged, style[part]); // the new keys first
+            mergeIntoIfMissing(merged, box.style[part]); // then the old ones under them
+            box.style[part] = merged;
         });
         applyStyle();
+        applyAnimated(); // WHY: style.press.time is in the transitions
     };
     // USAGE: button.setStyle({ box: { color: "tomato", borderColor: "red" }, hover: { color: "tomato" } })
 
-    box.setTone = function (toneName, styleName) {
-        box.styleName = styleName || box.styleName;
-        box.setStyle(SmartButton.getPackageStyle(box.styleName));
-        box.tone = toneName;
-        if (toneName) box.setStyle(SmartButton.getToneStyle(toneName, box.styleName));
+    // The two colors of a tone (a color of the page given with style goes)
+    box.setTone = function (toneName) {
+        box.tone = toneName || "";
+        box.setStyle(SmartButton.getToneStyle(box.tone, box.styleName));
     };
-    // USAGE: button.setTone("blue"), button.setTone("blue", "pillSolid"), button.setTone("", "pill") (only the package)
-
-    // The style on the objects (box, layout, icon, label, focus ring); render() gives the colors of the state.
-    // The side of the icon a little narrower (style.layout.iconSideTrim), only for an icon left of a text
-    const paintIconSide = function () {
-        const _l = box.style.layout;
-        const isIconLeft = box.icon && box.label && box.iconPosition !== "top";
-        const padding = Array.isArray(_l.padding) ? _l.padding[0] : _l.padding;
-        const trim = isIconLeft ? (Number(_l.iconSideTrim) || 0) : 0;
-        box.layout.css = { paddingLeft: Math.max(0, padding - trim) + "px" };
-    };
-
-    const applyStyle = function () {
-        const _s = box.style;
-        box.props(_s.box);
-        box.layout.props(_s.layout);
-        paintIconSide();
-        if (box.icon) box.icon.props(_s.icon);
-        if (box.label) box.label.props(_s.label);
-        box.setFocusRing(_s.focus.ringColor);
-        render();
-    };
+    // USAGE: button.setTone("green"), button.setTone("") (the gray of its template)
 
     // delay: ms before the wait ends (only for 0)
     box.setWaiting = function (value, delay = 0) {
-        const isWaiting = basic.isOn(value) ? 1 : 0;
         if (cancelWaitingEnd) cancelWaitingEnd();
         cancelWaitingEnd = null;
-        if (isWaiting) {
-            box.cancelAsk();
-            box.waiting = 1;
-            box.aria = { busy: true };
-            box.waitingCover.visible = 1;
-            fitWaitingIcon();
-            render();
+        if (basic.isOn(value)) {
+            startWaiting();
             return;
         }
         if (box.waiting != 1) return;
@@ -501,22 +574,15 @@ const SmartButton = function (params = {}) {
             endWaiting();
             return;
         }
-        cancelWaitingEnd = box.after(delay, function () {
-            cancelWaitingEnd = null;
-            endWaiting();
-        });
+        cancelWaitingEnd = box.after(delay, endWaiting);
     };
     // USAGE: get: button.waiting, set: button.setWaiting(1) / button.setWaiting(0, 1000)
 
     // *** OBJECT VIEW:
 
-    // BOX: Container look
-    box.props(box.style.box);
+    // BOX: Container (its look: applyStyle(), when its objects are made)
     box.clickable = 1;
     box.role = "button";
-    box.setFocusRing(box.style.focus.ringColor);
-    // (the transitions: applyAnimated(); WHY not setMotion() here: its timer came after them and wrote over them)
-    box.setMotionNow(STILL_MOTION);
 
     // GROUP: Layout (icon, label). iconPosition "top" puts the icon above the label.
     // WHY "100%" for a fixed size: the group fills the inside of the border; with the size of the box itself it was
@@ -538,31 +604,18 @@ const SmartButton = function (params = {}) {
         // LABEL: only when there is a text
         if (box.labelText) {
             box.label = Label(0, 0, box.style.label);
-            box.label.text = box.labelText;
+            setText(box.label, box.labelText);
             box.label.css.whiteSpace = "nowrap";
         }
 
     endAutoLayout();
-    box.layout.setMotionNow(WAITING_MOTION);
-    paintIconSide();
-
-    // BOX: Waiting cover (clear: the content fades under it; it holds the animation and takes the mouse)
-    box.waitingCover = startBox(0, 0, "100%", "100%", {
-        color: "transparent",
-        clickable: 1, // WHY: the button under it gets no hover look while waiting
-        cursor: "progress",
-    });
-        if (box.waitingType == "dots") {
-            box.waitingCover.icon = SmartButton.createDots(box.style.waiting.dots);
-        } else {
-            const clock = Box(0, 0, 0, 0, { color: "transparent" });
-            clock.elem.innerHTML = SmartButton.createClockSvg(SmartButton.clocks[box.waitingClock] || SmartButton.clocks.ozden);
-            box.waitingCover.icon = clock;
-        }
-    endBox();
-    box.waitingCover.visible = 0;
+    // (the waiting cover: createWaitingCover(), at the first wait)
 
     // *** OBJECT INIT CODE:
+
+    // WHY the look before the transitions: nothing fades in at the first view
+    applyStyle();
+    startMotion();
 
     box.on("click", function (self, event) {
         press(event);
@@ -591,10 +644,6 @@ const SmartButton = function (params = {}) {
         isSpaceDown = 0;
     });
 
-    box.onResize(function () {
-        if (box.waiting == 1) fitWaitingIcon();
-    });
-
     // THE MOUSE: hover, pressed, back to normal (render)
     box.onHoverChange(function (self, isOver) {
         isHover = isOver;
@@ -612,13 +661,7 @@ const SmartButton = function (params = {}) {
         render();
     });
 
-    applyAnimated();
-    render();
-
-    if (box.waiting == 1) {
-        box.waiting = 0;
-        box.setWaiting(1);
-    }
+    if (box.waiting == 1) box.setWaiting(1);
 
     return endObject(box);
 
@@ -627,6 +670,13 @@ const SmartButton = function (params = {}) {
 // *** STATIC FUNCTIONS:
 
 SmartButton.askingButton = null; // the button that asks now (ask: one at a time)
+
+// WHY one query for the page: render() asks it at every hover and press
+SmartButton.isReducedMotion = function () {
+    if (!window.matchMedia) return false;
+    if (!SmartButton.reducedMotionQuery) SmartButton.reducedMotionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+    return SmartButton.reducedMotionQuery.matches;
+};
 
 // 1: a dark color (the ripple is light on it). A color of the browser: "rgb(r, g, b)" or "rgba(r, g, b, a)".
 // A transparent color is not dark (the page under it shows).
@@ -658,181 +708,188 @@ SmartButton.injectCss = function () {
         "@media (prefers-reduced-motion: reduce) { .smart-button-hand, .smart-button-dot { animation: none !important; } }");
 };
 
-// *** THE STYLE PACKAGES (the user, 2026-10-30): the buttons of 02-comp-examples/smart-button-3-ozden.htm.
-// A package needs only the keys that differ from the default (ozdenType1).
+// *** THE TEMPLATES (the shapes), all gray. A template is a style with only the keys that differ from the default
+// (ozden); its color comes from a tone or from style. Every template has the default height (44).
+SmartButton.WHITE_ICON = "brightness(0) invert(1)"; // a CSS filter: any icon file turns white
+SmartButton.ROUND = 100; // pill, outlined: always round, at any height
+SmartButton.EDGE_WIDTH = 2; // outlined: the edge and the line at its bottom
+
 SmartButton.styles = {
-    ozdenType1: SmartButtonDefaults.style, // an edge and a bottom line
-    ozdenType2: { box: { boxShadow: "none" } }, // only the edge
-    ozdenType3: { box: { borderColor: Black(0.1), boxShadow: "none" } }, // a faint edge
-    ozdenType4: { box: { color: White(0), border: 0, borderColor: "transparent", boxShadow: "none" } }, // a ghost
-    classic: { // the look of before 2026-10-30
-        layout: { gap: 8, padding: [12, 6] },
-        icon: { opacity: 1 },
-        label: { fontSize: 16, textColor: Black(0.8), fontFamily: "opensans-bold" },
-        box: { color: White(1), border: 1, borderColor: Black(0.2), round: 6, boxShadow: "none" },
-        hover: { color: "#f5f5f5" },
-        active: { color: "#e0e0e0" },
+    // (the buttons of 02-comp-examples/smart-button-3-ozden.htm)
+    ozden: SmartButtonDefaults.style, // an edge and a bottom line
+    ozden2: { box: { boxShadow: "none" } }, // only the edge
+    ozden3: { box: { borderColor: Black(0.1), boxShadow: "none" } }, // a faint edge
+    ozden4: { box: { color: White(0), border: 0, borderColor: "transparent", boxShadow: "none" } }, // a ghost
+    // ROUND (the buttons of 02-comp-examples/smart-button-alternatif.htm). WHY a smaller text
+    // and icon: they were 52 px high with a 30 px icon; now as high as the other buttons
+    pill: { // no edge, a bold text
+        layout: { gap: 10, padding: [18, 0] },
+        icon: { width: 26, height: 26, opacity: 1 },
+        label: { fontSize: 18, fontFamily: "opensans-bold" },
+        box: { border: 0, borderColor: "transparent", round: SmartButton.ROUND, boxShadow: "none" },
+    },
+    outlined: { // a thicker edge with a line at its bottom
+        layout: { gap: 8, padding: [14, 0] },
+        icon: { width: 26, height: 26, opacity: 1 },
+        label: { fontSize: 18 },
+        box: { border: SmartButton.EDGE_WIDTH, round: SmartButton.ROUND, boxShadow: "inset 0 -" + SmartButton.EDGE_WIDTH + "px 0 " + Black(0.35) },
     },
 };
 
-// THE DARK PACKAGES (2026-10-31, the draft _designs/smart-button-dark.htm): the shapes of ozdenType1-4 with the
+// THE DARK TEMPLATES (the draft _designs/smart-button-dark.htm): the shapes of ozden ... ozden4 with the
 // colors of a dark page (the cards of Ozden Panel / Ozden Manager, #1A1A19). The icon turns white, the waiting clock
-// is the dark one, the dots yellow; the ask stays red. Packages of params (a "style" key): waitingClock is a param.
-SmartButton.createDarkPackage = function (box, hoverColor) {
+// is the dark one, the dots yellow; the ask stays orange.
+// THE EDGE AND THE BOTTOM LINE: the edge of ozden in white and its 2 px line in white, a
+// little fainter. A light tone on a dark template keeps them too.
+// WHY 0.2 / 0.12 (0.35 / 0.2 were too bright on a dark page; a white edge on a dark page is
+//     much stronger than the same black on a light one): still twice the faint edge of ozden3Dark (0.1).
+SmartButton.DARK_EDGE = White(0.2);
+SmartButton.DARK_BOTTOM_LINE = "inset 0 -2px 0 " + White(0.12);
+// boxKeys: only the keys of the box that differ from ozdenDark (as the light templates from ozden)
+SmartButton.createDarkTemplate = function (boxKeys, hoverColor = "#383835") {
     return {
-        style: {
-            box: box,
-            hover: { color: hoverColor },
-            active: { color: hoverColor },
-            label: { textColor: White(0.85) },
-            icon: { opacity: 0.85, filter: "brightness(0) invert(1)" },
-            focus: { ringColor: "rgba(101, 162, 147, 0.75)" },
-            disabled: { color: "#232322", borderColor: White(0.06), textColor: White(0.28), iconOpacity: 0.25 },
-            press: { brightness: 0.88 },
-            waiting: { dots: { color: "#F1C74A" } },
-        },
-        waitingClock: "ozdenDark",
+        box: Object.assign({ color: "#2E2E2C", borderColor: SmartButton.DARK_EDGE, boxShadow: SmartButton.DARK_BOTTOM_LINE }, boxKeys),
+        hover: { color: hoverColor },
+        label: { textColor: White(0.85) },
+        icon: { opacity: 0.85, filter: SmartButton.WHITE_ICON },
+        focus: { ringColor: "rgba(101, 162, 147, 0.75)" },
+        disabled: { color: "#232322", borderColor: White(0.06), textColor: White(0.28), iconOpacity: 0.25 },
+        press: { brightness: 0.88 },
+        waiting: { clock: "ozdenDark", dots: { color: "#F1C74A" } },
     };
 };
-SmartButton.styles.ozdenType1Dark = SmartButton.createDarkPackage({ color: "#2E2E2C", borderColor: White(0.16), boxShadow: "inset 0 -2px 0 rgba(0, 0, 0, 0.45)" }, "#383835"); // an edge and a bottom line
-SmartButton.styles.ozdenType2Dark = SmartButton.createDarkPackage({ color: "#2E2E2C", borderColor: White(0.16), boxShadow: "none" }, "#383835"); // only the edge
-SmartButton.styles.ozdenType3Dark = SmartButton.createDarkPackage({ color: "#2E2E2C", borderColor: White(0.06), boxShadow: "none" }, "#383835"); // a faint edge
-SmartButton.styles.ozdenType4Dark = SmartButton.createDarkPackage({ color: White(0), border: 0, borderColor: "transparent", boxShadow: "none" }, White(0.08)); // a ghost
+SmartButton.styles.ozdenDark = SmartButton.createDarkTemplate({}); // an edge and a bottom line
+SmartButton.styles.ozden2Dark = SmartButton.createDarkTemplate({ boxShadow: "none" }); // only the edge
+SmartButton.styles.ozden3Dark = SmartButton.createDarkTemplate({ borderColor: White(0.1), boxShadow: "none" }); // a faint edge: the 0.1 of ozden3 in white
+SmartButton.styles.ozden4Dark = SmartButton.createDarkTemplate({ color: White(0), border: 0, borderColor: "transparent", boxShadow: "none" }, White(0.08)); // a ghost
 
-// *** THE TONES AND THE SHAPES (2026-11-02, the user): the color of a button is apart from its shape.
-// color: the strong color; solidHover: its hover; onColor: the text on it (default white); tint / hover: the soft
-// surface; deep: the text of outlined; pillText: the text of pill (default color); light: the light part of a
-// two-tone icon. A new color is one new row.
-SmartButton.ON_COLOR_TEXT = Black(0.75); // the dark text on a light full color
-SmartButton.TONES = {
-    gray: { color: "#6E6F74", deep: "#3A3A3A", tint: "#F0F0F0", hover: "#E6E6E6", solidHover: "#5F6065", light: "#C4C5C9", pillText: "#3A3A3A" },
-    blue: { color: "#2F6FED", deep: "#2563D8", tint: "#E4EDFD", hover: "#D8E5FC", solidHover: "#2563D8", light: "#93B7F7" },
-    green: { color: "#3F9A6C", deep: "#2F8259", tint: "#E6F5EE", hover: "#D9EFE4", solidHover: "#358A5E", light: "#9FD6BC" },
-    purple: { color: "#8B5CF0", deep: "#7C4FE0", tint: "#EFE9FD", hover: "#E6DDFC", solidHover: "#7C4FE0", light: "#C9B4F7" },
-    orange: { color: "#F28C33", deep: "#B8651E", tint: "#FDF1E3", hover: "#FCE8D2", solidHover: "#E57E25", light: "#F7C393" },
-    red: { color: "#E5564A", deep: "#C8443A", tint: "#FDECEA", hover: "#FBDFDC", solidHover: "#D84A3E", light: "#F4B1AB" },
-    yellow: { color: "#D9A400", deep: "#8F6B00", tint: "#FFF7DB", hover: "#FFF0C2", solidHover: "#C99700", light: "#F5DC8A", pillText: "#B88A00" },
-    teal: { color: "#0E9A9A", deep: "#0B7F7F", tint: "#E4F5F5", hover: "#D6EEEE", solidHover: "#0B8C8C", light: "#92D6D6" },
-    sky: { color: "#4FB5D4", deep: "#2A7C93", tint: "#E3F7FB", hover: "#D5F2F8", solidHover: "#3FA6C6", light: "#A5DEEC", pillText: "#2E8BC0" },
-    navy: { color: "#2A3A8C", deep: "#1C2A78", tint: "#DFE3EF", hover: "#D3D8E9", solidHover: "#1C2A78", light: "#8F9AC6" },
-    pink: { color: "#E8457C", deep: "#C93668", tint: "#FDE8EF", hover: "#FBDBE6", solidHover: "#DC3A70", light: "#F5AFC7" },
-    // The situations (2026-10-31, chosen by the user on the draft _designs/smart-button-colors.htm)
-    primary: { color: "#5BBAC1", solidHover: "#50AEB5", onColor: SmartButton.ON_COLOR_TEXT, deep: "#2F8088", tint: "#E6F5F6", hover: "#D9EFF1", light: "#ADDDE0", pillText: "#2F8088" }, // the main action: Save, Send
-    danger: { color: "#E8796D", solidHover: "#E0695C", deep: "#C4574C", tint: "#FDECEA", hover: "#FBDFDC", light: "#F4BDB6", pillText: "#C4574C" }, // a delete, a reject
-    warning: { color: "#F1C74A", solidHover: "#E6BB3C", onColor: SmartButton.ON_COLOR_TEXT, deep: "#8F6B00", tint: "#FFF7DB", hover: "#FFF0C2", light: "#F7E2A0", pillText: "#B88A00" }, // go on, but look first
-    success: { color: "#7BC362", solidHover: "#70B756", onColor: SmartButton.ON_COLOR_TEXT, deep: "#4A8A35", tint: "#EDF7E8", hover: "#E1F1DA", light: "#BDE0AF", pillText: "#4F9A38" }, // after a good result: Done
-    info: { color: "#52A8D0", solidHover: "#479CC4", onColor: SmartButton.ON_COLOR_TEXT, deep: "#2F7DA3", tint: "#E6F3F9", hover: "#D9ECF5", light: "#A6D2E7", pillText: "#2F7DA3" }, // Details, Help
+// THE MINIMAL TEMPLATES (the draft _designs/minimal-theme.htm): small (28 px, a 13 px text, a 14 px icon) and made of
+// lines: no fill, the edge gets darker under the mouse, a blue focus ring, a ring that waits. The main action takes the
+// tone "ink" (inkDark on a dark page): the only filled button of the theme.
+SmartButton.MINIMAL_DANGER = "#C24A36"; // the ask of the minimal templates (on light and dark windows: a white text)
+SmartButton.createMinimalTemplate = function (colors) {
+    const danger = SmartButton.MINIMAL_DANGER;
+    return {
+        height: 28,
+        style: {
+            layout: { gap: 6, padding: [10, 0], iconSideTrim: 0 },
+            icon: { width: 14, height: 14, opacity: 1, filter: colors.iconFilter },
+            label: { fontSize: 13, textColor: colors.text },
+            box: { color: "transparent", border: 1, borderColor: colors.line, round: 4, boxShadow: "none" },
+            hover: { color: "transparent", borderColor: colors.lineHover },
+            focus: { ringColor: colors.focus },
+            disabled: { color: "transparent", borderColor: colors.disabledLine, textColor: colors.disabledText, iconOpacity: 0.4 },
+            press: { scale: 0.97, brightness: 1 },
+            waiting: { clock: colors.clock, contentOpacity: 0.12, clockSize: 16, space: 6 },
+            ask: {
+                button: { color: danger, borderColor: danger, boxShadow: "none", textColor: "white", iconFilter: SmartButton.WHITE_ICON },
+                bubble: { color: danger, textColor: "white", fontSize: 12, bold: 0, round: 4, padding: [8, 4], border: 0, borderColor: "", shadow: "none", arrow: 8, gap: 4, edge: 6 },
+            },
+        },
+    };
+};
+SmartButton.styles.minimal = SmartButton.createMinimalTemplate({
+    text: Black(0.85), line: Black(0.2), lineHover: Black(0.45), focus: "#3D8BD9",
+    disabledLine: Black(0.08), disabledText: Black(0.34), iconFilter: "none", clock: "minimal",
+});
+SmartButton.styles.minimalDark = SmartButton.createMinimalTemplate({
+    text: White(0.88), line: White(0.18), lineHover: White(0.42), focus: "#7FB6DE",
+    disabledLine: White(0.07), disabledText: White(0.35), iconFilter: SmartButton.WHITE_ICON, clock: "minimalDark",
+});
+// A delete in the minimal theme: the line and the text in the danger color (the line half of it, all of it under the
+// mouse). The icon keeps the color of its file: give it an icon drawn in the danger color.
+SmartButton.styles.minimalDanger = SmartButton.createMinimalTemplate({
+    text: "#C24A36", line: "rgba(194, 74, 54, 0.5)", lineHover: "#C24A36", focus: "#3D8BD9",
+    disabledLine: Black(0.08), disabledText: Black(0.34), iconFilter: "none", clock: "minimal",
+});
+SmartButton.styles.minimalDangerDark = SmartButton.createMinimalTemplate({
+    text: "#FF9F93", line: "rgba(255, 159, 147, 0.5)", lineHover: "#FF9F93", focus: "#7FB6DE",
+    disabledLine: White(0.07), disabledText: White(0.35), iconFilter: "none", clock: "minimalDark",
+});
+
+// *** THE TONES: the colors of the kit, with simple color names; a tone for a dark page ends
+// with "Dark". A tone is three colors: the button, the button under the mouse and its text (DARK_TEXT, or LIGHT_TEXT:
+// it turns the icon white too). The light ones are white and the colors of the situations (chosen on the draft
+// _designs/smart-button-colors.htm). Any other color: style (Ex: 02-comp-examples/smart-button-alternatif.htm).
+SmartButton.DARK_TEXT = Black(0.75);
+SmartButton.LIGHT_TEXT = White(0.9);
+SmartButton.tones = {
+    white: { color: "white", hover: "whitesmoke", text: SmartButton.DARK_TEXT },
+    cyan: { color: "#5BBAC1", hover: "#50AEB5", text: SmartButton.DARK_TEXT }, // the main action: Save, Send
+    orange: { color: "#DE815B", hover: "#D4724B", text: SmartButton.DARK_TEXT }, // a delete, a reject
+    yellow: { color: "#F1C74A", hover: "#E6BB3C", text: SmartButton.DARK_TEXT }, // go on, but look first
+    green: { color: "#7BC362", hover: "#70B756", text: SmartButton.DARK_TEXT }, // after a good result: Done
+    blue: { color: "#52A8D0", hover: "#479CC4", text: SmartButton.DARK_TEXT }, // nothing changes: Details, Help
+    // For a dark page: the same colors, 45 % over the dark card #1A1A19 (53 % under the mouse); chosen by the user on
+    // the draft _designs/smart-button2-dark-tones.htm.
+    // WHY 45 %: the light text reads on every one of them (contrast 4.8 - 6.7; 4.5 is enough)
+    cyanDark: { color: "#376265", hover: "#3C6F72", text: SmartButton.LIGHT_TEXT },
+    orangeDark: { color: "#724837", hover: "#82513C", text: SmartButton.LIGHT_TEXT },
+    yellowDark: { color: "#7B682F", hover: "#8C7633", text: SmartButton.LIGHT_TEXT },
+    greenDark: { color: "#46663A", hover: "#4D7440", text: SmartButton.LIGHT_TEXT },
+    blueDark: { color: "#335A6B", hover: "#38657A", text: SmartButton.LIGHT_TEXT },
+    // The main action of the minimal templates (the ink of the theme). edge / hoverEdge: the edge in the color of the
+    // button (a line of the template around a filled button looked like a frame)
+    ink: { color: "#1F1F1F", hover: "#3A3A3A", text: SmartButton.LIGHT_TEXT, edge: "#1F1F1F", hoverEdge: "#3A3A3A" },
+    inkDark: { color: "#EDEDEB", hover: "#FFFFFF", text: "#1A1A19", edge: "#EDEDEB", hoverEdge: "#FFFFFF" },
 };
 
-// The colors of a tone on each shape; "filled" is the look of every other shape.
-SmartButton.toneLooks = {
-    filled: function (tone) {
-        const textColor = tone.onColor || "white";
-        const isWhiteText = (textColor == "white");
-        return {
-            box: { color: tone.color },
-            hover: { color: tone.solidHover },
-            active: { color: tone.solidHover },
-            label: { textColor: textColor },
-            icon: { opacity: isWhiteText ? 1 : 0.8, filter: isWhiteText ? "brightness(0) invert(1)" : "none" },
-        };
-    },
-    ozdenType4: function (tone) {
-        return {
-            hover: { color: tone.tint },
-            active: { color: tone.tint },
-            label: { textColor: tone.deep },
-        };
-    },
-    pill: function (tone) {
-        return {
-            box: { color: tone.tint },
-            hover: { color: tone.hover },
-            active: { color: tone.hover },
-            label: { textColor: tone.pillText || tone.color },
-        };
-    },
-    pillSolid: function (tone) {
-        return {
-            box: { color: tone.color },
-            hover: { color: tone.solidHover },
-            active: { color: tone.solidHover },
-            label: { textColor: tone.onColor || "white" },
-        };
-    },
-    outlined: function (tone) {
-        return {
-            box: { color: tone.tint, borderColor: tone.color, boxShadow: "inset 0 -" + SmartButton.EDGE_WIDTH + "px 0 " + tone.color },
-            hover: { color: tone.hover },
-            active: { color: tone.hover },
-            label: { textColor: tone.deep },
-        };
-    },
+// THE LOOK, the one place of its order: style > tone > the template (styleName) > the defaults. It fills params.style
+// and returns params (getTemplateColors reads a template with it too).
+SmartButton.applyLook = function (params) {
+    SmartButton.applyTone(params);
+    basic.applyStylePackage(params, SmartButton.styles, SmartButtonDefaults);
+    mergeIntoIfMissing(params.style, SmartButtonDefaults.style);
+    return params;
 };
 
+// A tone as a style. No tone: the colors of the template (setTone("") makes a button gray again).
 SmartButton.getToneStyle = function (toneName, styleName) {
-    const tone = SmartButton.TONES[toneName];
+    if (!toneName) return SmartButton.getTemplateColors(styleName);
+    const tone = SmartButton.tones[toneName];
     if (!tone) {
         console.warn("SmartButton: tone not found: " + toneName);
         return {};
     }
-    const createLook = SmartButton.toneLooks[styleName] || SmartButton.toneLooks.filled;
-    return createLook(tone);
+    // WHY the icon: an icon file is drawn dark; with a light text it turns white
+    const isLightText = (tone.text === SmartButton.LIGHT_TEXT);
+    const toneStyle = {
+        box: { color: tone.color },
+        hover: { color: tone.hover },
+        label: { textColor: tone.text },
+        icon: { filter: isLightText ? SmartButton.WHITE_ICON : "none" },
+    };
+    if (tone.edge) {
+        toneStyle.box.borderColor = tone.edge;
+        toneStyle.hover.borderColor = tone.hoverEdge || tone.edge;
+    }
+    return toneStyle;
 };
 
-// The whole look of a package: its keys, then the defaults (a package has only the keys that differ).
-SmartButton.getPackageStyle = function (styleName) {
-    const stylePackage = SmartButton.styles[styleName] || {};
-    const packageStyle = {};
-    mergeIntoIfMissing(packageStyle, stylePackage.style || stylePackage);
-    mergeIntoIfMissing(packageStyle, SmartButtonDefaults.style);
-    return packageStyle;
+// The colors of a template: the button, the button under the mouse, its text and its icon
+SmartButton.getTemplateColors = function (styleName) {
+    const template = SmartButton.applyLook({ styleName: styleName }).style;
+    return {
+        box: { color: template.box.color },
+        hover: { color: template.hover.color },
+        label: { textColor: template.label.textColor },
+        icon: { filter: template.icon.filter },
+    };
 };
 
-// The tone goes under params.style, so a key the page gives still wins. WHY a new object: params.style can be a package.
+// The tone goes under the style of the page, so a color the page gives still wins.
+// WHY a new object: params.style can be a template given as it is (style: SmartButton.styles.ozden2)
 SmartButton.applyTone = function (params) {
     if (!params.tone) return;
-    const styleName = params.styleName || SmartButtonDefaults.styleName;
     const ownStyle = {};
     mergeIntoIfMissing(ownStyle, params.style || {});
-    mergeIntoIfMissing(ownStyle, SmartButton.getToneStyle(params.tone, styleName));
+    mergeIntoIfMissing(ownStyle, SmartButton.getToneStyle(params.tone));
     params.style = ownStyle;
 };
 
-// THE SITUATION PACKAGES: ozdenType1 (an edge and a bottom line) in the color of a situation.
-["primary", "danger", "warning", "success", "info"].forEach(function (toneName) {
-    SmartButton.styles[toneName] = SmartButton.toneLooks.filled(SmartButton.TONES[toneName]);
-});
-
-// THE PILL AND OUTLINED SHAPES (the user: the buttons of 02-comp-examples/smart-button.htm): gray without a tone.
-SmartButton.PILL_ROUND = 100; // always round, at any height
-SmartButton.EDGE_WIDTH = 2; // outlined: the edge and the bottom line on it
-
-SmartButton.PILL_SHAPE = {
-    layout: { gap: 12, padding: [22, 11] },
-    icon: { width: 30, height: 30, opacity: 1 },
-    label: { fontFamily: "opensans-bold" },
-    box: { border: 0, borderColor: "transparent", round: SmartButton.PILL_ROUND, boxShadow: "none" },
-};
-SmartButton.OUTLINED_SHAPE = {
-    layout: { gap: 8, padding: [16, 9] },
-    icon: { width: 30, height: 30, opacity: 1 },
-    label: { fontFamily: "opensans" },
-    box: { border: SmartButton.EDGE_WIDTH, round: SmartButton.PILL_ROUND },
-};
-SmartButton.createShapePackage = function (shape, look) {
-    const shapePackage = {};
-    mergeIntoIfMissing(shapePackage, look);
-    mergeIntoIfMissing(shapePackage, shape);
-    return shapePackage;
-};
-SmartButton.styles.pill = SmartButton.createShapePackage(SmartButton.PILL_SHAPE, SmartButton.toneLooks.pill(SmartButton.TONES.gray));
-SmartButton.styles.pillSolid = SmartButton.createShapePackage(SmartButton.PILL_SHAPE, SmartButton.toneLooks.pillSolid(SmartButton.TONES.gray));
-SmartButton.styles.outlined = SmartButton.createShapePackage(SmartButton.OUTLINED_SHAPE, SmartButton.toneLooks.outlined(SmartButton.TONES.gray));
-
 // *** THE WAITING DRAWINGS: the clock and the dots (comp/loading-screen.js uses them too)
 
-// The clocks of the waiting views with moving hands (the user, 2026-10-29). The sizes are px on a 30 px clock.
+// The clocks of the waiting views with moving hands. The sizes are px on a 30 px clock.
 SmartButton.clocks = {
     ozden: { // a white face, dark lines
         faceColor: "#FFFFFF",
@@ -849,7 +906,7 @@ SmartButton.clocks = {
         hourTurn: 19.2, // seconds for one turn of the hour hand (12 x minuteTurn: a real clock)
     },
 };
-// a dark face, light lines; WHY yellow (the user, 2026-10-29): indianred was weak on the dark face (contrast 3.6,
+// a dark face, light lines; WHY yellow: indianred was weak on the dark face (contrast 3.6,
 // #F1C74A 8.9); the hour hand is dimmer, so the yellow minute hand leads (as the red one on the light clock)
 SmartButton.clocks.ozdenDark = Object.assign({}, SmartButton.clocks.ozden, {
     faceColor: "#2A2A2A",
@@ -859,10 +916,22 @@ SmartButton.clocks.ozdenDark = Object.assign({}, SmartButton.clocks.ozden, {
     centerColor: "#F1C74A",
 });
 
+// The waiting ring of the minimal templates: a faint circle and a quarter arc turning on it, in the color of the text
+// (isRing: SmartButton.createRingSvg draws it in place of a clock).
+SmartButton.clocks.minimal = {
+    isRing: 1,
+    lineColor: Black(0.85),
+    edgeWidth: 3, // on the 30 px drawing (1.6 px at 16 px)
+    trackOpacity: 0.2, // the circle under the arc
+    turnTime: 0.8, // seconds for one turn of the arc
+};
+SmartButton.clocks.minimalDark = Object.assign({}, SmartButton.clocks.minimal, { lineColor: White(0.88) });
+
 // The clock as an SVG text (as wide as its box): a face with an edge, the minute hand up, the hour hand to the right.
 SmartButton.CLOCK_SIZE = 30; // the px of the drawing
 SmartButton.createClockSvg = function (clockStyle) {
     SmartButton.injectCss();
+    if (clockStyle.isRing) return SmartButton.createRingSvg(clockStyle);
     const c = clockStyle;
     const size = SmartButton.CLOCK_SIZE;
     const middle = size / 2;
@@ -876,6 +945,18 @@ SmartButton.createClockSvg = function (clockStyle) {
         hand(middle + c.hourLength, middle, c.hourWidth, c.hourColor || c.lineColor, c.hourTurn) + // the hour hand (under)
         hand(middle, middle - c.minuteLength, c.minuteWidth, c.minuteColor, c.minuteTurn) + // the minute hand
         '<circle cx="' + middle + '" cy="' + middle + '" r="' + (c.centerSize / 2) + '" fill="' + c.centerColor + '"/>' +
+        "</svg>";
+};
+
+// A ring that waits: a faint circle and a quarter arc turning on it (the turn of the hands of the clock)
+SmartButton.createRingSvg = function (ring) {
+    const size = SmartButton.CLOCK_SIZE;
+    const middle = size / 2;
+    const radius = middle - ring.edgeWidth / 2;
+    const arc = "M" + middle + " " + (middle - radius) + " A" + radius + " " + radius + " 0 0 1 " + (middle + radius) + " " + middle;
+    return '<svg viewBox="0 0 ' + size + ' ' + size + '" width="100%" height="100%" aria-hidden="true" style="display: block">' +
+        '<circle cx="' + middle + '" cy="' + middle + '" r="' + radius + '" fill="none" stroke="' + ring.lineColor + '" stroke-opacity="' + ring.trackOpacity + '" stroke-width="' + ring.edgeWidth + '"/>' +
+        '<path class="smart-button-hand" d="' + arc + '" fill="none" stroke="' + ring.lineColor + '" stroke-width="' + ring.edgeWidth + '" stroke-linecap="round" style="animation-duration: ' + ring.turnTime + 's"/>' +
         "</svg>";
 };
 

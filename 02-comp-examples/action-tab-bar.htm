@@ -18,14 +18,13 @@
 
         /* Bismillah */
 
-        // SAMPLE: ActionTabBar (comp/action-tab-bar.js), the tab bar of javascript-mobile-app-template
-        // (custom-tab-bar.htm) with its big round "+": at the bottom of a white page. The labels in the middle
+        // SAMPLE: ActionTabBar (comp/action-tab-bar.js) with its big round "+": at the bottom of a white page. The labels in the middle
         // show the selected tab (onChange) and the taps of the "+" (onAction).
-        // The page is drawn 600 px wide and fitted to the screen (page.fit(600, 800)), like the old template.
+        // The page is drawn 600 px wide and fitted to the screen (page.fit(600, 600)).
 
         // *** VARIABLES:
         const DESIGN_WIDTH = 600; // px: the width the page is drawn for
-        const MAX_WIDTH = 800; // px: on a wider screen the page stops growing at this width
+        const MAX_WIDTH = 600; // px: on a wider screen the page stops growing at this width
         const TAB_BAR_HEIGHT = 150;
         const TABS = [
             { key: "status", text: "STATUS", iconFile: "../assets/tab-bar/status.png" },
@@ -42,7 +41,7 @@
             page.onResize(fitToWindow);
 
             // GROUP: Fills the window and puts the page in its middle
-            AutoLayout({ align: "center top" });
+            HGroup({ align: "center top" });
 
                 // BOX: The page (600 px)
                 startBox({ width: DESIGN_WIDTH, height: "100%", color: "white" });
@@ -67,7 +66,7 @@
 
                 endBox();
 
-            endAutoLayout();
+            endGroup();
 
             showPage(tabBar);
 

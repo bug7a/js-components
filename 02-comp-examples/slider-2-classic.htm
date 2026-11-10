@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+
+        <title>Slider JS Component</title>
+
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <!-- LIBRARY FILES -->
+        <!-- <link rel="preload" href="image.png" as="image"> -->
+        <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+        <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
+        <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
+        <!--<script src="../basic/scroll-bar.min.js" type="text/javascript" charset="utf-8"></script>-->
+
+        <script src="../comp/slider.js" type="text/javascript" charset="utf-8"></script>
+
+        <script>
+
+        // Slider (comp/slider.js) in its classic look (inspired by Material 3): two sliders, one with its own track. New pages use "round": slider.htm.
+
+        const start = function () {
+
+            page.color = "lightgray";
+
+            // PAGE:
+            VGroup({
+                align: "center",
+                gap: 6,
+            });
+
+                // SLIDER A TITLE:
+                createSliderTitle("Carrots", "../assets/fruids/havuc.png");
+
+                // SLIDER: A
+                const sliderA = Slider({
+                    value: random(0,100),
+                });
+
+                // SPACING
+                Box({
+                    height: 20,
+                    color: "transparent",
+                });
+
+                // SLIDER B TITLE
+                createSliderTitle("Blueberries", "../assets/fruids/yabanmersini.png");
+
+                // SLIDER: B
+                const sliderB = Slider({
+                    trackHeight: 44,
+                    trackColor: "indianred",
+                    value: random(0,100),
+                });
+
+            endGroup();
+
+            // GROUP: Top left buttons
+            HGroup({
+                align: "top left",
+                gap: 8,
+                padding: [20, 20],
+            });
+
+                createPageButton("Set Random Values", function () {
+                    sliderA.setValue(random(0,100));
+                    sliderB.setValue(random(0,100));
+                });
+
+                createPageButton("Show Values", function () {
+                    sliderA.showValue();
+                    sliderB.showValue();
+                });
+
+            endGroup();
+
+            // GROUP: Bottom info
+            VGroup({
+                align: "left bottom",
+                padding: [20 ,20],
+            });
+
+                Label({
+                    text: "Inspired by Google Material 3",
+                    fontSize: 16,
+                });
+
+                Label({
+                    text: "(Not affiliated with Google)",
+                    opacity: 0.7,
+                    fontSize: 14,
+                });
+
+            endGroup();
+
+        };
+
+        // A label that works as a button
+        const createPageButton = function (text, onClick) {
+            const button = Label({
+                text: text,
+                padding: [12, 4],
+                color: "white",
+                border: 0,
+                borderColor: "rgba(0,0,0,0.1)",
+                round: 8,
+                fontSize: 14,
+                cursor: "pointer",
+            });
+            button.on("click", onClick);
+        };
+
+        const createSliderTitle = function (titleText, iconPath) {
+
+            // GROUP: An icon and a title
+            HGroup({
+                align: "left center",
+                height: "auto",
+                width: 250,
+                gap: 8,
+                padding: [12, 0, 0, 0],
+            });
+
+                Icon({
+                    width: 32,
+                    height: 32,
+                });
+                that.load(iconPath);
+
+                Label({
+                    text: titleText,
+                });
+
+            endGroup();
+
+        };
+
+        </script>
+
+    </head>
+    <body>
+
+        <!-- HTML content -->
+
+    </body>
+</html>

@@ -5,10 +5,10 @@
 Full Screen Select - v26.11
 
 A select field that opens its list on the whole screen: a search box at the top, a close button, the items under it
-(a phone app, a long list). The new version of comp-m1/ui-select-text.js (UISelectText, removed on 2026-10-28) with the same look.
+(a phone app, a long list).
 - The field: the text of the selected item, two small arrows at the right side. A click (or Enter, Space, the down
   arrow) opens the list. autoWidth: 1 -> the field is as wide as its text.
-- The list: it comes in from below with a fade. The search box (comp/search-input-v2.js SearchInput, load it
+- The list: it comes in from below with a fade. The search box (comp/search-input.js SearchInput, load it
   first; without it there is no search box) shows only the items with the typed text (Turkish letters are found
   without their marks); Enter selects the first one. The selected item has a soft yellow color.
   searchIconFile / clearIconFile: the icons of the search box ("": the default files of SearchInput, which are
@@ -18,26 +18,28 @@ A select field that opens its list on the whole screen: a search box at the top,
 - Only one list is open at a time (FullScreenSelect.openedSelect). The list is made on page when it first opens,
   hidden when it closes and removed with the field (box.own); setItems() makes it again at the next open.
 - Motion: the list comes in from below with a fade in 0.2 s (transform and opacity) and goes out at once
-  (the user, 2026-10-28); no motion when the system asks for reduced motion.
-- Style packages: "classic" (default, the look of UISelectText), "dark". (FullScreenSelect.styles)
+; no motion when the system asks for reduced motion.
+- Style packages: "light" (default; the old name "classic" works too), "dark". (FullScreenSelect.styles)
 
 USAGE:
 const fruits = FullScreenSelect({
     width: 320,
-    items: [{ key: "banana", title: "Banana" }, { key: "peach", title: "Peach" }, "Kiwi"],
+    items: [{ key: "banana", text: "Banana" }, { key: "peach", text: "Peach" }, "Kiwi"],
     selectedKey: "banana",
     onChange: function (self) { println(self.selectedKey); },
 });
 fruits.setSelectedKey("peach");      // onChange runs (silent: fruits.setSelectedKey("peach", 1))
 fruits.setItems(otherItems);
-fruits.getSelectedItem();            // { key, title } or null
+fruits.getSelectedItem();            // { key, text } or null
 fruits.open(); fruits.close();
 FullScreenSelect({ styleName: "dark", ... });
 
-Started Date: 22 February 2022 (UISelectText), October 2026 (FullScreenSelect)
-Developer: Bugra Ozden
-Email: bugra.ozden@gmail.com
+Started Date: October 2026
 Webpage: https://bug7a.github.io/js-components/
+
+Copyright 2020-2026 Bugra Ozden <bugra.ozden@gmail.com> (https://bug7a.github.io/)
+Licensed under the Apache License, Version 2.0
+SPDX-License-Identifier: Apache-2.0
 
 */
 
@@ -47,9 +49,9 @@ Webpage: https://bug7a.github.io/js-components/
 const FullScreenSelectDefaults = {
     width: 200,
     height: 50,
-    items: [], // [{ key, title }] or ["Text"] (the text is its key). ({ id, name } of UISelectText is read too.)
+    items: [], // [{ key, text }] or ["Text"] (the text is its key)
     selectedKey: null, // null: the first item
-    placeholderText: "Search",
+    placeholder: "Search",
     emptyText: "No results",
     autoWidth: 0, // 1: the field is as wide as the text of the selected item
     showSearch: 1, // 0: no search box (a short list)
@@ -61,15 +63,15 @@ const FullScreenSelectDefaults = {
     onChange: function (self) {}, // self.selectedKey changed (not at create time, not with silent: 1)
     onOpen: function (self) {},
     onClose: function (self) {},
-    styleName: "classic", // "classic", "dark" or a name added to FullScreenSelect.styles
-    style: { // Classic style package (default): the look of UISelectText
+    styleName: "light", // "light" ("classic": its old name), "dark" or a name added to FullScreenSelect.styles
+    style: { // Light style package (default)
         box: { color: "whitesmoke", round: 4, border: 0 },
         focus: { ringColor: "rgba(95, 158, 160, 0.6)" },
         label: { left: 10, fontSize: 20, textColor: Black(0.8) },
         arrow: { size: 16, right: 8, gap: 7, opacity: 0.7, invert: 0 }, // gap: from the middle to each arrow
         panel: { color: "white", zIndex: 3000, slide: 150 }, // slide: px, from below when it opens
         search: { left: 20, top: 40, height: 50, closeGap: 10, color: "whitesmoke", textColor: "gray", round: 25, fontSize: 20, iconOpacity: 0.4 }, // closeGap: to the close button
-        searchStyleName: "classic",
+        searchStyleName: "original", // the first look of SearchInput
         closeButton: { size: 30, right: 20, top: 50, color: "#D8D8D8", iconSize: 14, iconOpacity: 0.5, invert: 0 },
         list: { left: 10, top: 110, gap: 0 },
         item: { height: 60, sideSpace: 20, round: 4, color: "white", fontSize: 20, textColor: "#4A4A4A", textLeft: 30 },
@@ -83,7 +85,7 @@ const FullScreenSelectDefaults = {
 
 const FullScreenSelect = function (params = {}) {
 
-    // Merge style package: params.style > FullScreenSelect.styles[styleName] > FullScreenSelectDefaults.style (classic)
+    // Merge style package: params.style > FullScreenSelect.styles[styleName] > FullScreenSelectDefaults.style (light)
     basic.applyStylePackage(params, FullScreenSelect.styles, FullScreenSelectDefaults);
 
     // Merge params:
@@ -126,8 +128,8 @@ const FullScreenSelect = function (params = {}) {
 
     const applyContent = function () {
         const item = findItem(box.selectedKey);
-        box.lblText.plainText = item ? item.title : "";
-        box.aria = { label: box.ariaLabel || (item ? item.title : ""), expanded: !!box.isOpen };
+        box.lblText.plainText = item ? item.text : "";
+        box.aria = { label: box.ariaLabel || (item ? item.text : ""), expanded: !!box.isOpen };
     };
 
     const fitAutoWidth = function () {
@@ -195,7 +197,7 @@ const FullScreenSelect = function (params = {}) {
 
     // Every open starts with an empty search and the selected item in sight.
     const resetPanel = function () {
-        if (box.panel.searchInput) box.panel.searchInput.setText("");
+        if (box.panel.searchInput) box.panel.searchInput.setValue("", 1);
         searchText = null;
         filterRows("");
         box.panel.listBox.elem.scrollTop = 0;
@@ -214,7 +216,7 @@ const FullScreenSelect = function (params = {}) {
         box.panel = createIn(page, function () {
 
             // BOX: Full screen list
-            const panel = startBox(0, 0, "100%", "100%", { color: _s.panel.color, zIndex: _s.panel.zIndex, role: "dialog", aria: { modal: true, label: box.ariaLabel || box.placeholderText } });
+            const panel = startBox(0, 0, "100%", "100%", { color: _s.panel.color, zIndex: _s.panel.zIndex, role: "dialog", aria: { modal: true, label: box.ariaLabel || box.placeholder } });
             panel.rows = [];
 
                 createSearch(panel);
@@ -269,8 +271,8 @@ const FullScreenSelect = function (params = {}) {
             searchIconOpacity: search.iconOpacity,
             border: 0,
             borderBottomStyle: "none",
-            placeholderText: box.placeholderText,
-            onSearch: function (text) { filterRows(text); },
+            placeholder: box.placeholder,
+            onChange: function (self) { filterRows(self.getSearchText()); },
         };
         // WHY only when given: a file given here would win over the icon of the style package of SearchInput
         if (box.searchIconFile) searchParams.searchIconFile = box.searchIconFile;
@@ -334,7 +336,7 @@ const FullScreenSelect = function (params = {}) {
             row.lblText = Label({
                 left: itemStyle.textLeft,
                 width: "calc(100% - " + (itemStyle.textLeft * 2) + "px)",
-                plainText: item.title,
+                plainText: item.text,
                 fontSize: itemStyle.fontSize,
                 textColor: itemStyle.textColor,
                 ellipsis: 1,
@@ -378,11 +380,11 @@ const FullScreenSelect = function (params = {}) {
 
     const filterRows = function (text) {
         const newSearchText = FullScreenSelect.toSearchText(text).trim();
-        // WHY: SearchInput calls onSearch at every keyup, the arrow keys too: they must not reset the focused item
+        // WHY: the same text again (a search that is asked again) must not reset the focused item
         if (newSearchText === searchText) return;
         searchText = newSearchText;
         box.panel.rows.forEach(function (row) {
-            const isShown = (searchText == "") || FullScreenSelect.toSearchText(row.item.title).includes(searchText);
+            const isShown = (searchText == "") || FullScreenSelect.toSearchText(row.item.text).includes(searchText);
             row.visible = isShown ? 1 : 0;
         });
         box.panel.lblEmpty.visible = (getShownRows().length == 0) ? 1 : 0;
@@ -479,6 +481,7 @@ const FullScreenSelect = function (params = {}) {
         box.isOpen = 1;
         FullScreenSelect.openedSelect = box;
         if (!box.panel) createPanel();
+        box.panel.zIndex = basic.zIndexAbove(box, _s.panel.zIndex); // WHY at open: a field in a Dialog (4000 and up) opens its list over it
         applyContent();
         showPanel(1);
         resetPanel(); // (after showPanel: a hidden list can not scroll to the selected item)
@@ -532,7 +535,7 @@ const FullScreenSelect = function (params = {}) {
         css: { top: "50%", transform: "translateY(-50%)", whiteSpace: "nowrap", overflow: "hidden" },
     });
     if (box.autoWidth != 1) {
-        // WHY a mask: a long text fades out before the arrows on any color of the field (UISelectText: a box with the gradient of its color)
+        // WHY a mask: a long text fades out before the arrows on any color of the field
         const fade = "linear-gradient(to right, black calc(100% - " + TEXT_FADE + "px), transparent)";
         box.lblText.css = { maskImage: fade, webkitMaskImage: fade };
     }
@@ -564,14 +567,13 @@ const FullScreenSelect = function (params = {}) {
 
 FullScreenSelect.openedSelect = null; // The select whose list is open
 
-// [{ key, title }] from items: objects ({ key, title } or { id, name }) or texts
+// [{ key, text }] from items: objects { key, text } or texts
 FullScreenSelect.toItems = function (items) {
     if (!Array.isArray(items)) return [];
     return items.map(function (item) {
-        if (item === null || typeof item !== "object") return { key: String(item), title: String(item) };
-        const key = (item.key !== undefined) ? item.key : item.id;
-        const title = (item.title !== undefined) ? item.title : item.name;
-        return { key: key, title: (title === undefined || title === null) ? String(key) : String(title) };
+        if (item === null || typeof item !== "object") return { key: String(item), text: String(item) };
+        const text = (item.text === undefined || item.text === null) ? String(item.key) : String(item.text);
+        return { key: item.key, text: text };
     });
 };
 
@@ -584,11 +586,11 @@ FullScreenSelect.toSearchText = function (value) {
 // *** STYLE PACKAGES:
 // USAGE: FullScreenSelect({ styleName: "dark" })
 // USAGE: FullScreenSelect({ style: { itemSelected: { color: "#BFDBC9" } } }) // Change only some keys.
-// NOTE: A new package needs only the keys that differ from the classic style.
+// NOTE: A new package needs only the keys that differ from the light style.
 FullScreenSelect.styles = {
 
-    // The look of UISelectText: a whitesmoke field, a white list, a soft yellow selected item.
-    classic: FullScreenSelectDefaults.style,
+    // A whitesmoke field, a white list, a soft yellow selected item.
+    light: FullScreenSelectDefaults.style,
 
     // For a dark page.
     dark: {
@@ -609,3 +611,4 @@ FullScreenSelect.styles = {
     },
 
 };
+FullScreenSelect.styles.classic = FullScreenSelect.styles.light; // the old name of light: the pages made with it keep their look

@@ -4,11 +4,9 @@
 
 SortableList - v26.10
 
-2026-10-28: Drag preview escapes scroll clipping; document pointer events prevent stuck rows.
-
 UI COMPONENT TEMPLATE
-- A list whose order can be changed. (Sıralama nesnesi: verilen itemlerin sırasını düzenleyebildiğin liste.)
-- Items: strings or objects { key, text, desc, locked }. getItems() / getKeys() give the new order.
+- A list whose order can be changed.
+- Items: strings or objects { key, text, description, locked }. getItems() / getKeys() give the new order.
 - Mouse and touch: drag the handle (dragBy: "handle", default) or the whole row (dragBy: "row").
   The other rows slide out of the way. Near the top / bottom edge the list scrolls by itself.
 - Keyboard: ArrowUp / ArrowDown move the focus. Space or Enter grabs the row, the arrow keys move it,
@@ -22,7 +20,7 @@ UI COMPONENT TEMPLATE
 - onChange(self, item, fromIndex, toIndex) is NOT called when the component is created,
   by setItems() or by the silent: 1 parameter.
 - Everything is drawn with code (no image files needed).
-- Style packages: "classic" (default), "modern", "dark". Select with styleName. (SortableList.styles)
+- Style packages: "light" (default; the old name "classic" works too), "modern", "dark". Select with styleName. (SortableList.styles)
 
 USAGE:
 const list = SortableList({
@@ -33,15 +31,17 @@ const list = SortableList({
 });
 list.getItems();                          // Items in the new order (the same objects / strings you gave)
 list.moveItem(0, 2);                      // onChange is called
-list.addItem({ key: "hr", text: "Staff", desc: "Headcount by department" });
+list.addItem({ key: "hr", text: "Staff", description: "Headcount by department" });
 list.removeItem(1);
 SortableList({ items: [{ key: "home", text: "Home", locked: 1 }, "Orders", "Reports"], showButtons: 1, removable: 1 });
 SortableList({ height: "auto", dragBy: "row", showNumbers: 0, styleName: "modern" });
 
 Started Date: September 2026
-Developer: Bugra Ozden
-Email: bugra.ozden@gmail.com
 Webpage: https://bug7a.github.io/js-components/
+
+Copyright 2020-2026 Bugra Ozden <bugra.ozden@gmail.com> (https://bug7a.github.io/)
+Licensed under the Apache License, Version 2.0
+SPDX-License-Identifier: Apache-2.0
 
 */
 
@@ -52,7 +52,7 @@ const SortableListDefaults = {
     key: "0",
     width: 340,
     height: 320, // "auto": grows with the rows (no scrolling)
-    items: [], // Strings or { key, text, desc, locked }
+    items: [], // Strings or { key, text, description, locked } (style.desc is the look of the description)
     dragBy: "handle", // "handle": drag by the grip at the left, "row": drag by the whole row (touch: the list then scrolls only by the scroll bar)
     showHandle: 1, // The grip at the left. (dragBy: "row" can hide it)
     showNumbers: 1, // Position numbers
@@ -81,8 +81,8 @@ const SortableListDefaults = {
     onItemClick: function (self, item, index) { },
     onDragStart: function (self, item, index) { },
     onDragEnd: function (self, item, index) { }, // index: the new position
-    styleName: "classic", // "classic", "modern", "dark" or a name added to SortableList.styles
-    style: { // Classic style package (default)
+    styleName: "light", // "light" ("classic": its old name), "modern", "dark" or a name added to SortableList.styles
+    style: { // Light style package (default)
         box: {
             color: "transparent",
             border: 0,
@@ -161,7 +161,7 @@ const SortableListDefaults = {
 
 const SortableList = function (params = {}) {
 
-    // Merge style package: params.style > SortableList.styles[styleName] > SortableListDefaults.style (classic)
+    // Merge style package: params.style > SortableList.styles[styleName] > SortableListDefaults.style (light)
     basic.applyStylePackage(params, SortableList.styles, SortableListDefaults);
 
     // Merge params:
@@ -191,7 +191,7 @@ const SortableList = function (params = {}) {
     const AUTO_SCROLL_EDGE = 48; // px: the edge (top / bottom) where the list scrolls by itself
     const AUTO_SCROLL_SLOWDOWN = 3; // The speed is the depth into the edge divided by this.
     const AUTO_SCROLL_MAX_SPEED = 18; // px per frame
-    let entries = []; // { item, key, text, desc, locked, row, ... } in the current order
+    let entries = []; // { item, key, text, description, locked, row, ... } in the current order
     let drag = null; // Pointer drag state
     let grab = null; // Keyboard grab state: { entry, startIndex }
     let isSettling = 0; // The dropped row is sliding to its place
@@ -206,7 +206,7 @@ const SortableList = function (params = {}) {
 
     // *** PRIVATE FUNCTIONS:
 
-    // "Sales" or { key, text, desc, locked } -> entry
+    // "Sales" or { key, text, description, locked } -> entry
     const toEntry = function (item) {
         const isObject = (item !== null && typeof item === "object");
         const text = isObject ? String(item.text ?? item.key ?? "") : String(item ?? "");
@@ -214,7 +214,7 @@ const SortableList = function (params = {}) {
             item: item,
             key: isObject ? String(item.key ?? text) : text,
             text: text,
-            desc: isObject ? String(item.desc ?? "") : "",
+            description: isObject ? String(item.description ?? "") : "",
             locked: (isObject && basic.isOn(item.locked)) ? 1 : 0,
             row: null,
         };
@@ -379,6 +379,9 @@ const SortableList = function (params = {}) {
 
     const onRowKeyDown = function (entry, event) {
 
+        // WHY: the keys of a field inside the row (createItemView) are its own: Backspace in it removed the row,
+        //      a space could not be typed (DataTable, SmartTable and Stepper check the target too)
+        if (event.target !== entry.row.elem) return;
         if (box.enabled != 1 || isSettling) return;
         const key = event.key;
         const index = indexOf(entry);
@@ -529,16 +532,28 @@ const SortableList = function (params = {}) {
         box.onDragStart(box, drag.entry.item, index);
     };
 
-    // Target: the dragged row passes a row when its center passes the center of that row.
-    const findDragTarget = function (center) {
+    // How far the dragged row moves (dy) to sit at the index: the rows between move out of its way.
+    const getDropDy = function (state, index) {
+        const from = state.index;
+        const tops = state.tops;
+        const heights = state.heights;
+        if (index < from) return tops[index] - tops[from];
+        if (index > from) return (tops[index] + heights[index]) - (tops[from] + heights[from]);
+        return 0;
+    };
+
+    // Target: the dragged row takes a place when it is past the middle of the way to it.
+    // WHY: The dragged row stops at the edge of the list. A rule like "its center passes the center of a row"
+    //      can not reach the first and the last place there (its center stops on the center of that row).
+    const findDragTarget = function (dy) {
         const index = drag.index;
-        const tops = drag.tops;
-        const heights = drag.heights;
         for (let k = drag.minIndex; k < index; k++) {
-            if (center < tops[k] + heights[k] / 2) return k;
+            const middle = (getDropDy(drag, k) + getDropDy(drag, k + 1)) / 2;
+            if (dy < middle) return k;
         }
         for (let k = drag.maxIndex; k > index; k--) {
-            if (center > tops[k] + heights[k] / 2) return k;
+            const middle = (getDropDy(drag, k - 1) + getDropDy(drag, k)) / 2;
+            if (dy > middle) return k;
         }
         return index;
     };
@@ -553,19 +568,16 @@ const SortableList = function (params = {}) {
     const updateDrag = function () {
         if (!drag || !drag.active) return;
         const index = drag.index;
-        const tops = drag.tops;
-        const heights = drag.heights;
         let dy = (drag.lastY - drag.startY) + (getScrollTop() - drag.startScroll);
-        const minDy = tops[drag.minIndex] - tops[index];
-        const maxDy = (tops[drag.maxIndex] + heights[drag.maxIndex]) - (tops[index] + heights[index]);
+        const minDy = getDropDy(drag, drag.minIndex); // The dragged row stays between its first and its last place.
+        const maxDy = getDropDy(drag, drag.maxIndex);
         dy = Math.max(minDy, Math.min(dy, maxDy));
         drag.dy = dy;
 
-        const center = tops[index] + heights[index] / 2 + dy;
-        const target = findDragTarget(center);
+        const target = findDragTarget(dy);
         drag.target = target;
 
-        const slot = heights[index] + box.rowGap;
+        const slot = drag.heights[index] + box.rowGap;
         entries.forEach(function (e, k) {
             if (k === index) return;
             let shift = 0;
@@ -633,12 +645,8 @@ const SortableList = function (params = {}) {
         stopAutoScroll();
         const finished = drag;
         const from = finished.index;
-        const tops = finished.tops;
-        const heights = finished.heights;
         const target = apply ? finished.target : from;
-        let finalDy = 0;
-        if (target > from) finalDy = (tops[target] + heights[target]) - (tops[from] + heights[from]);
-        else if (target < from) finalDy = tops[target] - tops[from];
+        const finalDy = getDropDy(finished, target);
         if (!apply) {
             entries.forEach(function (e, k) {
                 if (k !== from) e.row.css.transform = "";
@@ -718,7 +726,7 @@ const SortableList = function (params = {}) {
     // "Sales, Monthly totals, Locked"
     const getRowLabel = function (entry) {
         let label = entry.text;
-        if (entry.desc) label += ", " + entry.desc;
+        if (entry.description) label += ", " + entry.description;
         if (entry.locked) label += ", " + box.texts.locked;
         return label;
     };
@@ -859,9 +867,9 @@ const SortableList = function (params = {}) {
                         ellipsis: 1,
                     });
                     if (_s.text.fontFamily) row.lblText.css.fontFamily = _s.text.fontFamily;
-                    if (entry.desc) {
+                    if (entry.description) {
                         row.lblDesc = Label({
-                            plainText: entry.desc,
+                            plainText: entry.description,
                             width: "100%",
                             fontSize: _s.desc.fontSize,
                             textColor: _s.desc.textColor,
@@ -951,7 +959,7 @@ const SortableList = function (params = {}) {
         entries = (Array.isArray(items) ? items : []).map(toEntry);
         render();
     };
-    // USAGE: list.setItems(["A", "B", { key: "c", text: "C", desc: "Third", locked: 1 }]) // onChange is not called.
+    // USAGE: list.setItems(["A", "B", { key: "c", text: "C", description: "Third", locked: 1 }]) // onChange is not called.
 
     box.getItems = function () {
         return entries.map(function (e) { return e.item; });
@@ -1136,7 +1144,7 @@ SortableList.getCloseSvg = function (color, size) {
 SortableList.styles = {
 
     // White rows with a thin border.
-    classic: SortableListDefaults.style,
+    light: SortableListDefaults.style,
 
     // Soft cadetblue rows, no border. Same colors as the modern Stepper, CheckBox, ProgressBar and Tabs.
     modern: {
@@ -1170,3 +1178,4 @@ SortableList.styles = {
     },
 
 };
+SortableList.styles.classic = SortableList.styles.light; // the old name of light: the pages made with it keep their look

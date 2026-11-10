@@ -1,47 +1,66 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
 
-        <title>ActionButton</title>
+<head>
+    <title>ActionButton</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- LIBRARY FILES -->
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Bold.ttf" as="font" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="../basic/basic.css">
+    <script src="../basic/basic.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../basic/scroll-bar.js" type="text/javascript" charset="utf-8"></script>
 
-        <!-- LIBRARY FILES -->
-        <link rel="stylesheet" type="text/css" href="../basic/basic.css">
-        <script src="../basic/basic.js" type="text/javascript" charset="utf-8"></script>
+    <!-- COMPONENT FILES -->
+    <script src="../comp/smart-button.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/action-button.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/scroll-area.js" type="text/javascript" charset="utf-8"></script>
 
-        <!-- COMPONENT -->
-        <script src="../comp/action-button.js" type="text/javascript" charset="utf-8"></script>
-
-        <script>
+    <script>
 
         /* Bismillah */
 
-        // SAMPLE: ActionButton (comp/action-button.js), the new version of comp-m1/ui-action-button.js
-        // (02-comp-m1-samples/ui-action-button.htm) with the same look. Above it: styleName "ozden".
+        // ActionButton (comp/action-button.js): the round button at the bottom right of the window and the menu it
+        // opens. The yellow one is the default, the one over it is styleName "ozden". onAction gives the key of the
+        // chosen item.
+
+        // *** THE COLORS AND SIZES OF THE PAGE
+        const PAGE_COLOR = "#F4F5F2";
+        const CARD_WIDTH = 420;
 
         const ACTIONS = [
-            { key: "photo", labelText: "Take a Photo" },
-            { key: "gallery", labelText: "Add from Gallery" },
-            { key: "url", labelText: "Add from URL" },
+            { key: "photo", text: "Take a Photo" },
+            { key: "gallery", text: "Add from Gallery" },
+            { key: "url", text: "Add from URL" },
         ];
 
-        // *** VARIABLES:
         let fab, fabOzden, lblAction, btnAnimated;
 
         const start = function () {
 
-            page.color = "whitesmoke";
+            page.color = PAGE_COLOR;
 
-            // LABEL: What onAction gives
-            lblAction = Label({ left: 40, top: 40, text: "Click the yellow button at the bottom right.", fontSize: 16, textColor: Black(0.5) });
+            // SCROLL AREA: The page (comp/scroll-area.js)
+            ScrollArea({ align: "center top", gap: 20, padding: [16, 40] });
 
-            // BUTTON: animated on / off (context/basic-js-animated-rules.md)
-            btnAnimated = Button({ left: 40, top: 80, width: 160, height: 40, fontSize: 15, text: "animated: 1" });
-            btnAnimated.on("click", toggleAnimated);
+                Label({ text: "ActionButton", fontSize: 24, bold: 1, textColor: Black(0.8) });
 
-            // ACTION BUTTON
+                // CARD: What to try
+                startCard("Click a round button at the bottom right: its menu opens. The key of the item you choose is written here.");
+
+                    // LABEL: What onAction gives
+                    lblAction = Label({ text: "onAction: -", fontSize: 13, textColor: Black(0.5) });
+
+                    // BUTTON: animated on / off (context/basic-js-animated-rules.md)
+                    btnAnimated = SmartButton({ labelText: "animated: 1", onClick: toggleAnimated });
+
+                endCard();
+
+            endGroup();
+
+            // ACTION BUTTON: the default (at the bottom right of the window)
             fab = ActionButton({
                 items: ACTIONS,
                 animated: 1,
@@ -61,20 +80,43 @@
 
         // *** OTHER FUNCTIONS:
 
-        const showAction = function (key) {
-            lblAction.text = "onAction: " + key;
+        const showAction = function (self, key) {
+            lblAction.plainText = "onAction: " + key;
         };
 
         const toggleAnimated = function () {
             const value = (fab.animated) ? 0 : 1;
             fab.setAnimated(value);
             fabOzden.setAnimated(value);
-            btnAnimated.text = "animated: " + value;
+            btnAnimated.setLabelText("animated: " + value);
         };
 
-        </script>
+        // GROUP: A white card with a line that says what to try
+        const startCard = function (text) {
+            VGroup({
+                width: CARD_WIDTH,
+                height: "auto",
+                align: "left top",
+                gap: 14,
+                padding: 24,
+                color: "white",
+                round: 10,
+                border: 1,
+                borderColor: Black(0.08),
+                css: { maxWidth: "100%" }, // WHY maxWidth: on a phone the card is as wide as the screen
+            });
+            Label({ text: text, fontSize: 13, textColor: Black(0.55) });
+        };
 
-    </head>
-    <body>
-    </body>
+        const endCard = function () {
+            endGroup();
+        };
+
+    </script>
+
+</head>
+
+<body>
+</body>
+
 </html>

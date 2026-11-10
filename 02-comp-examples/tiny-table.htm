@@ -15,13 +15,13 @@
 
     <script src="../comp/scrolling-text.js" type="text/javascript" charset="utf-8"></script>
     <script src="../comp/tiny-table.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/scroll-area.js" type="text/javascript" charset="utf-8"></script>
 
     <script>
 
     /* Bismillah */
 
-    // TinyTable (comp-m4): a light table for short lists. The new version of comp-m1/tiny-table.js with the same look
-    // (the first table is its sample: 02-comp-m1-samples/tiny-table.htm).
+    // TinyTable: a light table for short lists.
 
     const COLUMNS = [
         { title: "ID", width: 50, align: "center" },
@@ -53,7 +53,15 @@
     // GROUP: A title over a sample
     // WHY clipContent: 0: a group cuts its content at its round corners; the corner of the table was cut there
     const startSample = function (title, look = {}) {
-        VGroup({ hug: 1, align: "left top", gap: 10, padding: look.padding || 0, color: look.color || "transparent", round: 12, clipContent: 0 });
+        VGroup({
+            hug: 1,
+            align: "left top",
+            gap: 10,
+            padding: look.padding || 0,
+            color: look.color || "transparent",
+            round: 12,
+            clipContent: 0,
+        });
         Label({ plainText: title, fontSize: 14, bold: 1, textColor: look.textColor || Black(0.5) });
     };
 
@@ -65,38 +73,36 @@
 
         page.color = "#F0F1EE";
 
-        const pageBox = startBox(0, 0, "100%", "100%", { color: "transparent", scrollY: 1, scrollX: 1 });
+        ScrollArea({ align: "center top", gap: 30, padding: 40, scrollX: 1 });
 
-            VGroup({ width: "100%", height: "auto", align: "center top", gap: 30, padding: 40 });
-            // WHY: on a phone the samples are wider than the screen: the group grows, the page scrolls sideways (centered, the left side was cut)
-            that.css = { width: "max-content", minWidth: "100%" };
+            Label({ text: "TinyTable", fontSize: 26, bold: 1, textColor: Black(0.8) });
 
-                Label({ text: "TinyTable", fontSize: 26, bold: 1, textColor: Black(0.8) });
+            startSample("classic · allowHtml: 1, onCellCreate, header indianred");
+                TinyTable({
+                    columns: COLUMNS,
+                    rows: ROWS,
+                    allowHtml: 1,
+                    style: { header: { color: "indianred", textColor: White(0.8) } },
+                    onCellCreate: boldValue,
+                    onRowClick: function (self, rowIndex) { println("Row: " + rowIndex); },
+                });
+            endSample();
 
-                startSample("classic · the comp-m1 sample (allowHtml: 1, onCellCreate, header indianred)");
-                    TinyTable({
-                        columns: COLUMNS,
-                        rows: ROWS,
-                        allowHtml: 1,
-                        style: { header: { color: "indianred", textColor: White(0.8) } },
-                        onCellCreate: boldValue,
-                        onRowClick: function (self, rowIndex) { println("Row: " + rowIndex); },
-                    });
-                endSample();
+            startSample("styleName: \"light\" · bodyHeight: " + SCROLL_HEIGHT + " (the rows scroll)");
+                TinyTable({
+                    styleName: "light",
+                    columns: COLUMNS,
+                    rows: PLAIN_ROWS.concat(PLAIN_ROWS),
+                    bodyHeight: SCROLL_HEIGHT,
+                    onCellCreate: boldValue,
+                });
+            endSample();
 
-                startSample("styleName: \"light\" · bodyHeight: " + SCROLL_HEIGHT + " (the rows scroll)");
-                    TinyTable({ styleName: "light", columns: COLUMNS, rows: PLAIN_ROWS.concat(PLAIN_ROWS), bodyHeight: SCROLL_HEIGHT, onCellCreate: boldValue });
-                endSample();
+            startSample("styleName: \"dark\"", { color: "#141414", textColor: White(0.6), padding: 20 });
+                TinyTable({ styleName: "dark", columns: COLUMNS, rows: PLAIN_ROWS, onCellCreate: boldValue });
+            endSample();
 
-                startSample("styleName: \"dark\"", { color: "#141414", textColor: White(0.6), padding: 20 });
-                    TinyTable({ styleName: "dark", columns: COLUMNS, rows: PLAIN_ROWS, onCellCreate: boldValue });
-                endSample();
-
-            endGroup();
-
-        endBox();
-
-        if (typeof ScrollBar !== "undefined") ScrollBar({ scrollableBox: pageBox });
+        endGroup();
 
     };
 

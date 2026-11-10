@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+
+        <title>Canvas</title>
+
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <!-- LIBRARY FILES -->
+        <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
+        <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../basic/scroll-bar.min.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- COMPONENT FILES -->
+        <script src="../comp/tooltip.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/smart-button.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/canvas.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/scroll-area.js" type="text/javascript" charset="utf-8"></script>
+
+        <script>
+
+        /* Bismillah */
+
+        // Canvas (comp/canvas.js): a place to draw on.
+        // 1. The shapes: every type; the sun can be dragged, a click names the shape.
+        // 2. Free drawing with a pen of three colors; Clear; the drawing as a picture.
+        // 3. On a dark page: 300 dots that move at every frame.
+
+        // *** VARIABLES:
+        const PAGE_COLOR = "#ECEBE8";
+        const CARD_COLOR = "#FFFFFF";
+        const DARK_CARD_COLOR = "#232322";
+        const SOFT_TEXT = "#6F6E6B";
+        const DARK_SOFT_TEXT = White(0.55);
+        const CARD_MIN_WIDTH = 340;
+        const CARD_MAX_WIDTH = 480;
+        const CARD_ROUND = 12;
+        const BOARD_HEIGHT = 280;
+        const PEN_COLORS = [{ labelText: "Black", color: "#373836" }, { labelText: "Cyan", color: "#3F8D94" }, { labelText: "Orange", color: "#E0913A" }];
+        const DOT_COUNT = 300;
+
+        // First running function. (basic.js calls it when the page is ready)
+        const start = function () {
+
+            page.color = PAGE_COLOR;
+
+            // SCROLL AREA: Page (it scrolls when the window is lower than the samples)
+            ScrollArea({ align: "center top", gap: 16, padding: [16, 28] });
+
+                Label({ text: "Canvas", fontSize: 24, bold: 1, textColor: Black(0.8) });
+
+                // GROUP: The samples side by side (one under the other on a narrow screen)
+                HGroup({ width: "100%", height: "auto", align: "center top", gap: 20, wrap: 1, clipContent: 0 });
+                    createShapes();
+                    createFreeDrawing();
+                    createDots();
+                endGroup();
+
+            endGroup();
+
+        };
+
+        // *** OTHER FUNCTIONS:
+
+        // GROUP: A card with a title and a note. endGroup() closes it.
+        const startCard = function (titleText, noteText, color, textColor, softColor) {
+            VGroup({
+                width: "auto",
+                height: "auto",
+                align: "left top",
+                gap: 12,
+                padding: 20,
+                color: color,
+                round: CARD_ROUND,
+                clipContent: 0,
+                css: { flex: "1 1 " + CARD_MIN_WIDTH + "px", maxWidth: CARD_MAX_WIDTH + "px", minWidth: "0" },
+            });
+            Label({ text: titleText, fontSize: 15, bold: 1, textColor: textColor });
+            Label({ width: "100%", text: noteText, fontSize: 13, textColor: softColor });
+        };
+
+        const createShapes = function () {
+
+            startCard("The shapes", "Drag the sun; a click names the shape", CARD_COLOR, Black(0.75), SOFT_TEXT);
+
+                const lblClicked = Label({ text: "Click a shape", fontSize: 14, textColor: Black(0.7) });
+                const board = Canvas({
+                    width: "100%",
+                    height: BOARD_HEIGHT,
+                    onClick: function (self, x, y, shape) {
+                        lblClicked.plainText = (shape) ? shape.type + " (" + shape.key + ")" : "Nothing at " + x + ", " + y;
+                    },
+                    onShapeMove: function (self, shape) {
+                        lblClicked.plainText = "The sun is at " + Math.round(shape.x) + ", " + Math.round(shape.y);
+                    },
+                });
+                // WHY the ground is wide: the card may be wider than the scene.
+                board.addRect(0, 200, CARD_MAX_WIDTH, 80, { fill: "#E3EEDC", key: "ground" });
+                board.addPolygon([[20, 200], [90, 115], [160, 200]], { fill: "#9DBE8C", key: "hill" });
+                board.addRect(190, 140, 80, 60, { fill: "#F6E7C8", color: "#C98B4B", round: 4, key: "house" });
+                board.addPolygon([[180, 140], [230, 102], [280, 140]], { fill: "#C98B4B", key: "roof" });
+                board.addLine(16, 240, 170, 258, { color: "#5E8C4A", lineWidth: 4, dash: [10, 6], key: "path" });
+                board.addEllipse(250, 245, 44, 14, { fill: "#B9D7EA", key: "lake" });
+                board.addPolyline([[120, 56], [138, 46], [156, 56], [174, 46]], { color: Black(0.5), lineWidth: 2, key: "bird" });
+                board.addText(16, 14, "A small town", { fontSize: 18, bold: 1, key: "title" });
+                board.addCircle(270, 64, 30, { fill: "#E0913A", draggable: 1, key: "sun" });
+
+            endGroup();
+
+        };
+
+        const createFreeDrawing = function () {
+
+            startCard("Free drawing", "drawing: 1, setPen(), clear(), getImage()", CARD_COLOR, Black(0.75), SOFT_TEXT);
+
+                const lblLines = Label({ text: "Draw with the mouse or a finger", fontSize: 14, textColor: Black(0.7) });
+                const board = Canvas({
+                    width: "100%",
+                    height: BOARD_HEIGHT,
+                    drawing: 1,
+                    penWidth: 4,
+                    onDrawEnd: function (self, shape) {
+                        lblLines.plainText = self.getShapes().length + " lines (the last one: " + shape.points.length + " points)";
+                    },
+                });
+
+                // GROUP: The pens and the buttons
+                HGroup({ width: "100%", height: "auto", align: "left center", gap: 8, wrap: 1, clipContent: 0 });
+                    PEN_COLORS.forEach(function (pen) {
+                        SmartButton({ labelText: pen.labelText, onClick: function () { board.setPen(pen.color); } });
+                    });
+                    SmartButton({ labelText: "Clear", tone: "orange", onClick: function () {
+                        board.clear();
+                        lblLines.plainText = "Draw with the mouse or a finger";
+                    } });
+                    SmartButton({ labelText: "Picture", tone: "cyan", onClick: function () { downloadPicture(board); } });
+                endGroup();
+
+            endGroup();
+
+        };
+
+        const downloadPicture = function (board) {
+            const link = document.createElement("a");
+            link.href = board.getImage();
+            link.download = "drawing.png";
+            link.click();
+        };
+
+        const createDots = function () {
+
+            startCard("On a dark page", "styleName: \"dark\"; " + DOT_COUNT + " dots move at every frame (moveShape)", DARK_CARD_COLOR, White(0.85), DARK_SOFT_TEXT);
+
+                const board = Canvas({ width: "100%", height: BOARD_HEIGHT, styleName: "dark" });
+                const dots = makeDots(board);
+                moveDots(board, dots);
+
+            endGroup();
+
+        };
+
+        const makeDots = function (board) {
+            const dots = [];
+            for (let index = 0; index < DOT_COUNT; index++) {
+                const hue = 170 + (index % 40);
+                const key = board.addCircle(random(10, 300), random(10, BOARD_HEIGHT - 10), random(2, 5), { fill: "hsl(" + hue + ", 45%, 60%)" });
+                dots.push({ key: key, dx: random(-20, 20) / 10, dy: random(-20, 20) / 10 });
+            }
+            return dots;
+        };
+
+        // Every dot goes on in its own way and turns back at an edge.
+        const moveDots = function (board, dots) {
+            dots.forEach(function (dot) {
+                const shape = board.getShape(dot.key);
+                if (shape.x < 0 || shape.x > board.elem.clientWidth) dot.dx = -dot.dx;
+                if (shape.y < 0 || shape.y > BOARD_HEIGHT) dot.dy = -dot.dy;
+                board.moveShape(dot.key, dot.dx, dot.dy);
+            });
+            requestAnimationFrame(function () { moveDots(board, dots); });
+        };
+
+        </script>
+    </head>
+
+    <body></body>
+
+</html>

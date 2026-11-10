@@ -17,29 +17,31 @@ UI COMPONENT TEMPLATE
 - maxVisible: Old toasts are closed when there are too many.
 - Small screens: Toasts use the full width.
 - Accessibility: Errors use role="alert", others role="status". Escape closes the focused toast.
-- Scale (2026-11-01): scale multiplies every size of a toast (its style, its shadow, its motion); the scale of
+- Scale: scale multiplies every size of a toast (its style, its shadow, its motion); the scale of
   Toast.options multiplies the places of the toasts (width, offsets, gap, smallScreenWidth). null (default):
   Toast.options.scale, else basic.uiScale (1; a page fitted with page.fit() sets 1 / page.zoom: the toasts keep
   their size on the screen).
 
 USAGE:
 Toast.success("Changes are saved.");
-Toast.error("Could not save the file.", { title: "Upload failed", duration: 0 });
-Toast.show({ type: "info", title: "Item deleted", message: "report.pdf", action: { text: "Undo", onClick: undoDelete } });
-Toast.show({ key: "copy", type: "success", message: "Link is copied." }); // Same key: updates the visible toast
+Toast.error("Could not save the file.", { titleText: "Upload failed", duration: 0 });
+Toast.show({ type: "info", titleText: "Item deleted", messageText: "report.pdf", action: { text: "Undo", onClick: undoDelete } });
+Toast.show({ key: "copy", type: "success", messageText: "Link is copied." }); // Same key: updates the visible toast
 Toast.promise(saveData(), { loading: "Saving...", success: "Saved.", error: (err) => "Failed: " + err.message });
 Toast.setOptions({ position: "bottom-right", theme: "dark" });
 Toast.setOptions({ scale: 1.5 }); // every toast and its place x 1.5 (default: basic.uiScale)
 
-const toast = Toast.show({ type: "loading", message: "Uploading 0%" });
-toast.update({ message: "Uploading 60%" });
-toast.update({ type: "success", message: "Uploaded." }); // Starts its timer (loading has no timer)
+const toast = Toast.show({ type: "loading", messageText: "Uploading 0%" });
+toast.update({ messageText: "Uploading 60%" });
+toast.update({ type: "success", messageText: "Uploaded." }); // Starts its timer (loading has no timer)
 toast.close();
 
 Started Date: September 2026
-Developer: Bugra Ozden
-Email: bugra.ozden@gmail.com
 Webpage: https://bug7a.github.io/js-components/
+
+Copyright 2020-2026 Bugra Ozden <bugra.ozden@gmail.com> (https://bug7a.github.io/)
+Licensed under the Apache License, Version 2.0
+SPDX-License-Identifier: Apache-2.0
 
 */
 
@@ -49,9 +51,9 @@ Webpage: https://bug7a.github.io/js-components/
 const ToastDefaults = {
     key: "", // Same key: updates the visible toast.
     type: "info", // "success", "error", "warning", "info", "loading"
-    title: "",
-    message: "",
-    allowHtml: 0, // 0: title and message are shown as text. 1: As HTML (use only your own texts).
+    titleText: "",
+    messageText: "",
+    allowHtml: 0, // 0: titleText and messageText are shown as text. 1: As HTML (use only your own texts).
     duration: null, // ms. null: Toast.options.durations[type]. 0: Stays until it is closed.
     closable: 1, // 1: Close button
     showProgress: 1, // 1: Time bar
@@ -61,7 +63,7 @@ const ToastDefaults = {
     theme: null, // null: Toast.options.theme
     scale: null, // every size multiplied (Ex: 1.5). null: Toast.options.scale
     onClick: null, // function (toast) {} Click on the toast (not on the buttons)
-    onClose: function (toast, reason) { }, // reason: "timeout", "close", "action", "limit", "api"
+    onClose: function (self, reason) { }, // reason: "timeout", "close", "action", "limit", "api"
     style: { // (its sizes are px, multiplied by scale)
         card: {
             round: 10,
@@ -104,7 +106,19 @@ const ToastDefaults = {
 
 const Toast = function (params = {}) {
 
-    // Merge params:
+    // WHY: The other components take styleName; a toast takes theme (the colors, also "auto") and style (the shapes).
+    //      Without this line a styleName is kept quietly and the toast keeps the theme of the page.
+    if (params.styleName) console.warn("Toast: styleName is not used. The colors come with theme (\"light\", \"dark\", \"auto\", \"minimal\", \"minimalDark\"), the shapes with style.");
+
+    // Merge params: the shapes of its theme (Toast.THEMES[name].style: minimal), then the defaults
+    // WHY before the defaults: the shapes of a theme win over the default shapes, a style of the page over both
+    const themeOfParams = Toast.THEMES[params.theme || Toast.options.theme];
+    if (themeOfParams && themeOfParams.style) {
+        const ownStyle = {};
+        mergeIntoIfMissing(ownStyle, params.style || {});
+        mergeIntoIfMissing(ownStyle, themeOfParams.style);
+        params.style = ownStyle;
+    }
     mergeIntoIfMissing(params, ToastDefaults);
 
     const options = Toast.options;
@@ -206,20 +220,20 @@ const Toast = function (params = {}) {
 
         box.icon.text = Toast.getIconSvg(box.type, color, _s.icon.size);
 
-        box.lblTitle.visible = (box.title) ? 1 : 0;
-        box.lblTitle.text = getViewText(box.title);
+        box.lblTitle.visible = (box.titleText) ? 1 : 0;
+        box.lblTitle.text = getViewText(box.titleText);
         box.lblTitle.textColor = theme.title;
 
-        box.lblMessage.visible = (box.message) ? 1 : 0;
-        box.lblMessage.text = getViewText(box.message);
-        box.lblMessage.textColor = (box.title) ? theme.message : theme.title; // WHY: Without a title, the message is the main text.
+        box.lblMessage.visible = (box.messageText) ? 1 : 0;
+        box.lblMessage.text = getViewText(box.messageText);
+        box.lblMessage.textColor = (box.titleText) ? theme.message : theme.title; // WHY: Without a title, the message is the main text.
 
         const hasAction = !!(box.action && box.action.text);
         box.btnAction.visible = (hasAction) ? 1 : 0;
         if (hasAction) {
             box.btnAction.plainText = box.action.text;
-            box.btnAction.textColor = color;
-            box.btnAction.color = Toast.alpha(color, 0.12);
+            box.btnAction.textColor = theme.actionText || color;
+            box.btnAction.color = theme.actionFill || Toast.alpha(color, 0.12);
         }
 
         box.btnClose.visible = (box.closable == 1) ? 1 : 0;
@@ -319,7 +333,7 @@ const Toast = function (params = {}) {
     // Changes the toast and starts its timer again.
     box.update = function (values = {}) {
         if (!box || box.isClosing) return box;
-        ["type", "title", "message", "allowHtml", "duration", "closable", "showProgress", "pauseOnHover", "theme", "onClick", "action"].forEach(function (key) {
+        ["type", "titleText", "messageText", "allowHtml", "duration", "closable", "showProgress", "pauseOnHover", "theme", "onClick", "action"].forEach(function (key) {
             if (key in values) box[key] = values[key];
         });
         if (!("duration" in values)) box.duration = null; // WHY: A new type (loading -> success) uses its own duration.
@@ -327,7 +341,7 @@ const Toast = function (params = {}) {
         startTimer();
         return box;
     };
-    // USAGE: toast.update({ type: "success", message: "Uploaded." })
+    // USAGE: toast.update({ type: "success", messageText: "Uploaded." })
 
     // A small move to show that the toast is updated.
     box.bump = function () {
@@ -592,14 +606,15 @@ Toast.POSITIONS = ["top-right", "top-center", "top-left", "bottom-right", "botto
 // Global options. Change with Toast.setOptions().
 Toast.options = {
     position: "top-right",
-    theme: "auto", // "light", "dark", "auto"
+    theme: "auto", // "light", "dark", "auto", "minimal", "minimalDark"
     width: 360,
     offset: 16, // Space to the screen edges
     offsetTop: null, // Space to the top edge (Ex: under the header of an app). null: offset
     offsetBottom: null, // Space to the bottom edge (Ex: over a tab bar). null: offset
     gap: 10, // Space between toasts
     maxVisible: 5, // In one position
-    zIndex: 3000,
+    zIndex: 45000, // WHY: over the Dialogs (4000 and up: a toast under the cover of a dialog could not be clicked, its
+                   //      Undo closed the dialog), under Notice (50000) and Tooltip (100000)
     smallScreenWidth: 520, // Page width: toasts use the full width below this.
     durations: { success: 3000, info: 4000, warning: 5000, error: 7000, loading: 0 },
     // The px above (width, offsets, gap, smallScreenWidth) multiplied, and the scale of a toast without its own.
@@ -610,7 +625,8 @@ Toast.options = {
 // *** THEMES: the colors. (The style param has the shapes and the sizes.)
 // USAGE: Toast.success("Saved", { theme: "dark" })
 // USAGE: Toast.setOptions({ theme: "auto" }) // Every toast: "light", "dark", "auto" (the system setting)
-// NOTE: A new theme needs only the keys that differ from the light theme.
+// NOTE: A new theme needs only the keys that differ from the light theme. actionText / actionFill: the colors of the
+// action button ("": the color of the type, and a pale fill of it).
 // USAGE: Toast.THEMES.ocean = { background: "#0B2239", title: "#FFFFFF" };
 Toast.THEMES = {
     light: {
@@ -635,6 +651,44 @@ Toast.THEMES = {
     },
 };
 
+// The minimal theme (_designs/minimal-theme.htm): on the ground of the window with a line and no shadow; style: its
+// shapes too (a theme with a style gives the shapes, under the style of the page): smaller and less round.
+Toast.MINIMAL_SHAPES = {
+    card: { round: 4, padding: [12, 10], gap: 10, border: 1 },
+    icon: { size: 16, marginTop: 1 },
+    title: { fontSize: 13 },
+    message: { fontSize: 12 },
+    action: { fontSize: 12, padding: [0, 2], round: 4, marginTop: 4 }, // WHY no side room: a text with no fill, in the line of the message
+    close: { size: 20, iconSize: 14, round: 4, marginTop: -2, marginRight: -4 },
+    progress: { height: 2, opacity: 0.45 },
+};
+Toast.THEMES.minimal = {
+    background: "#FFFFFF",
+    border: Black(0.2),
+    shadow: "none",
+    title: Black(0.85),
+    message: Black(0.55),
+    close: Black(0.45),
+    closeHover: Black(0.05),
+    actionText: "#1F1F1F",
+    actionFill: "transparent",
+    colors: { success: "#2E9E74", error: "#C24A36", warning: "#B77A00", info: "#3D8BD9", loading: Black(0.55) },
+    style: Toast.MINIMAL_SHAPES,
+};
+Toast.THEMES.minimalDark = {
+    background: "#1A1A19",
+    border: White(0.18),
+    shadow: "none",
+    title: White(0.88),
+    message: White(0.55),
+    close: White(0.5),
+    closeHover: White(0.06),
+    actionText: "#EDEDEB",
+    actionFill: "transparent",
+    colors: { success: "#7FE3B5", error: "#FF9F93", warning: "#E8B23A", info: "#7FB6DE", loading: White(0.55) },
+    style: Toast.MINIMAL_SHAPES,
+};
+
 // [toast] Visible toasts (oldest first)
 Toast.list = [];
 
@@ -649,19 +703,19 @@ Toast.show = function (params = {}) {
 };
 
 Toast.success = function (message, params = {}) {
-    return Toast(Object.assign({}, params, { type: "success", message: message }));
+    return Toast(Object.assign({}, params, { type: "success", messageText: message }));
 };
 
 Toast.error = function (message, params = {}) {
-    return Toast(Object.assign({}, params, { type: "error", message: message }));
+    return Toast(Object.assign({}, params, { type: "error", messageText: message }));
 };
 
 Toast.warning = function (message, params = {}) {
-    return Toast(Object.assign({}, params, { type: "warning", message: message }));
+    return Toast(Object.assign({}, params, { type: "warning", messageText: message }));
 };
 
 Toast.info = function (message, params = {}) {
-    return Toast(Object.assign({}, params, { type: "info", message: message }));
+    return Toast(Object.assign({}, params, { type: "info", messageText: message }));
 };
 
 // A "loading" toast that becomes "success" or "error". Returns the promise.
@@ -670,7 +724,7 @@ Toast.promise = function (promise, texts = {}, params = {}) {
 
     const toast = Toast(Object.assign({}, params, {
         type: "loading",
-        message: texts.loading || "Loading...",
+        messageText: texts.loading || "Loading...",
         duration: 0,
         closable: 0,
     }));
@@ -680,9 +734,9 @@ Toast.promise = function (promise, texts = {}, params = {}) {
     };
 
     promise.then(function (data) {
-        toast.update({ type: "success", message: getText(texts.success, data) || "Done.", closable: 1 });
+        toast.update({ type: "success", messageText: getText(texts.success, data) || "Done.", closable: 1 });
     }, function (error) {
-        toast.update({ type: "error", message: getText(texts.error, error) || "Something went wrong.", closable: 1 });
+        toast.update({ type: "error", messageText: getText(texts.error, error) || "Something went wrong.", closable: 1 });
     });
 
     return promise;
@@ -835,4 +889,3 @@ Toast.getCloseSvg = function (color, size = 16) {
     return '<svg xmlns="http://www.w3.org/2000/svg" width="' + size + '" height="' + size + '" viewBox="0 0 24 24" fill="none" stroke="' + color +
         '" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>';
 };
-

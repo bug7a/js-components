@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <title>SmartTable</title>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Bold.ttf" as="font" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="../basic/basic.css">
+    <script src="../basic/basic.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../basic/scroll-bar.js" type="text/javascript" charset="utf-8"></script>
+
+    <script src="../comp/search-input.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/context-menu.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/tooltip.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/smart-table.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/scroll-area.js" type="text/javascript" charset="utf-8"></script>
+
+    <script>
+
+    /* Bismillah */
+
+    // SmartTable: the model page. New pages take their table from here:
+    // "classic" (the default) on a light page, "dark" on a dark page; both are the looks of DataTable. "green" is the
+    // look of SmartTable before them. Rest the mouse on a cut text: a bubble shows all of it (comp/tooltip.js).
+    // More samples: smart-table-2.htm ... smart-table-5.htm (2M rows); smart-table-4.htm has a style of its own.
+
+    const CARD_WIDTH = 640;
+    const CUSTOMER_COUNT = 500;
+    const LINE_COUNT = 8;
+
+    const NAMES = ["Ayşe Yılmaz", "John Smith", "İlker Şahin", "Jane Doe", "Emre Çelik", "Sofia Rodriguez", "Peter Johnson",
+        "Zeynep Öztürk", "Ahmed Ali", "Olivia Brown", "Can Doğan", "Emma Williams", "Muhammed Abdurrahman Karaosmanoğlu"];
+    const CITIES = ["İstanbul", "London", "İzmir", "Paris", "Ankara", "Madrid", "Berlin", "Tokyo"];
+    const NOTES = [
+        "Leave the parcel with the neighbor at number 12 when nobody is at home.",
+        "Gift wrap every order and add a handwritten thank-you card.",
+        "",
+        "The invoice must have the company name: Öztürk Yazılım ve Danışmanlık A.Ş.",
+        "Calls after 18:00 only.",
+        "Returns are picked up from the back entrance of the building, the doorbell at the front does not work.",
+    ];
+
+    // "Ayşe Yılmaz" -> "ayse.yilmaz" (the letters of an e-mail address)
+    const toEmailName = function (name) {
+        return SmartTable.toSearchText(name).split(" ").join(".");
+    };
+
+    // 500 customers: { id, name, email, city, orders, note }
+    const CUSTOMERS = [];
+    for (let i = 1; i <= CUSTOMER_COUNT; i++) {
+        const name = NAMES[i % NAMES.length];
+        const mailDomain = (i % 3) ? "mail.com" : "company-with-a-long-name.co.uk";
+        CUSTOMERS.push({
+            id: i,
+            name: name,
+            email: toEmailName(name) + "@" + mailDomain,
+            city: CITIES[(i * 3) % CITIES.length],
+            orders: (i * 37) % 90 + 1,
+            note: NOTES[i % NOTES.length],
+        });
+    }
+
+    const CUSTOMER_COLUMNS = [
+        { name: "#", dataTitle: "id", dataType: "integer", width: 70, sortable: 1 },
+        { name: "Customer", dataTitle: "name", dataType: "string", width: 170, sortable: 1 },
+        { name: "E-mail", dataTitle: "email", dataType: "string", width: 200, sortable: 1 },
+        { name: "City", dataTitle: "city", dataType: "string", width: 110, sortable: 1 },
+        { name: "Orders", dataTitle: "orders", dataType: "integer", width: 100, sortable: 1 },
+        { name: "Note", dataTitle: "note", dataType: "string", width: 240, sortable: 0 },
+    ];
+
+    // The page look of each style package (the table sits on it)
+    const LOOKS = {
+        light: { color: "white", textColor: Black(0.5) },
+        dark: { color: "#141414", textColor: White(0.5) },
+    };
+
+    // GROUP: A card with a title and a short description.
+    const startCard = function (title, description, look) {
+        VGroup({
+            width: CARD_WIDTH,
+            height: "auto",
+            align: "left top",
+            gap: 12,
+            padding: 16,
+            color: look.color,
+            round: 12,
+            border: 1,
+            borderColor: Black(0.1),
+            css: { alignItems: "stretch", maxWidth: "100%" },
+        });
+        Label({ plainText: title, fontSize: 14, textColor: look.textColor, bold: 1 });
+        Label({
+            plainText: description,
+            fontSize: 13,
+            textColor: look.textColor,
+            width: "100%",
+            css: { lineHeight: "1.4" },
+        });
+    };
+
+    const endCard = function () {
+        endGroup();
+    };
+
+    const showCustomer = function (label, customer) {
+        label.plainText = "Selected: " + customer.id + " · " + customer.name + " · " + customer.city;
+    };
+
+    const createStyleSample = function (styleName, description, look) {
+        startCard("styleName: \"" + styleName + "\"", description, look);
+            SmartTable({
+                styleName: styleName,
+                titleDataList: CUSTOMER_COLUMNS,
+                itemDataList: CUSTOMERS,
+                itemLineCount: LINE_COUNT,
+                sortByTitleIndex: 0,
+                sortDirection: "A-Z",
+                style: { width: "100%", height: "auto" },
+                onSelect: function (self, customer) { showCustomer(info, customer); },
+            });
+            const info = Label({
+                plainText: "Click a row, then ↑ ↓, Page Up / Page Down, Home / End.",
+                width: "100%",
+                fontSize: 13,
+                textColor: look.textColor,
+            });
+        endCard();
+    };
+
+    const start = function () {
+
+        page.color = "#E9EAE6";
+
+        ScrollArea({ align: "center top", gap: 24, padding: 32 });
+
+            Label({ text: "SmartTable", fontSize: 26, bold: 1, textColor: Black(0.8) });
+            Label({
+                plainText: "Very many rows and columns · more samples: smart-table-2 ... smart-table-5 · a better looking table for fewer rows: DataTable",
+                width: "100%",
+                fontSize: 14,
+                textColor: Black(0.45),
+                textAlign: "center",
+            });
+
+            // GROUP: The style packages
+            HGroup({ width: "100%", height: "auto", align: "center top", gap: 20, wrap: 1 });
+
+                createStyleSample(
+                    "classic",
+                    "The default, for a light page: the look of DataTable \"classic\". Rest the mouse on a cut e-mail or note: a bubble shows all of it.",
+                    LOOKS.light
+                );
+
+                createStyleSample(
+                    "dark",
+                    "For a dark page: the look of DataTable \"dark\". The filter box is the SearchInput \"ozdenDark\".",
+                    LOOKS.dark
+                );
+
+                createStyleSample(
+                    "green",
+                    "An older look: a green title line, a dark edge, big texts. A page with its own colors over it names it (styleName: \"green\").",
+                    LOOKS.light
+                );
+
+            endGroup();
+
+        endGroup();
+
+    };
+
+    </script>
+
+</head>
+<body>
+</body>
+</html>

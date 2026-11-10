@@ -13,7 +13,7 @@
         <script src="../basic/scroll-bar.js" type="text/javascript" charset="utf-8"></script>
 
         <!-- COMPONENTS -->
-        <script src="../comp/search-input-v2.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/search-input.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/data-table.js" type="text/javascript" charset="utf-8"></script>
 
         <!-- DATA -->
@@ -53,9 +53,10 @@
                     width: TABLE_WIDTH,
                     height: TABLE_HEIGHT,
                     rowHeight: ROW_HEIGHT,
+                    css: { maxWidth: "100%" }, // WHY maxWidth: on a phone the table is as wide as the screen (its rows scroll to the side)
                     titleText: "People",
                     showSearch: 1,
-                    searchParams: { placeholderText: "Name or city" },
+                    searchParams: { placeholder: "Name or city" },
                     columns: [
                         { key: "id", title: "ID", valueIndex: 0, type: "number", width: 64, align: "center", sortable: 1, cellColor: ID_COLOR, cellStyle: { bold: 1 } },
                         { key: "name", title: "First And Last Name", valueIndex: 1, width: 230, sortable: 1, cellStyle: { fontSize: 13 } },
@@ -86,7 +87,14 @@
         // BOX: A small bar; the value (0 - 100) fills a part of it
         const createSmallChart = function (cell, value) {
 
-            startBox({ width: CHART_WIDTH, height: CHART_HEIGHT, color: "white", border: 1, borderColor: Black(0.8), round: 2 });
+            startBox({
+                width: CHART_WIDTH,
+                height: CHART_HEIGHT,
+                color: "white",
+                border: 1,
+                borderColor: Black(0.8),
+                round: 2,
+            });
 
                 // BOX: Value
                 Box(0, 0, Math.max(0, Math.min(100, value)) + "%", "100%", {

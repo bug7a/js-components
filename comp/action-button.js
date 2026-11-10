@@ -8,11 +8,9 @@ UI COMPONENT
 - A floating action button at the bottom right of its container (the page): a round button with a + icon.
   A click opens the menu of actions at its left side; a click on an action, on the button again, outside the
   menu or Escape closes it. With fewer than 2 actions the button runs onAction at once (no menu).
-- The new version of comp-m1/ui-action-button.js (UIActionButton), with the same look. (Sample:
-  02-comp-m1-samples/ui-action-button.htm)
 - The component covers its container (100% x 100%) but lets the mouse through: only the button, the open menu
   and its cover (to close it) catch clicks.
-- Style packages: "classic" (default, the look of UIActionButton), "ozden" (an ink button with a white icon, a
+- Style packages: "classic" (default), "ozden" (an ink button with a white icon, a
   white menu with a shadow, animated: 1). Select with styleName. (ActionButton.styles)
 - animated: 1 (context/basic-js-animated-rules.md): the button grows a little with a soft shadow under the mouse
   and gets smaller when pressed, the menu grows out of the button and closes faster, its actions come in one
@@ -23,11 +21,11 @@ UI COMPONENT
 USAGE:
 const fab = ActionButton({
     items: [
-        { key: "photo", labelText: "Take a Photo" },
-        { key: "gallery", labelText: "Add from Gallery" },
+        { key: "photo", text: "Take a Photo" },
+        { key: "gallery", text: "Add from Gallery" },
         "Add from URL", // a text: its key is the text
     ],
-    onAction: function (key, self) { println("Action: " + key); },
+    onAction: function (self, key) { println("Action: " + key); },
 });
 fab.setItems([...]);
 fab.openMenu(); fab.closeMenu(); fab.toggleMenu();
@@ -37,10 +35,12 @@ ActionButton({ animated: 1, items: [...] }); // small, smooth motions
 ActionButton({ onAction: function () { addNewNote(); } }); // no items: a direct button
 ActionButton({ style: { button: { color: "#8BC34A" } } }); // Change only some keys of the style.
 
-Started Date: October 2026 (UIActionButton: 22 August 2022)
-Developer: Bugra Ozden
-Email: bugra.ozden@gmail.com
+Started Date: October 2026
 Webpage: https://bug7a.github.io/js-components/
+
+Copyright 2020-2026 Bugra Ozden <bugra.ozden@gmail.com> (https://bug7a.github.io/)
+Licensed under the Apache License, Version 2.0
+SPDX-License-Identifier: Apache-2.0
 
 */
 
@@ -53,8 +53,8 @@ const ActionButtonDefaults = {
     top: 0,
     width: "100%",
     height: "100%",
-    items: [], // [{ key, labelText }] or ["text"]
-    iconFile: "../comp/action-button/add.png",
+    items: [], // [{ key, text }] or ["text"]
+    iconFile: "data:image/svg+xml;utf8," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" preserveAspectRatio="none" fill="#000000"><path d="M231 0H281V512H231ZM0 231H512V281H0Z"/></svg>'), // a plus (a page can give its own picture)
     openIconFile: "", // "": iconFile. The icon while the menu is open.
     iconSize: 30,
     iconRotate: 0, // deg
@@ -64,10 +64,10 @@ const ActionButtonDefaults = {
     menuWidth: 280,
     menuGap: 20, // Between the menu and the button
     animated: 0, // 1: small hover / press / open motions (context/basic-js-animated-rules.md). (box.setAnimated(0/1))
-    onAction: function (key, self) { }, // An action was chosen (no items: key is "", one item: its key)
+    onAction: function (self, key) { }, // An action was chosen (no items: key is "", one item: its key)
     onMenuToggle: function (self) { }, // The menu opened / closed: self.menuOpened
     styleName: "classic", // "classic", "ozden" or a name added to ActionButton.styles
-    style: { // Classic style package (default): the look of UIActionButton
+    style: { // Classic style package (default)
         button: {
             size: 90,
             color: "#FFD541",
@@ -165,7 +165,7 @@ const ActionButton = function (params = {}) {
     const createItemButton = function (item) {
         const btn = Button({ width: "100%", height: _s.item.height, minimal: 1, color: _s.item.color });
         btn.shrink = 0;
-        btn.plainText = item.labelText;
+        btn.plainText = item.text;
         if (_s.item.textColor) btn.textColor = _s.item.textColor;
         if (_s.item.fontSize) btn.fontSize = _s.item.fontSize;
         btn.on("click", function () { chooseAction(item.key); });
@@ -186,7 +186,7 @@ const ActionButton = function (params = {}) {
         // WHY: the menu fades for a moment after it closes; a double click ran onAction twice
         if (!box.menuOpened) return;
         box.closeMenu();
-        box.onAction(key, box);
+        box.onAction(box, key);
     };
 
     // WHY: A user who asked the system for less motion gets the still menu and button.
@@ -346,7 +346,7 @@ const ActionButton = function (params = {}) {
             return;
         }
         const onlyItem = box.items[0];
-        box.onAction((onlyItem) ? onlyItem.key : "", box);
+        box.onAction(box, (onlyItem) ? onlyItem.key : "");
     };
 
     box.setItems = function (items) {
@@ -409,7 +409,7 @@ const ActionButton = function (params = {}) {
         height: "auto",
         align: "left top",
         gap: _s.item.gap,
-        padding: [0, 0, 0, _s.item.gap], // WHY: UIActionButton left one line under the last action too.
+        padding: [0, 0, 0, _s.item.gap], // WHY: one line under the last action too.
         color: _s.menu.color,
         round: _s.menu.round,
         border: _s.menu.border,
@@ -468,13 +468,12 @@ const ActionButton = function (params = {}) {
 
 // *** STATIC FUNCTIONS:
 
-// The items with every value filled: a text -> { key: text, labelText: text }; id (UIActionButton) is a key too.
+// The items with every value filled: a text -> { key: text, text: text }; without a key, its text is its key.
 ActionButton.normalizeItems = function (items) {
     return (Array.isArray(items) ? items : []).map(function (item) {
-        if (typeof item !== "object" || item === null) return { key: String(item), labelText: String(item) };
-        const key = (item.key !== undefined) ? item.key : item.id;
-        const labelText = (item.labelText !== undefined) ? item.labelText : item.text;
-        return { key: String(key !== undefined ? key : labelText), labelText: String(labelText || "") };
+        if (typeof item !== "object" || item === null) return { key: String(item), text: String(item) };
+        const text = String(item.text || "");
+        return { key: String((item.key !== undefined) ? item.key : text), text: text };
     });
 };
 
@@ -483,7 +482,7 @@ ActionButton.normalizeItems = function (items) {
 // USAGE: ActionButton({ style: { button: { color: "#8BC34A" } } }) // Change only some keys.
 ActionButton.styles = {
 
-    // The look of UIActionButton (comp-m1): a yellow round button, a white menu with thin lines.
+    // A yellow round button, a white menu with thin lines.
     classic: ActionButtonDefaults.style,
 
     // Bugra's style: an ink round button with a white +, a white rounded menu with a soft shadow, animated.

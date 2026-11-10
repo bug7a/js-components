@@ -6,7 +6,7 @@ PageControl - v26.09
 
 UI COMPONENT TEMPLATE
 - A box that holds pages side by side and shows one of them. The pages slide (or fade) when another one is opened.
-  The new version of comp-m1/ui-page-control.js. (Wizards, onboarding screens, carousels, mobile app screens...)
+  (Wizards, onboarding screens, carousels, mobile app screens...)
 - Pages are created with addPage(key) and filled with startPage(key) ... endPage(), or with getPage(key).
 - Transitions: "slide" (horizontal, default), "slide-vertical", "fade", "none". The move is done with CSS transforms.
 - The pages always have the size of the box: width: "100%" and window resizes need no code. (No setSizes())
@@ -30,9 +30,11 @@ pages.next(); pages.previous();
 PageControl({ transition: "fade", autoPlay: 4, loop: 1, pages: ["a", "b", "c"] });
 
 Started Date: September 2026
-Developer: Bugra Ozden
-Email: bugra.ozden@gmail.com
 Webpage: https://bug7a.github.io/js-components/
+
+Copyright 2020-2026 Bugra Ozden <bugra.ozden@gmail.com> (https://bug7a.github.io/)
+Licensed under the Apache License, Version 2.0
+SPDX-License-Identifier: Apache-2.0
 
 */
 
@@ -258,6 +260,7 @@ const PageControl = function (params = {}) {
             dot.aria = { label: "Page " + String(item.key) };
             dot.on("click", function (self, event) {
                 event.stopPropagation();
+                if (box.enabled != 1) return; // WHY: setEnabled(0) stopped the arrows, keys and swipe, not the dots
                 box.open(item.key);
             });
             dotList.push(dot);
@@ -318,8 +321,21 @@ const PageControl = function (params = {}) {
         } catch (error) { }
     };
 
+    // The mouse button was released outside the box before the drag took the pointer: no pointerup came here.
+    // WHY: the next moves with no button pressed swiped the pages, and a click left them half way
+    const endLostDrag = function () {
+        const wasActive = drag.active;
+        drag = null;
+        box.track.cursor = "";
+        if (wasActive) showActivePage(1); // Back to the place
+    };
+
     const onPointerMove = function (self, event) {
         if (!drag || event.pointerId !== drag.id) return;
+        if (event.pointerType === "mouse" && event.buttons === 0) {
+            endLostDrag();
+            return;
+        }
         drag.x = event.clientX;
         drag.y = event.clientY;
         const dx = drag.x - drag.startX;
@@ -719,8 +735,9 @@ const PageControl = function (params = {}) {
     box.on("keydown", onKeyDown);
     box.on("mouseenter", function () { isHover = 1; });
     box.on("mouseleave", function () { isHover = 0; });
+    // WHY :focus-visible: the ring is for the keyboard (a click focused the box and showed it too)
     box.on("focus", function () {
-        box.boxShadow = "inset 0 0 0 2px " + _s.focus.outlineColor;
+        box.boxShadow = box.elem.matches(":focus-visible") ? "inset 0 0 0 2px " + _s.focus.outlineColor : "none";
     });
     box.on("blur", function () {
         box.boxShadow = "none";

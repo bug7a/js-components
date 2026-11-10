@@ -14,7 +14,7 @@
 
     <!-- item-list.js before select-box.js: with createItemView, the list of SelectBox is an ItemList -->
     <script src="../comp/item-list.js" type="text/javascript" charset="utf-8"></script>
-    <script src="../comp/search-input-v2.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/search-input.js" type="text/javascript" charset="utf-8"></script>
     <script src="../comp/select-box.js" type="text/javascript" charset="utf-8"></script>
 
     <script>
@@ -23,7 +23,7 @@
 
     /*
 
-    SelectBox with styleName: "ozden" and YOUR OWN ROWS (the look of the old comp-m1 SelectItem sample).
+    SelectBox with styleName: "ozden" and YOUR OWN ROWS.
 
     - createItemView(option, row, self) -> draws one row of the list. The objects created in it go into the row
                                            (an HGroup: side by side). The row's hover / selected looks come from the package.
@@ -61,7 +61,8 @@
     const start = function () {
 
         fruitSelect = SelectBox({
-            styleName: "ozden",         // 350 px wide, a search box, the list down to the page bottom
+            styleName: "ozden",         // 350 px wide, a search box; the rows: the ItemList package "ozden"
+            fullHeightList: 1,          // the list from the top of the page to its bottom
             height: ROW_HEIGHT,
             options: FRUITS,
             value: "Tomato",
@@ -98,8 +99,8 @@
 
             Label({ plainText: option.label, fontSize: 20, textColor: Black(0.8) });
 
-            Label({ plainText: option.description, fontSize: 14, textColor: "gray" });
-            that.css = { marginTop: "-4px" };   // WHY: the old title and description were this close
+            // WHY: the title and the description stay close
+            Label({ plainText: option.description, fontSize: 14, textColor: "gray", css: { marginTop: "-4px" } });
 
         endGroup();
 

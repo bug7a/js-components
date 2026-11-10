@@ -7,8 +7,11 @@ JS Components Website - Site Theme & UI Helpers - v26.09
 - Renkler, ölçüler, ikonlar ve sayfa boyunca tekrar eden küçük arayüz parçaları.
 - Colors, metrics, icons and the small UI pieces the site repeats.
 
-Developer: Bugra Ozden
-Email: bugra.ozden@gmail.com
+Webpage: https://bug7a.github.io/js-components/
+
+Copyright 2020-2026 Bugra Ozden <bugra.ozden@gmail.com> (https://bug7a.github.io/)
+Licensed under the Apache License, Version 2.0
+SPDX-License-Identifier: Apache-2.0
 
 */
 
@@ -18,15 +21,19 @@ const SITE = {
 
     // *** COLORS:
     INK: "#141414",             // Başlıklar, koyu düğmeler
-    BG: "#F4F4F1",              // Sayfa zemini
-    BG_SOFT: "#ECECE7",
+    // WHY the grounds and the accent of the basic.js site (03-webpages/webpage-basicjs/js/theme.js): one palette for
+    //     the sites of the family (the user, 2026-11-09; a warm ground #F4F4F1 and the blue #2F6FEB before). The
+    //     turquoise is the main action of the kit, SmartButton tone "cyan" #5BBAC1; the accent here is a text, so it
+    //     is the dark tone of "cyanDark" (6.2 : 1). The selections (the tabs, the search box) stay in ink.
+    BG: "#F3F7F7",              // The page ground, cool with a breath of the accent
+    BG_SOFT: "#E5EDEE",
     CARD: "#FFFFFF",
     LINE: "rgba(0, 0, 0, 0.09)",
     LINE_STRONG: "rgba(0, 0, 0, 0.16)",
     TEXT: "rgba(0, 0, 0, 0.82)",
     TEXT_SOFT: "rgba(0, 0, 0, 0.56)",
     TEXT_FAINT: "rgba(0, 0, 0, 0.38)",
-    ACCENT: "#2F6FEB",          // Bağlantılar, seçili durum
+    ACCENT: "#376265",          // The eyebrow of the hero
     WARNING_BG: "#FFF4E0",
     WARNING_TEXT: "#8A5A00",
 

@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+
+        <title>MarkdownView</title>
+
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <!-- LIBRARY FILES -->
+        <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
+        <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../basic/scroll-bar.min.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- COMPONENT FILES -->
+        <script src="../comp/tooltip.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/smart-button.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/code-editor.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/markdown-view.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/scroll-area.js" type="text/javascript" charset="utf-8"></script>
+
+        <script>
+
+        /* Bismillah */
+
+        // MarkdownView (comp/markdown-view.js): a text written in Markdown, drawn on the page.
+        // 1. A report, in the two themes: headings, a table, a picture, lists, a quote, code with a button that copies it.
+        // 2. A text that comes piece by piece (the answer of an AI): appendText().
+        // 3. A text is never read as HTML: the addresses that are not safe stay a text.
+
+        // *** VARIABLES:
+        const PAGE_COLOR = "#ECEBE8";
+        const SOFT_TEXT = "#6F6E6B";
+        const CARD_MIN_WIDTH = 440;
+        const CARD_MAX_WIDTH = 620;
+        const CARD_ROUND = 12;
+        const REPORT_HEIGHT = 480;
+        const ANSWER_HEIGHT = 280;
+        const WRITE_INTERVAL = 40; // ms: between two words
+
+        const CHART_SVG = '<svg xmlns="http://www.w3.org/2000/svg" width="320" height="110" viewBox="0 0 320 110">' +
+            '<rect width="320" height="110" rx="8" fill="#DCEFF1"/>' +
+            '<rect x="24" y="62" width="36" height="34" rx="4" fill="#3F8D94"/><rect x="82" y="44" width="36" height="52" rx="4" fill="#3F8D94"/>' +
+            '<rect x="140" y="52" width="36" height="44" rx="4" fill="#3F8D94"/><rect x="198" y="30" width="36" height="66" rx="4" fill="#3F8D94"/>' +
+            '<rect x="256" y="16" width="36" height="80" rx="4" fill="#3F8D94"/></svg>';
+        const CHART_ADDRESS = "data:image/svg+xml;base64," + btoa(CHART_SVG);
+
+        const REPORT = [
+            "# Monthly report",
+            "",
+            "The **sales** went up by *12%* this month. ~~The old plan~~ is gone: read the [notes](https://example.com/notes), or go to [the numbers](#the-numbers).",
+            "",
+            "## The numbers",
+            "",
+            "| Product | Count | Total |",
+            "|:---|:--:|---:|",
+            "| Olive oil | 120 | 7,200 TL |",
+            "| Honey | 45 | 3,150 TL |",
+            "| Tea | 310 | 4,650 TL |",
+            "",
+            "![The sales of the year](" + CHART_ADDRESS + ")",
+            "",
+            "## Next steps",
+            "",
+            "1. Call the new customers",
+            "2. Prepare the list",
+            "   - The names",
+            "   - The addresses",
+            "3. Send the offers",
+            "",
+            "- [x] Write the report",
+            "- [ ] Send it",
+            "",
+            "> The numbers of the last week are **not final**. They change when the shops close the month.",
+            "",
+            "---",
+            "",
+            "### The code of the report",
+            "",
+            "```python",
+            "# It adds up the last column",
+            "total = sum(row[\"total\"] for row in rows)",
+            "print(f\"Total: {total:,} TL\")",
+            "```",
+            "",
+            "Run it with `python report.py`.",
+        ].join("\n");
+
+        const ANSWER = [
+            "## An answer",
+            "",
+            "A text can come **piece by piece**. Only the block at the end is drawn again, so the text above can be selected while it comes.",
+            "",
+            "1. Scroll up: the view stays where you are.",
+            "2. Scroll to the end: it follows again.",
+            "",
+            "```javascript",
+            "// The next piece of the text",
+            "view.appendText(piece);",
+            "```",
+            "",
+            "That is all.",
+        ].join("\n");
+
+        const UNSAFE_TEXT = [
+            "<b>This is not bold</b>, and this is not a script: <img src=x onerror=alert(1)>",
+            "",
+            "These two are not links: [a click](javascript:alert(1)) and [a page](data:text/html,hello).",
+            "",
+            "A remote picture stays a link, until `remotePictures: 1`: ![A photo](https://example.com/photo.png)",
+        ].join("\n");
+
+        let lblLink;
+        let answerView;
+        let writeTimer = null;
+
+        // First running function. (basic.js calls it when the page is ready)
+        const start = function () {
+
+            page.color = PAGE_COLOR;
+
+            // SCROLL AREA: Page (it scrolls when the window is lower than the samples)
+            ScrollArea({ align: "center top", gap: 16, padding: [16, 28] });
+
+                Label({ text: "MarkdownView", fontSize: 24, bold: 1, textColor: Black(0.8) });
+
+                // GROUP: The samples side by side (one under the other on a narrow screen)
+                HGroup({ width: "100%", height: "auto", align: "center top", gap: 20, wrap: 1, clipContent: 0 });
+                    createReport("Light", "styleName: \"light\" (default)", "light");
+                    createReport("Dark", "styleName: \"dark\"", "dark");
+                    createAnswer();
+                    createUnsafeText();
+                endGroup();
+
+            endGroup();
+
+        };
+
+        // *** OTHER FUNCTIONS:
+
+        // GROUP: A card with a title and a note. endGroup() closes it.
+        const startCard = function (titleText, noteText) {
+            VGroup({
+                width: "auto",
+                height: "auto",
+                align: "left top",
+                gap: 10,
+                clipContent: 0,
+                css: { flex: "1 1 " + CARD_MIN_WIDTH + "px", maxWidth: CARD_MAX_WIDTH + "px", minWidth: "0" },
+            });
+            HGroup({ width: "100%", height: "auto", align: "left center", gap: 8 });
+                Label({ text: titleText, fontSize: 15, bold: 1, textColor: Black(0.75) });
+                Label({ text: noteText, fontSize: 13, textColor: SOFT_TEXT });
+            endGroup();
+        };
+
+        const showLink = function (self, address) {
+            lblLink.plainText = "onLinkClick: " + address;
+        };
+
+        const createReport = function (titleText, noteText, styleName) {
+
+            startCard(titleText, noteText);
+
+                MarkdownView({ height: REPORT_HEIGHT, styleName: styleName, markdownText: REPORT, onLinkClick: showLink, round: CARD_ROUND });
+                if (styleName === "light") lblLink = Label({ text: "A click on a link: onLinkClick", fontSize: 13, textColor: SOFT_TEXT });
+
+            endGroup();
+
+        };
+
+        const stopWriting = function () {
+            clearInterval(writeTimer);
+            writeTimer = null;
+        };
+
+        // The next words every moment, until the text ends.
+        const writeAnswer = function () {
+            stopWriting();
+            const pieces = ANSWER.match(/\s*\S+|\s+$/g);
+            let position = 0;
+            answerView.setMarkdownText("");
+            writeTimer = setInterval(function () {
+                if (position >= pieces.length) {
+                    stopWriting();
+                    return;
+                }
+                answerView.appendText(pieces[position]);
+                position++;
+            }, WRITE_INTERVAL);
+        };
+
+        const createAnswer = function () {
+
+            startCard("Piece by piece", "appendText()");
+
+                SmartButton({ labelText: "Write it", onClick: writeAnswer });
+                answerView = MarkdownView({ height: ANSWER_HEIGHT, emptyText: "The text comes here.", round: CARD_ROUND });
+
+            endGroup();
+
+        };
+
+        const createUnsafeText = function () {
+
+            startCard("Not read as HTML", "height: \"auto\"");
+
+                MarkdownView({ height: "auto", markdownText: UNSAFE_TEXT, round: CARD_ROUND });
+
+            endGroup();
+
+        };
+
+        </script>
+    </head>
+
+    <body></body>
+
+</html>

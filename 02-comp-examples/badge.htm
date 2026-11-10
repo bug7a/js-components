@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Badge</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- LIBRARY FILES -->
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Bold.ttf" as="font" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="../basic/basic.css">
+    <script src="../basic/basic.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../basic/scroll-bar.js" type="text/javascript" charset="utf-8"></script>
+
+    <!-- COMPONENT FILES -->
+    <script src="../comp/badge.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/scroll-area.js" type="text/javascript" charset="utf-8"></script>
+
+    <script>
+
+        /* Bismillah */
+
+        // Badge (comp/badge.js) on a box: 1 is a dot, a number, a number bigger than its maxValue ("99+"), in the style
+        // packages "ozden" (the default), "light" and "dark" (the look of the kit). badge.setValue(0): hidden.
+
+        // *** THE COLORS AND SIZES OF THE PAGE
+        const PAGE_COLOR = "#F4F5F2";
+        const OZDEN_CARD = { color: "#F5F5F5", item: "lightgray", text: Black(0.45) };
+        const LIGHT_CARD = { color: "#FFFFFF", item: "#F2F3F0", text: Black(0.45) };
+        const DARK_CARD = { color: "#1A1A19", item: "#2C2C2B", text: White(0.5) };
+        const ITEM_SIZE = 56;
+
+        const start = function () {
+
+            page.color = PAGE_COLOR;
+
+            ScrollArea({ align: "center top", gap: 20, padding: [16, 40] });
+
+                Label({ text: "Badge", fontSize: 24, bold: 1, textColor: Black(0.8) });
+
+                // CARD: ozden, the default
+                startCard(OZDEN_CARD, "styleName: \"ozden\" (the default)");
+                    addBadgeBox(OZDEN_CARD, { value: 1 });
+                    addBadgeBox(OZDEN_CARD, { value: 5 });
+                    addBadgeBox(OZDEN_CARD, { value: 120 });
+                endCard();
+
+                // CARD: light, the look of the kit
+                startCard(LIGHT_CARD, "styleName: \"light\"");
+                    addBadgeBox(LIGHT_CARD, { styleName: "light", value: 1 });
+                    addBadgeBox(LIGHT_CARD, { styleName: "light", value: 5 });
+                    addBadgeBox(LIGHT_CARD, { styleName: "light", value: 120 });
+                endCard();
+
+                // CARD: dark, the look of the kit on a dark page
+                startCard(DARK_CARD, "styleName: \"dark\"");
+                    addBadgeBox(DARK_CARD, { styleName: "dark", value: 1 });
+                    addBadgeBox(DARK_CARD, { styleName: "dark", value: 5 });
+                    addBadgeBox(DARK_CARD, { styleName: "dark", value: 120 });
+                endCard();
+
+            endGroup();
+
+        };
+
+        // *** OTHER FUNCTIONS:
+
+        // GROUP: A card in the colors of its page: its title, then its boxes in a row (endCard() closes them)
+        const startCard = function (card, title) {
+            VGroup({ width: "100%", height: "auto", align: "left top", gap: 14, padding: 20, color: card.color, round: 10, border: 1, borderColor: Black(0.08), css: { maxWidth: "420px" } });
+                Label({ text: title, fontSize: 13, bold: 1, textColor: card.text });
+            HGroup({ width: "auto", height: "auto", align: "left center", gap: 16 });
+        };
+
+        const endCard = function () {
+            endGroup(); // the row
+            endGroup(); // the card
+        };
+
+        // BOX: A box with its badge (params of Badge)
+        const addBadgeBox = function (card, params) {
+            const item = Box({ width: ITEM_SIZE, height: ITEM_SIZE, color: card.item, round: 12, position: "relative" });
+            item.add(Badge(params));
+            return item;
+        };
+
+    </script>
+
+</head>
+
+<body>
+</body>
+
+</html>

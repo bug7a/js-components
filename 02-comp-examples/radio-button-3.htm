@@ -14,13 +14,14 @@
 
     <!-- COMPONENT FILES -->
     <script src="../comp/radio-button.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/scroll-area.js" type="text/javascript" charset="utf-8"></script>
 
     <script>
 
         /* Bismillah */
 
         // *** VARIABLES:
-        let lblSize, lblPlan, rdoPremium, scrollBox;
+        let lblSize, lblPlan;
 
         // The colors of the page (Ozden Panel dark theme)
         const PAGE_COLOR = "#000000";
@@ -30,94 +31,103 @@
 
             page.color = PAGE_COLOR;
 
-            // BOX: Full screen scrollable container
-            // WHY: page does not scroll. Scrollable content must be inside a Box with scrollY: 1.
-            scrollBox = startBox(0, 0, "100%", "100%", {
-                color: "transparent",
-                scrollY: 1,
+            // SCROLL AREA: The page
+            // WHY: page does not scroll. A ScrollArea fills the window; its content scrolls when it is taller.
+            ScrollArea({
+                align: "center top",
+                gap: 30,
+                padding: 50,
             });
 
-                // GROUP: Page layout
-                VGroup({
-                    width: "100%",
-                    height: "auto", // Grows with content, so the Box can scroll.
-                    align: "center top",
-                    gap: 30,
-                    padding: 50,
+                // LABEL: Title
+                Label({
+                    text: "Radio Button 3",
+                    fontSize: 26,
+                    fontFamily: "opensans-bold",
+                    textColor: White(0.9),
                 });
 
-                    // LABEL: Title
-                    Label({
-                        text: "Radio Button 3",
-                        fontSize: 26,
-                        fontFamily: "opensans-bold",
-                        textColor: White(0.9),
+                Label({
+                    text: "styleName: \"dark\": the classic shape on a dark page.",
+                    fontSize: 14,
+                    textColor: White(0.5),
+                });
+
+                // SAMPLE 1: A group
+                startCard("1. Size");
+
+                    ["Small", "Medium", "Large"].forEach(function (name) {
+                        RadioButton({
+                            group: "size",
+                            value: name.charAt(0), // S, M, L
+                            labelText: name,
+                            checked: (name == "Medium") ? 1 : 0,
+                            onChange: refreshSize,
+                            styleName: "dark",
+                        });
                     });
 
-                    Label({
-                        text: "styleName: \"dark\": the classic shape on a dark page.",
+                    lblSize = Label({
+                        text: "",
                         fontSize: 14,
                         textColor: White(0.5),
+                        padding: [0, 8],
                     });
 
-                    // SAMPLE 1: A group
-                    startCard("1. Size");
+                endCard();
 
-                        ["Small", "Medium", "Large"].forEach(function (name) {
-                            RadioButton({
-                                group: "size",
-                                value: name.charAt(0), // S, M, L
-                                labelText: name,
-                                checked: (name == "Medium") ? 1 : 0,
-                                onChange: refreshSize,
-                                styleName: "dark",
-                            });
-                        });
+                // SAMPLE 2: States
+                startCard("2. States");
 
-                        lblSize = Label({
-                            text: "",
-                            fontSize: 14,
-                            textColor: White(0.5),
-                            padding: [0, 8],
-                        });
+                    RadioButton({
+                        group: "plan",
+                        value: "free",
+                        labelText: "Free",
+                        checked: 1,
+                        onChange: refreshPlan,
+                        styleName: "dark",
+                    });
+                    RadioButton({ group: "plan", value: "pro", labelText: "Pro", onChange: refreshPlan, styleName: "dark" });
+                    RadioButton({
+                        group: "plan",
+                        value: "premium",
+                        labelText: "Premium (disabled)",
+                        enabled: 0,
+                        onChange: refreshPlan,
+                        styleName: "dark",
+                    });
+                    RadioButton({
+                        group: "plan",
+                        value: "team",
+                        labelText: "Label on the left",
+                        labelPosition: "left",
+                        onChange: refreshPlan,
+                        styleName: "dark",
+                    });
 
-                    endCard();
+                    lblPlan = Label({
+                        text: "",
+                        fontSize: 14,
+                        textColor: White(0.5),
+                        padding: [0, 8],
+                    });
 
-                    // SAMPLE 2: States
-                    startCard("2. States");
+                endCard();
 
-                        RadioButton({ group: "plan", value: "free", labelText: "Free", checked: 1, onChange: refreshPlan, styleName: "dark" });
-                        RadioButton({ group: "plan", value: "pro", labelText: "Pro", onChange: refreshPlan, styleName: "dark" });
-                        rdoPremium = RadioButton({ group: "plan", value: "premium", labelText: "Premium (disabled)", enabled: 0, onChange: refreshPlan, styleName: "dark" });
-                        RadioButton({ group: "plan", value: "team", labelText: "Label on the left", labelPosition: "left", onChange: refreshPlan, styleName: "dark" });
+                // SAMPLE 3: Another accent color
+                startCard("3. Only the accent changed");
 
-                        lblPlan = Label({
-                            text: "",
-                            fontSize: 14,
-                            textColor: White(0.5),
-                            padding: [0, 8],
-                        });
+                    RadioButton({
+                        group: "accent",
+                        labelText: "Purple when checked",
+                        checked: 1,
+                        styleName: "dark",
+                        style: { checkedMark: { borderColor: "#A78BFA" }, dot: { color: "#A78BFA" } },
+                    });
 
-                    endCard();
+                endCard();
 
-                    // SAMPLE 3: Another accent color
-                    startCard("3. Only the accent changed");
-
-                        RadioButton({
-                            group: "accent",
-                            labelText: "Purple when checked",
-                            checked: 1,
-                            styleName: "dark",
-                            style: { checkedMark: { borderColor: "#A78BFA" }, dot: { color: "#A78BFA" } },
-                        });
-
-                    endCard();
-
-                endGroup();
-
-            endBox();
-
-            if (typeof ScrollBar !== "undefined") ScrollBar({ scrollableBox: scrollBox });
+            endGroup();
 
             refreshSize();
             refreshPlan();

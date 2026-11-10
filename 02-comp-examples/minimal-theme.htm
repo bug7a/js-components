@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <title>Minimal theme</title>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- LIBRARY FILES -->
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Bold.ttf" as="font" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="../basic/basic.css">
+    <script src="../basic/basic.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../basic/scroll-bar.js" type="text/javascript" charset="utf-8"></script>
+
+    <!-- COMPONENT FILES -->
+    <script src="../comp/smart-button.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/check-box.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/radio-button.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/toggle.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/tooltip.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/text-field.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/email-field.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/password-field.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/text-area-field.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/search-input.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/item-list.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/select-box.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/slider.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/progress-bar.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/tabs.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/stepper.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/context-menu.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/menu-bar.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/tool-bar.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/status-bar.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/tree-view.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/smart-table.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/data-table.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/json-editor.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/range-slider.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/dialog.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/toast.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/date-picker.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/time-picker.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/color-picker.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/file-picker.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/slider-field.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/tag-input.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/step-bar.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/time-line.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/accordion.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/splitter.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/side-panel.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/loading-screen.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/graph-box.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/scroll-area.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/markdown-view.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/chat-view.js" type="text/javascript" charset="utf-8"></script>
+
+    <script>
+
+    /* Bismillah */
+
+    // The minimal theme: styleName "minimal" on a light window, "minimalDark" on a dark one (the design:
+    // _designs/minimal-theme.htm). Small (28 px, a 13 px text) and made of lines: a component has no fill of its
+    // own, it takes the ground of its window. The main action is the only filled button: tone "ink" / "inkDark".
+    // The components that have it so far: SmartButton (and minimalDanger for a delete), CheckBox, RadioButton, Toggle,
+    // TextField (EmailField, PasswordField, TextAreaField...), SearchInput, SelectBox, ItemList, Slider, RangeSlider,
+    // ProgressBar, Tabs, Stepper, MenuBar (its menus: ContextMenu), ToolBar, StatusBar, TreeView, SmartTable,
+    // DataTable, JsonEditor, ChatView, Tooltip, Dialog, Toast.
+    // The pickers, the fields and the panels too: DatePicker, TimePicker, ColorPicker, SliderField, TagInput,
+    // FilePicker, StepBar, TimeLine, Accordion, Splitter, SidePanel, LoadingScreen; GraphBox with theme: \"minimal\".
+    // The same theme in a color of the page: MinimalAccent (comp/minimal-accent.js; the sample minimal-accent.htm).
+
+    // *** THE COLORS AND SIZES OF THE PAGE
+    const PAGE_COLOR = "#EDEDEB";
+    const LIGHT_WINDOW_COLOR = "#FFFFFF";
+    const DARK_WINDOW_COLOR = "#1A1A19";
+    const LIGHT_TITLE_COLOR = Black(0.85);
+    const DARK_TITLE_COLOR = White(0.88);
+    const LIGHT_CAPTION_COLOR = Black(0.45);
+    const DARK_CAPTION_COLOR = White(0.45);
+    const WINDOW_WIDTH = 460;
+    const PAGE_SIDE_SPACE = 16; // px at the sides of the windows (a phone)
+    const LIGHT_LINE_COLOR = Black(0.2);
+    const DARK_LINE_COLOR = White(0.18);
+    const SPLIT_HEIGHT = 80;
+    const CHART_HEIGHT = 220;
+    const LOADING_TIME = 1500; // ms: the loading screen of the sample stays this long
+    const JSON_EDITOR_HEIGHT = 280;
+    const CHAT_HEIGHT = 300;
+    const ICON_LIGHT = Black(0.85);
+    const DANGER_LIGHT = "#C24A36";
+    const DANGER_DARK = "#FF9F93";
+    const FRUITS = ["Apple", "Banana", "Cherry", "Grape"];
+    const MENUS = [
+        { text: "File", items: [{ text: "Open", shortcut: "Ctrl+O" }, { text: "Save", shortcut: "Ctrl+S" }, "-", { text: "Quit", enabled: 0 }] },
+        { text: "Edit", items: ["Undo", "Redo", "-", "Cut", "Copy", "Paste"] },
+        { text: "View", items: [{ text: "Word wrap", checked: 1 }] },
+    ];
+    const TOOLS = [
+        { key: "new", icon: "new", hint: "New" },
+        { key: "save", icon: "save", hint: "Save", shortcut: "Ctrl+S" },
+        "-",
+        { key: "bold", icon: "bold", hint: "Bold", toggle: 1, checked: 1 },
+        { key: "left", icon: "alignLeft", hint: "Left", group: "align" },
+        { key: "right", icon: "alignRight", hint: "Right", group: "align" },
+    ];
+    const FILES = [
+        { key: "src", text: "src", expanded: 1, children: [{ key: "app", text: "app.js", description: "4 KB" }, { key: "lib", text: "lib", children: ["a.js", "b.js"] }] },
+        { key: "readme", text: "README.md", tag: "new" },
+    ];
+    const PEOPLE_COLUMNS = [
+        { name: "Name", dataTitle: "name", dataType: "string", width: 150, sortable: 1 },
+        { name: "City", dataTitle: "city", dataType: "string", width: 120, sortable: 1 },
+        { name: "Orders", dataTitle: "orders", dataType: "integer", width: 70, sortable: 1 },
+    ];
+    const PEOPLE_DATA_COLUMNS = [
+        { key: "name", title: "Name", width: 150 },
+        { key: "city", title: "City" },
+        { key: "orders", title: "Orders", width: 80, align: "right", type: "number" },
+    ];
+    const PEOPLE = [
+        { name: "Ada Lovelace", city: "London", orders: 12 },
+        { name: "Alan Turing", city: "Manchester", orders: 7 },
+        { name: "Grace Hopper", city: "New York", orders: 21 },
+    ];
+    const TAGS = ["audio", "fitness", "guide", "travel"];
+    const CHAT_MESSAGES = [
+        { role: "user", text: "How do I count the lines of a file?" },
+        { role: "assistant", text: "Read the file and count its lines:\n\n```python\nlines = open(\"notes.txt\").read().splitlines()\nprint(len(lines))\n```" },
+    ];
+    const SECTIONS = [
+        { key: "general", text: "General", description: "3 settings", opened: 1 },
+        { key: "advanced", text: "Advanced" },
+        { key: "locked", text: "Locked", enabled: 0 },
+    ];
+    const HISTORY = [
+        { time: "Today, 14:02", text: "Saved", description: "report.md, 2.4 KB" },
+        { time: "Yesterday", text: "Created" },
+    ];
+    const MONTHS = ["Jun", "Jul", "Aug", "Sep", "Oct", "Nov"];
+    const VISITS = [
+        { label: "2026", data: [12, 19, 7, 15, 22, 18] },
+        { label: "2025", data: [8, 11, 9, 12, 14, 13] },
+    ];
+
+    // A line icon (24 x 24, the color in the drawing): SmartButton turns it white in minimalDark
+    const lineIcon = function (paths, color = ICON_LIGHT) {
+        const svgStart = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="' + color + '"'
+            + ' stroke-width="2" stroke-linecap="round" stroke-linejoin="round">';
+        return "data:image/svg+xml;utf8," + encodeURIComponent(svgStart + paths + "<\/svg>");
+    };
+    const ICON_SAVE = lineIcon('<path d="M5 4h11l3 3v13H5z"/><path d="M8 4v5h7V4M8 20v-6h8v6"/>');
+    const TRASH_PATHS = '<path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3"/>';
+    const ICON_TRASH_LIGHT = lineIcon(TRASH_PATHS, DANGER_LIGHT); // minimalDanger keeps the color of the icon file
+    const ICON_TRASH_DARK = lineIcon(TRASH_PATHS, DANGER_DARK);
+    const FOLDER_PATHS = '<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>';
+    const ICON_FOLDER = lineIcon(FOLDER_PATHS, Black(0.55));
+    const ICON_FOLDER_DARK = lineIcon(FOLDER_PATHS, White(0.55)); // ItemList shows an icon file as it is
+    const ICON_MORE = lineIcon('<circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/>');
+
+    const start = function () {
+
+        page.color = PAGE_COLOR;
+
+        // SCROLL AREA: Scrolling page
+        ScrollArea();
+
+            HGroup({ width: "100%", height: "auto", align: "center top", gap: 24, padding: [PAGE_SIDE_SPACE, 40], wrap: 1, clipContent: 0 });
+
+                // GROUP: The light window (minimal)
+                VGroup({ width: "100%", height: "auto", align: "left top", gap: 14, padding: 28, color: LIGHT_WINDOW_COLOR, round: 10, clipContent: 0 });
+                that.css = { maxWidth: WINDOW_WIDTH + "px" }; // WHY: on a phone the window is as wide as the screen
+
+                    Label({ text: "minimal", fontSize: 18, bold: 1, textColor: LIGHT_TITLE_COLOR });
+
+                    Label({ text: "BUTTONS", fontSize: 11, bold: 1, textColor: LIGHT_CAPTION_COLOR });
+                    HGroup({ hug: 1, align: "left center", gap: 8, clipContent: 0 });
+                        SmartButton({ styleName: "minimal", labelText: "Save", iconFile: ICON_SAVE });
+                        SmartButton({ styleName: "minimal", tone: "ink", labelText: "Send" });
+                        SmartButton({ styleName: "minimalDanger", labelText: "Delete", iconFile: ICON_TRASH_LIGHT, ask: "Click again to delete." });
+                        SmartButton({ styleName: "minimal", labelText: "", iconFile: ICON_MORE, ariaLabel: "More" });
+                    endGroup();
+                    HGroup({ hug: 1, align: "left center", gap: 8, clipContent: 0 });
+                        SmartButton({ styleName: "minimal", labelText: "Disabled", enabled: 0 });
+                        SmartButton({ styleName: "minimal", labelText: "Waiting", waiting: 1 });
+                    endGroup();
+
+                    Label({ text: "CHOICES", fontSize: 11, bold: 1, textColor: LIGHT_CAPTION_COLOR });
+                    HGroup({ hug: 1, align: "left center", gap: 20, clipContent: 0 });
+                        CheckBox({ styleName: "minimal", labelText: "Remember me", checked: 1 });
+                        CheckBox({ styleName: "minimal", labelText: "Send the news" });
+                    endGroup();
+                    HGroup({ hug: 1, align: "left center", gap: 20, clipContent: 0 });
+                        RadioButton({ styleName: "minimal", group: "lightPlan", labelText: "Monthly", checked: 1 });
+                        RadioButton({ styleName: "minimal", group: "lightPlan", labelText: "Yearly" });
+                    endGroup();
+                    HGroup({ hug: 1, align: "left center", gap: 10, clipContent: 0 });
+                        Toggle({ styleName: "minimal", value: 1 });
+                        Label({ text: "Sounds", fontSize: 13, textColor: LIGHT_TITLE_COLOR });
+                    endGroup();
+
+                    Label({ text: "FIELDS", fontSize: 11, bold: 1, textColor: LIGHT_CAPTION_COLOR });
+                    EmailField({ styleName: "minimal", width: 260, titleText: "E-mail", placeholder: "name@mail.com" });
+                    PasswordField({ styleName: "minimal", width: 260, titleText: "Password", value: "secret" });
+                    TextAreaField({ styleName: "minimal", width: 260, height: 96, titleText: "Note", placeholder: "A few words" });
+                    SearchInput({ styleName: "minimal", width: 260 });
+                    SelectBox({ styleName: "minimal", width: 260, options: FRUITS, value: "Apple" });
+                    Stepper({ styleName: "minimal", value: 3 });
+
+                    Label({ text: "LIST", fontSize: 11, bold: 1, textColor: LIGHT_CAPTION_COLOR });
+                    ItemList({ styleName: "minimal", width: 260, height: "auto", selectedKeys: ["1"], items: [
+                        { text: "Projects", iconFile: ICON_FOLDER },
+                        { text: "Designs", iconFile: ICON_FOLDER },
+                        { text: "Archive", iconFile: ICON_FOLDER },
+                    ] });
+
+                    Label({ text: "SLIDER, PROGRESS", fontSize: 11, bold: 1, textColor: LIGHT_CAPTION_COLOR });
+                    Slider({ styleName: "minimal", width: 260, value: 40 });
+                    ProgressBar({ styleName: "minimal", width: 260, titleText: "Uploading files", value: 62 });
+
+                    Label({ text: "TABS", fontSize: 11, bold: 1, textColor: LIGHT_CAPTION_COLOR });
+                    Tabs({ styleName: "minimal", width: 300, tabs: ["General", "Sound", "Advanced"], panelHeight: 0 });
+
+                    Label({ text: "WINDOW BARS", fontSize: 11, bold: 1, textColor: LIGHT_CAPTION_COLOR });
+                    VGroup({ width: "100%", height: "auto", align: "left top", gap: 0, clipContent: 0 });
+                        MenuBar({ styleName: "minimal", position: "relative", menus: MENUS });
+                        ToolBar({ styleName: "minimal", position: "relative", items: TOOLS });
+                        StatusBar({ styleName: "minimal", position: "relative", messageText: "Ready", items: ["UTF-8", "100%"] });
+                    endGroup();
+
+                    Label({ text: "TREE, TABLE, RANGE", fontSize: 11, bold: 1, textColor: LIGHT_CAPTION_COLOR });
+                    TreeView({ styleName: "minimal", width: 260, height: "auto", value: "app", items: FILES });
+                    SmartTable({ styleName: "minimal", titleDataList: PEOPLE_COLUMNS, itemDataList: PEOPLE, itemLineCount: 3, style: { width: "100%", height: "auto" } });
+                    DataTable({ styleName: "minimal", width: "100%", height: 124, columns: PEOPLE_DATA_COLUMNS, rows: PEOPLE });
+                    JsonEditor({ styleName: "minimal", height: JSON_EDITOR_HEIGHT, value: PEOPLE, showHint: 0 });
+                    RangeSlider({ styleName: "minimal", width: 260, lowValue: 20, highValue: 70 });
+
+                    Label({ text: "PICKERS, FIELDS", fontSize: 11, bold: 1, textColor: LIGHT_CAPTION_COLOR });
+                    HGroup({ width: "100%", height: "auto", align: "left center", gap: 8, wrap: 1, clipContent: 0 }); // WHY wrap: a phone
+                        DatePicker({ styleName: "minimal", width: 140, placeholder: "Date" });
+                        TimePicker({ styleName: "minimal", width: 100, time: "14:30" });
+                        ColorPicker({ styleName: "minimal", width: 130, selectedColor: "#3871E0" });
+                    endGroup();
+                    SliderField({ styleName: "minimal", width: 260, labelText: "Size", value: 40, minValue: 0, maxValue: 100, unitText: " px" });
+                    TagInput({ styleName: "minimal", width: "100%", tags: ["audio", "guide"], suggestions: TAGS });
+                    FilePicker({ styleName: "minimal", width: "100%", multiple: 1 });
+
+                    Label({ text: "STEPS, SECTIONS, AREAS", fontSize: 11, bold: 1, textColor: LIGHT_CAPTION_COLOR });
+                    StepBar({ styleName: "minimal", width: "100%", steps: ["Cart", "Address", "Payment", "Done"], currentStep: 2 });
+                    TimeLine({ styleName: "minimal", width: "100%", items: HISTORY });
+                    const lightSettings = Accordion({ styleName: "minimal", width: "100%", height: "auto", sections: SECTIONS });
+                    lightSettings.startSection("general");
+                        CheckBox({ styleName: "minimal", labelText: "Open with the system" });
+                        CheckBox({ styleName: "minimal", labelText: "Look for updates", checked: 1 });
+                    lightSettings.endSection();
+                    startBox({ width: "100%", height: SPLIT_HEIGHT, color: "transparent", border: 1, borderColor: LIGHT_LINE_COLOR, round: 4 });
+                        Splitter({ styleName: "minimal", firstSize: 160 });
+                    endBox();
+
+                    Label({ text: "CONVERSATION", fontSize: 11, bold: 1, textColor: LIGHT_CAPTION_COLOR });
+                    ChatView({ styleName: "minimal", width: "100%", height: CHAT_HEIGHT, messages: CHAT_MESSAGES });
+
+                    Label({ text: "CHART", fontSize: 11, bold: 1, textColor: LIGHT_CAPTION_COLOR });
+                    GraphBox({ theme: "minimal", width: "100%", height: CHART_HEIGHT, type: "line", titleText: "Visits", labels: MONTHS, datasets: VISITS });
+
+                    Label({ text: "OVER THE PAGE", fontSize: 11, bold: 1, textColor: LIGHT_CAPTION_COLOR });
+                    HGroup({ hug: 1, align: "left center", gap: 8, clipContent: 0 });
+                        const lightHint = SmartButton({ styleName: "minimal", labelText: "A hint" });
+                        Tooltip({ target: lightHint, hintText: "Save the file (Ctrl+S)", styleName: "minimal" });
+                        SmartButton({ styleName: "minimal", labelText: "A dialog", onClick: function () {
+                            Dialog.confirm({ styleName: "minimal", titleText: "Delete the file?", messageText: "report.pdf goes to the trash.", confirmText: "Delete", danger: 1 });
+                        } });
+                        SmartButton({ styleName: "minimal", labelText: "A toast", onClick: function () {
+                            Toast.show({ theme: "minimal", type: "success", titleText: "Saved", messageText: "report.pdf is saved.", action: { text: "Undo", onClick: function () { } } });
+                        } });
+                    endGroup();
+                    const lightPanel = SidePanel({ styleName: "minimal", side: "right", panelSize: 300, titleText: "Filters" });
+                    lightPanel.startBody();
+                        CheckBox({ styleName: "minimal", labelText: "Only the new ones", checked: 1 });
+                        CheckBox({ styleName: "minimal", labelText: "With a picture" });
+                    lightPanel.endBody();
+                    HGroup({ hug: 1, align: "left center", gap: 8, clipContent: 0 });
+                        SmartButton({ styleName: "minimal", labelText: "A side panel", onClick: function () {
+                            lightPanel.open();
+                        } });
+                        SmartButton({ styleName: "minimal", labelText: "Loading", onClick: function () {
+                            LoadingScreen({ styleName: "minimal", titleText: "My App", messageText: "Loading the data...", minDuration: LOADING_TIME, removeOnClose: 1 }).close();
+                        } });
+                    endGroup();
+
+                endGroup();
+
+                // GROUP: The dark window (minimalDark)
+                VGroup({ width: "100%", height: "auto", align: "left top", gap: 14, padding: 28, color: DARK_WINDOW_COLOR, round: 10, clipContent: 0 });
+                that.css = { maxWidth: WINDOW_WIDTH + "px" }; // WHY: on a phone the window is as wide as the screen
+
+                    Label({ text: "minimalDark", fontSize: 18, bold: 1, textColor: DARK_TITLE_COLOR });
+
+                    Label({ text: "BUTTONS", fontSize: 11, bold: 1, textColor: DARK_CAPTION_COLOR });
+                    HGroup({ hug: 1, align: "left center", gap: 8, clipContent: 0 });
+                        SmartButton({ styleName: "minimalDark", labelText: "Save", iconFile: ICON_SAVE });
+                        SmartButton({ styleName: "minimalDark", tone: "inkDark", labelText: "Send" });
+                        SmartButton({ styleName: "minimalDangerDark", labelText: "Delete", iconFile: ICON_TRASH_DARK, ask: "Click again to delete." });
+                        SmartButton({ styleName: "minimalDark", labelText: "", iconFile: ICON_MORE, ariaLabel: "More" });
+                    endGroup();
+                    HGroup({ hug: 1, align: "left center", gap: 8, clipContent: 0 });
+                        SmartButton({ styleName: "minimalDark", labelText: "Disabled", enabled: 0 });
+                        SmartButton({ styleName: "minimalDark", labelText: "Waiting", waiting: 1 });
+                    endGroup();
+
+                    Label({ text: "CHOICES", fontSize: 11, bold: 1, textColor: DARK_CAPTION_COLOR });
+                    HGroup({ hug: 1, align: "left center", gap: 20, clipContent: 0 });
+                        CheckBox({ styleName: "minimalDark", labelText: "Remember me", checked: 1 });
+                        CheckBox({ styleName: "minimalDark", labelText: "Send the news" });
+                    endGroup();
+                    HGroup({ hug: 1, align: "left center", gap: 20, clipContent: 0 });
+                        RadioButton({ styleName: "minimalDark", group: "darkPlan", labelText: "Monthly", checked: 1 });
+                        RadioButton({ styleName: "minimalDark", group: "darkPlan", labelText: "Yearly" });
+                    endGroup();
+                    HGroup({ hug: 1, align: "left center", gap: 10, clipContent: 0 });
+                        Toggle({ styleName: "minimalDark", value: 1 });
+                        Label({ text: "Sounds", fontSize: 13, textColor: DARK_TITLE_COLOR });
+                    endGroup();
+
+                    Label({ text: "FIELDS", fontSize: 11, bold: 1, textColor: DARK_CAPTION_COLOR });
+                    EmailField({ styleName: "minimalDark", width: 260, titleText: "E-mail", placeholder: "name@mail.com" });
+                    PasswordField({ styleName: "minimalDark", width: 260, titleText: "Password", value: "secret" });
+                    TextAreaField({ styleName: "minimalDark", width: 260, height: 96, titleText: "Note", placeholder: "A few words" });
+                    SearchInput({ styleName: "minimalDark", width: 260 });
+                    SelectBox({ styleName: "minimalDark", width: 260, options: FRUITS, value: "Apple" });
+                    Stepper({ styleName: "minimalDark", value: 3 });
+
+                    Label({ text: "LIST", fontSize: 11, bold: 1, textColor: DARK_CAPTION_COLOR });
+                    ItemList({ styleName: "minimalDark", width: 260, height: "auto", selectedKeys: ["1"], items: [
+                        { text: "Projects", iconFile: ICON_FOLDER_DARK },
+                        { text: "Designs", iconFile: ICON_FOLDER_DARK },
+                        { text: "Archive", iconFile: ICON_FOLDER_DARK },
+                    ] });
+
+                    Label({ text: "SLIDER, PROGRESS", fontSize: 11, bold: 1, textColor: DARK_CAPTION_COLOR });
+                    Slider({ styleName: "minimalDark", width: 260, value: 40 });
+                    ProgressBar({ styleName: "minimalDark", width: 260, titleText: "Uploading files", value: 62 });
+
+                    Label({ text: "TABS", fontSize: 11, bold: 1, textColor: DARK_CAPTION_COLOR });
+                    Tabs({ styleName: "minimalDark", width: 300, tabs: ["General", "Sound", "Advanced"], panelHeight: 0 });
+
+                    Label({ text: "WINDOW BARS", fontSize: 11, bold: 1, textColor: DARK_CAPTION_COLOR });
+                    VGroup({ width: "100%", height: "auto", align: "left top", gap: 0, clipContent: 0 });
+                        MenuBar({ styleName: "minimalDark", position: "relative", menus: MENUS });
+                        ToolBar({ styleName: "minimalDark", position: "relative", items: TOOLS });
+                        StatusBar({ styleName: "minimalDark", position: "relative", messageText: "Ready", items: ["UTF-8", "100%"] });
+                    endGroup();
+
+                    Label({ text: "TREE, TABLE, RANGE", fontSize: 11, bold: 1, textColor: DARK_CAPTION_COLOR });
+                    TreeView({ styleName: "minimalDark", width: 260, height: "auto", value: "app", items: FILES });
+                    SmartTable({ styleName: "minimalDark", titleDataList: PEOPLE_COLUMNS, itemDataList: PEOPLE, itemLineCount: 3, style: { width: "100%", height: "auto" } });
+                    DataTable({ styleName: "minimalDark", width: "100%", height: 124, columns: PEOPLE_DATA_COLUMNS, rows: PEOPLE });
+                    JsonEditor({ styleName: "minimalDark", height: JSON_EDITOR_HEIGHT, value: PEOPLE, showHint: 0 });
+                    RangeSlider({ styleName: "minimalDark", width: 260, lowValue: 20, highValue: 70 });
+
+                    Label({ text: "PICKERS, FIELDS", fontSize: 11, bold: 1, textColor: DARK_CAPTION_COLOR });
+                    HGroup({ width: "100%", height: "auto", align: "left center", gap: 8, wrap: 1, clipContent: 0 }); // WHY wrap: a phone
+                        DatePicker({ styleName: "minimalDark", width: 140, placeholder: "Date" });
+                        TimePicker({ styleName: "minimalDark", width: 100, time: "14:30" });
+                        ColorPicker({ styleName: "minimalDark", width: 130, selectedColor: "#3871E0" });
+                    endGroup();
+                    SliderField({ styleName: "minimalDark", width: 260, labelText: "Size", value: 40, minValue: 0, maxValue: 100, unitText: " px" });
+                    TagInput({ styleName: "minimalDark", width: "100%", tags: ["audio", "guide"], suggestions: TAGS });
+                    FilePicker({ styleName: "minimalDark", width: "100%", multiple: 1 });
+
+                    Label({ text: "STEPS, SECTIONS, AREAS", fontSize: 11, bold: 1, textColor: DARK_CAPTION_COLOR });
+                    StepBar({ styleName: "minimalDark", width: "100%", steps: ["Cart", "Address", "Payment", "Done"], currentStep: 2 });
+                    TimeLine({ styleName: "minimalDark", width: "100%", items: HISTORY });
+                    const darkSettings = Accordion({ styleName: "minimalDark", width: "100%", height: "auto", sections: SECTIONS });
+                    darkSettings.startSection("general");
+                        CheckBox({ styleName: "minimalDark", labelText: "Open with the system" });
+                        CheckBox({ styleName: "minimalDark", labelText: "Look for updates", checked: 1 });
+                    darkSettings.endSection();
+                    startBox({ width: "100%", height: SPLIT_HEIGHT, color: "transparent", border: 1, borderColor: DARK_LINE_COLOR, round: 4 });
+                        Splitter({ styleName: "minimalDark", firstSize: 160 });
+                    endBox();
+
+                    Label({ text: "CONVERSATION", fontSize: 11, bold: 1, textColor: DARK_CAPTION_COLOR });
+                    ChatView({ styleName: "minimalDark", width: "100%", height: CHAT_HEIGHT, messages: CHAT_MESSAGES });
+
+                    Label({ text: "CHART", fontSize: 11, bold: 1, textColor: DARK_CAPTION_COLOR });
+                    GraphBox({ theme: "minimalDark", width: "100%", height: CHART_HEIGHT, type: "line", titleText: "Visits", labels: MONTHS, datasets: VISITS });
+
+                    Label({ text: "OVER THE PAGE", fontSize: 11, bold: 1, textColor: DARK_CAPTION_COLOR });
+                    HGroup({ hug: 1, align: "left center", gap: 8, clipContent: 0 });
+                        const darkHint = SmartButton({ styleName: "minimalDark", labelText: "A hint" });
+                        Tooltip({ target: darkHint, hintText: "Save the file (Ctrl+S)", styleName: "minimalDark" });
+                        SmartButton({ styleName: "minimalDark", labelText: "A dialog", onClick: function () {
+                            Dialog.confirm({ styleName: "minimalDark", titleText: "Delete the file?", messageText: "report.pdf goes to the trash.", confirmText: "Delete", danger: 1 });
+                        } });
+                        SmartButton({ styleName: "minimalDark", labelText: "A toast", onClick: function () {
+                            Toast.show({ theme: "minimalDark", type: "success", titleText: "Saved", messageText: "report.pdf is saved.", action: { text: "Undo", onClick: function () { } } });
+                        } });
+                    endGroup();
+                    const darkPanel = SidePanel({ styleName: "minimalDark", side: "right", panelSize: 300, titleText: "Filters" });
+                    darkPanel.startBody();
+                        CheckBox({ styleName: "minimalDark", labelText: "Only the new ones", checked: 1 });
+                        CheckBox({ styleName: "minimalDark", labelText: "With a picture" });
+                    darkPanel.endBody();
+                    HGroup({ hug: 1, align: "left center", gap: 8, clipContent: 0 });
+                        SmartButton({ styleName: "minimalDark", labelText: "A side panel", onClick: function () {
+                            darkPanel.open();
+                        } });
+                        SmartButton({ styleName: "minimalDark", labelText: "Loading", onClick: function () {
+                            LoadingScreen({ styleName: "minimalDark", titleText: "My App", messageText: "Loading the data...", minDuration: LOADING_TIME, removeOnClose: 1 }).close();
+                        } });
+                    endGroup();
+
+                endGroup();
+
+            endGroup();
+
+        endGroup();
+
+    };
+
+    </script>
+
+</head>
+<body>
+</body>
+</html>

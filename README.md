@@ -1,9 +1,9 @@
-# JS-Component Kit
+# OzdenUI
 
 > **Design with code. See it work right away.**
 > UI components, samples and app templates for building web interfaces in plain JavaScript, with layout, style and behavior in one place.
 
-JS-Component Kit is built on [**basic.js**](https://bug7a.github.io/basic.js/), a small, dependency-free library that creates DOM objects directly from JavaScript. You add a `<script>` tag, write a few lines and open the page in a browser.
+OzdenUI is built on [**basic.js**](https://bug7a.github.io/basic.js/), a small, dependency-free library that creates DOM objects directly from JavaScript. You add a `<script>` tag, write a few lines and open the page in a browser.
 
 **[Browse the components](https://bug7a.github.io/js-components/)** · **[Handbook](https://bug7a.github.io/basic.js-handbook/)** · **[basic.js](https://bug7a.github.io/basic.js/)**
 
@@ -48,17 +48,17 @@ Nearly 70 components. Every one has a live example with its code in the [compone
 
 | Group | Some of the components |
 | :--- | :--- |
-| **Forms and inputs** | `InputB` and its email, password, phone, number, currency and URL versions, `TextareaB`, `TagInput`, `Stepper`, `SliderField`, `RichTextEditor`, `Form` |
-| **Selection** | `SelectBox`, `Filters`, `SelectDate`, `SelectTime`, `SelectColor`, `SelectFile`, `CheckBox`, `RadioButton`, `Toggle` |
+| **Forms and inputs** | `TextField` and its email, password, phone, number, currency and URL versions, `TextAreaField`, `TagInput`, `Stepper`, `SliderField`, `RichTextEditor`, `Form` |
+| **Selection** | `SelectBox`, `Filters`, `DatePicker`, `TimePicker`, `ColorPicker`, `FilePicker`, `CheckBox`, `RadioButton`, `Toggle` |
 | **Buttons and menus** | `SmartButton`, `HoldToConfirmButton`, `ContextMenu` |
 | **Navigation** | `Tabs`, `Breadcrumbs`, `LeftMenu`, `BottomBar`, `PageControl` |
-| **Data and charts** | `SmartTable`, `ChartBox`, `Gauge`, `SparkLineBox`, `ProgressBar`, `TimeLine`, `SortableList` |
+| **Data and charts** | `SmartTable`, `GraphBox`, `Gauge`, `SparkLineBox`, `ProgressBar`, `TimeLine`, `SortableList` |
 | **Overlays and feedback** | `Dialog`, `SidePanel`, `Toast`, `Tooltip`, `LoadingScreen` |
 | **Pages and views** | `LoginPage`, `WebView`, `PropertyPanel`, `LabelEditor` |
 
 ---
 
-## Why JS-Component Kit?
+## Why OzdenUI?
 
 * **Readable code:** The code for a screen follows the layout of the screen, so you can understand it at a glance.
 * **Small learning curve:** If you know JavaScript, a handful of concepts are enough to start: `Box`, `Label`, `Button`, `AutoLayout` and `that`.
@@ -89,7 +89,7 @@ The newer components come with ready-made looks. Pick one with `styleName` (`Tab
 
 ## Getting Started
 
-A new project, ready to build with AI tools:
+A new project with basic.js and every OzdenUI component (`_basic/comp/`), ready to build with AI tools:
 
 ```sh
 npm create basicjs@latest my-app
@@ -176,5 +176,7 @@ It fits admin panels, dashboards, internal tools, forms, mobile apps and prototy
 
 ## License
 
-Copyright 2020-2026 Bugra Ozden <bugra.ozden@gmail.com>
-Licensed under the [Apache License, Version 2.0](LICENSE).
+Copyright 2020-2026 Bugra Ozden <bugra.ozden@gmail.com> (https://bug7a.github.io/)
+Licensed under the [Apache License, Version 2.0](LICENSE) (see also [NOTICE](NOTICE)).
+
+Developed with the help of Claude Code (Anthropic).

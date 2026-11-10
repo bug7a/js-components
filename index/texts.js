@@ -9,8 +9,11 @@ JS Components Website - Texts - v26.09
 - All the copy of the site. Both languages must have the same keys.
   The component descriptions are in index/catalog.js.
 
-Developer: Bugra Ozden
-Email: bugra.ozden@gmail.com
+Webpage: https://bug7a.github.io/js-components/
+
+Copyright 2020-2026 Bugra Ozden <bugra.ozden@gmail.com> (https://bug7a.github.io/)
+Licensed under the Apache License, Version 2.0
+SPDX-License-Identifier: Apache-2.0
 
 */
 
@@ -20,7 +23,7 @@ const TEXTS = {
 
     en: {
         htmlLang: "en",
-        pageTitle: "JS Components – UI components for basic.js",
+        pageTitle: "OzdenUI – UI components for basic.js",
         pageDescription: "Plain JavaScript UI components built with basic.js. Every component with a live example and its code.",
         languageButton: "TR",
         languageHint: "Türkçe",
@@ -30,7 +33,7 @@ const TEXTS = {
         navHandbook: "Handbook",
 
         // HERO
-        eyebrow: "BASIC.JS UI COMPONENTS",
+        eyebrow: "BUILT ON BASIC.JS",
         heroTitle: "UI components written in plain JavaScript",
         heroLead: "Every component below is a live example page: open one to use it and read its code side by side. Layout, style and behavior are together, in plain JavaScript.",
         statComponents: "components",
@@ -43,6 +46,10 @@ const TEXTS = {
         allCategories: "All",
         noResult: "No component matches your search.",
         clearSearch: "Clear the search",
+
+        // FEATURED
+        featuredTitle: "Featured",
+        featuredNote: "Our picks to start with",
 
         // CARD
         examples: "examples",
@@ -71,11 +78,12 @@ const TEXTS = {
         // FOOTER
         footerText: "basic.js and the components are open source (Apache 2.0).",
         footerMade: "This site is built with basic.js and the components it shows.",
+        footerHelp: "Developed with the help of Claude Code (Anthropic).",
     },
 
     tr: {
         htmlLang: "tr",
-        pageTitle: "JS Components – basic.js arayüz bileşenleri",
+        pageTitle: "OzdenUI – basic.js arayüz bileşenleri",
         pageDescription: "basic.js ile, saf JavaScript ile yazılmış arayüz bileşenleri. Her bileşen, çalışan örneği ve koduyla.",
         languageButton: "EN",
         languageHint: "English",
@@ -85,7 +93,7 @@ const TEXTS = {
         navHandbook: "El kitabı",
 
         // HERO
-        eyebrow: "BASIC.JS ARAYÜZ BİLEŞENLERİ",
+        eyebrow: "BASIC.JS ÜZERİNE KURULU",
         heroTitle: "Saf JavaScript ile yazılmış arayüz bileşenleri",
         heroLead: "Aşağıdaki her bileşen çalışan bir örnek sayfadır: birini açın, kullanın ve kodunu yan tarafta okuyun. Düzen, stil ve davranış bir arada, saf JavaScript ile.",
         statComponents: "bileşen",
@@ -98,6 +106,10 @@ const TEXTS = {
         allCategories: "Tümü",
         noResult: "Aramanıza uyan bir bileşen yok.",
         clearSearch: "Aramayı temizle",
+
+        // FEATURED
+        featuredTitle: "Öne çıkanlar",
+        featuredNote: "Başlamak için seçtiklerimiz",
 
         // CARD
         examples: "örnek",
@@ -126,6 +138,7 @@ const TEXTS = {
         // FOOTER
         footerText: "basic.js ve bileşenler açık kaynaktır (Apache 2.0).",
         footerMade: "Bu site, basic.js ve gösterdiği bileşenlerle yapılmıştır.",
+        footerHelp: "Claude Code (Anthropic) yardımıyla geliştirildi.",
     },
 
 };

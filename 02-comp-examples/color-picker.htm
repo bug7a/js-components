@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Color Picker</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- LIBRARY FILES -->
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Bold.ttf" as="font" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
+    <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
+
+    <!-- COMPONENT FILES -->
+    <script src="../comp/smart-button.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/color-picker.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/scroll-area.js" type="text/javascript" charset="utf-8"></script>
+
+    <script>
+
+        /* Bismillah */
+
+        // *** VARIABLES:
+        let colorFunctions;
+        let lblDefault, lblOwn, lblInline, lblFunctions;
+        let boxPreview;
+
+        const start = function () {
+
+            page.color = "whitesmoke";
+
+            // SCROLL AREA: The page
+            // WHY: page does not scroll. A ScrollArea fills the window; its content scrolls when it is taller.
+            ScrollArea({
+                align: "center top",
+                gap: 30,
+                padding: [16, 50], // WHY 16 at the sides: the cards fill a phone (390 px)
+            });
+
+                // LABEL: Title
+                Label({
+                    text: "Color Picker",
+                    fontSize: 26,
+                    bold: 1,
+                });
+
+                // SAMPLE 1: Default (popup)
+                startCard("1. Default (20 colors, 5 columns)");
+
+                    ColorPicker({
+                        selectedColor: "#3871E0",
+                        onChange: function (self) {
+                            lblDefault.text = "value: \"" + self.value + "\"";
+                            boxPreview.color = (self.value !== "") ? self.value : "transparent";
+                        },
+                    });
+
+                    // GROUP: Value and preview
+                    HGroup({ width: "100%", height: "auto", align: "left center", gap: 12 });
+
+                        lblDefault = infoLabel("value: \"#3871E0\"");
+
+                        boxPreview = Box({
+                            width: 60,
+                            height: 24,
+                            color: "#3871E0",
+                            round: 5,
+                            border: 1,
+                            borderColor: Black(0.15),
+                        });
+
+                    endGroup();
+
+                endCard();
+
+                // SAMPLE 2: Own palette, no text
+                startCard("2. Own palette (setColors), showText: 0");
+
+                    ColorPicker({
+                        width: 70,
+                        columns: 4,
+                        showText: 0,
+                        selectedColor: "tomato",
+                        colors: ["tomato", "gold", "mediumseagreen", "cadetblue", "#7B61D9", "#141414", "#FFFFFF", "transparent"],
+                        onChange: function (self) {
+                            lblOwn.text = "value: \"" + self.value + "\"";
+                        },
+                    });
+
+                    lblOwn = infoLabel("value: \"tomato\"  (a CSS color name is also a color)");
+
+                endCard();
+
+                // SAMPLE 3: Inline with a custom style
+                startCard("3. Inline (custom style, 10 columns)");
+
+                    ColorPicker({
+                        inline: 1,
+                        columns: 10,
+                        selectedColor: "#E8D44D",
+                        colors: [
+                            "#141414", "#3D3D3D", "#5A5A5A", "#7A7A7A", "#9A9A9A", "#B8B8B8", "#D0D0D0", "#E8E8E8", "#F5F5F5", "#FFFFFF",
+                            "#D64545", "#E0A038", "#E8D44D", "#5DB182", "#3E8E62", "#3871E0", "#5AA9E6", "#7B61D9", "#B45FC0", "#E06AA0",
+                        ],
+                        onChange: function (self) {
+                            lblInline.text = "Selected: <b>" + self.value + "</b>";
+                        },
+                        style: {
+                            panel: { border: 0, padding: 0, shadow: "none" },
+                            swatch: { size: 24, gap: 6, round: 12 },
+                            mark: { size: 8 },
+                        },
+                    });
+
+                    lblInline = infoLabel("Selected: <b>#E8D44D</b>");
+
+                endCard();
+
+                // SAMPLE 4: Public functions
+                startCard("4. Functions");
+
+                    colorFunctions = ColorPicker({
+                        onChange: function (self) {
+                            lblFunctions.text = "onChange: \"" + self.value + "\"";
+                        },
+                    });
+
+                    // GROUP: Buttons
+                    HGroup({ width: "100%", height: "auto", align: "left center", gap: 8, wrap: 1 });
+
+                        smallButton("setColor(\"#D64545\")", function () {
+                            colorFunctions.setColor("#D64545");
+                        });
+
+                        smallButton("setColor(\"\")", function () {
+                            colorFunctions.setColor("");
+                        });
+
+                        smallButton("Gray palette", function () {
+                            colorFunctions.setColors(["#141414", "#5A5A5A", "#9A9A9A", "#D0D0D0", "#FFFFFF"]);
+                        });
+
+                        smallButton("Disable", function (self) {
+                            colorFunctions.setEnabled(colorFunctions.enabled ? 0 : 1);
+                            self.setLabelText((colorFunctions.enabled) ? "Disable" : "Enable");
+                        });
+
+                    endGroup();
+
+                    lblFunctions = infoLabel("Keyboard: Tab to the field, Enter to open, ← → ↑ ↓ select, Enter to close.");
+
+                endCard();
+
+            endGroup();
+
+        };
+
+        // *** OTHER FUNCTIONS:
+
+        // GROUP: A white card with a title.
+        const startCard = function (title) {
+            VGroup({
+                width: 460,
+                height: "auto",
+                align: "left top",
+                gap: 12,
+                padding: 20,
+                color: "white",
+                round: 10,
+                border: 1,
+                borderColor: Black(0.1),
+                css: { maxWidth: "100%" }, // WHY maxWidth: on a phone the card is as wide as the screen
+            });
+            Label({
+                text: title,
+                fontSize: 14,
+                textColor: Black(0.45),
+            });
+        };
+
+        const endCard = function () {
+            endGroup();
+        };
+
+        const infoLabel = function (text) {
+            return Label({
+                width: "auto",
+                text: text,
+                fontSize: 13,
+                textColor: Black(0.55),
+            });
+        };
+
+        // A button of the sample (SmartButton, its gray)
+        const smallButton = function (text, onClick) {
+            return SmartButton({ labelText: text, onClick: onClick });
+        };
+
+    </script>
+</head>
+
+<body></body>
+
+</html>

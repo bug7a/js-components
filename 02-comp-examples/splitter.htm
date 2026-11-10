@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+
+        <title>Splitter</title>
+
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <!-- LIBRARY FILES -->
+        <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
+        <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../basic/scroll-bar.min.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- COMPONENT FILES -->
+        <script src="../comp/smart-button.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/tree-view.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/log-view.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/splitter.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/scroll-area.js" type="text/javascript" charset="utf-8"></script>
+
+        <script>
+
+        /* Bismillah */
+
+        // Splitter (comp/splitter.js): two areas and a line between them, in the two themes.
+        // Drag a line; Tab comes to it, the arrows move it, Enter or a double click puts it back.
+        // The outer one: firstSize in px, so the list keeps its size when the window changes.
+        // The inner one: secondSize in px, so the output keeps its size and the content takes the rest.
+
+        // *** VARIABLES:
+        const PAGE_COLOR = "#ECEBE8";
+        const SOFT_TEXT = "#6F6E6B";
+        const WINDOW_MIN_WIDTH = 340;
+        const WINDOW_MAX_WIDTH = 620;
+        const WINDOW_HEIGHT = 340;
+
+        const FILES = [
+            { key: "src", text: "src", expanded: 1, children: [
+                { key: "main", text: "main.py" },
+                { key: "tools", text: "tools.py" },
+                { key: "data", text: "data", children: [{ key: "csv", text: "sales.csv" }] },
+            ] },
+            { key: "readme", text: "README.md" },
+        ];
+
+        let outerSplitters = [];
+        let isListVisible = 1;
+        let btnList;
+
+        // First running function. (basic.js calls it when the page is ready)
+        const start = function () {
+
+            page.color = PAGE_COLOR;
+
+            // SCROLL AREA: Page (it scrolls when the window is lower than the samples)
+            ScrollArea({ align: "center top", gap: 16, padding: [16, 28] });
+
+                Label({ text: "Splitter", fontSize: 24, bold: 1, textColor: Black(0.8) });
+
+                // GROUP: The buttons
+                HGroup({ width: "100%", height: "auto", align: "center center", gap: 8, wrap: 1 });
+                    btnList = SmartButton({ labelText: "Hide the list", onClick: toggleList });
+                    SmartButton({
+                        labelText: "A wide list",
+                        onClick: function () { eachOuter(function (split) { split.setFirstSize("50%"); }); },
+                    });
+                endGroup();
+
+                // GROUP: The two themes side by side (one under the other on a narrow screen)
+                HGroup({ width: "100%", height: "auto", align: "center top", gap: 20, wrap: 1 });
+                    createWindow("Light", "styleName: \"light\" (default)", "light", "classic", "#FFFFFF", Black(0.14), Black(0.6));
+                    createWindow("Dark", "styleName: \"dark\"", "dark", "dark", "#1C1C1B", White(0.1), White(0.65));
+                endGroup();
+
+            endGroup();
+
+        };
+
+        // *** OTHER FUNCTIONS:
+
+        const eachOuter = function (func) {
+            outerSplitters.forEach(func);
+        };
+
+        const toggleList = function () {
+            isListVisible = (isListVisible) ? 0 : 1;
+            btnList.setLabelText((isListVisible) ? "Hide the list" : "Show the list");
+            eachOuter(function (split) { split.setAreaVisible("first", isListVisible); });
+        };
+
+        // GROUP: A title and a small window with two Splitters
+        const createWindow = function (titleText, noteText, styleName, treeStyleName, windowColor, lineColor, softColor) {
+
+            VGroup({
+                width: "auto",
+                height: "auto",
+                align: "left top",
+                gap: 8,
+                css: { flex: "1 1 " + WINDOW_MIN_WIDTH + "px", maxWidth: WINDOW_MAX_WIDTH + "px", minWidth: "0" },
+            });
+
+                HGroup({ width: "100%", height: "auto", align: "left center", gap: 8 });
+                    Label({ text: titleText, fontSize: 15, bold: 1, textColor: Black(0.75) });
+                    Label({ text: basic.escapeHtml(noteText), fontSize: 12, textColor: SOFT_TEXT });
+                endGroup();
+
+                // BOX: The window
+                startBox({
+                    width: "100%",
+                    height: WINDOW_HEIGHT,
+                    color: windowColor,
+                    border: 1,
+                    borderColor: lineColor,
+                    round: 8,
+                });
+
+                    const outer = Splitter({ styleName: styleName, firstSize: 130, minFirst: 80, minSecond: 120 });
+                    outerSplitters.push(outer);
+
+                    createIn(outer.first, function () {
+                        TreeView({
+                            styleName: treeStyleName,
+                            width: "100%",
+                            height: "100%",
+                            items: FILES,
+                            style: { box: { border: 0, round: 0 } },
+                        });
+                    });
+
+                    createIn(outer.second, function () {
+                        const inner = Splitter({
+                            styleName: styleName,
+                            direction: "vertical",
+                            secondSize: 100,
+                            minFirst: 60,
+                            minSecond: 50,
+                        });
+                        createIn(inner.first, function () {
+                            Label({ text: "The content", fontSize: 14, textColor: softColor, css: { padding: "12px" } });
+                        });
+                        createIn(inner.second, function () {
+                            LogView({
+                                styleName: styleName,
+                                height: "100%",
+                                style: { box: { border: 0, round: 0 } },
+                                lines: [{ text: "An output keeps its height", level: "success" }, { text: "Try the line over it", level: "info" }],
+                            });
+                        });
+                    });
+
+                endBox();
+
+            endGroup();
+
+        };
+
+        </script>
+
+    </head>
+    <body>
+    </body>
+</html>

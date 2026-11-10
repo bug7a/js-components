@@ -16,9 +16,11 @@ HoldToConfirmButton({
 });
 
 Started Date: January 2026
-Developer: Bugra Ozden
-Email: bugra.ozden@gmail.com
 Webpage: https://bug7a.github.io/js-components/
+
+Copyright 2020-2026 Bugra Ozden <bugra.ozden@gmail.com> (https://bug7a.github.io/)
+Licensed under the Apache License, Version 2.0
+SPDX-License-Identifier: Apache-2.0
 
 
 Design inspired by a layout seen on Pinterest
@@ -35,8 +37,9 @@ const HoldToConfirmButtonDefaults = {
     height: 50,
     labelText: "Hold to Delete", // Hold to Vanish, Hold to Delete
     completedText: "DELETED", // Poof! And it's gone.  // DELETED // REMOVED
-    iconFile: "../comp/hold-to-confirm-button/trash.png",
-    holdingIconFile: "../comp/hold-to-confirm-button/trash-red.png",
+    allowHtml: 0, // 1: labelText and completedText are HTML (only for your own texts)
+    iconFile: "data:image/svg+xml;utf8," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 144 144" preserveAspectRatio="none" fill="none" stroke="#141414" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"><path d="M56.5 22.5H87.5M30.5 27H113.5M34.5 31V112A9.5 9.5 0 0 0 44 121.5H100A9.5 9.5 0 0 0 109.5 112V31M59.5 48.5V99.5M84.5 48.5V99.5"/></svg>'), // a bin (a page can give its own picture)
+    holdingIconFile: "data:image/svg+xml;utf8," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 144 144" preserveAspectRatio="none" fill="none" stroke="#FE5D49" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"><path d="M56.5 22.5H87.5M30.5 27H113.5M34.5 31V112A9.5 9.5 0 0 0 44 121.5H100A9.5 9.5 0 0 0 109.5 112V31M59.5 48.5V99.5M84.5 48.5V99.5"/></svg>'), // the bin in red while it is held
     onConfirm: function (self) { },
     onReset: function (self) {},
     holdDuration: 3000, // ms
@@ -111,6 +114,12 @@ const HoldToConfirmButton = function (params = {}) {
     box.resetTimer = null; // The cancel function of the waiting reset (box.after)
 
     // *** PRIVATE FUNCTIONS:
+
+    const setText = function (label, text) {
+        const value = (text === undefined || text === null) ? "" : String(text);
+        if (box.allowHtml == 1) label.text = value;
+        else label.plainText = value;
+    };
 
     // The red layer is as wide as the normal button. Its icon and label are placed by the same group layout.
     // WHY: aline() copied whole pixels (offsetTop), but the flex layout puts the label at 10.25 px:
@@ -205,7 +214,7 @@ const HoldToConfirmButton = function (params = {}) {
         // LABEL
         box.label = Label(0, 0, box.style.label);
         box.label.setMotion("opacity 0.2s");
-        box.label.text = box.labelText;
+        setText(box.label, box.labelText);
         box.label.css.whiteSpace = "nowrap";
 
     endGroup();
@@ -231,7 +240,7 @@ const HoldToConfirmButton = function (params = {}) {
 
             // LABEL: red
             box.labelRed = Label(0, 0, box.style.holdingLabel);
-            box.labelRed.text = box.labelText;
+            setText(box.labelRed, box.labelText);
             box.labelRed.css.whiteSpace = "nowrap";
 
             // BOX: The line at the moving end of the red layer (not a part of the layout)
@@ -261,7 +270,7 @@ const HoldToConfirmButton = function (params = {}) {
 
             // LABEL: Completed text
             Label(box.style.completedLabel);
-            that.text = box.completedText;
+            setText(that, box.completedText);
             that.css.whiteSpace = "nowrap";
 
         endGroup();

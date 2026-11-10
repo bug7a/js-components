@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+
+        <title>A small program</title>
+
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <!-- LIBRARY FILES -->
+        <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
+        <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../basic/scroll-bar.min.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- COMPONENT FILES -->
+        <script src="../comp/context-menu.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/menu-bar.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/status-bar.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/image-view.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/log-view.js" type="text/javascript" charset="utf-8"></script>
+
+        <script>
+
+        /* Bismillah */
+
+        // A small program made of MenuBar, ImageView, LogView and StatusBar (a tool that a Python program can open).
+        // View > Dark theme: setTheme() of the four objects changes their style packages; nothing is made again.
+
+        // *** VARIABLES:
+        const NARROW_WIDTH = 720; // px: the picture and the output go one under the other
+        const SAVED_MESSAGE_TIME = 3000; // ms
+        const JOB_LINE_TIME = 300; // ms: a line of the job
+
+        const THEMES = {
+            light: { pageColor: "#FFFFFF" },
+            dark: { pageColor: "#1C1C1B" },
+        };
+
+        const JOB_LINES = [
+            { text: "Reading 3 files", level: "info" },
+            { text: "photo.jpg: 4032 x 3024", level: "debug" },
+            { text: "photo.jpg is very large", level: "warn" },
+            { text: "plot.png was saved", level: "success" },
+        ];
+
+        let themeName = "light";
+        let hasWordWrap = 1;
+        let imageIndex = 0;
+        let windowGroup, menuBar, imageView, logView, statusBar;
+        let jobTimer = null;
+        let jobLineIndex = 0;
+
+        // First running function. (basic.js calls it when the page is ready)
+        const start = function () {
+            drawWindow();
+            page.onResize(placeAreas);
+        };
+
+        // *** OTHER FUNCTIONS:
+
+        const drawWindow = function () {
+
+            page.color = THEMES[themeName].pageColor;
+
+            // GROUP: The window: the bars take their own height, the areas the rest
+            windowGroup = VGroup({ left: 0, top: 0, width: "100%", height: "100%", align: "left top", gap: 0 });
+
+                menuBar = MenuBar({ styleName: themeName, menus: makeMenus(), shrink: 0 });
+
+                // GROUP: The picture and the output
+                windowGroup.areas = HGroup({
+                    width: "100%",
+                    height: "auto",
+                    align: "left top",
+                    gap: 0,
+                    grow: 1,
+                    css: { minHeight: "0", flexBasis: "0" },
+                });
+
+                    imageView = ImageView({
+                        styleName: themeName,
+                        width: "auto",
+                        height: "auto",
+                        imageFile: IMAGES[imageIndex].file,
+                        altText: IMAGES[imageIndex].altText,
+                        enlargeToFit: 1,
+                        style: { box: { border: 0, round: 0 }, image: { color: "white" } },
+                        onZoomChange: function (self) { statusBar.setItemText("zoom", Math.round(self.zoomLevel * 100) + "%"); },
+                        grow: 1,
+                        css: { flexBasis: "0", minWidth: "0", minHeight: "0", alignSelf: "stretch" },
+                    });
+
+                    logView = LogView({
+                        styleName: themeName,
+                        width: "auto",
+                        height: "auto",
+                        wrapLines: hasWordWrap,
+                        lines: [{ text: "Program started", level: "info" }],
+                        style: { box: { border: 0, round: 0 } },
+                        grow: 1,
+                        css: { flexBasis: "0", minWidth: "0", minHeight: "0", alignSelf: "stretch" },
+                    });
+
+                endGroup();
+
+                statusBar = StatusBar({
+                    styleName: themeName,
+                    messageText: "Ready",
+                    shrink: 0,
+                    items: [
+                        { key: "picture", text: IMAGES[imageIndex].name },
+                        { key: "zoom", text: Math.round(imageView.zoomLevel * 100) + "%", ariaLabel: "Zoom to fit", onClick: function () { imageView.zoomToFit(); } },
+                    ],
+                });
+
+            endGroup();
+
+            placeAreas();
+
+        };
+
+        // LAYOUT: side by side, or one under the other on a narrow window
+        const placeAreas = function () {
+            const isNarrow = (page.width < NARROW_WIDTH);
+            windowGroup.areas.css.flexDirection = (isNarrow) ? "column" : "row";
+            // WHY: A line between the two areas, on the side where they meet.
+            const lineColor = (themeName === "dark") ? White(0.1) : Black(0.12);
+            logView.css.borderLeft = (isNarrow) ? "0" : ("1px solid " + lineColor);
+            logView.css.borderTop = (isNarrow) ? ("1px solid " + lineColor) : "0";
+        };
+
+        const makeMenus = function () {
+            return [
+                { text: "File", items: [
+                    { text: "Open the next picture", key: "open", shortcut: "Ctrl+O", onClick: openNextImage },
+                    { text: "Save", key: "save", shortcut: "Ctrl+S", onClick: save },
+                ] },
+                { text: "View", items: [
+                    { text: "Dark theme", key: "dark", checked: (themeName === "dark") ? 1 : 0, onClick: toggleTheme },
+                    { text: "Word wrap", key: "wrap", checked: hasWordWrap, onClick: toggleWordWrap },
+                    "-",
+                    { text: "Zoom in", key: "zoomIn", onClick: function () { imageView.zoomIn(); } },
+                    { text: "Zoom out", key: "zoomOut", onClick: function () { imageView.zoomOut(); } },
+                    { text: "Fit", key: "fit", onClick: function () { imageView.zoomToFit(); } },
+                ] },
+                { text: "Tools", items: [
+                    { text: "Run the job", key: "job", shortcut: "F5", onClick: toggleJob },
+                    { text: "Clear the output", key: "clear", onClick: function () { logView.clearLines(); } },
+                ] },
+                { text: "Help", items: [
+                    { text: "About", key: "about", onClick: function () { statusBar.setMessageText("A small program, made with basic.js", "info", SAVED_MESSAGE_TIME); } },
+                ] },
+            ];
+        };
+
+        const openNextImage = function () {
+            imageIndex = (imageIndex + 1) % IMAGES.length;
+            const image = IMAGES[imageIndex];
+            imageView.setImage(image.file, image.altText);
+            statusBar.setItemText("picture", image.name);
+            logView.info("Opened: " + image.name);
+        };
+
+        const save = function () {
+            statusBar.setMessageText("Saved", "success", SAVED_MESSAGE_TIME);
+            logView.success("The file was saved");
+        };
+
+        const toggleTheme = function () {
+            themeName = (themeName === "dark") ? "light" : "dark";
+            page.color = THEMES[themeName].pageColor;
+            [menuBar, imageView, logView, statusBar].forEach(function (obj) { obj.setTheme(themeName); });
+            menuBar.setItemChecked("dark", (themeName === "dark") ? 1 : 0);
+            placeAreas();
+        };
+
+        const toggleWordWrap = function () {
+            hasWordWrap = (hasWordWrap) ? 0 : 1;
+            logView.setWrapLines(hasWordWrap);
+            menuBar.setItemChecked("wrap", hasWordWrap);
+        };
+
+        const writeJobLine = function () {
+            const line = JOB_LINES[jobLineIndex % JOB_LINES.length];
+            jobLineIndex++;
+            logView.addLine(line.text, line.level);
+        };
+
+        const toggleJob = function () {
+            if (jobTimer) {
+                clearInterval(jobTimer);
+                jobTimer = null;
+                statusBar.setBusy(0);
+                statusBar.setMessageText("Ready");
+                logView.info("The job was stopped");
+                return;
+            }
+            jobTimer = setInterval(writeJobLine, JOB_LINE_TIME);
+            statusBar.setBusy(1);
+            statusBar.setMessageText("The job is running... (F5 stops it)");
+        };
+
+        // A plot in a data: address, like a picture that a Python program sends.
+        const makePlot = function () {
+            const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="640" height="480" viewBox="0 0 640 480" font-family="sans-serif" font-size="15">'
+                + '<rect width="640" height="480" fill="white"/>'
+                + '<g fill="#1F77B4"><rect x="90" y="250" width="60" height="170"/><rect x="180" y="170" width="60" height="250"/><rect x="270" y="210" width="60" height="210"/><rect x="360" y="110" width="60" height="310"/><rect x="450" y="70" width="60" height="350"/><\/g>'
+                + '<g fill="none" stroke="#333333"><path d="M60 40V420H600"/><\/g>'
+                + '<g fill="#333333" text-anchor="middle"><text x="120" y="442">Jan<\/text><text x="210" y="442">Feb<\/text><text x="300" y="442">Mar<\/text><text x="390" y="442">Apr<\/text><text x="480" y="442">May<\/text><text x="320" y="26" font-size="18">The sales of the year<\/text><\/g>'
+                + "<\/svg>";
+            return "data:image/svg+xml;utf8," + encodeURIComponent(svg);
+        };
+
+        const IMAGES = [
+            { name: "sales.svg", file: makePlot(), altText: "The sales of the year" },
+            { name: "olives.png", file: "../assets/cards/olives.png", altText: "A bowl of olives" },
+        ];
+
+        </script>
+
+    </head>
+    <body>
+    </body>
+</html>

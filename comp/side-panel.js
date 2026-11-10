@@ -22,7 +22,8 @@ UI COMPONENT
 - The content goes into the body with startBody() ... endBody(). The body scrolls when it is tall.
 - onBeforeClose can stop the closing. (Ex: unsaved changes.)
 - Everything is drawn with code (no image files needed). Accessibility: role="dialog", aria-modal.
-- Style packages: "classic" (default), "modern", "dark". Select with styleName. (SidePanel.styles)
+- Style packages: "light" (default; the old name "classic" works too), "modern", "dark", "minimal", "minimalDark".
+  Select with styleName. (SidePanel.styles)
 
 USAGE:
 const panel = SidePanel({ side: "right", titleText: "Filters" });
@@ -40,9 +41,11 @@ panel.setTitleText("Filters (3)");
 panel.remove();    // Also removes its backdrop and its window events.
 
 Started Date: September 2026
-Developer: Bugra Ozden
-Email: bugra.ozden@gmail.com
 Webpage: https://bug7a.github.io/js-components/
+
+Copyright 2020-2026 Bugra Ozden <bugra.ozden@gmail.com> (https://bug7a.github.io/)
+Licensed under the Apache License, Version 2.0
+SPDX-License-Identifier: Apache-2.0
 
 */
 
@@ -58,6 +61,7 @@ const SidePanelDefaults = {
     duration: 300, // Length of the animation, in milliseconds.
     fade: 1, // 1: The panel fades in / out with its slide. 0: It only slides. (The backdrop always fades.) (Only at create time)
     titleText: "",
+    allowHtml: 0, // 1: titleText is HTML (only for your own texts)
     showHeader: 1, // 0: No header. (The close button goes with it.)
     showCloseButton: 1,
     showBackdrop: 1,
@@ -69,8 +73,8 @@ const SidePanelDefaults = {
     onOpen: function (self) { },
     onClose: function (self) { },
     onBeforeClose: function (self) { }, // Return false to keep the panel open.
-    styleName: "classic", // "classic", "modern", "dark" or a name added to SidePanel.styles
-    style: { // Classic style package (default)
+    styleName: "light", // "light" ("classic": its old name), "modern", "dark", "minimal", "minimalDark" or a name added to SidePanel.styles
+    style: { // Light style package (default)
         panel: {
             color: White(1),
             border: 1,
@@ -108,7 +112,7 @@ const SidePanelDefaults = {
 
 const SidePanel = function (params = {}) {
 
-    // Merge style package: params.style > SidePanel.styles[styleName] > SidePanelDefaults.style (classic)
+    // Merge style package: params.style > SidePanel.styles[styleName] > SidePanelDefaults.style (light)
     basic.applyStylePackage(params, SidePanel.styles, SidePanelDefaults);
 
     // Merge params:
@@ -157,6 +161,12 @@ const SidePanel = function (params = {}) {
     const OPEN_TRANSFORM = "translate(0px, 0px)";
 
     // *** PRIVATE FUNCTIONS:
+
+    const setText = function (label, text) {
+        const value = (text === undefined || text === null) ? "" : String(text);
+        if (box.allowHtml == 1) label.text = value;
+        else label.plainText = value;
+    };
 
     const isVertical = function () {
         return (box.side === "bottom" || box.side === "top");
@@ -248,7 +258,14 @@ const SidePanel = function (params = {}) {
 
     const onKeyDown = function (self, event) {
         if (event.code !== "Escape") return;
-        if (box.isOpened === 1 && box.closeOnEscape == 1) box.close();
+        // WHY after the event: a list opened from the panel can listen on window too, after the panel
+        //      (FullScreenSelect). An Escape that closed a list, or that a Dialog over the panel kept, closed the panel
+        //      too (the sheet of the mobile template is removed when it closes: its typed text was lost).
+        box.after(0, function () {
+            if (event.defaultPrevented) return; // used by a list, a menu or a Dialog
+            if (typeof Dialog === "function" && Dialog.getTop()) return; // a modal over the panel
+            if (box.isOpened === 1 && box.closeOnEscape == 1) box.close();
+        });
     };
 
     // *** PUBLIC VARIABLES:
@@ -337,7 +354,7 @@ const SidePanel = function (params = {}) {
 
     box.setTitleText = function (text) {
         box.titleText = text;
-        if (box.lblTitle) box.lblTitle.text = text;
+        if (box.lblTitle) setText(box.lblTitle, text);
     };
     // USAGE: get: panel.titleText, set: panel.setTitleText("Filters (3)")
 
@@ -347,13 +364,20 @@ const SidePanel = function (params = {}) {
     };
 
     // The objects created between these two calls go into the body of the panel.
+    // WHY a group of their own (on the start / end stack, as PageControl.startPage and Tabs.startPanel): only the
+    //     default container was set. In a panel made while a group of the page was open, the endObject() of the first
+    //     component (or an endGroup()) in the body went back to that group, and the next objects were drawn outside
+    //     the panel. The group has the gap and the alignment of the body, so the look is the same.
     box.startBody = function () {
         bodyStack.push(getDefaultContainerBox());
         setDefaultContainerBox(box.body);
+        const content = VGroup({ width: "100%", height: "auto", align: "left top", gap: _s.body.gap, color: "transparent", position: "relative" });
+        content.css.alignItems = "stretch";
         return box.body;
     };
 
     box.endBody = function () {
+        endGroup(); // the group of startBody()
         const previous = bodyStack.pop();
         if (previous) setDefaultContainerBox(previous);
     };
@@ -418,12 +442,12 @@ const SidePanel = function (params = {}) {
 
                 // LABEL: Title
                 box.lblTitle = Label({
-                    text: box.titleText,
                     fontSize: _s.title.fontSize,
                     textColor: _s.title.textColor,
                     fontFamily: _s.title.fontFamily,
                     grow: 1,
                 });
+                setText(box.lblTitle, box.titleText);
                 that.ellipsis = 1;
 
                 // BOX: Close button (the X is drawn with two lines, no image file)
@@ -548,7 +572,7 @@ SidePanel.Z_INDEX = 1000;
 SidePanel.styles = {
 
     // White panel, gray divider.
-    classic: SidePanelDefaults.style,
+    light: SidePanelDefaults.style,
 
     // Round corners, cadetblue title. Same colors as the modern Tabs, Stepper and ProgressBar.
     modern: {
@@ -571,3 +595,22 @@ SidePanel.styles = {
     },
 
 };
+SidePanel.styles.classic = SidePanel.styles.light; // the old name of light: the pages made with it keep their look
+
+// The minimal theme (_designs/minimal-theme.htm): the ground of the window, a line and no shadow (as the minimal
+// Dialog), a 40 px header with a 14 px title, a 24 px close button with a faint fill under the mouse.
+// minimalDark: the same on a dark window.
+SidePanel.createMinimalStyle = function (colors) {
+    return {
+        panel: { color: colors.ground, border: 1, borderColor: colors.edge, boxShadow: "none", round: 0 },
+        header: { height: 40, color: "transparent", padding: [16, 0], dividerColor: colors.line },
+        title: { fontSize: 14, textColor: colors.text, fontFamily: "opensans-bold" },
+        closeButton: { size: 24, color: "transparent", hoverColor: colors.hover, iconColor: colors.softText, round: 4 },
+        body: { padding: [16, 14], gap: 10 },
+        backdrop: { color: colors.cover },
+    };
+};
+SidePanel.MINIMAL_COLORS = { ground: "#FFFFFF", text: Black(0.85), softText: Black(0.55), line: Black(0.2), edge: Black(0.45), hover: Black(0.05), cover: Black(0.3) };
+SidePanel.styles.minimal = SidePanel.createMinimalStyle(SidePanel.MINIMAL_COLORS);
+SidePanel.MINIMAL_DARK_COLORS = { ground: "#1A1A19", text: White(0.88), softText: White(0.55), line: White(0.18), edge: White(0.42), hover: White(0.07), cover: Black(0.6) };
+SidePanel.styles.minimalDark = SidePanel.createMinimalStyle(SidePanel.MINIMAL_DARK_COLORS);

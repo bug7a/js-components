@@ -13,8 +13,7 @@ Button, hover and attention effects for basic.js objects (Button, Box, groups, L
   box-shadow values are combined, so they do not overwrite each other.
 - play(obj, name) plays an animation one time, loop(obj, name) repeats it until stop().
 - press(), hover(), focusGroup() and loop() return a function that removes the effect: off() / stop().
-- button() is the same function as press() and attention() is the same as loop(). They stay for the old code
-  (comp/ui-effects.js had only UIEffects.button(btn)).
+- button() is the same function as press() and attention() is the same as loop(). They stay for the old code.
 - Hover effects do not run for touch (no sticky hover on phones). Press effects do.
 - A disabled button (btn.enabled = 0) has no effects.
 - play() and loop() do nothing when the user prefers reduced motion (UIEffects.reduceMotion).
@@ -49,10 +48,12 @@ NOTES:
 - ripple, shine and spotlight add a <span> into the object for a short time (not on Icon and Input).
 - Add your own type: UIEffects.types.myType = function (obj, o, fx) { return { motion: [...], render: function (st) {} }; };
 
-Started Date: 2025 (v26.09: rewritten with more effects)
-Developer: Bugra Ozden
-Email: bugra.ozden@gmail.com
+Started Date: 2025
 Webpage: https://bug7a.github.io/js-components/
+
+Copyright 2020-2026 Bugra Ozden <bugra.ozden@gmail.com> (https://bug7a.github.io/)
+Licensed under the Apache License, Version 2.0
+SPDX-License-Identifier: Apache-2.0
 
 */
 
@@ -73,7 +74,7 @@ UIEffects.press = function (obj, type = "default", options = {}) {
     return UIEffects._add(obj, type, options, 1);
 };
 
-// The old name of press() (comp/ui-effects.js). The old code keeps working.
+// The old name of press(): the old code keeps working.
 UIEffects.button = UIEffects.press;
 
 // Hover effect only (no press state).
@@ -568,22 +569,26 @@ UIEffects.types.spotlight = function (obj, o, fx) {
     const size = o.size ?? 180;
     const LIGHT_FADE_MS = 300;
     let light = null;
-    let removeTimer = null;
+    const fadingLights = new Set(); // the lights that fade out (removed after LIGHT_FADE_MS)
     return {
         motion: [],
         render: function (st) {
             if (!light) return;
             light.style.opacity = st.over ? 1 : 0;
             // WHY: The light is removed after it fades out. It is a child of the object (button.text reads it too).
-            clearTimeout(removeTimer);
             if (!st.over) {
                 const oldLight = light;
                 light = null;
-                removeTimer = setTimeout(function () { oldLight.remove(); }, LIGHT_FADE_MS);
+                fadingLights.add(oldLight);
+                setTimeout(function () {
+                    oldLight.remove();
+                    fadingLights.delete(oldLight);
+                }, LIGHT_FADE_MS);
             }
         },
         move: function (event) {
-            clearTimeout(removeTimer);
+            // WHY no clearTimeout of the fading light here: it cancelled its removal, so every quick out-and-in left
+            //     a span in the object for good (button.text returned "Save<span ...>")
             // WHY: button.text = "..." clears the button's HTML, so the light is created again when it is lost.
             if (!light || light.parentNode !== obj.elem) {
                 light = UIEffects._overlay(obj);
@@ -596,7 +601,8 @@ UIEffects.types.spotlight = function (obj, o, fx) {
             light.style.background = "radial-gradient(circle " + size + "px at " + center + ", " + color + ", transparent)";
         },
         off: function () {
-            clearTimeout(removeTimer);
+            fadingLights.forEach(function (oldLight) { oldLight.remove(); });
+            fadingLights.clear();
             if (light) light.remove();
         },
     };

@@ -5,37 +5,44 @@
 Dialog - v26.10
 
 A dialog window over the page: a title, a message, your fields (inputs) or any content, and buttons. The page under
-it waits (a modal dialog: a dark cover, the keyboard stays in the dialog). The new version of comp/dialog.js with
-the features of comp/modal.js and the look of 02-comp-examples/smart-button-3-ozden.htm (the first dialog).
-NOTE: still in development (the user, 2026-10-29): more style packages come; their buttons may be animated.
+it waits (a modal dialog: a dark cover, the keyboard stays in the dialog).
+NOTE: still in development: more style packages come; their buttons may be animated.
 
-- Buttons (SmartButton of comp-m4, load it first): [{ text, type, key, iconFile, align, ask, ariaLabel, onClick }]
+- Buttons (SmartButton, load it first): [{ text, type, key, iconFile, align, ask, ariaLabel, onClick }]
   - type: "primary" (the main action), "secondary" (Cancel), "danger" (a delete), "warning", "success", "info"
-    (the situation packages of SmartButton: primary, danger...), "icon" (only an icon: a square).
+    (the tones of SmartButton: cyan, orange, yellow, green, blue), "icon" (only an icon: a white square).
   - align: "left": at the left side of the footer (Ex: the trash); the others stay at the right side.
-  - ask: "Click again to delete." -> two clicks: the first one turns the button red and shows the text in a bubble
-    over it; the second one runs onClick. It forgets after 5 s. (The ask of SmartButton, 2026-10-30.)
+  - ask: "Click again to delete." -> two clicks: the first one turns the button orange and shows the text in a bubble
+    over it; the second one runs onClick. It forgets after 5 s. (The ask of SmartButton.)
   - onClick(dialog, button) returns false: the dialog stays open. A Promise: the button waits (its clock), the
     others are disabled, and the dialog closes when it ends (a rejected one keeps it open).
-- Fields: fields: [{ key, titleText, placeholder, value, required, validate(value) -> error text }] make InputB
-  fields (comp/input-b.js, load it with comp/tooltip.js; without it a plain Input). A "primary" button checks
+- Fields: fields: [{ key, titleText, placeholder, value, required, validate(value) -> error text }] make TextField
+  fields (comp/text-field.js, load it with comp/tooltip.js; without it a plain Input). A "primary" button checks
   them first: an error is written under the message and the field gets the focus. getValues() -> { key: value }.
 - content(dialog): any objects in the body (under the message).
-- Closes with a button, Escape, a click on the cover (closeOnCover) or close(). onClose(dialog, reason, buttonKey).
+- setStatus(text, type): a line under the content: "error" (red), "success" (green) or "info" (gray).
+- Closes with a button, Escape, a click on the cover (closeOnCover) or close(). onClose(self, reason, buttonKey).
 - Keyboard: Tab stays in the dialog; the first field (else the primary button) gets the focus; the focus goes back to
   the opener when it closes. More than one dialog: Escape closes the top one.
 - Dialog.confirm(), Dialog.alert(), Dialog.prompt(): Promises.
-- variant: "centered" (the user, 2026-10-29): the title and the message in the middle, the buttons one under the other
+- variant: "centered": the title and the message in the middle, the buttons one under the other
   (as wide as the card; the primary / danger one first, on the gray band of the footer) and an icon at the top
   (topIconFile: a file or an "<svg" text: dark in a light gray circle). The look: style.centered.
+  topIconTone: "cyan", "orange", "yellow", "green" or "blue" (the tones of SmartButton) puts
+  the icon in three tones of it (Dialog.ICON_TONES): a light circle, and in an "<svg" text the words LIGHT and STRONG
+  are filled in with a light and a strong tone (a two-tone icon; currentColor is the strong tone). "": gray.
+  CIRCLE in it is the color of the circle: a ring that cuts a part out (Ex: around the dot of a new mail).
 - Motion: the cover comes from nothing and the card rises 50 px while it comes (0.2 s); it goes at once; none with reduced motion.
-- Style packages: "ozden" (default). (Dialog.styles)
-- The buttons (the user, 2026-10-30): style.buttons[type] = { styleName, style }: a style package of SmartButton
-  (primary / secondary / danger: "ozdenType1", icon: "ozdenType2") and only the keys that differ (the colors).
-- Scale (2026-11-01): scale multiplies every size of the dialog (its style, width, motion, its buttons and the bubble
+- Style packages: "ozden" (default), "ozdenDark" (for a dark page; Dialog.confirm / alert / prompt take styleName too),
+  "minimal", "minimalDark" (_designs/minimal-theme.htm: a card with a line, no shadow, the minimal buttons and fields).
+  (Dialog.styles)
+- The buttons: style.buttons[type] = { styleName, tone, style }: a template of SmartButton
+  ("ozden"; Cancel and icon: "ozden3", a faint edge), a tone of it
+  (primary: "cyan", danger: "orange"...; icon: "white") and only the keys that differ.
+- Scale: scale multiplies every size of the dialog (its style, width, motion, its buttons and the bubble
   of their ask). null (default): basic.uiScale (1; a page fitted with page.fit() sets 1 / page.zoom: the dialog keeps
   its size on the screen). Dialog.confirm / alert / prompt take it too. The objects of content(dialog) are made by
-  the page: dialog.scale is their scale. (The InputB fields keep their own px: InputB has no scale param yet.)
+  the page: dialog.scale is their scale. (The TextField fields keep their own px: TextField has no scale param yet.)
 
 USAGE:
 Dialog({
@@ -47,16 +54,18 @@ Dialog({
         { key: "cancel", text: "Cancel", type: "secondary" },
         { key: "publish", text: "Publish", type: "primary", iconFile: PEN_ICON, onClick: function (dialog) { return publish(dialog.getValues()); } },
     ],
-    onClose: function (dialog, reason, buttonKey) { },
+    onClose: function (self, reason, buttonKey) { },
 });
 if (await Dialog.confirm({ titleText: "Delete the file?", messageText: "It can not be undone.", confirmText: "Delete", danger: 1 })) { }
 const name = await Dialog.prompt({ titleText: "Rename", value: "report.pdf", validate: (text) => (text.trim()) ? "" : "A name is needed." });
 Dialog.alert({ titleText: "Saved", scale: 1.5 }); // every size x 1.5 (default: basic.uiScale)
 
-Started Date: June 2024 (comp-m2 Dialog), October 2026 (comp-m4 Dialog)
-Developer: Bugra Ozden
-Email: bugra.ozden@gmail.com
+Started Date: October 2026
 Webpage: https://bug7a.github.io/js-components/
+
+Copyright 2020-2026 Bugra Ozden <bugra.ozden@gmail.com> (https://bug7a.github.io/)
+Licensed under the Apache License, Version 2.0
+SPDX-License-Identifier: Apache-2.0
 
 */
 
@@ -78,11 +87,12 @@ const DialogDefaults = {
     removeOnClose: 1, // 0: close() only hides it; open() shows it again
     ariaLabel: "", // when there is no title
     variant: "", // "": the buttons in a row at the bottom; "centered": the texts in the middle, the buttons one under the other
-    topIconFile: "", // "centered": the icon at the top (a file, or an "<svg" text drawn with currentColor)
+    topIconFile: "", // "centered": the icon at the top (a file, or an "<svg" text drawn with currentColor or LIGHT / STRONG)
+    topIconTone: "", // "centered": "cyan", "orange", "yellow", "green", "blue": the circle and the icon in its tones; "": gray
     scale: null, // every size multiplied (Ex: 1.5). null: basic.uiScale (1 / page.zoom on a page fitted with page.fit())
-    onOpen: function (dialog) { },
-    onClose: function (dialog, reason, buttonKey) { }, // reason: "button", "escape", "cover", "api"
-    styleName: "ozden", // "ozden" or a name added to Dialog.styles
+    onOpen: function (self) { },
+    onClose: function (self, reason, buttonKey) { }, // reason: "button", "escape", "cover", "api"
+    styleName: "ozden", // "ozden", "ozdenDark", "minimal", "minimalDark" or a name added to Dialog.styles
     style: { // The ozden style package (default): the first dialog of smart-button-3-ozden.htm
         cover: { color: Black(0.8), zIndex: 4000 },
         card: {
@@ -97,42 +107,45 @@ const DialogDefaults = {
         },
         title: { fontSize: 20, textColor: "#1B1F23", fontFamily: "opensans-bold" },
         message: { fontSize: 16, textColor: Black(0.55), lineHeight: 1.5 },
-        status: { fontSize: 13, errorColor: "#E8796D", infoColor: Black(0.55) },
+        // successColor ("it is saved" under the content): the green of SmartButton (#7BC362), deeper.
+        // WHY deeper: #7BC362 is 2.2:1 on white; #498335 is 4.6:1, enough for a small text
+        // errorColor: #E8796D deeper and calmer (the same hue). WHY: #E8796D is 2.8:1 on white; #C74B3D is 4.7:1
+        status: { fontSize: 13, errorColor: "#C74B3D", infoColor: Black(0.55), successColor: "#498335" },
         footer: { color: "#FAFAF9", lineColor: Black(0.1), padding: [16, 14], gap: 10, buttonHeight: 40, iconButtonWidth: 50 },
-        fieldStyleName: "ozden", // the styleName of the InputB fields
-        // variant: "centered" (a layout the user drew, the colors of ozden)
+        fieldStyleName: "ozden", // the styleName of the TextField fields
+        // variant: "centered" (the colors of ozden)
         centered: {
-            // (2026-10-30, the user: a light gray circle on white, a dark icon; was a dark circle on a gray area)
+            // A light gray circle on white, a dark icon
             iconArea: { height: 116, color: "white", round: 6 }, // the area at the top
             iconCircle: { size: 100, color: "#EEEEEE" },
-            icon: { size: 56, color: "#232323" },
+            icon: { size: 56, color: "#232323", lightColor: "#D2D2D0" }, // lightColor: LIGHT of a two-tone icon (no tone)
             buttonHeight: 48,
             buttonGap: 10,
-            // The buttons are on the band of the footer (its color and line, the user 2026-10-30), one under the other
+            // The buttons are on the band of the footer (its color and line), one under the other
             footerPadding: [22, 18],
         },
-        // The looks of the buttons: a style package of SmartButton and only what differs from it. The colors of the
-        // situations are the situation packages of SmartButton (2026-10-31, the draft _designs/smart-button-colors.htm)
+        // The looks of the buttons: a template of SmartButton, a tone of it and only what differs from them. The colors
+        // of the situations are the tones of SmartButton (the draft _designs/smart-button-colors.htm)
         buttons: {
-            primary: { styleName: "primary", style: {} },
-            secondary: { styleName: "ozdenType1", style: {} }, // the gray of the package
-            danger: { styleName: "danger", style: {} },
-            warning: { styleName: "warning", style: {} },
-            success: { styleName: "success", style: {} },
-            info: { styleName: "info", style: {} },
+            primary: { styleName: "ozden", tone: "cyan", style: {} },
+            // the gray of the template, a faint edge (as the Cancel of 02-comp-examples/smart-button.htm)
+            secondary: { styleName: "ozden3", tone: "", style: {} },
+            danger: { styleName: "ozden", tone: "orange", style: {} },
+            warning: { styleName: "ozden", tone: "yellow", style: {} },
+            success: { styleName: "ozden", tone: "green", style: {} },
+            info: { styleName: "ozden", tone: "blue", style: {} },
+            // white, whitesmoke under the mouse (as the trash of the SmartButton samples). An icon button has no room at
+            // its sides by itself. A faint edge as Cancel (ozden3)
             icon: {
-                styleName: "ozdenType2",
+                styleName: "ozden3",
+                tone: "white",
                 style: {
-                    layout: { gap: 0, padding: [0, 0] },
-                    box: { color: "white" },
-                    hover: { color: "#FDF1EF" },
-                    active: { color: "#FDF1EF" },
-                    icon: { opacity: 1 }, // (30 px until 2026-10-29)
+                    icon: { opacity: 1 },
                 },
             },
         },
         // A button that asks again (ask): its red look and its bubble (comp/tooltip.js) are the style.ask of
-        // SmartButton (its default, the user 2026-10-30). A page or a package may give its own here:
+        // SmartButton (its default). A page or a package may give its own here:
         // ask: { button: { color, border, borderColor, boxShadow, textColor, iconFilter }, bubble, time }
     },
 };
@@ -181,13 +194,13 @@ const Dialog = function (params = {}) {
     const id = "dialog-" + (Dialog.counter++);
     const OPEN_TIME = "0.2s";
     const OPEN_CURVE = "cubic-bezier(0.2, 0.8, 0.2, 1)"; // fast at first, soft at its place
-    const OPEN_MOVE = 50 * box.scale; // px: the card comes up from here (the user, 2026-10-29)
+    const OPEN_MOVE = 50 * box.scale; // px: the card comes up from here
     // The px of the view that are not in the style (multiplied by scale, like the style)
     const LINE_WIDTH = 1 * box.scale; // the line over the footer
     const SECTION_SPACE = 8 * box.scale; // over the fields, under the icon at the top
     const FIELD_GAP = 10 * box.scale; // between the fields (and the objects of content)
     const STATUS_MIN_HEIGHT = 18 * box.scale;
-    const INPUT_HEIGHT = 44 * box.scale; // a plain Input (without InputB)
+    const INPUT_HEIGHT = 44 * box.scale; // a plain Input (without TextField)
     const isCentered = (params.variant == "centered");
     let isOpen = 0;
     let isBusy = 0;
@@ -197,7 +210,7 @@ const Dialog = function (params = {}) {
 
     // *** PUBLIC VARIABLES:
     box.buttonList = []; // { data, button } (button: the SmartButton)
-    box.fieldList = []; // { data, input } (input: InputB or Input)
+    box.fieldList = []; // { data, input } (input: TextField or Input)
 
     // *** PRIVATE FUNCTIONS:
 
@@ -215,15 +228,15 @@ const Dialog = function (params = {}) {
 
     const createField = function (field) {
         let input;
-        if (typeof InputB !== "undefined") {
-            input = InputB({
+        if (typeof TextField !== "undefined") {
+            input = TextField({
                 styleName: _s.fieldStyleName,
-                scale: box.scale, // (taken when InputB has a scale param; its sizes are fixed px today)
+                scale: box.scale, // (taken when TextField has a scale param; its sizes are fixed px today)
                 width: "100%",
                 titleText: field.titleText,
                 placeholder: field.placeholder,
-                inputValue: field.value,
-                isRequired: field.required ? 1 : 0,
+                value: field.value,
+                required: field.required ? 1 : 0,
             });
         } else {
             input = Input({ width: "100%", height: INPUT_HEIGHT, placeholder: field.placeholder || field.titleText, value: field.value });
@@ -233,7 +246,7 @@ const Dialog = function (params = {}) {
     };
 
     const getFieldValue = function (item) {
-        if (item.input.getInputValue) return item.input.getInputValue();
+        if (item.input.getValue) return item.input.getValue();
         return item.input.value;
     };
 
@@ -286,15 +299,14 @@ const Dialog = function (params = {}) {
         const style = JSON.parse(JSON.stringify(look.style));
         if (_s.ask) style.ask = _s.ask;
         if (box.scale === 1) return style;
-        return scaleButtonStyle(style, look.styleName);
+        return scaleButtonStyle(style, look);
     };
 
-    // WHY: SmartButton has no scale param: its whole style (the look over its package) is multiplied here, and the
-    //      button gets scale 1 (a SmartButton that has one must not multiply it again)
-    const scaleButtonStyle = function (style, styleName) {
-        const buttonParams = { styleName: styleName, style: style };
-        const fullStyle = basic.applyStylePackage(buttonParams, SmartButton.styles, SmartButtonDefaults).style;
-        mergeIntoIfMissing(fullStyle, SmartButtonDefaults.style);
+    // WHY: SmartButton has no scale param: its whole style (the look over its template and tone) is multiplied here,
+    //      and the button gets scale 1 (a SmartButton that has one must not multiply it again).
+    //      The whole style has the colors of the tone: a style given in full wins over a tone.
+    const scaleButtonStyle = function (style, look) {
+        const fullStyle = SmartButton.applyLook({ styleName: look.styleName, tone: look.tone, style: style }).style;
         const scaled = basic.scaleStyle(fullStyle, box.scale);
         // (the sizes that are not named like one)
         scaled.layout.iconSideTrim = fullStyle.layout.iconSideTrim * box.scale;
@@ -312,6 +324,7 @@ const Dialog = function (params = {}) {
 
         const button = SmartButton({
             styleName: look.styleName,
+            tone: look.tone || "",
             scale: 1, // WHY: its style is in the px of the dialog already (getButtonStyle)
             width: getButtonWidth(isIcon),
             height: isCentered ? _s.centered.buttonHeight : _s.footer.buttonHeight,
@@ -335,7 +348,7 @@ const Dialog = function (params = {}) {
     // Before the press of a button (and before its ask: the button asks "Sure?" itself, SmartButton ask)
     const canPressButton = function (item) {
         if (!box || isBusy) return false;
-        // WHY the fields first (the user, 2026-10-29): a form with an error must not ask "Sure?" first
+        // WHY the fields first: a form with an error must not ask "Sure?" first
         if (item.data.type == "primary" && box.fieldList.length) {
             const error = checkFields();
             box.setStatus(error, "error");
@@ -504,22 +517,23 @@ const Dialog = function (params = {}) {
         return isBusy;
     };
 
-    // A line under the message: type "error" (red) or "info"; "" hides it
+    // A line under the message (and the fields, the content): type "error" (red), "success" (green) or "info"; "" hides it
     box.setStatus = function (text, type = "info") {
+        const colors = { error: _s.status.errorColor, success: _s.status.successColor, info: _s.status.infoColor };
         box.lblStatus.plainText = text || "";
-        box.lblStatus.textColor = (type == "error") ? _s.status.errorColor : _s.status.infoColor;
+        box.lblStatus.textColor = colors[type] || _s.status.infoColor;
         box.lblStatus.visible = text ? 1 : 0;
     };
-    // USAGE: dialog.setStatus("Could not save.", "error")
+    // USAGE: dialog.setStatus("Could not save.", "error") / dialog.setStatus("The title is saved.", "success")
 
-    box.setTitle = function (text) {
+    box.setTitleText = function (text) {
         box.titleText = text;
         setText(box.lblTitle, text);
         box.lblTitle.visible = text ? 1 : 0;
         box.card.aria = { labelledby: text ? box.lblTitle.elem.id : null, label: text ? null : (box.ariaLabel || null) };
     };
 
-    box.setMessage = function (text) {
+    box.setMessageText = function (text) {
         box.messageText = text;
         setText(box.lblMessage, text);
         box.lblMessage.visible = text ? 1 : 0;
@@ -571,13 +585,30 @@ const Dialog = function (params = {}) {
         box.footer.css = { alignItems: "stretch", borderTop: LINE_WIDTH + "px solid " + _s.footer.lineColor, borderRadius: "0 0 " + _s.card.round + "px " + _s.card.round + "px", flexShrink: "0" };
     };
 
-    // The icon at the top: a dark icon in a light gray circle
+    // The colors of the icon at the top: three tones of topIconTone, else the gray of the style
+    const getTopIconLook = function () {
+        const tone = Dialog.ICON_TONES[box.topIconTone];
+        if (tone) return tone;
+        const _c = _s.centered;
+        return { circle: _c.iconCircle.color, light: _c.icon.lightColor, strong: _c.icon.color };
+    };
+
+    // WHY: the words LIGHT and STRONG in an "<svg" text are the places of the two colors of a two-tone icon; CIRCLE
+    //      is the color of the circle behind it (a ring around a part looks cut out of the icon)
+    const fillIconColors = function (file, look) {
+        const text = String(file);
+        if (!text.trim().startsWith("<svg")) return file;
+        return text.split("LIGHT").join(look.light).split("STRONG").join(look.strong).split("CIRCLE").join(look.circle);
+    };
+
+    // The icon at the top: in a light circle (gray: a dark icon; topIconTone: the tones of SmartButton)
     const createTopIcon = function () {
         const _c = _s.centered;
+        const look = getTopIconLook();
         box.iconArea = HGroup({ width: "100%", height: _c.iconArea.height, align: "center center", color: _c.iconArea.color, round: _c.iconArea.round });
         box.iconArea.css = { flexShrink: "0", marginBottom: SECTION_SPACE + "px" };
-            HGroup({ width: _c.iconCircle.size, height: _c.iconCircle.size, align: "center center", color: _c.iconCircle.color, round: _c.iconCircle.size / 2 });
-                box.topIcon = createIconView(box.topIconFile, _c.icon);
+            HGroup({ width: _c.iconCircle.size, height: _c.iconCircle.size, align: "center center", color: look.circle, round: _c.iconCircle.size / 2 });
+                box.topIcon = createIconView(fillIconColors(box.topIconFile, look), { size: _c.icon.size, color: look.strong });
             endGroup();
         endGroup();
     };
@@ -585,11 +616,14 @@ const Dialog = function (params = {}) {
     // WHY two ways: an "<svg" text takes the color of the style (currentColor); a file keeps its own colors
     const createIconView = function (file, look) {
         if (String(file).trim().startsWith("<svg")) {
-            const label = Label({ width: look.size, height: look.size, text: file, textColor: look.color, css: { lineHeight: "0" } });
+            // WHY clipContent 0 and overflow visible: a part that moves (the lid of a bin that lifts) goes out of the
+            //     drawing for a moment; it was cut at the top
+            const label = Label({ width: look.size, height: look.size, text: file, textColor: look.color, clipContent: 0, css: { lineHeight: "0" } });
             const svg = label.elem.querySelector("svg");
             if (svg) {
                 svg.setAttribute("width", "100%");
                 svg.setAttribute("height", "100%");
+                svg.style.overflow = "visible";
             }
             return label;
         }
@@ -601,7 +635,7 @@ const Dialog = function (params = {}) {
     box.color = _s.cover.color;
     // WHY: "absolute", not "fixed": the cover is on page, as big as page (page never scrolls). page.fit() / page.zoom give
     //      <body> a transform, and a fixed box inside a transformed one is measured on it (a 0 px high body: the
-    //      dialog was not seen; the admin panel, 2026-10-31).
+    //      dialog is not seen).
     box.css = { position: "absolute" };
     box.elem.style.display = "block"; // WHY: visible keeps the display type: without it, visible: 1 does not show it again
     box.clickable = 1;
@@ -673,8 +707,8 @@ const Dialog = function (params = {}) {
 
     // *** OBJECT INIT CODE:
 
-    box.setTitle(box.titleText);
-    box.setMessage(box.messageText);
+    box.setTitleText(box.titleText);
+    box.setMessageText(box.messageText);
     box.setStatus("");
     box.footer.visible = buttonList.length ? 1 : 0;
 
@@ -733,11 +767,16 @@ Dialog.closeAll = function () {
 document.addEventListener("keydown", function (event) {
     if (event.key != "Escape" || event.defaultPrevented) return;
     const top = Dialog.getTop();
-    if (!top || !basic.isOn(top.closeOnEscape) || top.isBusy()) return;
+    if (!top) return;
     // WHY: the focus in an object made on page over the dialog (Ex: the list of a FullScreenSelect): its Escape
     const target = event.target;
     const isFocusFree = (target === document.body || target === document.documentElement);
     if (!isFocusFree && !top.elem.contains(target)) return;
+    // WHY: a modal keeps its Escape even when it does not close (closeOnEscape 0, busy): a SidePanel under it closed
+    if (!basic.isOn(top.closeOnEscape) || top.isBusy()) {
+        event.preventDefault();
+        return;
+    }
     event.preventDefault();
     event.stopPropagation();
     top.close("escape");
@@ -768,6 +807,7 @@ Dialog.confirm = function (params = {}) {
             style: params.style || {},
             variant: params.variant || "",
             topIconFile: params.topIconFile || "",
+            topIconTone: params.topIconTone || "",
             scale: params.scale,
             buttons: [
                 { key: "cancel", text: params.cancelText || "Cancel", type: "secondary" },
@@ -816,6 +856,7 @@ Dialog.alert = function (params = {}) {
             style: params.style || {},
             variant: params.variant || "",
             topIconFile: params.topIconFile || "",
+            topIconTone: params.topIconTone || "",
             scale: params.scale,
             buttons: [{ key: "ok", text: params.buttonText || "OK", type: params.buttonType || "primary" }],
             onClose: function () { resolve(); },
@@ -834,6 +875,7 @@ Dialog.prompt = function (params = {}) {
             style: params.style || {},
             variant: params.variant || "",
             topIconFile: params.topIconFile || "",
+            topIconTone: params.topIconTone || "",
             scale: params.scale,
             fields: [{ key: "value", titleText: params.fieldText || "", placeholder: params.placeholder || "", value: params.value || "", required: params.required ? 1 : 0, validate: params.validate }],
             buttons: [
@@ -846,9 +888,105 @@ Dialog.prompt = function (params = {}) {
 };
 // USAGE: const name = await Dialog.prompt({ titleText: "Rename", value: "a.pdf", validate: (t) => (t.trim()) ? "" : "A name is needed." })
 
+// The tones of an icon at the top (topIconTone): the circle behind it, the LIGHT shape and the STRONG details, made
+// from the tones of SmartButton (the icons of 02-comp-examples/dialog-centered.htm).
+// WHY STRONG this deep: the details read on the light shape (2.6:1) and on the circle (3.6:1), a white mark on it (3.9:1)
+Dialog.ICON_TONES = {
+    cyan: { circle: "#EAF6F7", light: "#A5D9DD", strong: "#36898F" },
+    orange: { circle: "#FBEFEA", light: "#EDBAA5", strong: "#C4532A" },
+    yellow: { circle: "#FDF8E7", light: "#F5D77D", strong: "#9A7409" },
+    green: { circle: "#EEF7EB", light: "#B6DEA9", strong: "#4A8F33" },
+    blue: { circle: "#E9F4F9", light: "#A0CFE5", strong: "#2E81A8" },
+};
+// USAGE: Dialog({ variant: "centered", topIconTone: "green", topIconFile: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="STRONG"/>...</svg>' })
+
 // *** STYLE PACKAGES:
 // USAGE: Dialog({ style: { card: { round: 12 } } }) // Change only some keys. (The width of the card is the param width.)
-// NOTE: more packages come (the user, 2026-10-29); a new one needs only the keys that differ from ozden.
+// NOTE: more packages come; a new one needs only the keys that differ from ozden.
 Dialog.styles = {
     ozden: DialogDefaults.style,
+
+    // For a dark page: the black tones of the kit; the fields and the buttons take their dark looks.
+    ozdenDark: {
+        cover: { color: Black(0.65) },
+        card: {
+            color: "#232322",
+            border: 1,
+            borderColor: White(0.16),
+            boxShadow: "0 10px 30px rgba(0, 0, 0, 0.45)",
+        },
+        title: { textColor: White(0.92) },
+        message: { textColor: White(0.62) },
+        // WHY these colors: the errorColor and successColor of ozden are deepened for white; on this card they are too dark.
+        status: { errorColor: "#FF9F93", infoColor: White(0.6), successColor: "#7FE3B5" },
+        footer: { color: "#1C1C1B", lineColor: White(0.1) },
+        fieldStyleName: "ozdenDark",
+        centered: {
+            iconArea: { color: "#232322" },
+            iconCircle: { color: "#32322F" },
+            icon: { color: White(0.88), lightColor: White(0.35) },
+        },
+        buttons: {
+            primary: { styleName: "ozdenDark", tone: "cyanDark", style: {} },
+            secondary: { styleName: "ozden3Dark", tone: "", style: {} },
+            danger: { styleName: "ozdenDark", tone: "orangeDark", style: {} },
+            warning: { styleName: "ozdenDark", tone: "yellowDark", style: {} },
+            success: { styleName: "ozdenDark", tone: "greenDark", style: {} },
+            info: { styleName: "ozdenDark", tone: "blueDark", style: {} },
+            icon: {
+                styleName: "ozden3Dark",
+                tone: "",
+                style: {
+                    icon: { opacity: 1 },
+                },
+            },
+        },
+    },
 };
+
+// The minimal theme (_designs/minimal-theme.htm): a card on the ground of the window with a line and no shadow, a
+// 14 px title, a 13 px message, the buttons at the right with no band under them: the minimal SmartButtons (the main
+// one "ink", a delete "minimalDanger"), the minimal fields. minimalDark: the same on a dark window.
+Dialog.createMinimalStyle = function (colors) {
+    const button = function (tone) {
+        return { styleName: colors.buttonName, tone: tone, style: {} };
+    };
+    return {
+        cover: { color: colors.cover },
+        card: { color: colors.ground, round: 6, border: 1, borderColor: colors.lineHover, boxShadow: "none", padding: [16, 16], gap: 6, margin: 16 },
+        title: { fontSize: 14, textColor: colors.text, fontFamily: "opensans-bold" },
+        message: { fontSize: 13, textColor: colors.softText, lineHeight: 1.45 },
+        status: { fontSize: 12, errorColor: colors.danger, infoColor: colors.softText, successColor: colors.success },
+        footer: { color: "transparent", lineColor: "transparent", padding: [16, 14], gap: 8, buttonHeight: 28, iconButtonWidth: 28 },
+        fieldStyleName: colors.fieldName,
+        centered: {
+            iconArea: { height: 76, color: colors.ground, round: 4 },
+            iconCircle: { size: 56, color: colors.iconCircle },
+            icon: { size: 28, color: colors.text, lightColor: colors.faintText },
+            buttonHeight: 28,
+            buttonGap: 8,
+            footerPadding: [16, 14],
+        },
+        buttons: {
+            primary: button(colors.inkTone),
+            secondary: button(""),
+            danger: { styleName: colors.dangerName, tone: "", style: {} },
+            warning: button(""),
+            success: button(""),
+            info: button(""),
+            icon: { styleName: colors.buttonName, tone: "", style: { icon: { opacity: 1 } } },
+        },
+    };
+};
+Dialog.MINIMAL_COLORS = {
+    cover: Black(0.3), ground: "#FFFFFF", text: Black(0.85), softText: Black(0.55), faintText: Black(0.54), lineHover: Black(0.45),
+    danger: "#C24A36", success: "#2E9E74", iconCircle: Black(0.05),
+    buttonName: "minimal", dangerName: "minimalDanger", inkTone: "ink", fieldName: "minimal",
+};
+Dialog.styles.minimal = Dialog.createMinimalStyle(Dialog.MINIMAL_COLORS);
+Dialog.MINIMAL_DARK_COLORS = {
+    cover: Black(0.6), ground: "#1A1A19", text: White(0.88), softText: White(0.55), faintText: White(0.48), lineHover: White(0.42),
+    danger: "#FF9F93", success: "#7FE3B5", iconCircle: White(0.06),
+    buttonName: "minimalDark", dangerName: "minimalDangerDark", inkTone: "inkDark", fieldName: "minimalDark",
+};
+Dialog.styles.minimalDark = Dialog.createMinimalStyle(Dialog.MINIMAL_DARK_COLORS);

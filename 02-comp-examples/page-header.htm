@@ -14,13 +14,14 @@
 
     <script src="../comp/smart-button.js" type="text/javascript" charset="utf-8"></script>
     <script src="../comp/page-header.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/scroll-area.js" type="text/javascript" charset="utf-8"></script>
 
     <script>
 
     /* Bismillah */
 
-    // PageHeader (comp-m4), 2026-11-01: the header of a page that slides in over the tabs of a mobile app (a small
-    // back link over a big title), with the look of the old javascript-mobile-app-template. The page is a 600 px
+    // PageHeader: the header of a page that slides in over the tabs of a mobile app (a small
+    // back link over a big title). The page is a 600 px
     // design fitted to the screen (page.fit(600, 800)), like the mobile template.
     // The back link: a click, or Tab and Enter / Space.
 
@@ -48,13 +49,27 @@
 
     // LABEL: What the header under it shows
     const createCaption = function (text) {
-        Label({ plainText: text, width: "100%", fontSize: TEXT_SIZE, textColor: Black(0.5), padding: [SPACE, 0] });
-        that.css = { margin: "28px 0 10px" };
+        Label({
+            plainText: text,
+            width: "100%",
+            fontSize: TEXT_SIZE,
+            textColor: Black(0.5),
+            padding: [SPACE, 0],
+            css: { margin: "28px 0 10px" },
+        });
     };
 
     // The buttons that change the last header
     const createSetterButtons = function (header) {
-        HGroup({ width: "100%", height: "auto", align: "left center", gap: 10, wrap: 1, padding: [SPACE, 14], clipContent: 0 });
+        HGroup({
+            width: "100%",
+            height: "auto",
+            align: "left center",
+            gap: 10,
+            wrap: 1,
+            padding: [SPACE, 14],
+            clipContent: 0,
+        });
 
             SmartButton({ labelText: "Title", height: 50, onClick: function () {
                 titleIndex = (titleIndex + 1) % TITLES.length;
@@ -79,32 +94,44 @@
         page.onResize(fitPage);
         page.color = PAGE_COLOR;
 
-        startBox(0, 0, "100%", "100%", { color: "transparent", scrollY: 1 });
+        ScrollArea({ align: "left top", gap: 0, padding: [0, 0, 0, BOTTOM_SPACE] });
 
-            VGroup({ width: "100%", height: "auto", align: "left top", gap: 0, padding: [0, 0, 0, BOTTOM_SPACE] });
+            // The header of a page over the tabs: the back link goes back to Settings
+            PageHeader({ titleText: "Security", backText: "Settings", onBack: onBack });
 
-                // The header of a page over the tabs (the old "Security" page): the back link goes back to Settings
-                PageHeader({ titleText: "Security", backText: "Settings", onBack: onBack });
+            createCaption("A long title ends with \"...\"");
+            PageHeader({
+                titleText: "Privacy Policy and Terms of Use of This Application",
+                backText: "Settings",
+                onBack: onBack,
+            });
 
-                createCaption("A long title ends with \"...\"");
-                PageHeader({ titleText: "Privacy Policy and Terms of Use of This Application", backText: "Settings", onBack: onBack });
+            createCaption("showBack: 0");
+            PageHeader({ titleText: "Welcome", showBack: 0 });
 
-                createCaption("showBack: 0");
-                PageHeader({ titleText: "Welcome", showBack: 0 });
+            createCaption("Your own colors: color, backColor");
+            PageHeader({
+                titleText: "Coffee",
+                backText: "Categories",
+                color: "whitesmoke",
+                backColor: "indianred",
+                onBack: onBack,
+            });
 
-                createCaption("Your own colors: color, backColor");
-                PageHeader({ titleText: "Coffee", backText: "Categories", color: "whitesmoke", backColor: "indianred", onBack: onBack });
+            createCaption("The setters: setTitleText, setBackText, setBackVisible");
+            const header = PageHeader({ titleText: TITLES[0], onBack: onBack });
+            createSetterButtons(header);
 
-                createCaption("The setters: setTitleText, setBackText, setBackVisible");
-                const header = PageHeader({ titleText: TITLES[0], onBack: onBack });
-                createSetterButtons(header);
+            // LABEL: The last onBack
+            lblResult = Label({
+                plainText: "Click a back link (or Tab to it and press Enter).",
+                width: "100%",
+                fontSize: TEXT_SIZE,
+                textColor: GREEN,
+                padding: [SPACE, 0],
+            });
 
-                // LABEL: The last onBack
-                lblResult = Label({ plainText: "Click a back link (or Tab to it and press Enter).", width: "100%", fontSize: TEXT_SIZE, textColor: GREEN, padding: [SPACE, 0] });
-
-            endGroup();
-
-        endBox();
+        endGroup();
 
     };
 

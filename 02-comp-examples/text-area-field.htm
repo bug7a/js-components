@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>TextAreaField</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- LIBRARY FILES -->
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Bold.ttf" as="font" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="../basic/basic.css">
+    <script src="../basic/basic.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../basic/scroll-bar.js" type="text/javascript" charset="utf-8"></script>
+
+    <!-- COMPONENT FILES -->
+    <script src="../comp/tooltip.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/text-field.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/text-area-field.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/scroll-area.js" type="text/javascript" charset="utf-8"></script>
+
+    <script>
+
+        /* Bismillah */
+
+        // TextAreaField (comp/text-area-field.js): a text of more lines with a counter of its letters; it must be
+        // longer than 80 letters (minCharCount).
+
+        // *** THE COLORS AND SIZES OF THE PAGE
+        const PAGE_COLOR = "#F4F5F2";
+        const CARD_WIDTH = 420;
+
+        const start = function () {
+
+            page.color = PAGE_COLOR;
+
+            // SCROLL AREA: The page (comp/scroll-area.js)
+            ScrollArea({ align: "center top", gap: 20, padding: [16, 40] });
+
+                Label({ text: "TextAreaField", fontSize: 24, bold: 1, textColor: Black(0.8) });
+
+                // CARD: The field and what to try
+                startCard("Write a message: the counter at the bottom right goes on, a text under 80 letters is marked.");
+
+                    // TEXT AREA FIELD
+                    TextAreaField({
+                        styleName: "modern",
+                        width: "100%",
+                        height: 170, // 4 lines
+                        required: 1,
+                        titleText: "MESSAGE",
+                        placeholder: "How can we help you?",
+                        minCharCount: 80,
+                        showCount: 1,
+                        lengthText: "length: ",
+                        warningText: "The entered text must be longer than 80",
+                        warningColor: "#E5885E",
+                        maxLength: 255,
+                        rightPadding: 5,
+                        unitStyle: {
+                            padding: [12, 4],
+                            color: "#373836EE",
+                            textColor: "white",
+                        },
+                    });
+
+                endCard();
+
+            endGroup();
+
+        };
+
+        // *** OTHER FUNCTIONS:
+
+        // GROUP: A white card with a line that says what to try
+        const startCard = function (text) {
+            VGroup({
+                width: CARD_WIDTH,
+                height: "auto",
+                align: "left top",
+                gap: 14,
+                padding: 24,
+                color: "white",
+                round: 10,
+                border: 1,
+                borderColor: Black(0.08),
+                css: { maxWidth: "100%", alignItems: "stretch" }, // WHY maxWidth: on a phone the card is as wide as the screen
+            });
+            Label({ text: text, fontSize: 13, textColor: Black(0.55) });
+        };
+
+        const endCard = function () {
+            endGroup();
+        };
+
+    </script>
+
+</head>
+
+<body>
+</body>
+
+</html>

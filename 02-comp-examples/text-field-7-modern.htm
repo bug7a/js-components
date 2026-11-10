@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+
+        <title>TextField JS Component</title>
+
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"><!-- , user-scalable=no -->
+
+        <!-- LIBRARY FILES -->
+        <!-- <link rel="preload" href="image.png" as="image"> -->
+        <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+        <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
+        <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
+
+        <script src="../comp/tooltip.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/text-field.js" type="text/javascript" charset="utf-8"></script>
+
+        <script>
+
+        // TextField (comp/text-field.js) with styleName "modern", its first look: every param of the look written out, and an
+        // icon in its left box. The light and dark look of the kit (the default): text-field-8-light-dark.htm.
+
+        const start = function () {
+
+            page.color = "white";
+
+            // GROUP: Centered content
+            HGroup();
+
+                // INPUT: #1
+                const myInput = TextField({
+                    styleName: "modern",
+                    key: "1",
+                    width: 350,
+                    height: "auto",
+                    leftPadding: 80,
+                    rightPadding: 60,
+                    titleText: "FIRST NAME",
+                    placeholder: "Jack",
+                    value: "",
+                    maxLength: 30,
+                    showDescription: 0,
+                    descriptionText: "",
+
+                    backgroundColor: "#F6F6F6",
+                    focusBackgroundColor: "#F3F4E0",
+                    lineColor: "#141414",
+                    focusLineColor: "#65A293",
+
+                    required: 1,
+                    requiredText: "Required",
+                    requiredColor: "white",
+                    warningText: "Invalid value format",
+                    warningColor: "#E5885E",
+
+                    showLeftBox: 1,
+                    showRightBox: 0,
+                    showUnit: 0,
+                    unitText: "",
+                    unitStyle: {
+                        padding: [12, 4],
+                        color: "#373836",
+                        textColor: "white",
+                        round: 40,
+                        fontSize: 14,
+                    },
+
+                });
+
+            endGroup();
+
+    // Other functions of TextField: setTitleText(), setDescriptionText() (needs showDescription: 1), setMaxLength(),
+            // setPlaceholder(), setBackgroundColor(), setFocusBackgroundColor(), setLineColor(),
+            // setFocusLineColor(), setRequired(), setRequiredText()
+
+            // Get value
+            myInput.onChange = function () {
+                console.log(myInput.getValue());
+            };
+
+            // *** ADD AN ICON into INPUT (showLeftBox: 1, leftPadding: 80)
+            myInput.leftBox.align = "top left";
+            myInput.leftBox.padding = [20, 20];
+
+            // ICON:
+            myInput.icon = Icon({
+                width: 42,
+                height: 42,
+            });
+            myInput.icon.load("../assets/fruids/brokoli.png");
+            myInput.leftBox.add(myInput.icon);
+            myInput.icon.position = "relative";
+
+        };
+
+        </script>
+
+    </head>
+    <body>
+
+        <!-- HTML content -->
+
+    </body>
+</html>

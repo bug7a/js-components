@@ -2,44 +2,102 @@
 <html lang="en">
 
 <head>
-    <title>BottomBar Component Sample</title>
+    <title>BottomBar</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <!-- LIBRARY FILES -->
-    <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
-    <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Bold.ttf" as="font" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="../basic/basic.css">
+    <script src="../basic/basic.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../basic/scroll-bar.js" type="text/javascript" charset="utf-8"></script>
 
     <!-- COMPONENT FILES -->
+    <script src="../comp/badge.js" type="text/javascript" charset="utf-8"></script>
     <script src="../comp/bottom-bar.js" type="text/javascript" charset="utf-8"></script>
-    <script src="../comp/badge-v2.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/scroll-area.js" type="text/javascript" charset="utf-8"></script>
 
     <script>
-        window.onload = function () {
 
-            page.color = "white";
+        /* Bismillah */
 
-            window.bottomBar = BottomBar({
+        // BottomBar (comp/bottom-bar.js): four tabs at the bottom of the window, a number on two of them (setBadge);
+        // onItemClick gives the clicked item.
+
+        // *** THE COLORS AND SIZES OF THE PAGE
+        const PAGE_COLOR = "#F4F5F2";
+        const CARD_WIDTH = 420;
+
+        let lblClicked;
+
+        const start = function () {
+
+            page.color = PAGE_COLOR;
+
+            // SCROLL AREA: The page (comp/scroll-area.js)
+            ScrollArea({ align: "center top", gap: 20, padding: [16, 40] });
+
+                Label({ text: "BottomBar", fontSize: 24, bold: 1, textColor: Black(0.8) });
+
+                // CARD: What to try
+                startCard("Click a tab of the bar at the bottom: it is selected and its name shows. Basket and Notifications show a number (setBadge).");
+
+                    // LABEL: What onItemClick gives
+                    lblClicked = Label({ text: "Clicked: -", fontSize: 13, textColor: Black(0.5) });
+
+                endCard();
+
+            endGroup();
+
+            // BOTTOM BAR: at the bottom of the window
+            const bottomBar = BottomBar({
                 bottom: 0,
                 selectedIndex: 0,
                 items: [
-                    { icon: "bottom-bar/icon1.png", text: "Home" },
-                    { icon: "bottom-bar/icon2.png", text: "Basket" },
-                    { icon: "bottom-bar/icon3.png", text: "Favorites" },
-                    { icon: "bottom-bar/icon4.png", text: "Notifications" }
+                    { iconFile: "bottom-bar/icon1.png", selectedIconFile: "bottom-bar/icon1s.png", text: "Home" },
+                    { iconFile: "bottom-bar/icon2.png", selectedIconFile: "bottom-bar/icon2s.png", text: "Basket" },
+                    { iconFile: "bottom-bar/icon3.png", selectedIconFile: "bottom-bar/icon3s.png", text: "Favorites" },
+                    { iconFile: "bottom-bar/icon4.png", selectedIconFile: "bottom-bar/icon4s.png", text: "Notifications" },
                 ],
-                onItemClick: function (itemObj, index) {
-                    console.log("Clicked:", itemObj);
-                }
+                onItemClick: function (self, item, index) {
+                    lblClicked.plainText = "Clicked: " + item.data.text + " (index " + index + ")";
+                },
             });
 
             bottomBar.setBadge(1, 8);
             bottomBar.setBadge(3, 1);
 
         };
+
+        // *** OTHER FUNCTIONS:
+
+        // GROUP: A white card with a line that says what to try
+        const startCard = function (text) {
+            VGroup({
+                width: CARD_WIDTH,
+                height: "auto",
+                align: "left top",
+                gap: 14,
+                padding: 24,
+                color: "white",
+                round: 10,
+                border: 1,
+                borderColor: Black(0.08),
+                css: { maxWidth: "100%" }, // WHY maxWidth: on a phone the card is as wide as the screen
+            });
+            Label({ text: text, fontSize: 13, textColor: Black(0.55) });
+        };
+
+        const endCard = function () {
+            endGroup();
+        };
+
     </script>
+
 </head>
 
-<body></body>
+<body>
+</body>
 
 </html>

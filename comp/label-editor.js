@@ -5,13 +5,13 @@
 LabelEditor - v26.09
 
 UI COMPONENT TEMPLATE
-- An object based editor for labels. (Nesne tabanlı editör nesnesi)
+- An object based editor for labels.
 - "Add label" adds a label to the list. The labels are stacked one under the other.
 - Click a label: the properties panel opens at the right side of the screen (full height, SidePanel).
   Text, font size, bold, italic, alignment, width (auto / full), text color, background, padding,
   corner radius and border are changed there. The panel has no backdrop: another label can be
   clicked while it is open.
-- The panel is made of components: SidePanel, Stepper, SelectColor, Tabs (pill), CheckBox and the
+- The panel is made of components: SidePanel, Stepper, ColorPicker, Tabs (pill), CheckBox and the
   Input / Button of basic.js.
 - Saved styles: give the properties of a label a name and save them. Click a saved style to apply it
   to the selected label. The chips show a preview of each style.
@@ -21,11 +21,11 @@ UI COMPONENT TEMPLATE
 - Keyboard: Tab to a label, Enter / Space selects it, Delete removes it, Escape closes the panel.
 - getLabels() / setLabels() give and take plain objects, to save the work or to draw it somewhere else.
 - The label texts are shown as plain text (not HTML).
-- Style packages: "classic" (default), "dark". Select with styleName. (LabelEditor.styles)
+- Style packages: "light" (default; the old name "classic" works too), "dark". Select with styleName. (LabelEditor.styles)
 
 NEEDS: basic.js v26.10.27 (its "dark" package is a package of params).
 NEEDS (load them before this file):
-comp/side-panel.js, comp/stepper.js, comp/select-color.js, comp/tabs.js, comp/check-box.js
+comp/side-panel.js, comp/stepper.js, comp/color-picker.js, comp/tabs.js, comp/check-box.js
 
 USAGE:
 const editor = LabelEditor({
@@ -42,9 +42,11 @@ editor.getLabels();                      // [{ text, fontSize, textColor, color,
 editor.remove();                         // Also removes its panel from the page.
 
 Started Date: September 2026
-Developer: Bugra Ozden
-Email: bugra.ozden@gmail.com
 Webpage: https://bug7a.github.io/js-components/
+
+Copyright 2020-2026 Bugra Ozden <bugra.ozden@gmail.com> (https://bug7a.github.io/)
+Licensed under the Apache License, Version 2.0
+SPDX-License-Identifier: Apache-2.0
 
 */
 
@@ -121,8 +123,8 @@ const LabelEditorDefaults = {
     onChange: function (self) { }, // The labels changed. self.getLabels()
     onSelect: function (self, index) { }, // index: -1 when nothing is selected
     onStylesChange: function (self) { }, // The saved styles changed. self.getSavedStyles()
-    styleName: "classic", // "classic", "dark" or a name added to LabelEditor.styles
-    style: { // Classic style package (default)
+    styleName: "light", // "light" ("classic": its old name), "dark" or a name added to LabelEditor.styles
+    style: { // Light style package (default)
         box: { color: "#F4F5F2", border: 1, borderColor: Black(0.12), round: 10 },
         header: { color: White(1), dividerColor: Black(0.08), titleColor: "#1F2328", titleSize: 15 },
         list: { color: "#F4F5F2", padding: 24, gap: 12, emptyColor: Black(0.4) },
@@ -134,11 +136,11 @@ const LabelEditorDefaults = {
         chip: { color: White(1), borderColor: Black(0.14), activeBorderColor: "#2F6FB0", round: 16, closeColor: Black(0.4) },
         // The components in the panel: their style package names and their style changes.
         // WHY: Not nested deeper (Ex: parts.checkBox.style.label): mergeIntoIfMissing stops at 4 levels.
-        sidePanelStyleName: "classic",
-        stepperStyleName: "classic",
-        tabsStyleName: "classic",
-        checkBoxStyleName: "classic",
-        selectColorStyleName: "classic",
+        sidePanelStyleName: "light",
+        stepperStyleName: "light",
+        tabsStyleName: "light",
+        checkBoxStyleName: "light",
+        selectColorStyleName: "light",
         sidePanelStyle: {},
         stepperStyle: {},
         tabsStyle: {},
@@ -152,12 +154,12 @@ const LabelEditor = function (params = {}) {
 
     // WHY: The panel is made of these components. Without them it can not be drawn.
     const _missing = [
-        ["SidePanel", typeof SidePanel], ["Stepper", typeof Stepper], ["SelectColor", typeof SelectColor],
+        ["SidePanel", typeof SidePanel], ["Stepper", typeof Stepper], ["ColorPicker", typeof ColorPicker],
         ["Tabs", typeof Tabs], ["CheckBox", typeof CheckBox],
     ].filter(function (pair) { return pair[1] === "undefined"; }).map(function (pair) { return pair[0]; });
     if (_missing.length) console.error("LabelEditor: Load these components before label-editor.js: " + _missing.join(", "));
 
-    // Merge style package: your params > LabelEditor.styles[styleName] > LabelEditorDefaults (classic)
+    // Merge style package: your params > LabelEditor.styles[styleName] > LabelEditorDefaults (light)
     basic.applyStylePackage(params, LabelEditor.styles, LabelEditorDefaults);
 
     // Merge params:
@@ -592,7 +594,7 @@ const LabelEditor = function (params = {}) {
     // STEPPER: A number
     const createStepper = function (min, max, ariaLabel, key) {
         return Stepper({
-            width: "100%", height: _s.input.height, value: min, min: min, max: max, ariaLabel: ariaLabel,
+            width: "100%", height: _s.input.height, value: min, minValue: min, maxValue: max, ariaLabel: ariaLabel,
             styleName: _s.stepperStyleName, style: copyStyle(_s.stepperStyle),
             onChange: function (self) { setProp(key, self.value); },
         });
@@ -600,7 +602,7 @@ const LabelEditor = function (params = {}) {
 
     // SELECT COLOR: A color from the palette
     const createColor = function (key, onPick) {
-        const picker = SelectColor({
+        const picker = ColorPicker({
             width: "100%", height: _s.input.height, colors: box.colorPalette.slice(),
             styleName: _s.selectColorStyleName, style: copyStyle(_s.selectColorStyle),
             onChange: function (self) {
@@ -1088,14 +1090,14 @@ LabelEditor.getCloseSvg = function (color, size) {
 // *** STYLE PACKAGES:
 // USAGE: LabelEditor({ styleName: "dark" })
 // USAGE: LabelEditor({ style: { selection: { color: "tomato" } } }) // Change only some keys.
-// USAGE: LabelEditor({ style: LabelEditor.styles.classic }) // The same as styleName: "classic". (The package is copied, never changed.)
+// USAGE: LabelEditor({ style: LabelEditor.styles.light }) // The same as styleName: "light". (The package is copied, never changed.)
 // NOTE: "dark" is a package of params (it has a "style" key): it also gives new labels a light text color and a palette for the dark list. Use it with styleName: "dark".
 // NOTE: A new package needs only the keys that differ from the default (classic) style.
 // NOTE: xxxStyleName / xxxStyle: the style package and the style changes of the components in the panel.
 LabelEditor.styles = {
 
     // Light gray work area, white header and panel.
-    classic: LabelEditorDefaults.style,
+    light: LabelEditorDefaults.style,
 
     // Dark theme, same colors as SidePanel, Stepper and Tabs "dark".
     // A package of params (basic.js v26.10.27): "style" is the look, "newLabel" the new labels, "colorPalette" the color pickers.
@@ -1135,3 +1137,4 @@ LabelEditor.styles = {
     },
 
 };
+LabelEditor.styles.classic = LabelEditor.styles.light; // the old name of light: the pages made with it keep their look

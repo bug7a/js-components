@@ -6,17 +6,20 @@ Search Results - v26.09
 
 UI COMPONENT
 - The result list that opens under a search input. (Command palette / autocomplete.)
-- The items are plain objects: { text, desc, group }. Anything else you put in them comes back
+- The items are plain objects: { text, description, group }. Anything else you put in them comes back
   to you in onSelect, so the page decides what "opening a result" means.
 - Group headers: the items are shown in the order they are given, and a new "group" value starts
   a new header. (Ex: "Pages", "Users", "Orders")
 - It is always created on the page and placed with fixed position, so it is never clipped by the
   bar or the group it is called from, and it stays on the screen on a small screen.
+- The width: maxWidth (default 380) whatever the width of the anchor; matchAnchorWidth: 1
+  makes the list as wide as the anchor, so both edges meet on a phone and on a wide screen (maxWidth is not used
+  then). Never wider than the screen. setMatchAnchorWidth(). Sample: 02-comp-examples/search-results.htm
 - The list scrolls with basic/scroll-bar.js (ScrollBar), not with the scrollbar of the browser.
 - attachTo(inputElement) does the whole keyboard work: ArrowUp / ArrowDown move, Enter opens,
   Escape closes, focus reopens the last results and blur closes them.
 - The texts are written with plainText (textContent), so a name with < or & is shown as it is.
-- Style packages: "classic" (default), "dark", "modern". Select with styleName. (SearchResults.styles)
+- Style packages: "light" (default; the old name "classic" works too), "dark", "modern". Select with styleName. (SearchResults.styles)
 
 USAGE:
 const results = SearchResults({
@@ -24,14 +27,16 @@ const results = SearchResults({
     styleName: "dark",
     onSelect: function (self, item) { item.open(); },
 });
-searchInput.onSearch = function (text) { results.setItems(findResults(text), text); };
+searchInput.onChange = function (self) { results.setItems(findResults(self.getSearchText()), self.getSearchText()); };
 results.attachTo(searchInput.txtSearch.inputElement);
 results.remove();                         // Also removes its window events and its ScrollBar.
 
 Started Date: September 2026
-Developer: Bugra Ozden
-Email: bugra.ozden@gmail.com
 Webpage: https://bug7a.github.io/js-components/
+
+Copyright 2020-2026 Bugra Ozden <bugra.ozden@gmail.com> (https://bug7a.github.io/)
+Licensed under the Apache License, Version 2.0
+SPDX-License-Identifier: Apache-2.0
 
 */
 
@@ -42,6 +47,7 @@ const SearchResultsDefaults = {
     key: "0",
     anchor: null, // The basic.js object the list opens under. (Ex: a SearchInput)
     anchorAlign: "right", // "right": the right edges meet, "left": the left edges meet.
+    matchAnchorWidth: 0, // 1: the list is as wide as the anchor (both edges meet; maxWidth is not used). setMatchAnchorWidth()
     maxWidth: 380,
     maxHeightRatio: 0.7, // Of the screen height.
     offsetY: 6, // Space between the anchor and the list.
@@ -61,8 +67,8 @@ const SearchResultsDefaults = {
     onOpen: function (self) { },
     onClose: function (self) { },
     onActiveChange: function (self, item, index) { },
-    styleName: "classic", // "classic", "dark", "modern" or a name added to SearchResults.styles
-    style: { // Classic style package (default)
+    styleName: "light", // "light" ("classic": its old name), "dark", "modern" or a name added to SearchResults.styles
+    style: { // Light style package (default)
         box: {
             color: White(1),
             border: 1,
@@ -116,7 +122,7 @@ const SearchResultsDefaults = {
 
 const SearchResults = function (params = {}) {
 
-    // Merge style package: params.style > SearchResults.styles[styleName] > SearchResultsDefaults.style (classic)
+    // Merge style package: params.style > SearchResults.styles[styleName] > SearchResultsDefaults.style (light)
     basic.applyStylePackage(params, SearchResults.styles, SearchResultsDefaults);
 
     // Merge params:
@@ -144,6 +150,7 @@ const SearchResults = function (params = {}) {
     let inputElem = null;           // attachTo()
     let inputRemovers = [];         // The removers of the events of that input.
     const SECTION_SPACE = "4px";    // Above a group header and the hint
+    const MIN_LIST_HEIGHT = 60;     // px: the list is not made shorter than this to fit the screen (it scrolls)
 
     // *** PRIVATE FUNCTIONS:
 
@@ -231,9 +238,9 @@ const SearchResults = function (params = {}) {
                         ellipsis: 1,
                     });
 
-                    if (item.desc) {
+                    if (item.description) {
                         Label({
-                            plainText: item.desc,
+                            plainText: item.description,
                             fontSize: _s.itemDesc.fontSize,
                             textColor: _s.itemDesc.textColor,
                             ellipsis: 1,
@@ -268,19 +275,22 @@ const SearchResults = function (params = {}) {
 
     };
 
-    // Under the anchor, on the screen, as tall as its content up to the maximum.
+    // The width of the list: maxWidth, or the width of the anchor (matchAnchorWidth). Never wider than the screen.
+    const getListWidth = function () {
+        const screenWidth = page.width - (box.screenMargin * 2);
+        const hasAnchor = (box.anchor && box.anchor.elem);
+        if (box.matchAnchorWidth != 1 || !hasAnchor) return Math.min(box.maxWidth, screenWidth);
+        const anchorWidth = withPageZoom(box.anchor.elem.getBoundingClientRect().width);
+        return Math.min(anchorWidth, screenWidth);
+    };
+
+    // Under the anchor (over it when there is more room there), on the screen, as tall as its content up to the
+    // maximum and to the room on the screen.
     const layout = function () {
 
         const padding = _s.box.padding || 0;
-        const width = Math.min(box.maxWidth, page.width - (box.screenMargin * 2));
+        const width = getListWidth(); // (as wide as the anchor: both values of anchorAlign give its left edge)
         box.width = width;
-
-        if (box.anchor && box.anchor.elem) {
-            const rect = box.anchor.elem.getBoundingClientRect();
-            const left = (box.anchorAlign === "left") ? withPageZoom(rect.left) : withPageZoom(rect.right) - width;
-            box.left = Math.max(box.screenMargin, Math.min(left, page.width - width - box.screenMargin));
-            box.top = withPageZoom(rect.bottom) + box.offsetY;
-        }
 
         // WHY: The height has to be a number, not "auto": the content is in a scrolling box and a
         //      box does not grow with it. It is also what the ScrollBar needs.
@@ -289,8 +299,26 @@ const SearchResults = function (params = {}) {
         //      even when there was nothing to scroll.
         const border = _s.box.border || 0;
         const contentHeight = (box.wrapper) ? box.wrapper.elem.offsetHeight : 0;
+        const fullHeight = contentHeight + (padding * 2) + (border * 2);
         const maxHeight = Math.round(window.innerHeight * box.maxHeightRatio);
-        box.height = Math.min(contentHeight + (padding * 2) + (border * 2), maxHeight);
+        let height = Math.min(fullHeight, maxHeight);
+
+        if (box.anchor && box.anchor.elem) {
+            const rect = box.anchor.elem.getBoundingClientRect();
+            const left = (box.anchorAlign === "left") ? withPageZoom(rect.left) : withPageZoom(rect.right) - width;
+            box.left = Math.max(box.screenMargin, Math.min(left, page.width - width - box.screenMargin));
+            // WHY the room: the list was always under the anchor, so under a field low on the screen its rows were
+            //     below the window (the box itself out of the screen: they could not be scrolled up)
+            const anchorTop = withPageZoom(rect.top);
+            const anchorBottom = withPageZoom(rect.bottom);
+            const roomBelow = page.height - anchorBottom - box.offsetY - box.screenMargin;
+            const roomAbove = anchorTop - box.offsetY - box.screenMargin;
+            const isAbove = (height > roomBelow && roomAbove > roomBelow);
+            height = Math.min(height, Math.max(MIN_LIST_HEIGHT, isAbove ? roomAbove : roomBelow));
+            box.top = isAbove ? anchorTop - box.offsetY - height : anchorBottom + box.offsetY;
+        }
+
+        box.height = height;
 
         if (box.scrollBar) box.scrollBar.refreshScroll();
 
@@ -303,11 +331,11 @@ const SearchResults = function (params = {}) {
 
     // *** PUBLIC FUNCTIONS:
 
-    // items: [{ text, desc, group, ... }]. The list opens by itself when there is something to show.
+    // items: [{ text, description, group, ... }]. The list opens by itself when there is something to show.
     box.setItems = function (newItems, searchedText = "") {
 
-        // WHY: a SearchInput calls onSearch at every keyup (the arrows, Enter, Escape too), with the same text.
-        //      The active row went back to the first one after each arrow, and a list closed with Escape opened again.
+        // WHY: the same text again keeps the active row (it went back to the first one), and a list closed with Escape
+        //      stays closed (it opened again)
         const isSameQuery = (String(searchedText) === String(query));
         const keptIndex = (isSameQuery && box.isOpened === 1) ? activeIndex : 0;
         if (!isSameQuery) isClosedByUser = 0;
@@ -337,6 +365,7 @@ const SearchResults = function (params = {}) {
 
         if (!box.wrapper) render();
 
+        box.zIndex = basic.zIndexAbove(box.anchor, box.zIndexValue); // WHY: a search field in a Dialog or a SidePanel opens its list over them
         box.visible = 1;
         layout();
 
@@ -460,6 +489,12 @@ const SearchResults = function (params = {}) {
         if (box.isOpened === 1) layout();
     };
 
+    // 1: the list is as wide as the anchor, 0: as wide as maxWidth.
+    box.setMatchAnchorWidth = function (value) {
+        box.matchAnchorWidth = value;
+        box.refresh();
+    };
+
     // WHY: box.superRemove is overwritten by a component that extends this one, so the local copy is called below.
     const superRemove = box.remove;
     box.superRemove = superRemove;
@@ -531,7 +566,7 @@ const SearchResults = function (params = {}) {
 SearchResults.styles = {
 
     // White list, gray text.
-    classic: SearchResultsDefaults.style,
+    light: SearchResultsDefaults.style,
 
     // Dark list. The same colors as the "dark" Tabs, Stepper and SidePanel.
     dark: {
@@ -558,3 +593,4 @@ SearchResults.styles = {
     },
 
 };
+SearchResults.styles.classic = SearchResults.styles.light; // the old name of light: the pages made with it keep their look

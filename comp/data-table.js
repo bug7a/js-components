@@ -5,19 +5,28 @@
 Data Table - v26.10
 
 A table made from data: the columns from a list of objects, the rows from a list of arrays (or objects).
-(The new version of UITable, 2022 (its template 04-template-m1/js-data-table is gone): the m2 / m3 component pattern.)
+WHEN TO USE IT: the better looking table (style packages, sorting, search, selection, your own
+cells), but the data it can hold has a limit: every row is a basic.js object (about 9 DOM nodes), all made at once.
+Measured (headless Chrome, Apple M1, 4 columns), the time to the screen: 200 rows 0.07 s, 1 000 rows
+0.13 s, 2 000 rows 0.27 s, 5 000 rows 0.65 s, 10 000 rows 1.4 s (a phone is slower). Up to about 2 000 rows. Very big
+data (tens of thousands of rows, very many columns): comp/smart-table.js (SmartTable: it makes only the rows that are
+seen; 100 000 rows in about 0.1 s in the Tauri template). A few rows inside a text: comp/tiny-table.js (TinyTable).
 - Samples: 02-comp-examples/data-table.htm, data-table-2.htm ... data-table-5.htm (data: assets/data-table/).
-- FOR SHORT AND MIDDLE LISTS (up to some hundreds of rows): every row is a basic.js object. For very many rows
-  (thousands, millions) use comp/smart-table.js (SmartTable): it makes only the rows that are seen.
 - Sorting: a click on a sortable title (again: the other direction), the keyboard (Enter / Space on a title), sortBy().
-- Search: showSearch: 1 puts a SearchInput (comp/search-input-v2.js, load it first) in the header; search().
+- Search: showSearch: 1 puts a SearchInput (comp/search-input.js, load it first) in the header; search(). Escape
+  clears it (searchParams: { clearOnEscape: 0 } turns it off).
 - Selection: a click, the arrow keys (Home / End), Enter runs onRowClick. select(id), getSelectedData().
 - updateRows() adds, changes and removes rows by their id: the sorting, the search and the selection stay.
 - Your own cell: column.createView(cell, value, row, self) makes objects in the cell (a chart, a button). It runs
   again when the value of the row changes (updateRows, updateRow).
 - The rows scroll with the ScrollBar of basic.js (basic/scroll-bar.js, load it first; useScrollBar: 0 turns it off).
+- A table narrower than its columns (a phone): the rows scroll to the side and the titles go with them; an "auto"
+  column is never narrower than its minWidth.
+- The rows off the screen are not laid out or drawn (CSS content-visibility: auto): 10 000 rows came on the
+  screen in 2.2 s before, 1.4 s now, a sort took 315 ms, now 210 ms.
 - The values are shown as plain text (a value can not inject HTML).
-- Style packages: "classic" (default), "minimal" (white, lines only), "dark". (DataTable.styles)
+- Style packages: "light" (default; the old name "classic" works too), "plain" (white, lines only), "dark",
+  "minimal", "minimalDark" (the minimal theme, _designs/minimal-theme.htm: as SmartTable "minimal"). (DataTable.styles)
 
 A COLUMN:
 {
@@ -27,6 +36,7 @@ A COLUMN:
                           // A row object: row[key].
     type: "number",       // "text" (default) or "number": how it is sorted
     width: 100,           // a number or "auto" (default): the "auto" columns share the width that is left
+    minWidth: 100,        // an "auto" column is never narrower (default 100); a narrower table scrolls to the side
     align: "left",        // "left" (default), "center", "right"
     sortable: 1,          // a click on the title sorts the rows
     iconFile: "",         // a small icon before the title
@@ -56,10 +66,12 @@ table.search("paris");
 table.select(2);
 DataTable({ styleName: "dark", ... });
 
-Started Date: 1 October 2022 (UITable), October 2026 (DataTable)
-Developer: Bugra Ozden
-Email: bugra.ozden@gmail.com
+Started Date: October 2026
 Webpage: https://bug7a.github.io/js-components/
+
+Copyright 2020-2026 Bugra Ozden <bugra.ozden@gmail.com> (https://bug7a.github.io/)
+Licensed under the Apache License, Version 2.0
+SPDX-License-Identifier: Apache-2.0
 
 */
 
@@ -78,8 +90,8 @@ const DataTableDefaults = {
     canSelect: 1, // 0: a click runs onRowClick, no row is selected
     rowHeight: "auto", // "auto": as high as its text (more lines); a number: one line, cut with "..."
     titleText: "", // "": no title in the header
-    showSearch: 0, // 1: a search box in the header (comp/search-input-v2.js SearchInput must be loaded)
-    searchParams: {}, // More params of the SearchInput. Ex: { placeholderText: "Ara" }
+    showSearch: 0, // 1: a search box in the header (comp/search-input.js SearchInput must be loaded)
+    searchParams: {}, // More params of the SearchInput. Ex: { placeholder: "Ara" }
     emptyText: "There are no records.",
     noResultText: "No records found.",
     sortIconFile: "data:image/svg+xml;utf8," + encodeURIComponent('<?xml version="1.0" encoding="UTF-8"?> <svg xmlns="http://www.w3.org/2000/svg" id="Outline" viewBox="0 0 24 24" width="512" height="512"><path d="M17.71,9.88l-4.3-4.29a2,2,0,0,0-2.82,0L6.29,9.88a1,1,0,0,0,0,1.41,1,1,0,0,0,1.42,0L11,8V19a1,1,0,0,0,2,0V8l3.29,3.29a1,1,0,1,0,1.42-1.41Z"/></svg>'),
@@ -87,8 +99,8 @@ const DataTableDefaults = {
     onRowClick: function (self, row) {}, // A click on a row, or Enter on the selected row
     onSelect: function (self, row) {}, // The selected row changed (row: null when nothing is selected). Not with silent: 1
     onSort: function (self) {}, // self.sortKey, self.sortDirection
-    styleName: "classic", // "classic", "minimal", "dark" or a name added to DataTable.styles
-    style: { // Classic style package (default)
+    styleName: "light", // "light" ("classic": its old name), "plain", "dark", "minimal", "minimalDark" or a name added to DataTable.styles
+    style: { // Light style package (default)
         box: { color: "white", border: 1, borderColor: Black(0.15), round: 6 },
         focus: { ringColor: "rgba(95, 158, 160, 0.6)" },
         header: { height: 60, padding: [16, 0], gap: 12 },
@@ -126,7 +138,7 @@ const DataTableDefaults = {
 
 const DataTable = function (params = {}) {
 
-    // Merge style package: params.style > DataTable.styles[styleName] > DataTableDefaults.style (classic)
+    // Merge style package: params.style > DataTable.styles[styleName] > DataTableDefaults.style (light)
     basic.applyStylePackage(params, DataTable.styles, DataTableDefaults);
 
     // Merge params:
@@ -142,6 +154,7 @@ const DataTable = function (params = {}) {
     // *** PRIVATE VARIABLES:
     const _s = box.style;
     const ARROW_DOWN = 180; // deg: the sort icon of "desc"
+    const ROW_LINE_HEIGHT = 1.4; // the line of a text in a row, x its font size (only a guess: guessRowHeight)
     let searchText = "";
     let searchKey = "";
     let shownRowCount = 0;
@@ -169,15 +182,24 @@ const DataTable = function (params = {}) {
         return box.columns.find(function (column) { return column.key == key; }) || null;
     };
 
+    // The width the columns need: a narrower table scrolls to the side.
+    const findColumnsWidth = function () {
+        return box.columns.reduce(function (sum, column) {
+            return sum + ((column.width == "auto") ? column.minWidth : Number(column.width));
+        }, 0);
+    };
+
     const findRow = function (id) {
         return box.rowList.find(function (row) { return row.id == id; }) || null;
     };
 
-    // The flex size of a column: a number is fixed, "auto" shares the free width.
+    // The flex size of a column: a number is fixed, "auto" shares the free width, not under its minWidth.
+    // WHY the minimum: with a minimum of 0, a narrow table (a phone) gave its "auto" column no width, and its text
+    //     broke after every letter, so every row was very tall.
     const applyColumnWidth = function (cell, column) {
         if (column.width == "auto") {
             cell.width = 0;
-            cell.css = { flex: "1 1 0", minWidth: "0px" };
+            cell.css = { flex: "1 1 0", minWidth: column.minWidth + "px" };
             return;
         }
         cell.css = { flex: "0 0 auto" };
@@ -281,9 +303,20 @@ const DataTable = function (params = {}) {
     // *** THE ROWS:
 
     // A row: a group of cells. Its container must be set (createIn).
+    // The height of a row before the browser draws it (content-visibility). "auto" rows: one line of text.
+    const guessRowHeight = function () {
+        if (typeof box.rowHeight === "number") return box.rowHeight;
+        const padding = _s.row.padding;
+        const paddingY = Array.isArray(padding) ? padding[1] : (padding || 0);
+        return Math.round(_s.row.fontSize * ROW_LINE_HEIGHT + paddingY * 2 + 1);
+    };
+
     const createRow = function (data) {
 
         // GROUP: Row
+        // WHY content-visibility: the browser does not lay out and draw the rows off the screen. Measured
+        //     with 10 000 rows: on the screen 2.2 s -> 1.5 s, a sort 315 -> 151 ms. Every row is still made (most of
+        //     the time); the "auto" of contain-intrinsic-size keeps the real height of a row once it was drawn.
         const row = HGroup({
             width: "100%",
             height: box.rowHeight,
@@ -292,7 +325,12 @@ const DataTable = function (params = {}) {
             clickable: 1,
             cursor: "pointer",
             role: "row",
-            css: { borderBottom: "1px solid " + _s.row.lineColor, flex: "0 0 auto" },
+            css: {
+                borderBottom: "1px solid " + _s.row.lineColor,
+                flex: "0 0 auto",
+                contentVisibility: "auto",
+                containIntrinsicSize: "auto " + guessRowHeight() + "px",
+            },
         });
         row.data = data;
         row.id = getRowId(data);
@@ -543,21 +581,21 @@ const DataTable = function (params = {}) {
     const createSearch = function () {
 
         if (typeof SearchInput === "undefined") {
-            console.warn("DataTable: showSearch needs comp/search-input-v2.js (SearchInput).");
+            console.warn("DataTable: showSearch needs comp/search-input.js (SearchInput).");
             return;
         }
 
         const searchParams = Object.assign(
-            { styleName: _s.searchStyleName },
-            DataTable.getSearchIconFiles(),
+            { styleName: _s.searchStyleName, clearOnEscape: 1 }, // (Escape clears the search, as in SmartTable)
             _s.search,
             box.searchParams,
         );
-        searchParams.onSearch = function (text) {
-            box.search(text);
+        searchParams.onChange = function (self) {
+            box.search(self.getSearchText());
         };
         box.searchInput = SearchInput(searchParams);
         box.searchInput.shrink = 0;
+        box.searchInput.css = { maxWidth: "60%" }; // WHY: on a narrow table (a phone) the title keeps room
 
     };
 
@@ -575,25 +613,31 @@ const DataTable = function (params = {}) {
     // Adds, changes and removes rows by their id. The objects of the rows that stay are kept.
     box.updateRows = function (rows) {
 
+        // WHY a list for each id: rows with the same id (object rows with no id, a first column that repeats) kept
+        //     only the last one in the map. The others stayed on the screen out of box.rowList, so clearRows() and
+        //     setRows() could not remove them either ("ghost" rows).
         const oldRows = new Map();
-        box.rowList.forEach(function (row) { oldRows.set(row.id, row); });
+        box.rowList.forEach(function (row) {
+            if (!oldRows.has(row.id)) oldRows.set(row.id, []);
+            oldRows.get(row.id).push(row);
+        });
 
         box.rows = Array.isArray(rows) ? rows.slice() : [];
         box.rowList = [];
 
         box.rows.forEach(function (data) {
-            const row = oldRows.get(getRowId(data));
+            const sameId = oldRows.get(getRowId(data));
+            const row = (sameId && sameId.length) ? sameId.shift() : null;
             if (!row) {
                 addRowObject(data);
                 return;
             }
-            oldRows.delete(row.id);
             refreshRow(row, data);
             box.rowList.push(row);
         });
 
         const hadSelection = !!box.selectedRow;
-        oldRows.forEach(removeRowObject);
+        oldRows.forEach(function (list) { list.forEach(function (row) { removeRowObject(row); }); });
         showRows();
         if (hadSelection && !box.selectedRow) box.onSelect(box, null);
 
@@ -733,14 +777,19 @@ const DataTable = function (params = {}) {
 
     endGroup();
 
-    // BOX: Scrolling area of the rows
-    box.scrollBox = startBox(0, rowsTop, "100%", "calc(100% - " + rowsTop + "px)", { color: "transparent", scrollY: 1 });
+    // BOX: Scrolling area of the rows (to the side too, when the table is narrower than its columns)
+    box.scrollBox = startBox(0, rowsTop, "100%", "calc(100% - " + rowsTop + "px)", { color: "transparent", scrollY: 1, scrollX: 1 });
 
         // GROUP: Rows (the order: their CSS order, showRows)
-        box.rowsGroup = VGroup({ width: "100%", height: "auto", align: "left top" });
+        box.rowsGroup = VGroup({ width: "100%", height: "auto", align: "left top", css: { minWidth: findColumnsWidth() + "px" } });
         endGroup();
 
     endBox();
+
+    // WHY: the titles are not in the box that scrolls (they stay at the top); they go to the side with the rows.
+    box.scrollBox.on("scroll", function () {
+        box.titleRow.elem.scrollLeft = box.scrollBox.elem.scrollLeft;
+    });
 
     // LABEL: No rows / no result
     box.lblEmpty = Label({
@@ -780,6 +829,7 @@ DataTable.fitColumns = function (columns) {
             valueIndex: i,
             type: "text",
             width: "auto",
+            minWidth: 100, // px: the least width of an "auto" column (a narrower table scrolls to the side)
             align: "left",
             sortable: 0,
             iconFile: "",
@@ -813,27 +863,17 @@ DataTable.toAriaSort = function (direction) {
     return (direction == "desc") ? "descending" : "ascending";
 };
 
-// The icons of the search box next to comp/search-input-v2.js, wherever the page is.
-// WHY: SearchInput gives paths from a page in a samples folder ("../comp/..."); a page of another folder did not
-//      find them. The folder of the loaded script is the same from every page.
-DataTable.getSearchIconFiles = function () {
-    const script = document.querySelector('script[src*="search-input-v2"]');
-    if (!script) return {};
-    const folder = script.getAttribute("src").replace(/search-input-v2(\.min)?\.js.*$/, "search-input-v2/");
-    return { searchIconFile: folder + "search.svg", clearIconFile: folder + "clear-round.svg" };
-};
-
 // *** STYLE PACKAGES:
-// USAGE: DataTable({ styleName: "minimal" })
+// USAGE: DataTable({ styleName: "plain" })
 // USAGE: DataTable({ styleName: "dark", style: { row: { fontSize: 13 } } }) // Change only some keys.
-// NOTE: A new package needs only the keys that differ from the classic style.
+// NOTE: A new package needs only the keys that differ from the light style.
 DataTable.styles = {
 
     // A light gray title row, striped rows, a soft yellow selection.
-    classic: DataTableDefaults.style,
+    light: DataTableDefaults.style,
 
     // White, no stripes, only lines: a table in a page.
-    minimal: {
+    plain: {
         box: { color: "white", border: 0, round: 0 },
         titleRow: { height: 50, color: "white", lineColor: Black(0.2) },
         titleCell: { lineColor: "transparent", hoverColor: "whitesmoke", uppercase: 0 },
@@ -863,3 +903,35 @@ DataTable.styles = {
     },
 
 };
+DataTable.styles.classic = DataTable.styles.light; // the old name of light: the pages made with it keep their look
+
+// The minimal theme (_designs/minimal-theme.htm), as SmartTable "minimal": small (30 px titles, rows of a 13 px text),
+// on the ground of the window with a line around it; no stripes, thin lines between the rows, soft titles over a line,
+// a faint row under the mouse and a stronger one for the selected row. minimalDark: the same on a dark window.
+DataTable.createMinimalStyle = function (colors) {
+    return {
+        box: { color: colors.ground, border: 1, borderColor: colors.line, round: 4 },
+        focus: { ringColor: colors.focus },
+        header: { height: 40, padding: [12, 0], gap: 10 },
+        headerTitle: { fontSize: 14, textColor: colors.text, fontFamily: "opensans-bold" },
+        search: { width: 200, height: 28, fontSize: 13, searchIconSize: 14 },
+        searchStyleName: colors.minimalName,
+        titleRow: { height: 30, color: colors.ground, lineColor: colors.line },
+        titleCell: { padding: 10, gap: 6, fontSize: 12, textColor: colors.softText, fontFamily: "opensans-bold", lineColor: "transparent", hoverColor: colors.hover, uppercase: 0 },
+        titleIcon: { size: 14, opacity: 0.7, invert: colors.invertIcons },
+        sortIcon: { size: 14, opacity: 0.3, activeOpacity: 1, invert: colors.invertIcons },
+        row: { padding: [10, 5], fontSize: 13, textColor: colors.text, fontFamily: "opensans", oddColor: colors.ground, evenColor: colors.ground, hoverColor: colors.hover, selectedColor: colors.selected, lineColor: colors.track },
+        empty: { fontSize: 12, textColor: colors.softText, top: 30 },
+        scrollBar: { neverHide: 0, showDots: 0, bar_color: colors.scrollBar, bar_mouseOverColor: colors.scrollBar, bar_width: 3 },
+    };
+};
+DataTable.MINIMAL_COLORS = {
+    ground: "#FFFFFF", text: Black(0.85), softText: Black(0.55), line: Black(0.2), track: Black(0.08), hover: Black(0.03),
+    selected: Black(0.06), focus: "#3D8BD9", scrollBar: "#9A9A98", invertIcons: 0, minimalName: "minimal",
+};
+DataTable.styles.minimal = DataTable.createMinimalStyle(DataTable.MINIMAL_COLORS);
+DataTable.MINIMAL_DARK_COLORS = {
+    ground: "#1A1A19", text: White(0.88), softText: White(0.55), line: White(0.18), track: White(0.08), hover: White(0.04),
+    selected: White(0.08), focus: "#7FB6DE", scrollBar: "#A0A0A0", invertIcons: 1, minimalName: "minimalDark",
+};
+DataTable.styles.minimalDark = DataTable.createMinimalStyle(DataTable.MINIMAL_DARK_COLORS);

@@ -13,7 +13,9 @@
     <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
 
     <!-- COMPONENT FILES -->
+    <script src="../comp/smart-button.js" type="text/javascript" charset="utf-8"></script>
     <script src="../comp/mini-graph-box.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/scroll-area.js" type="text/javascript" charset="utf-8"></script>
 
     <script>
 
@@ -30,131 +32,119 @@
 
             page.color = "white";
 
-            // BOX: Full screen scrollable container
-            // WHY: page does not scroll. Scrollable content must be inside a Box with scrollY: 1.
-            startBox(0, 0, "100%", "100%", {
-                color: "transparent",
-                scrollY: 1,
+            // SCROLL AREA: The page
+            // WHY: page does not scroll. A ScrollArea fills the window; its content scrolls when it is taller.
+            ScrollArea({
+                align: "center top",
+                gap: 30,
+                padding: [16, 50], // WHY 16 at the sides: the cards fill a phone (390 px)
             });
 
-                // GROUP: Page layout
-                VGroup({
-                    width: "100%",
-                    height: "auto", // Grows with content, so the Box can scroll.
-                    align: "center top",
-                    gap: 30,
-                    padding: 50,
+                // LABEL: Title
+                Label({
+                    text: "Mini Graph Box",
+                    fontSize: 26,
+                    fontFamily: "opensans-bold",
                 });
 
-                    // LABEL: Title
+                // SAMPLE 1: Live graphs
+                startCard("1. Live data (a new value every 0.5 seconds)");
+
+                    // GROUP: Graphs
+                    HGroup({ width: "100%", height: "auto", align: "left top", gap: 16, wrap: 1 });
+
+                        graphSold = MiniGraphBox({
+                            titleText: "Sold Items",
+                            valueText: "1.3K",
+                            iconFile: ICON_FOLDER + "carrot.png",
+                            barColor: "tomato",
+                            values: randomList(49, 10, 30),
+                        });
+
+                        graphUsers = MiniGraphBox({
+                            titleText: "Active Users",
+                            valueText: "248",
+                            iconFile: ICON_FOLDER + "blueberries.png",
+                            barColor: "#5B7BD5",
+                            values: randomList(20, 150, 300),
+                        });
+
+                        graphCpu = MiniGraphBox({
+                            titleText: "CPU",
+                            valueText: "42%",
+                            barColor: "#65A293",
+                            maxValue: 100, // Fixed top: 100%
+                            style: {
+                                box: { color: "white", borderColor: Black(0.15), round: 8 },
+                                bars: { barWidth: 4, gap: 2, height: 34 },
+                            },
+                        });
+
+                    endGroup();
+
                     Label({
-                        text: "Mini Graph Box",
-                        fontSize: 26,
+                        text: "When a graph is full, the first bar is removed and the others move one step left. \"CPU\" has <b>maxValue: 100</b>.",
+                        fontSize: 13,
+                        textColor: Black(0.55),
                     });
-                    that.elem.style.fontFamily = "opensans-bold";
 
-                    // SAMPLE 1: Live graphs
-                    startCard("1. Live data (a new value every 0.5 seconds)");
+                    smallButton("Pause", function (self) {
+                        isPaused = isPaused ? 0 : 1;
+                        self.setLabelText(isPaused ? "Continue" : "Pause");
+                    });
 
-                        // GROUP: Graphs
-                        HGroup({ width: "100%", height: "auto", align: "left top", gap: 16 });
-                        that.elem.style.flexWrap = "wrap";
+                endCard();
 
-                            graphSold = MiniGraphBox({
-                                title: "Sold Items",
-                                valueText: "1.3K",
-                                iconFile: ICON_FOLDER + "carrot.png",
-                                barColor: "tomato",
-                                values: randomList(49, 10, 30),
-                            });
+                // SAMPLE 2: Change from outside
+                startCard("2. Change title, text, icon and color");
 
-                            graphUsers = MiniGraphBox({
-                                title: "Active Users",
-                                valueText: "248",
-                                iconFile: ICON_FOLDER + "blueberries.png",
-                                barColor: "#5B7BD5",
-                                values: randomList(20, 150, 300),
-                            });
+                    graphWide = MiniGraphBox({
+                        width: "100%", // The bar count changes with the width.
+                        titleText: "Strawberry Orders",
+                        valueText: "86",
+                        iconFile: ICON_FOLDER + "strawberry.png",
+                        barColor: "#E0457B",
+                        values: randomList(60, 5, 40),
+                    });
 
-                            graphCpu = MiniGraphBox({
-                                title: "CPU",
-                                valueText: "42%",
-                                barColor: "#65A293",
-                                maxValue: 100, // Fixed top: 100%
-                                style: {
-                                    box: { color: "white", borderColor: Black(0.15), round: 8 },
-                                    bars: { barWidth: 4, gap: 2, height: 34 },
-                                },
-                            });
+                    // GROUP: Buttons
+                    HGroup({ width: "100%", height: "auto", align: "left center", gap: 8, wrap: 1 });
 
-                        endGroup();
-
-                        Label({
-                            text: "When a graph is full, the first bar is removed and the others move one step left. \"CPU\" has <b>maxValue: 100</b>.",
-                            fontSize: 13,
-                            textColor: Black(0.55),
+                        smallButton("Add value", function () {
+                            const value = random(5, 40);
+                            graphWide.addValue(value);
+                            graphWide.setValueText(String(value));
                         });
 
-                        smallButton("Pause", function (self) {
-                            isPaused = isPaused ? 0 : 1;
-                            self.text = isPaused ? "Continue" : "Pause";
+                        smallButton("Add orange value", function () {
+                            graphWide.addValue(random(30, 40), "orange");
                         });
 
-                    endCard();
-
-                    // SAMPLE 2: Change from outside
-                    startCard("2. Change title, text, icon and color");
-
-                        graphWide = MiniGraphBox({
-                            width: "100%", // The bar count changes with the width.
-                            title: "Strawberry Orders",
-                            valueText: "86",
-                            iconFile: ICON_FOLDER + "strawberry.png",
-                            barColor: "#E0457B",
-                            values: randomList(60, 5, 40),
+                        smallButton("Change color", function () {
+                            const colors = ["#E0457B", "#5B7BD5", "#65A293", "#8E6CC9", "#373836"];
+                            graphWide.setBarColor(colors[(colors.indexOf(graphWide.barColor) + 1) % colors.length]);
                         });
 
-                        // GROUP: Buttons
-                        HGroup({ width: "100%", height: "auto", align: "left center", gap: 8 });
-                        that.elem.style.flexWrap = "wrap";
+                        smallButton("Change title & icon", function () {
+                            const isOlive = graphWide.iconFile.includes("olives");
+                            graphWide.setTitleText(isOlive ? "Strawberry Orders" : "Olive Orders");
+                            graphWide.setIcon(ICON_FOLDER + (isOlive ? "strawberry.png" : "olives.png"));
+                        });
 
-                            smallButton("Add value", function () {
-                                const value = random(5, 40);
-                                graphWide.addValue(value);
-                                graphWide.setValueText(String(value));
-                            });
+                        smallButton("Hide icon", function (self) {
+                            graphWide.setIcon(graphWide.iconFile ? "" : ICON_FOLDER + "strawberry.png");
+                            self.setLabelText(graphWide.iconFile ? "Hide icon" : "Show icon");
+                        });
 
-                            smallButton("Add orange value", function () {
-                                graphWide.addValue(random(30, 40), "orange");
-                            });
+                        smallButton("Clear", function () {
+                            graphWide.clear();
+                        });
 
-                            smallButton("Change color", function () {
-                                const colors = ["#E0457B", "#5B7BD5", "#65A293", "#8E6CC9", "#373836"];
-                                graphWide.setBarColor(colors[(colors.indexOf(graphWide.barColor) + 1) % colors.length]);
-                            });
+                    endGroup();
 
-                            smallButton("Change title & icon", function () {
-                                const isOlive = graphWide.iconFile.includes("olives");
-                                graphWide.setTitle(isOlive ? "Strawberry Orders" : "Olive Orders");
-                                graphWide.setIcon(ICON_FOLDER + (isOlive ? "strawberry.png" : "olives.png"));
-                            });
+                endCard();
 
-                            smallButton("Hide icon", function (self) {
-                                graphWide.setIcon(graphWide.iconFile ? "" : ICON_FOLDER + "strawberry.png");
-                                self.text = graphWide.iconFile ? "Hide icon" : "Show icon";
-                            });
-
-                            smallButton("Clear", function () {
-                                graphWide.clear();
-                            });
-
-                        endGroup();
-
-                    endCard();
-
-                endGroup();
-
-            endBox();
+            endGroup();
 
             setLoopTimer(500);
 
@@ -201,6 +191,7 @@
                 round: 10,
                 border: 1,
                 borderColor: Black(0.1),
+                css: { maxWidth: "100%" }, // WHY maxWidth: on a phone the card is as wide as the screen
             });
             Label({
                 text: title,
@@ -213,11 +204,9 @@
             endGroup();
         };
 
-        const smallButton = function (text, func) {
-            const btn = Button({ text: text, width: "auto", height: 34, fontSize: 13, color: "#E8E8E8", textColor: Black(0.75), round: 6 });
-            btn.elem.style.padding = "0 14px";
-            btn.on("click", function (self) { func(self); });
-            return btn;
+        // A button of the sample (SmartButton, its gray)
+        const smallButton = function (text, onClick) {
+            return SmartButton({ labelText: text, onClick: onClick });
         };
 
     </script>

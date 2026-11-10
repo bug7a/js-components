@@ -14,6 +14,7 @@
     <script src="../basic/scroll-bar.js" type="text/javascript" charset="utf-8"></script>
 
     <!-- COMPONENT FILES -->
+    <script src="../comp/smart-button.js" type="text/javascript" charset="utf-8"></script>
     <script src="../comp/property-panel.js" type="text/javascript" charset="utf-8"></script>
 
     <script>
@@ -23,20 +24,32 @@
         // *** VARIABLES:
         let panel, canvas, lblText, lblLog;
         const logLines = [];
+        const MAX_LOG_LINES = 10;
+        const MIN_PAGE_WIDTH = 720; // px: the canvas and the panel need it; a narrower window (a phone) shows the page smaller
+        const CANVAS_COLOR = "#161615";
+        const SELECTION_COLOR = "#65A293";
 
         // The JSON of the panel. Every item: type, key, value and its own settings.
         const PANEL_DATA = {
             tabs: [
-                { key: "design", text: "Design" },
-                { key: "prototype", text: "Prototype" },
+                { key: "properties", text: "Properties" },
+                { key: "events", text: "Events" },
             ],
-            activeTab: "design",
-            headerItem: { key: "zoom", type: "select", value: 72, options: [{ value: 50, text: "50%" }, { value: 72, text: "72%" }, { value: 100, text: "100%" }, { value: 200, text: "200%" }] },
-            title: "Text",
+            activeTab: "properties",
+            headerItem: {
+                key: "device",
+                type: "select",
+                value: "desktop",
+                options: [
+                    { value: "desktop", text: "Desktop" },
+                    { value: "tablet", text: "Tablet" },
+                    { value: "phone", text: "Phone" },
+                ],
+            },
+            title: "Label",
             titleActions: [
-                { key: "createComponent", icon: "component", hint: "Create component" },
-                { key: "copyLink", icon: "link", hint: "Copy link" },
-                { key: "inspect", icon: "target", hint: "Inspect" },
+                { key: "duplicate", icon: "copy", hint: "Duplicate" },
+                { key: "remove", icon: "trash", hint: "Remove" },
                 { key: "more", icon: "more", hint: "More" },
             ],
             sections: [
@@ -45,8 +58,22 @@
                     title: "Position",
                     items: [
                         [
-                            { key: "alignH", type: "segmented", label: "Alignment", options: [{ value: "left", icon: "alignLeft", hint: "Align left" }, { value: "center", icon: "alignCenterH", hint: "Align horizontal centers" }, { value: "right", icon: "alignRight", hint: "Align right" }] },
-                            { key: "alignV", type: "segmented", options: [{ value: "top", icon: "alignTop", hint: "Align top" }, { value: "middle", icon: "alignCenterV", hint: "Align vertical centers" }, { value: "bottom", icon: "alignBottom", hint: "Align bottom" }] },
+                            {
+                                key: "alignH", type: "segmented", label: "Alignment",
+                                options: [
+                                    { value: "left", icon: "alignLeft", hint: "Align left" },
+                                    { value: "center", icon: "alignCenterH", hint: "Align horizontal centers" },
+                                    { value: "right", icon: "alignRight", hint: "Align right" },
+                                ],
+                            },
+                            {
+                                key: "alignV", type: "segmented",
+                                options: [
+                                    { value: "top", icon: "alignTop", hint: "Align top" },
+                                    { value: "middle", icon: "alignCenterV", hint: "Align vertical centers" },
+                                    { value: "bottom", icon: "alignBottom", hint: "Align bottom" },
+                                ],
+                            },
                         ],
                         [
                             { key: "x", type: "number", label: "Position", prefix: "X", value: 396 },
@@ -54,45 +81,58 @@
                             { key: "absolute", type: "iconButton", icon: "frame", toggle: 1, value: true, hint: "Absolute position" },
                         ],
                         [
-                            { key: "constraints", type: "constraints", label: "Constraints", value: { horizontal: "left", vertical: "top" } },
+                            { key: "constraints", type: "constraints", label: "Anchors", value: { horizontal: "left", vertical: "top" } },
                         ],
                         [
-                            { key: "rotation", type: "number", label: "Rotation", icon: "angle", value: 0, unit: "°", min: -360, max: 360 },
-                            { key: "transform", type: "segmented", options: [{ value: "rotate90", icon: "rotate", hint: "Rotate 90°" }, { value: "flipH", icon: "flipH", hint: "Flip horizontal" }, { value: "flipV", icon: "flipV", hint: "Flip vertical" }] },
+                            { key: "rotation", type: "number", label: "Rotate", icon: "angle", value: 0, unit: "°", min: -360, max: 360 },
+                            {
+                                key: "transform", type: "segmented",
+                                options: [
+                                    { value: "rotate90", icon: "rotate", hint: "Rotate 90°" },
+                                    { value: "flipH", icon: "flipH", hint: "Flip horizontal" },
+                                    { value: "flipV", icon: "flipV", hint: "Flip vertical" },
+                                ],
+                            },
                         ],
                     ],
                 },
                 {
-                    key: "layout",
-                    title: "Layout",
+                    key: "size",
+                    title: "Size",
                     items: [
-                        { key: "resizing", type: "segmented", label: "Resizing", span: 2, value: "autoWidth", options: [{ value: "autoWidth", icon: "hugWidth", hint: "Auto width" }, { value: "autoHeight", icon: "fixedWidth", hint: "Auto height" }, { value: "fixed", icon: "autoHeight", hint: "Fixed size" }] },
+                        {
+                            key: "resizing", type: "segmented", label: "Sizing", span: 2, value: "autoWidth",
+                            options: [
+                                { value: "autoWidth", icon: "hugWidth", hint: "Auto width" },
+                                { value: "autoHeight", icon: "fixedWidth", hint: "Auto height" },
+                                { value: "fixed", icon: "autoHeight", hint: "Fixed size" },
+                            ],
+                        },
                         [
-                            { key: "w", type: "number", label: "Dimensions", prefix: "W", value: 31, min: 1, enabled: 0 },
-                            { key: "h", type: "number", prefix: "H", value: 23, min: 1, enabled: 0 },
+                            { key: "w", type: "number", label: "Width", prefix: "W", value: 40, min: 1, enabled: 0 },
+                            { key: "h", type: "number", label: "Height", prefix: "H", value: 22, min: 1, enabled: 0 },
                             { key: "clipContent", type: "iconButton", icon: "clip", toggle: 1, value: false, accent: 0, hint: "Clip content" },
                         ],
                     ],
                 },
                 {
-                    key: "appearance",
-                    title: "Appearance",
+                    key: "style",
+                    title: "Style",
                     actions: [
                         { key: "visible", icon: "eye", iconActive: "eyeOff", toggle: 1, value: false, hint: "Hide" },
-                        { key: "blendMode", icon: "drop", hint: "Blend mode" },
                     ],
                     items: [
                         [
                             { key: "opacity", type: "number", label: "Opacity", icon: "opacity", value: 100, unit: "%", min: 0, max: 100 },
-                            { key: "radius", type: "number", label: "Corner radius", icon: "radius", value: 0, min: 0, enabled: 0 },
+                            { key: "radius", type: "number", label: "Round", icon: "radius", value: 0, min: 0, enabled: 0 },
                         ],
                     ],
                 },
                 {
-                    key: "typography",
-                    title: "Typography",
+                    key: "text",
+                    title: "Text",
                     actions: [
-                        { key: "textStyles", icon: "styles", hint: "Text styles" },
+                        { key: "wrap", icon: "wrap", toggle: 1, value: false, hint: "Wrap the text" },
                     ],
                     items: [
                         { key: "fontFamily", type: "select", span: 2, value: "Open Sans", options: ["Open Sans", "Istok Web", "Inter", "Georgia", "Courier New"] },
@@ -105,9 +145,23 @@
                             { key: "letterSpacing", type: "number", label: "Letter spacing", icon: "letterSpacing", value: 0, unit: "%", min: -50, max: 100, step: 0.5, precision: 0 },
                         ],
                         [
-                            { key: "textAlign", type: "segmented", label: "Alignment", value: "left", options: [{ value: "left", icon: "textLeft", hint: "Align left" }, { value: "center", icon: "textCenter", hint: "Align center" }, { value: "right", icon: "textRight", hint: "Align right" }] },
-                            { key: "verticalAlign", type: "segmented", value: "top", options: [{ value: "top", icon: "textTop", hint: "Top" }, { value: "middle", icon: "textMiddle", hint: "Middle" }, { value: "bottom", icon: "textBottom", hint: "Bottom" }] },
-                            { key: "typeDetails", type: "iconButton", icon: "sliders", hint: "Type details" },
+                            {
+                                key: "textAlign", type: "segmented", label: "Alignment", value: "left",
+                                options: [
+                                    { value: "left", icon: "textLeft", hint: "Align left" },
+                                    { value: "center", icon: "textCenter", hint: "Align center" },
+                                    { value: "right", icon: "textRight", hint: "Align right" },
+                                ],
+                            },
+                            {
+                                key: "verticalAlign", type: "segmented", value: "top",
+                                options: [
+                                    { value: "top", icon: "textTop", hint: "Top" },
+                                    { value: "middle", icon: "textMiddle", hint: "Middle" },
+                                    { value: "bottom", icon: "textBottom", hint: "Bottom" },
+                                ],
+                            },
+                            { key: "textDetails", type: "iconButton", icon: "sliders", hint: "More text settings" },
                         ],
                     ],
                 },
@@ -116,36 +170,60 @@
 
         const start = function () {
 
-            page.color = "#1E1E1E";
+            // WHY page.fit: under MIN_PAGE_WIDTH the page is drawn at that width and made smaller (zoom 1 above it)
+            page.fit(MIN_PAGE_WIDTH);
+            page.onResize(function () { page.fit(MIN_PAGE_WIDTH); });
+
+            page.color = CANVAS_COLOR;
 
             // BOX: Canvas (the left part of the screen)
-            canvas = startBox(0, 0, "calc(100% - 240px)", "100%", { color: "#1E1E1E" });
+            canvas = startBox(0, 0, "calc(100% - 240px)", "100%", { color: CANVAS_COLOR });
             canvas.clipContent = 1;
 
                 // LABEL: The selected text object
-                lblText = Label({ left: 396, top: 668, text: "Text", fontSize: 16, textColor: "#FFFFFF" });
-                lblText.css = { outline: "1px solid #0C8CE9", transformOrigin: "center", whiteSpace: "nowrap" };
+                lblText = Label({
+                    left: 396,
+                    top: 668,
+                    text: "Hello",
+                    fontSize: 16,
+                    textColor: "#EDEDEB",
+                    css: { outline: "1px solid " + SELECTION_COLOR, transformOrigin: "center", whiteSpace: "nowrap" },
+                });
 
                 // LABEL: Log of the changes
-                lblLog = Label({ left: 20, top: 20, width: 420, text: "Change the values in the panel.", fontSize: 12, textColor: "rgba(255, 255, 255, 0.55)", fontFamily: "monospace", lineHeight: "1.6" });
-                lblLog.css = { whiteSpace: "pre-wrap" };
+                lblLog = Label({
+                    left: 20,
+                    top: 20,
+                    width: 420,
+                    text: "Change the values in the panel.",
+                    fontSize: 12,
+                    textColor: "rgba(255, 255, 255, 0.55)",
+                    fontFamily: "monospace",
+                    lineHeight: "1.6",
+                    css: { whiteSpace: "pre-wrap" },
+                });
 
                 // BUTTON: Open / close the panel
-                const btnToggle = Button({ left: 20, top: 250, width: 140, height: 32, text: "Toggle panel", fontSize: 13 });
-                btnToggle.on("click", function () { panel.toggle(); });
+                SmartButton({
+                    left: 20,
+                    top: 250,
+                    styleName: "ozdenDark", // (a dark page)
+                    labelText: "Toggle panel",
+                    onClick: function () { panel.toggle(); },
+                });
 
             endBox();
 
             // PROPERTY PANEL:
             panel = PropertyPanel({
                 data: PANEL_DATA,
-                onChange: function (change, self) {
+                onChange: function (self, change) {
                     addLog(change);
                 },
             });
 
             // A second listener from outside: applies the changed value to the text object.
-            panel.listen(function (change, self) {
+            panel.listen(function (self, change) {
                 if (change.kind === "value") applyValue(change.key, change.value);
                 if (change.kind === "action") runAction(change);
             });
@@ -169,16 +247,26 @@
             switch (key) {
                 case "x": lblText.left = value; break;
                 case "y": lblText.top = value; break;
-                case "rotation": lblText.elem.style.transform = "rotate(" + (-value) + "deg)"; break;
-                case "opacity": case "visible": lblText.opacity = (panel.getValue("visible")) ? 0 : panel.getValue("opacity") / 100; break; // visible: the "hide" toggle
-                case "fontFamily": lblText.fontFamily = (value === "Open Sans") ? "" : "'" + value + "', sans-serif"; break;
+                case "rotation": lblText.rotate = -value; break;
+                case "opacity": case "visible": applyOpacity(); break;
+                case "fontFamily": applyFontFamily(value); break;
                 case "fontWeight": lblText.bold = (value === "bold"); break;
                 case "fontSize": lblText.fontSize = value; break;
                 case "lineHeight": lblText.lineHeight = (value === null) ? "normal" : String(value / 100); break;
-                case "letterSpacing": lblText.elem.style.letterSpacing = (value / 100) + "em"; break;
+                case "letterSpacing": lblText.css.letterSpacing = (value / 100) + "em"; break;
                 case "textAlign": lblText.textAlign = value; break;
             }
             if (SIZE_KEYS.indexOf(key) > -1) updateSize();
+        };
+
+        // visible: the "hide" toggle
+        const applyOpacity = function () {
+            const isHidden = panel.getValue("visible");
+            lblText.opacity = isHidden ? 0 : panel.getValue("opacity") / 100;
+        };
+
+        const applyFontFamily = function (fontName) {
+            lblText.fontFamily = (fontName === "Open Sans") ? "" : "'" + fontName + "', sans-serif";
         };
 
         // W and H follow the text (auto width).
@@ -187,23 +275,35 @@
         };
 
         const runAction = function (change) {
-            const cw = canvas.width, ch = canvas.height;
-            const w = lblText.elem.offsetWidth, h = lblText.elem.offsetHeight;
-            const moves = {
-                left: { x: 0 }, center: { x: Math.round((cw - w) / 2) }, right: { x: cw - w },
-                top: { y: 0 }, middle: { y: Math.round((ch - h) / 2) }, bottom: { y: ch - h },
-            };
             if (change.key === "alignH" || change.key === "alignV") {
-                panel.setValues(moves[change.value]); // Not silent: the change is sent, the listener moves the text.
-            } else if (change.key === "transform" && change.value === "rotate90") {
+                panel.setValues(getAlignMove(change.value)); // Not silent: the change is sent, the listener moves the text.
+                return;
+            }
+            if (change.key === "transform" && change.value === "rotate90") {
                 panel.setValue("rotation", ((panel.getValue("rotation") + 90 + 180) % 360) - 180);
             }
         };
 
+        // The new place of the text for an alignment button
+        const getAlignMove = function (align) {
+            const freeWidth = canvas.width - lblText.elem.offsetWidth;
+            const freeHeight = canvas.height - lblText.elem.offsetHeight;
+            const moves = {
+                left: { x: 0 },
+                center: { x: Math.round(freeWidth / 2) },
+                right: { x: freeWidth },
+                top: { y: 0 },
+                middle: { y: Math.round(freeHeight / 2) },
+                bottom: { y: freeHeight },
+            };
+            return moves[align];
+        };
+
         const addLog = function (change) {
-            const value = (typeof change.value === "object" && change.value !== null) ? JSON.stringify(change.value) : String(change.value);
+            const isObject = (typeof change.value === "object" && change.value !== null);
+            const value = isObject ? JSON.stringify(change.value) : String(change.value);
             logLines.unshift(change.kind + "  " + change.key + " = " + value);
-            if (logLines.length > 10) logLines.pop();
+            if (logLines.length > MAX_LOG_LINES) logLines.pop();
             lblLog.plainText = logLines.join("\n");
         };
 

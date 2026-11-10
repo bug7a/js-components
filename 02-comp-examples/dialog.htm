@@ -13,50 +13,52 @@
     <script src="../basic/basic.js" type="text/javascript" charset="utf-8"></script>
 
     <script src="../comp/tooltip.js" type="text/javascript" charset="utf-8"></script>
-    <script src="../comp/input-b.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/text-field.js" type="text/javascript" charset="utf-8"></script>
     <script src="../comp/smart-button.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/check-box.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/file-picker.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/sortable-list.js" type="text/javascript" charset="utf-8"></script>
     <script src="../comp/dialog.js" type="text/javascript" charset="utf-8"></script>
 
     <script>
 
     /* Bismillah */
 
-    // Dialog (comp-m4): a dialog over the page with fields and buttons. The look of the first dialog of
-    // 02-comp-examples/smart-button-3-ozden.htm; the features of comp/modal.js.
-    // A dialog for every situation (2026-10-31): the button types primary, danger, warning, success, info take the
-    // situation packages of SmartButton (primary, danger...: chosen on _designs/smart-button-colors.htm).
+    // Dialog: a dialog over the page with fields and buttons.
+    // The button types primary, danger, warning, success, info take the tones of SmartButton
+    // (cyan, orange, yellow, green, blue).
     // - Dialog({ buttons: [{ text, type: "primary" | "secondary" | "danger" | "warning" | "success" | "info" | "icon" }] })
     // - Dialog.confirm({ ..., danger: 1 }) / Dialog.confirm({ ..., confirmType: "warning" })
     // - Dialog.alert({ ..., buttonType: "success" })
+    // Dialogs with content: a file to upload (FilePicker), choices (CheckBox), a text to edit (a TextField field: Save is
+    // on only when it is changed, it waits, then the dialog says that it is saved) and an order to change (SortableList).
     // TRY: open each dialog; on Delete click twice (the first click asks); in Publish leave the title empty.
 
     const WORK_TIME = 1200; // ms: a job that takes time (the sample)
 
-    // The icons of the buttons (the drawings of the ozden sample)
-    const svgIcon = function (color, body) {
-        return "data:image/svg+xml;utf8," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">' + body.split("COLOR").join(color) + "</svg>");
+    // The icons of the buttons
+    const svgIcon = function (body) {
+        const svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">' + body + "<\/svg>";
+        return "data:image/svg+xml;utf8," + encodeURIComponent(svg);
     };
-    const PEN_ICON = svgIcon("black",
-        '<path d="M3.5 6h7M3.5 10h4" stroke="COLOR" stroke-width="2.2" stroke-linecap="round"/>' +
-        '<path d="M16.6 5.2a2.3 2.3 0 0 1 3.3 3.3l-9.6 9.6-4.8 1.5 1.5-4.8z" fill="COLOR" stroke="COLOR" stroke-width="1.6" stroke-linejoin="round"/>');
-    // A TRIAL (2026-10-29): the trash of the todo app. The soft bin of the ozden sample was:
-    // const TRASH_ICON = svgIcon("#6B6F73",
-    // '<path fill-rule="evenodd" fill="COLOR" d="M 4 6 Q 4 2 12 2 Q 20 2 20 6 L 18.5 18 Q 18 22 12 22 Q 6 22 5.5 18 Z ' +
-    // 'M 6.7 5.9 C 6.7 3.7 17.3 3.7 17.3 5.9 C 17.3 8.1 6.7 8.1 6.7 5.9 Z ' +
-    // 'M 9 11 Q 9.7 10.3 10.4 11 L 12 12.6 L 13.6 11 Q 14.3 10.3 15 11 Q 15.7 11.7 15 12.4 L 13.4 14 L 15 15.6 ' +
-    // 'Q 15.7 16.3 15 17 Q 14.3 17.7 13.6 17 L 12 15.4 L 10.4 17 Q 9.7 17.7 9 17 Q 8.3 16.3 9 15.6 L 10.6 14 L 9 12.4 Q 8.3 11.7 9 11 Z"/>');
+    const PEN_ICON = svgIcon(
+        '<path d="M3.5 6h7M3.5 10h4" stroke="black" stroke-width="2.2" stroke-linecap="round"/>' +
+        '<path d="M16.6 5.2a2.3 2.3 0 0 1 3.3 3.3l-9.6 9.6-4.8 1.5 1.5-4.8z" fill="black" stroke="black" stroke-width="1.6" stroke-linejoin="round"/>'
+    );
     const TRASH_ICON = "../04-templates/todo-app-example/images/trash.svg";
+    const UPLOAD_ICON = svgIcon(
+        '<path d="M12 15V4.5M7.5 9 12 4.5 16.5 9M5 19.5h14" fill="none" stroke="black" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>'
+    );
+
+    const UPLOAD_MAX_SIZE = 10 * 1024 * 1024; // bytes (10 MB)
+    const CONTACT_WAYS = ["E-mail", "SMS", "Push notifications", "Phone call"];
+
+    // What the dialogs with content change (they open with it the next time)
+    let chosenWays = ["E-mail"];
+    let articleTitle = "How I started to garden";
+    let menuOrder = ["Home", "Products", "Blog", "Contact"];
 
     const LAUNCH_BUTTON_HEIGHT = 40;
-
-    // The situations: the button type of a dialog, the SmartButton package of its color, the dialog it opens
-    const SITUATIONS = [
-        { type: "primary", text: "Publish", open: function () { openPublishDialog(); } },
-        { type: "danger", text: "Delete", open: function () { openDeleteConfirm(); } },
-        { type: "warning", text: "Leave", open: function () { openWarningConfirm(); } },
-        { type: "success", text: "Done", open: function () { openSuccessAlert(); } },
-        { type: "info", text: "Details", open: function () { openInfoAlert(); } },
-    ];
 
     let lblResult;
 
@@ -64,8 +66,10 @@
         lblResult.plainText = text;
     };
 
-    const wait = function (ms) {
-        return new Promise(function (resolve) { setTimeout(resolve, ms); });
+    // The page tells how a dialog was closed (a button says it itself)
+    const showClose = function (dialog, reason, buttonKey) {
+        if (reason != "button") showResult("Closed: " + reason);
+        else if (buttonKey == "cancel") showResult("Canceled.");
     };
 
     // The dialog of the design: a field, the trash (asks again), Cancel and Publish (it waits)
@@ -83,17 +87,180 @@
                 { key: "cancel", text: "Cancel", type: "secondary" },
                 {
                     key: "publish", text: "Publish", type: "primary", iconFile: PEN_ICON,
-                    onClick: function (dialog) {
+                    onClick: async function (dialog) {
                         const values = dialog.getValues();
-                        return wait(WORK_TIME).then(function () { showResult("Published: " + values.title); });
+                        await basic.sleep(WORK_TIME);
+                        showResult("Published: " + values.title);
                     },
                 },
             ],
-            onClose: function (dialog, reason, buttonKey) {
-                if (reason != "button") showResult("Closed: " + reason);
-                else if (buttonKey == "cancel") showResult("Canceled.");
-            },
+            onClose: showClose,
         });
+    };
+
+    // *** THE DIALOGS WITH CONTENT
+
+    // UPLOAD: files are dropped into the zone (or chosen with a click); Upload is on when there is a file, and it waits
+    // while they go (the sample does not send them)
+    const openUploadDialog = function () {
+        let selectFile;
+        const dialog = Dialog({
+            titleText: "Upload the files",
+            messageText: "Add the files of the report. You can drop more than one file.",
+            content: function (dialog) {
+                selectFile = FilePicker({
+                    width: "100%",
+                    zoneHeight: 150,
+                    multiple: 1,
+                    titleText: "Drag and drop the files here",
+                    maxSize: UPLOAD_MAX_SIZE,
+                    onChange: function (self) {
+                        dialog.getButton("upload").setEnabled(self.getFiles().length ? 1 : 0);
+                    },
+                });
+            },
+            buttons: [
+                { key: "cancel", text: "Cancel", type: "secondary" },
+                {
+                    key: "upload", text: "Upload", type: "primary", iconFile: UPLOAD_ICON,
+                    onClick: async function (dialog) {
+                        const names = selectFile.getFiles().map(function (file) { return file.name; });
+                        selectFile.setEnabled(0); // WHY: no new file while these go
+                        dialog.setStatus("Uploading " + names.length + " file(s)...");
+                        await basic.sleep(WORK_TIME);
+                        showResult("Uploaded: " + names.join(", "));
+                    },
+                },
+            ],
+            onClose: showClose,
+        });
+        dialog.getButton("upload").setEnabled(0); // (no file yet)
+    };
+
+    // CHOICES: check boxes in the dialog; Confirm is off while none is checked
+    const openChoicesDialog = function () {
+        const checkBoxes = [];
+        const getChosen = function () {
+            return checkBoxes
+                .filter(function (chk) { return chk.checked == 1; })
+                .map(function (chk) { return chk.labelText; });
+        };
+        Dialog({
+            titleText: "How can we reach you?",
+            messageText: "Choose one or more ways. You can change them later in the settings.",
+            content: function (dialog) {
+                CONTACT_WAYS.forEach(function (name) {
+                    const chkWay = CheckBox({
+                        labelText: name,
+                        checked: chosenWays.includes(name) ? 1 : 0,
+                        onChange: function () {
+                            dialog.getButton("confirm").setEnabled(getChosen().length ? 1 : 0);
+                        },
+                    });
+                    checkBoxes.push(chkWay);
+                });
+            },
+            buttons: [
+                { key: "cancel", text: "Cancel", type: "secondary" },
+                {
+                    key: "confirm", text: "Confirm", type: "primary",
+                    onClick: function () {
+                        chosenWays = getChosen();
+                        showResult("Confirmed: " + chosenWays.join(", "));
+                    },
+                },
+            ],
+            onClose: showClose,
+        });
+    };
+
+    // EDIT: the title comes ready in a TextField field; Save is off until it is changed. Save waits (its clock), then the
+    // dialog stays open and says under the field that it is saved.
+    const openEditDialog = function () {
+        const dialog = Dialog({
+            titleText: "Edit the title",
+            messageText: "The title of the article. Save is on when you change it.",
+            fields: [{ key: "title", titleText: "ARTICLE TITLE", value: articleTitle, required: 1 }],
+            buttons: [
+                {
+                    key: "delete", type: "icon", align: "left", iconFile: TRASH_ICON, ariaLabel: "Delete the article",
+                    ask: "Click again to delete the article.",
+                    onClick: function () { showResult("The article is deleted."); },
+                },
+                { key: "cancel", text: "Cancel", type: "secondary" },
+                {
+                    key: "save", text: "Save", type: "primary",
+                    onClick: function (dialog) {
+                        saveTitle(dialog);
+                        return false; // WHY: the dialog stays open: it shows that the title is saved
+                    },
+                },
+            ],
+            onClose: showClose,
+        });
+        // WHY on the TextField: the input event of its field goes up to it (TextField has no event of its own for it)
+        dialog.fieldList[0].input.on("input", function () {
+            dialog.setStatus("");
+            refreshSaveButton(dialog);
+        });
+        refreshSaveButton(dialog);
+    };
+
+    const getTypedTitle = function (dialog) {
+        return dialog.getValues().title.trim();
+    };
+
+    const refreshSaveButton = function (dialog) {
+        const isChanged = (getTypedTitle(dialog) !== articleTitle);
+        dialog.getButton("save").setEnabled(isChanged ? 1 : 0);
+    };
+
+    // WHY setBusy here, not a Promise from onClick: a Promise closes the dialog when it ends, and setBusy(0) turns
+    //     Save on again; here the title is saved first, then Save is off (the title is not changed any more)
+    const saveTitle = async function (dialog) {
+        const title = getTypedTitle(dialog);
+        dialog.setStatus("");
+        dialog.setBusy(1, "save"); // its clock; the other buttons wait
+        await basic.sleep(WORK_TIME);
+        if (!dialog.isOpen()) return;
+        dialog.setBusy(0);
+        articleTitle = title;
+        refreshSaveButton(dialog);
+        dialog.setStatus("The title is saved.", "success");
+        showResult("Saved: " + title);
+    };
+
+    // REORDER: the rows are dragged by their handle (or moved with Space and the arrow keys); Save is on when the order
+    // is changed
+    const openReorderDialog = function () {
+        let list;
+        const dialog = Dialog({
+            titleText: "Order the menu",
+            messageText: "Drag a row by its handle, or use Space and the arrow keys.",
+            content: function (dialog) {
+                list = SortableList({
+                    width: "100%",
+                    height: "auto",
+                    items: menuOrder.slice(),
+                    onChange: function () {
+                        const isChanged = (list.getKeys().join() !== menuOrder.join());
+                        dialog.getButton("save").setEnabled(isChanged ? 1 : 0);
+                    },
+                });
+            },
+            buttons: [
+                { key: "cancel", text: "Cancel", type: "secondary" },
+                {
+                    key: "save", text: "Save", type: "primary",
+                    onClick: function () {
+                        menuOrder = list.getKeys();
+                        showResult("The new order: " + menuOrder.join(", "));
+                    },
+                },
+            ],
+            onClose: showClose,
+        });
+        dialog.getButton("save").setEnabled(0); // (the order is not changed yet)
     };
 
     // DANGER: a delete, it asks again (two clicks)
@@ -122,13 +289,23 @@
 
     // SUCCESS: after a good result
     const openSuccessAlert = async function () {
-        await Dialog.alert({ titleText: "Uploaded", messageText: "All the 12 files are uploaded.", buttonText: "Done", buttonType: "success" });
+        await Dialog.alert({
+            titleText: "Uploaded",
+            messageText: "All the 12 files are uploaded.",
+            buttonText: "Done",
+            buttonType: "success",
+        });
         showResult("success alert: closed");
     };
 
     // INFO: nothing changes
     const openInfoAlert = async function () {
-        await Dialog.alert({ titleText: "What is new", messageText: "The buttons of the dialogs take the color of their situation now.", buttonText: "Got it", buttonType: "info" });
+        await Dialog.alert({
+            titleText: "What is new",
+            messageText: "The buttons of the dialogs take the color of their situation now.",
+            buttonText: "Got it",
+            buttonType: "info",
+        });
         showResult("info alert: closed");
     };
 
@@ -136,7 +313,7 @@
     const openAllTypes = function () {
         Dialog({
             titleText: "Every button type",
-            messageText: "The situation packages of SmartButton, as the Dialog uses them.",
+            messageText: "The tones of SmartButton, as the Dialog uses them.",
             width: 680, // the card (a number)
             buttons: [
                 { key: "secondary", text: "Cancel", type: "secondary" },
@@ -155,24 +332,58 @@
             titleText: "Rename the file",
             fieldText: "FILE NAME",
             value: "report.pdf",
-            validate: function (text) { return text.trim().endsWith(".pdf") ? "" : "The name must end with .pdf"; },
+            validate: function (text) {
+                if (text.trim().endsWith(".pdf")) return "";
+                return "The name must end with .pdf";
+            },
         });
         showResult("prompt: " + name);
     };
 
-    const createButton = function (text, onClick) {
-        const button = SmartButton({ styleName: "ozdenType1", labelText: text, height: LAUNCH_BUTTON_HEIGHT, style: { box: { color: "white" } }, onClick: onClick }); // white inside (its hover stays gray)
-        return button;
+    // styleName: "ozdenDark": the card, the field and the buttons of a dialog on a dark page
+    const openDarkDialog = async function () {
+        const name = await Dialog.prompt({
+            styleName: "ozdenDark",
+            titleText: "New folder",
+            messageText: "A name for the new folder:",
+            placeholder: "Photos",
+            required: 1,
+        });
+        showResult("Dark dialog: " + name);
     };
+
+    const createButton = function (text, onClick) {
+        return SmartButton({
+            styleName: "ozden",
+            labelText: text,
+            height: LAUNCH_BUTTON_HEIGHT,
+            style: { box: { color: "white" } }, // white inside (its hover stays gray)
+            onClick: onClick,
+        });
+    };
+
+    // The situations: the button type of a dialog, the SmartButton tone of its color, the dialog it opens
+    const SITUATIONS = [
+        { type: "primary", text: "Publish", open: openPublishDialog },
+        { type: "danger", text: "Delete", open: openDeleteConfirm },
+        { type: "warning", text: "Leave", open: openWarningConfirm },
+        { type: "success", text: "Done", open: openSuccessAlert },
+        { type: "info", text: "Details", open: openInfoAlert },
+    ];
 
     // A button in the color of a situation: it opens the dialog of that situation
     const createSituationButton = function (situation) {
-        const styleName = DialogDefaults.style.buttons[situation.type].styleName;
-        const group = VGroup({ hug: 1, align: "center top", gap: 6, clipContent: 0 });
-            SmartButton({ styleName: styleName, labelText: situation.text, height: LAUNCH_BUTTON_HEIGHT, onClick: situation.open });
-            Label({ text: situation.type + " · " + styleName, fontSize: 11, textColor: Black(0.45) });
+        const look = DialogDefaults.style.buttons[situation.type];
+        VGroup({ hug: 1, align: "center top", gap: 6, clipContent: 0 });
+            SmartButton({
+                styleName: look.styleName,
+                tone: look.tone,
+                labelText: situation.text,
+                height: LAUNCH_BUTTON_HEIGHT,
+                onClick: situation.open,
+            });
+            Label({ text: situation.type + " · " + look.tone, fontSize: 11, textColor: Black(0.45) });
         endGroup();
-        return group;
     };
 
     const start = function () {
@@ -183,7 +394,7 @@
 
             Label({ text: "Dialog", fontSize: 26, bold: 1, textColor: Black(0.8) });
 
-            Label({ text: "A dialog for every situation (the button type of the dialog · the SmartButton package)", fontSize: 13, textColor: Black(0.5) });
+            Label({ text: "A dialog for every situation (the button type of the dialog · the SmartButton tone)", fontSize: 13, textColor: Black(0.5) });
 
             HGroup({ hug: 1, gap: 12, wrap: 1, align: "center top", clipContent: 0 });
                 SITUATIONS.forEach(createSituationButton);
@@ -192,6 +403,16 @@
             HGroup({ hug: 1, gap: 10, wrap: 1, clipContent: 0 });
                 createButton("Every button type", openAllTypes);
                 createButton("Dialog.prompt", openPrompt);
+                createButton("A dark dialog", openDarkDialog);
+            endGroup();
+
+            Label({ text: "Dialogs with content", fontSize: 13, textColor: Black(0.5) });
+
+            HGroup({ hug: 1, gap: 10, wrap: 1, align: "center top", clipContent: 0 });
+                createButton("Upload files", openUploadDialog);
+                createButton("Choose", openChoicesDialog);
+                createButton("Edit a text", openEditDialog);
+                createButton("Reorder", openReorderDialog);
             endGroup();
 
             lblResult = Label({ plainText: "-", fontSize: 14, textColor: Black(0.5) });

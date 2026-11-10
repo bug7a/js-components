@@ -13,7 +13,9 @@
     <script src="../basic/scroll-bar.min.js" type="text/javascript" charset="utf-8"></script>
 
     <!-- COMPONENT FILES -->
+    <script src="../comp/smart-button.js" type="text/javascript" charset="utf-8"></script>
     <script src="../comp/toggle.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/scroll-area.js" type="text/javascript" charset="utf-8"></script>
 
     <script>
 
@@ -38,108 +40,105 @@
 
             page.color = "#F4F5F2";
 
-            // BOX: Full screen scrollable container
-            // WHY: page does not scroll. Scrollable content must be inside a Box with scrollY: 1.
-            const scrollBox = startBox(0, 0, "100%", "100%", {
-                color: "transparent",
-                scrollY: 1,
+            // SCROLL AREA: The page
+            // WHY: page does not scroll. A ScrollArea fills the window; its content scrolls when it is taller.
+            ScrollArea({
+                align: "center top",
+                gap: 24,
+                padding: [16, 40],
             });
 
-                // GROUP: Page layout
-                VGroup({
-                    width: "100%",
-                    height: "auto", // Grows with content, so the Box can scroll.
-                    align: "center top",
-                    gap: 24,
-                    padding: [16, 40],
+                // LABEL: Title
+                Label({
+                    text: "Toggle: shapes and marks",
+                    fontSize: 26,
+                    fontFamily: "opensans-bold",
                 });
 
-                    // LABEL: Title
-                    Label({
-                        text: "Toggle: shapes and marks",
-                        fontSize: 26,
-                        fontFamily: "opensans-bold",
-                    });
+                // SAMPLE 1: The shapes
+                startCard("1. Shapes", "A package gives the size and the colors. Off at the left, on at the right.");
+                    addStyleRow("float", "A knob bigger than its track");
+                    addStyleRow("round", "A big knob");
+                    addStyleRow("slim", "A low track");
+                    addStyleRow("outline", "A line around the track when off");
+                    addStyleRow("square", "Small corners");
+                endCard();
 
-                    // SAMPLE 1: The shapes
-                    startCard("1. Shapes", "A package gives the size and the colors. Off at the left, on at the right.");
-                        addStyleRow("float", "A knob bigger than its track");
-                        addStyleRow("round", "A big knob");
-                        addStyleRow("slim", "A low track");
-                        addStyleRow("outline", "A line around the track when off");
-                        addStyleRow("square", "Small corners");
-                    endCard();
+                // SAMPLE 2: The marks
+                startCard("2. Marks", "A check, a cross or a text shows the state.");
+                    addStyleRow("tick", "On the free side of the track");
+                    addStyleRow("badge", "In the knob, on a green or red track");
+                    addStyleRow("label", "A text on the track");
+                endCard();
 
-                    // SAMPLE 2: The marks
-                    startCard("2. Marks", "A check, a cross or a text shows the state.");
-                        addStyleRow("tick", "On the free side of the track");
-                        addStyleRow("badge", "In the knob, on a green or red track");
-                        addStyleRow("label", "A text on the track");
-                    endCard();
+                // SAMPLE 3: Your own texts
+                startCard(
+                    "3. Your own texts",
+                    "onMark, offMark: any short text. A param you give wins over the package. A longer text needs a wider toggle."
+                );
+                    startToggleRow();
+                        addToggle({ styleName: "label", onMark: "YES", offMark: "NO" });
+                        addToggle({ styleName: "label", onMark: "AÇIK", offMark: "KAPALI", width: 92, value: 1 });
+                        addToggle({ styleName: "tick", onMark: "I", offMark: "O", value: 1 });
+                    endGroup();
+                endCard();
 
-                    // SAMPLE 3: Your own texts
-                    startCard("3. Your own texts", "onMark, offMark: any short text. A param you give wins over the package. A longer text needs a wider toggle.");
-                        startToggleRow();
-                            addToggle({ styleName: "label", onMark: "YES", offMark: "NO" });
-                            addToggle({ styleName: "label", onMark: "AÇIK", offMark: "KAPALI", width: 92, value: 1 });
-                            addToggle({ styleName: "tick", onMark: "I", offMark: "O", value: 1 });
-                        endGroup();
-                    endCard();
+                // SAMPLE 4: The place of a mark
+                startCard(
+                    "4. markPlace",
+                    "Any toggle can have marks: \"track\" (the default) or \"knob\". markStyle: size, lineWidth, fontSize, color, selectedColor."
+                );
+                    startToggleRow();
+                        addToggle({ onMark: "check", offMark: "cross", offButtonScale: 1, value: 1 });
+                        addToggle({ styleName: "classic", onMark: "check", offMark: "cross", markPlace: "knob",
+                            markStyle: { color: "#A0A0A0", selectedColor: "#3871E0" }, value: 1 });
+                        addToggle({ styleName: "round", onMark: "check", offMark: "cross", markPlace: "knob",
+                            markStyle: { size: 22, lineWidth: 2.5, color: "#A0A0A0", selectedColor: JADE }, value: 1 });
+                    endGroup();
+                endCard();
 
-                    // SAMPLE 4: The place of a mark
-                    startCard("4. markPlace", "Any toggle can have marks: \"track\" (the default) or \"knob\". markStyle: size, lineWidth, fontSize, color, selectedColor.");
-                        startToggleRow();
-                            addToggle({ onMark: "check", offMark: "cross", offButtonScale: 1, value: 1 });
-                            addToggle({ styleName: "classic", onMark: "check", offMark: "cross", markPlace: "knob",
-                                markStyle: { color: "#A0A0A0", selectedColor: "#3871E0" }, value: 1 });
-                            addToggle({ styleName: "round", onMark: "check", offMark: "cross", markPlace: "knob",
-                                markStyle: { size: 22, lineWidth: 2.5, color: "#A0A0A0", selectedColor: JADE }, value: 1 });
-                        endGroup();
-                    endCard();
+                // SAMPLE 5: Your own colors
+                startCard("5. Your own colors", "backgroundStyle and buttonStyle win over the package; their other keys stay.");
+                    startToggleRow();
+                        addToggle({ styleName: "tick", value: 1, backgroundStyle: { selectedColor: JADE } });
+                        addToggle({ styleName: "label", value: 1, backgroundStyle: { selectedColor: INDIGO } });
+                        addToggle({ styleName: "outline", value: 1, backgroundStyle: { borderColor: JADE, selectedColor: JADE,
+                            selectedBorderColor: JADE }, buttonStyle: { color: JADE } });
+                    endGroup();
+                endCard();
 
-                    // SAMPLE 5: Your own colors
-                    startCard("5. Your own colors", "backgroundStyle and buttonStyle win over the package; their other keys stay.");
-                        startToggleRow();
-                            addToggle({ styleName: "tick", value: 1, backgroundStyle: { selectedColor: JADE } });
-                            addToggle({ styleName: "label", value: 1, backgroundStyle: { selectedColor: INDIGO } });
-                            addToggle({ styleName: "outline", value: 1, backgroundStyle: { borderColor: JADE, selectedColor: JADE,
-                                selectedBorderColor: JADE }, buttonStyle: { color: JADE } });
-                        endGroup();
-                    endCard();
+                // SAMPLE 6: setMarks
+                startCard("6. setMarks(onMark, offMark)", "It changes the marks of a toggle after it is made.");
+                    startToggleRow();
+                        const marksToggle = addToggle({ styleName: "label", value: 1 });
+                        MARK_CHOICES.forEach(function (choice) {
+                            addButton(choice.text, () => marksToggle.setMarks(choice.onMark, choice.offMark));
+                        });
+                    endGroup();
+                endCard();
 
-                    // SAMPLE 6: setMarks
-                    startCard("6. setMarks(onMark, offMark)", "It changes the marks of a toggle after it is made.");
-                        startToggleRow();
-                            const marksToggle = addToggle({ styleName: "label", value: 1 });
-                            MARK_CHOICES.forEach(function (choice) {
-                                addButton(choice.text, () => marksToggle.setMarks(choice.onMark, choice.offMark));
-                            });
-                        endGroup();
-                    endCard();
+                // SAMPLE 7: animated
+                startCard(
+                    "7. animated",
+                    "1 (the default): small motions of a toggle with marks. Click and hold these two, and go over them with the mouse. At the right: animated: 0."
+                );
+                    startToggleRow();
+                        addToggle({ styleName: "tick", animated: 1, value: 1 });
+                        addToggle({ styleName: "badge", animated: 1, value: 1 });
+                        addToggle({ styleName: "badge", animated: 0, value: 1 });
+                    endGroup();
+                endCard();
 
-                    // SAMPLE 7: animated
-                    startCard("7. animated", "1 (the default): small motions of a toggle with marks. Click and hold these two, and go over them with the mouse. At the right: animated: 0.");
-                        startToggleRow();
-                            addToggle({ styleName: "tick", animated: 1, value: 1 });
-                            addToggle({ styleName: "badge", animated: 1, value: 1 });
-                            addToggle({ styleName: "badge", animated: 0, value: 1 });
-                        endGroup();
-                    endCard();
+                // SAMPLE 8: API
+                startCard("8. API", "switch() and setValue(0 / 1), on every toggle of the page.");
+                    HGroup({ width: "100%", height: "auto", align: "left center", gap: 8, wrap: 1 });
+                        addButton("Switch all", () => toggleList.forEach((toggle) => toggle.switch()));
+                        addButton("All off", () => toggleList.forEach((toggle) => toggle.setValue(0)));
+                        addButton("All on", () => toggleList.forEach((toggle) => toggle.setValue(1)));
+                    endGroup();
+                endCard();
 
-                    // SAMPLE 8: API
-                    startCard("8. API", "switch() and setValue(0 / 1), on every toggle of the page.");
-                        HGroup({ width: "100%", height: "auto", align: "left center", gap: 8, wrap: 1 });
-                            addButton("Switch all", () => toggleList.forEach((toggle) => toggle.switch()));
-                            addButton("All off", () => toggleList.forEach((toggle) => toggle.setValue(0)));
-                            addButton("All on", () => toggleList.forEach((toggle) => toggle.setValue(1)));
-                        endGroup();
-                    endCard();
-
-                endGroup();
-
-            endBox();
-
-            if (typeof ScrollBar !== "undefined") ScrollBar({ scrollableBox: scrollBox });
+            endGroup();
 
         };
 
@@ -160,7 +159,12 @@
         const addStyleRow = function (styleName, description) {
             HGroup({ width: "100%", height: "auto", align: "left center", gap: 16, wrap: 1, clipContent: 0 });
                 VGroup({ width: STYLE_NAME_WIDTH, height: "auto", align: "left top", gap: 2, grow: 1 });
-                    Label({ plainText: "\"" + styleName + "\"", fontSize: 15, fontFamily: "opensans-bold", textColor: Black(0.75) });
+                    Label({
+                        plainText: "\"" + styleName + "\"",
+                        fontSize: 15,
+                        fontFamily: "opensans-bold",
+                        textColor: Black(0.75),
+                    });
                     Label({ plainText: description, width: "100%", fontSize: 12, textColor: Black(0.45) });
                 endGroup();
                 HGroup({ hug: 1, align: "left center", gap: 20, clipContent: 0 });
@@ -170,10 +174,9 @@
             endGroup();
         };
 
+        // A button of the sample (SmartButton, its gray)
         const addButton = function (text, onClick) {
-            const btn = Button({ text: text, width: "auto", height: 40, fontSize: 15, padding: [14, 0] });
-            btn.on("click", onClick);
-            return btn;
+            return SmartButton({ labelText: text, onClick: onClick });
         };
 
         // GROUP: A card with a title and a short description.

@@ -14,12 +14,18 @@
     <script src="../basic/scroll-bar.min.js" type="text/javascript" charset="utf-8"></script>
 
     <!-- COMPONENT FILES -->
-    <script src="../comp/search-input-v2.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/search-input.js" type="text/javascript" charset="utf-8"></script>
     <script src="../comp/search-results.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/scroll-area.js" type="text/javascript" charset="utf-8"></script>
 
     <script>
 
         /* Bismillah */
+
+        // SearchResults (comp/search-results.js): the result list under a SearchInput, in the default and the dark look; the arrows, Enter and Escape work in it.
+
+        const CARD_MAX_WIDTH = 600;
+        const PAGE_SIDE_PADDING = 16; // px: the sides of the page on a phone
 
         // *** VARIABLES:
         let lightInput, lightResults, lblLight;
@@ -27,31 +33,31 @@
 
         // DATA: Some rows to search in.
         const DATA = [
-            { group: "Pages", text: "Dashboard", desc: "Page" },
-            { group: "Pages", text: "Products", desc: "Page" },
-            { group: "Pages", text: "Orders", desc: "Page" },
-            { group: "Pages", text: "Settings", desc: "Page" },
-            { group: "Users", text: "Ada Lovelace", desc: "ada@example.com · Admin" },
-            { group: "Users", text: "Grace Hopper", desc: "grace@example.com · Editor" },
-            { group: "Users", text: "Alan Turing", desc: "alan@example.com · Viewer" },
-            { group: "Users", text: "Katherine Johnson", desc: "katherine@example.com · Admin" },
-            { group: "Orders", text: "#1042 · Ada Lovelace", desc: "$248.00 · Paid" },
-            { group: "Orders", text: "#1043 · Alan Turing", desc: "$92.50 · Shipped" },
-            { group: "Orders", text: "#1044 · Grace Hopper", desc: "$1,120.00 · Pending" },
-            { group: "Products", text: "Aluminium Frame 40x40", desc: "SKU-1001 · $12.40" },
-            { group: "Products", text: "Steel Bracket", desc: "SKU-1002 · $3.10" },
-            { group: "Products", text: "Rubber Gasket <M8>", desc: "SKU-1003 · $0.80" },
-            { group: "Products", text: "Ball Bearing 6202", desc: "SKU-1004 · $2.25" },
-            { group: "Products", text: "Linear Rail 500mm", desc: "SKU-1005 · $48.00" },
-            { group: "Products", text: "Timing Belt GT2", desc: "SKU-1006 · $6.90" },
-            { group: "Products", text: "Stepper Motor NEMA17", desc: "SKU-1007 · $18.50" },
+            { group: "Pages", text: "Dashboard", description: "Page" },
+            { group: "Pages", text: "Products", description: "Page" },
+            { group: "Pages", text: "Orders", description: "Page" },
+            { group: "Pages", text: "Settings", description: "Page" },
+            { group: "Users", text: "Ada Lovelace", description: "ada@example.com · Admin" },
+            { group: "Users", text: "Grace Hopper", description: "grace@example.com · Editor" },
+            { group: "Users", text: "Alan Turing", description: "alan@example.com · Viewer" },
+            { group: "Users", text: "Katherine Johnson", description: "katherine@example.com · Admin" },
+            { group: "Orders", text: "#1042 · Ada Lovelace", description: "$248.00 · Paid" },
+            { group: "Orders", text: "#1043 · Alan Turing", description: "$92.50 · Shipped" },
+            { group: "Orders", text: "#1044 · Grace Hopper", description: "$1,120.00 · Pending" },
+            { group: "Products", text: "Aluminium Frame 40x40", description: "SKU-1001 · $12.40" },
+            { group: "Products", text: "Steel Bracket", description: "SKU-1002 · $3.10" },
+            { group: "Products", text: "Rubber Gasket <M8>", description: "SKU-1003 · $0.80" },
+            { group: "Products", text: "Ball Bearing 6202", description: "SKU-1004 · $2.25" },
+            { group: "Products", text: "Linear Rail 500mm", description: "SKU-1005 · $48.00" },
+            { group: "Products", text: "Timing Belt GT2", description: "SKU-1006 · $6.90" },
+            { group: "Products", text: "Stepper Motor NEMA17", description: "SKU-1007 · $18.50" },
         ];
 
         const findResults = function (text) {
             const query = text.trim().toLowerCase();
             if (!query) return [];
             return DATA.filter(function (row) {
-                return (row.text + " " + row.desc).toLowerCase().includes(query);
+                return (row.text + " " + row.description).toLowerCase().includes(query);
             });
         };
 
@@ -59,60 +65,48 @@
 
             page.color = "#F4F5F2";
 
-            // BOX: Full screen scrollable container
-            // WHY: page does not scroll. Scrollable content must be inside a Box with scrollY: 1.
-            startBox(0, 0, "100%", "100%", { color: "transparent", scrollY: 1 });
+            // SCROLL AREA: The page (comp/scroll-area.js)
+            // WHY: page does not scroll. A ScrollArea fills the window; its content scrolls when it is taller.
+            ScrollArea({ align: "center top", gap: 30, padding: [PAGE_SIDE_PADDING, 50], useScrollBar: 0 });
 
-                VGroup({ width: "100%", height: "auto", align: "center top", gap: 30, padding: 50 });
+                Label({ text: "Search Results", fontSize: 26, fontFamily: "opensans-bold" });
 
-                    Label({ text: "Search Results", fontSize: 26, fontFamily: "opensans-bold" });
+                // SAMPLE 1: Classic
+                startCard(
+                    "1. Default (classic), matchAnchorWidth: 1",
+                    "SearchInput \"ozden\". Type \"a\" or \"ord\". ArrowUp / ArrowDown move, Enter opens, Escape closes. The list is as wide as the search box and scrolls with ScrollBar."
+                );
 
-                    // SAMPLE 1: Classic
-                    startCard("1. Default (classic)", "Type \"a\" or \"ord\". ArrowUp / ArrowDown move, Enter opens, Escape closes. The list scrolls with ScrollBar.");
+                    // SEARCH INPUT: comp/search-input.js, the package "ozden"
+                    lightInput = SearchInput({
+                        styleName: "ozden",
+                        width: "100%",
+                        position: "relative", // WHY: It is created in a group.
+                        placeholder: "Search pages, users...", // WHY short: the 20 px text of ozden on a 390 px phone
+                    });
 
-                        // SEARCH INPUT: comp/search-input-v2.js
-                        lightInput = SearchInput({
-                            width: "100%",
-                            height: 44,
-                            position: "relative", // WHY: It is created in a group.
-                            placeholderText: "Search pages, users, orders, products...",
-                            fontSize: 15,
-                            searchIconSize: 18,
-                            round: 8,
-                            border: 1,
-                            borderColor: Black(0.15),
-                            borderBottomStyle: "",
-                        });
+                    lblLight = Label({ text: "Nothing was opened yet.", fontSize: 14, textColor: Black(0.5) });
 
-                        lblLight = Label({ text: "Nothing was opened yet.", fontSize: 14, textColor: Black(0.5) });
+                endCard();
 
-                    endCard();
+                // SAMPLE 2: Dark, left aligned
+                startCard(
+                    "2. styleName: \"dark\", matchAnchorWidth: 1",
+                    "SearchInput \"ozdenDark\". The same component with the dark package, as wide as the search box.",
+                    1
+                );
 
-                    // SAMPLE 2: Dark, left aligned
-                    startCard("2. styleName: \"dark\", anchorAlign: \"left\"", "The same component with the dark package, lined up with the left edge of the input.", 1);
+                    // SEARCH INPUT: the package "ozdenDark"
+                    darkInput = SearchInput({
+                        styleName: "ozdenDark",
+                        width: "100%",
+                        position: "relative",
+                        placeholder: "Search...",
+                    });
 
-                        darkInput = SearchInput({
-                            width: "100%",
-                            height: 44,
-                            position: "relative",
-                            placeholderText: "Search...",
-                            fontSize: 15,
-                            searchIconSize: 18,
-                            round: 8,
-                            color: "#141414",
-                            textColor: "#EBEBEB",
-                            placeholderColor: White(0.35), // WHY: The browser colour is not readable on a dark box.
-                            invertIconColor: 1, // WHY: The icons are black, the box is dark.
-                            border: 1,
-                            borderColor: White(0.15),
-                            borderBottomStyle: "",
-                        });
+                endCard();
 
-                    endCard();
-
-                endGroup();
-
-            endBox();
+            endGroup();
 
             // *** RESULT LISTS:
             // NOTE: They are created here, inside the scrolling Box, but a SearchResults always puts
@@ -120,23 +114,21 @@
 
             lightResults = SearchResults({
                 anchor: lightInput,
-                anchorAlign: "left",
-                maxWidth: 520,
+                matchAnchorWidth: 1, // as wide as the search box: both edges meet (on a phone too)
                 onSelect: function (self, item) {
                     lblLight.text = "Opened: " + item.text + "  (" + item.group + ")";
                     clearSearchInput(lightInput);
                 },
             });
             lightResults.attachTo(lightInput.txtSearch.inputElement);
-            // NOTE: SearchInput gives the text in lower case. The raw text is in txtSearch.text.
-            lightInput.onSearch = function (text, self) {
-                lightResults.setItems(findResults(text), self.txtSearch.text);
+            // NOTE: getSearchText() is the text in lower case, value the text as it is typed.
+            lightInput.onChange = function (self) {
+                lightResults.setItems(findResults(self.getSearchText()), self.value);
             };
 
             darkResults = SearchResults({
                 anchor: darkInput,
-                anchorAlign: "left",
-                maxWidth: 520,
+                matchAnchorWidth: 1,
                 styleName: "dark",
                 onSelect: function (self, item) {
                     println("Opened: " + item.text);
@@ -144,8 +136,8 @@
                 },
             });
             darkResults.attachTo(darkInput.txtSearch.inputElement);
-            darkInput.onSearch = function (text, self) {
-                darkResults.setItems(findResults(text), self.txtSearch.text);
+            darkInput.onChange = function (self) {
+                darkResults.setItems(findResults(self.getSearchText()), self.value);
             };
 
         };
@@ -154,7 +146,7 @@
 
         const startCard = function (title, description = "", isDark = 0) {
             VGroup({
-                width: 600,
+                width: "100%",
                 height: "auto",
                 align: "left top",
                 gap: 16,
@@ -163,12 +155,17 @@
                 round: 10,
                 border: 1,
                 borderColor: (isDark) ? "#1C1C1B" : Black(0.1),
+                // WHY: basic.js has no maxWidth prop (a phone: the full width)
+                css: { alignItems: "stretch", maxWidth: CARD_MAX_WIDTH + "px" },
             });
-            that.elem.style.alignItems = "stretch";
             Label({ text: title, fontSize: 14, textColor: (isDark) ? White(0.5) : Black(0.45) });
             if (description) {
-                Label({ text: description, fontSize: 13, textColor: (isDark) ? White(0.4) : Black(0.35) });
-                that.elem.style.marginTop = "-10px";
+                Label({
+                    text: description,
+                    fontSize: 13,
+                    textColor: (isDark) ? White(0.4) : Black(0.35),
+                    css: { marginTop: "-10px" },
+                });
             }
         };
 
@@ -178,7 +175,7 @@
 
         // Cleans a SearchInput after a result was opened. (The clear (x) icon goes with the text.)
         const clearSearchInput = function (input) {
-            input.setText("");
+            input.setValue("", 1);
             input.imgClearIcon.opacity = 0;
             input.imgClearIcon.clickable = 0;
             input.txtSearch.inputElement.blur();

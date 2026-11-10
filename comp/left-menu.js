@@ -11,14 +11,23 @@ UI COMPONENT TEMPLATE
   the first tap opens the menu (it does not select an item, because the texts are not visible when it is closed),
   the second tap selects the item and closes the menu. A tap outside the menu also closes it.
 -- openOnClick: "auto" (touch device: tap, mouse: hover), 1: always tap, 0: always hover, "direct": a tap selects at
-   once and the menu stays closed (2026-11-02, for a short menu with clear icons).
+   once and the menu stays closed (for a short menu with clear icons).
 -- itemHeight: the height of a button item. A page fitted with page.fit() is zoomed: for a finger give Ex: 44 / page.zoom.
 -- leftMenu.setOpenOnClick(1) changes it later.
+- Style packages: "dark" (default: a dark menu with a red selection) and "light" (for a light
+  page: a light menu with a line at its right side, a soft shadow while it is open over the page, the cyan of
+  SmartButton in light tones, dark icons and a dark scroll bar). A package is a package of params (LeftMenu.styles):
+  LeftMenu({ styleName: "light" }), LeftMenu({ styleName: "light", selectedColor: "#DCEBEC" }) (a param wins).
+  Samples: 02-comp-examples/left-menu.htm (dark), left-menu-2.htm (light).
+- An item: { key, type: "button", text, iconFile, dontSelect } (dontSelect: 1: a click opens it, the selection stays)
+  or a title { key, type: "header", text }. addItemToTop(item) / addItemToBottom(item) add one later.
 
 Started Date: December 2024
-Developer: Bugra Ozden
-Email: bugra.ozden@gmail.com
 Webpage: https://bug7a.github.io/js-components/
+
+Copyright 2020-2026 Bugra Ozden <bugra.ozden@gmail.com> (https://bug7a.github.io/)
+Licensed under the Apache License, Version 2.0
+SPDX-License-Identifier: Apache-2.0
 
 */
 
@@ -36,14 +45,23 @@ const LeftMenuDefaults = {
     titleColor: "#8E342F",
     textColor: "rgba(255, 255, 255, 0.6)",           // Text color
     selectedTextColor: "rgba(255, 255, 255, 0.95)",
+    allowHtml: 0, // 1: the texts of the items are HTML (only for your own texts)
     invertIconColor: 1,
+    lineColor: "",                // A line at the right side of the menu ("": none)
+    expandedShadow: "",           // The shadow of the open menu over the page ("": none). Ex: "6px 0 18px rgba(0, 0, 0, 0.08)"
+    scrollBarColor: "#FFFFFF",    // The bar of the scroll of the items (a dark one on a light menu)
     openOnClick: "auto",          // "auto": Tap on a touch device, hover with a mouse. 1: Always tap, 0: Always hover.
-    items: [],                    // Menu items array
-    onItemClick: function(item) {}, // Callback when item is clicked
-    onMenuToggle: function(isExpanded) {}, // Callback when menu expands/collapses
+    items: [],                    // [{ key, type: "button", text, iconFile }, { key, type: "header", text }]
+    onItemClick: function(self, item) {}, // Callback when item is clicked
+    onMenuToggle: function(self, isExpanded) {}, // Callback when menu expands/collapses
+    styleName: "dark",            // "dark", "light" or a name added to LeftMenu.styles
+    style: {},                    // WHY: the look is in the flat params above; the packages are packages of params (LeftMenu.styles)
 };
 
 const LeftMenu = function(params = {}) {
+
+    // Merge style package: your params > LeftMenu.styles[styleName] (a package of params) > LeftMenuDefaults (dark)
+    basic.applyStylePackage(params, LeftMenu.styles, LeftMenuDefaults);
 
     // Merge params:
     mergeIntoIfMissing(params, LeftMenuDefaults);
@@ -65,6 +83,12 @@ const LeftMenu = function(params = {}) {
     box.state = "collapsed";      // "collapsed", "expanded"
 
     // *** PRIVATE FUNCTIONS:
+
+    const setText = function (label, text) {
+        const value = (text === undefined || text === null) ? "" : String(text);
+        if (box.allowHtml == 1) label.text = value;
+        else label.plainText = value;
+    };
 
     // The look of a button item: "normal", "hover" or "selected" (a gradient from the left)
     const paintButtonItem = function(buttonBox, look) {
@@ -107,7 +131,7 @@ const LeftMenu = function(params = {}) {
                     color: "transparent",
                     opacity: ICON_OPACITY,
                 });
-                buttonBox.icon.load(item.icon);
+                buttonBox.icon.load(item.iconFile);
 
                 if (box.invertIconColor == 1) {
                     that.css.filter = "invert(100%)";
@@ -115,11 +139,11 @@ const LeftMenu = function(params = {}) {
 
                 // Text label (hidden when collapsed)
                 buttonBox.textLabel = Label({
-                    text: item.text,
                     textColor: box.textColor,
                     fontSize: 18,
                     color: "transparent",
                 });
+                setText(buttonBox.textLabel, item.text);
 
             endGroup();
 
@@ -141,7 +165,7 @@ const LeftMenu = function(params = {}) {
                 if (!item.dontSelect) {
                     selectItem(item.key);
                 }
-                box.onItemClick(item);
+                box.onItemClick(box, item);
             }
 
             // Touch device: the open menu must not stay over the page.
@@ -189,12 +213,12 @@ const LeftMenu = function(params = {}) {
 
                 // Header text
                 const headerText = Label({
-                    text: item.text,
                     textColor: box.titleColor,
                     fontSize: 12,
                     color: box.backgroundColor,
                     padding: [12, 0],
                 });
+                setText(headerText, item.text);
                 headerText.css = { fontWeight: "bold", textTransform: "uppercase" };
 
             endAutoLayout();
@@ -207,7 +231,7 @@ const LeftMenu = function(params = {}) {
 
     box.clearSelection = function() {
 
-        // Önceki seçili öğeyi bırak
+        // The item selected before is not selected any more
         if (selectedItemKey) {
             const prev = itemElements.find(el => el.data.key === selectedItemKey);
             if (prev && prev.data.type === "button") {
@@ -220,13 +244,13 @@ const LeftMenu = function(params = {}) {
 
     }
 
-    // Bir öğeyi seç (görsel durumu güncelle)
+    // Select an item (its look)
     const selectItem = function(itemKey) {
 
-        // Önceki seçili öğeyi bırak
+        // The item selected before is not selected any more
         box.clearSelection();
 
-        // Yeni öğeyi seç
+        // Select the new item
         const current = itemElements.find(el => el.data.key === itemKey);
         if (current && current.data.type === "button") {
             paintButtonItem(current, "selected");
@@ -240,23 +264,30 @@ const LeftMenu = function(params = {}) {
     // Expand menu
     const expandMenu = function() {
         if (isExpanded) return;
-        
+
         isExpanded = 1;
         box.state = "expanded";
         box.width = box.expandedWidth;
+        paintShadow();
 
-        box.onMenuToggle(1);
+        box.onMenuToggle(box, 1);
     };
 
     // Collapse menu
     const collapseMenu = function() {
         if (!isExpanded) return;
-        
+
         isExpanded = 0;
         box.state = "collapsed";
         box.width = WIDTH;
+        paintShadow();
 
-        box.onMenuToggle(0);
+        box.onMenuToggle(box, 0);
+    };
+
+    // The shadow of the open menu over the page (expandedShadow)
+    const paintShadow = function() {
+        box.boxShadow = (isExpanded && box.expandedShadow) ? box.expandedShadow : "";
     };
 
     // Is this a touch device? (No mouse hover.)
@@ -329,7 +360,7 @@ const LeftMenu = function(params = {}) {
         const element = item.type === "button" ? createButtonItem(item) : createHeaderItem(item);
         itemElements.push(element);
         
-        // UI'ya alta ekle
+        // Added at the bottom of the menu
         box.bottomBox.add(element);
 
         return element;
@@ -339,7 +370,7 @@ const LeftMenu = function(params = {}) {
     // Remove item by key
     box.removeItem = function(itemKey) {
 
-        if (itemKey === selectedItemKey) box.clearSelection(); // Eğer seçili olan silinmeye çalışıyor ise, önce seçimi kaldır.
+        if (itemKey === selectedItemKey) box.clearSelection(); // The selected item is removed: the selection is cleared first.
         
         const index = itemList.findIndex(item => item.key === itemKey);
         if (index !== -1) {
@@ -421,11 +452,11 @@ const LeftMenu = function(params = {}) {
             bar_borderColor: "rgba(0, 0, 0, 1)",
             bar_width: 4,
             bar_mouseOverWidth: 4,
-            bar_mouseOverColor: "#FFFFFF",
+            bar_mouseOverColor: box.scrollBarColor,
             bar_opacity: 0.4,
             bar_mouseOverOpacity: 0.9,
             bar_padding: 2,
-            bar_color: "#FFFFFF",
+            bar_color: box.scrollBarColor,
             neverHide: 0,
             showDots: 1,
         });
@@ -453,6 +484,13 @@ const LeftMenu = function(params = {}) {
 
     endGroup();
 
+    // BOX: The line at the right side (lineColor)
+    // WHY a box made last (not a border of the menu): the colors of the selected item covered a line under them, and a
+    //     border takes a px of the 40 px of the icons
+    if (box.lineColor) {
+        box.line = Box({ right: 0, top: 0, width: 1, height: "100%", color: box.lineColor });
+    }
+
     // *** OBJECT INIT CODE:
     
     box.setOpenOnClick(box.openOnClick);
@@ -477,5 +515,34 @@ const LeftMenu = function(params = {}) {
     box.listenTo(document, "pointerdown", onDocumentPointerDown, true); // NOTE: Removed by remove().
 
     return endObject(box);
+
+};
+
+// *** STYLE PACKAGES:
+// USAGE: LeftMenu({ styleName: "light" })
+// USAGE: LeftMenu({ styleName: "light", selectedColor: "#DCEBEC" }) // A param you give wins over the package.
+// NOTE: Every package has "style: {}": the mark of a package of params (basic.js v26.10.27). A package needs only
+//       the params that differ from LeftMenuDefaults (dark).
+LeftMenu.styles = {
+
+    // The look of LeftMenuDefaults: a dark menu with a red selection.
+    dark: { style: {} },
+
+    // For a light page: a light menu with a line at its right side and a soft shadow while it is
+    // open over the page; the cyan of SmartButton (#5BBAC1) in light tones;
+    // dark icons and a dark scroll bar.
+    light: {
+        style: {},
+        backgroundColor: "#F7F7F5",
+        hoverColor: Black(0.05),
+        selectedColor: "#D1ECEE", // (#5BBAC1, 28 % on white)
+        titleColor: "#3D8F96", // (a darker #5BBAC1: it reads on the light menu)
+        textColor: Black(0.6),
+        selectedTextColor: Black(0.88),
+        invertIconColor: 0,
+        lineColor: Black(0.08),
+        expandedShadow: "6px 0 18px " + Black(0.08),
+        scrollBarColor: "#373836",
+    },
 
 };

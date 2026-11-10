@@ -13,16 +13,16 @@
     <script src="../basic/basic.js" type="text/javascript" charset="utf-8"></script>
     <script src="../basic/scroll-bar.js" type="text/javascript" charset="utf-8"></script>
 
-    <script src="../comp/search-input-v2.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/search-input.js" type="text/javascript" charset="utf-8"></script>
     <script src="../comp/smart-button.js" type="text/javascript" charset="utf-8"></script>
     <script src="../comp/item-list.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/scroll-area.js" type="text/javascript" charset="utf-8"></script>
 
     <script>
 
     /* Bismillah */
 
-    // ItemList (comp-m4): section rows with a search and the pressed flash (the Usage Examples list of
-    // javascript-mobile-app-template), and animated rows: addItem / removeItem with a FLIP motion.
+    // ItemList: section rows with a search and the pressed flash, and animated rows: addItem / removeItem with a FLIP motion.
 
     const PAGE_COLOR = "indianred";
     const CONTENT_WIDTH = 460; // px: the column of the page on a wide screen
@@ -32,29 +32,29 @@
     const BUTTON_STYLE = { label: { fontSize: 16 } };
     const FOOD_PATH = "../assets/fruids/";
 
-    // A section is an item { type: "section", title }: the items under it (until the next section) are its items.
+    // A section is an item { type: "section", text }: the items under it (until the next section) are its items.
     const EXAMPLES = [
-        { type: "section", title: "UI COMPONENTS" },
-        { title: "Toggle", desc: "comp/toggle.js" },
-        { title: "Page Control", desc: "comp/page-control.js" },
-        { title: "Tabs", desc: "comp/tabs.js" },
-        { title: "Search Input", desc: "comp/search-input-v2.js" },
-        { title: "Action Button", desc: "comp/action-button.js" },
-        { title: "Progress Bar", desc: "comp/progress-bar.js" },
-        { title: "Web View", desc: "comp/web-view.js" },
-        { type: "section", title: "VIEWS" },
-        { title: "defaultView", desc: "pages/default-example.js" },
-        { title: "secondView", desc: "pages/second-example.js" },
-        { title: "smallView", desc: "App.openSheet()" },
-        { type: "section", title: "PAGE TEMPLATES" },
-        { title: "Select Item Dialog", desc: "pages/color-dialog.js" },
-        { title: "Edit Item Dialog", desc: "pages/edit-item-dialog.js" },
-        { title: "Template A", desc: "pages/template-a.js" },
-        { title: "Lock Screen", desc: "pages/lock.js" },
-        { type: "section", title: "TECHNIQUES" },
-        { title: "Autolayout Group", desc: "VGroup, HGroup" },
-        { title: "Scrolling Text", desc: "comp/scrolling-text.js" },
-        { title: "HTML Page", desc: "html/privacy.htm" },
+        { type: "section", text: "UI COMPONENTS" },
+        { text: "Toggle", description: "comp/toggle.js" },
+        { text: "Page Control", description: "comp/page-control.js" },
+        { text: "Tabs", description: "comp/tabs.js" },
+        { text: "Search Input", description: "comp/search-input.js" },
+        { text: "Action Button", description: "comp/action-button.js" },
+        { text: "Progress Bar", description: "comp/progress-bar.js" },
+        { text: "Web View", description: "comp/web-view.js" },
+        { type: "section", text: "VIEWS" },
+        { text: "defaultView", description: "pages/default-example.js" },
+        { text: "secondView", description: "pages/second-example.js" },
+        { text: "smallView", description: "App.openSheet()" },
+        { type: "section", text: "PAGE TEMPLATES" },
+        { text: "Select Item Dialog", description: "pages/color-dialog.js" },
+        { text: "Edit Item Dialog", description: "pages/edit-item-dialog.js" },
+        { text: "Template A", description: "pages/template-a.js" },
+        { text: "Lock Screen", description: "pages/lock.js" },
+        { type: "section", text: "TECHNIQUES" },
+        { text: "Autolayout Group", description: "VGroup, HGroup" },
+        { text: "Scrolling Text", description: "comp/scrolling-text.js" },
+        { text: "HTML Page", description: "html/privacy.htm" },
     ];
 
     // The rows of the Usage Examples tab: white texts on indianred, a dark flash under the finger.
@@ -87,28 +87,34 @@
 
     // The foods of the animated list. section: the key of the section it goes under.
     const FOODS = [
-        { key: "apple", title: "Apple", desc: "Fruit", iconFile: FOOD_PATH + "elma.png", section: FRUIT },
-        { key: "banana", title: "Banana", desc: "Fruit", iconFile: FOOD_PATH + "muz.png", section: FRUIT },
-        { key: "carrot", title: "Carrot", desc: "Vegetable", iconFile: FOOD_PATH + "havuc.png", section: VEGETABLE },
-        { key: "strawberry", title: "Strawberry", desc: "Fruit", iconFile: FOOD_PATH + "cilek.png", section: FRUIT },
-        { key: "lemon", title: "Lemon", desc: "Fruit", iconFile: FOOD_PATH + "limon.png", section: FRUIT },
-        { key: "tomato", title: "Tomato", desc: "Vegetable", iconFile: FOOD_PATH + "domates.png", section: VEGETABLE },
-        { key: "eggplant", title: "Eggplant", desc: "Vegetable", iconFile: FOOD_PATH + "patlican.png", section: VEGETABLE },
-        { key: "watermelon", title: "Watermelon", desc: "Fruit", iconFile: FOOD_PATH + "karpuz.png", section: FRUIT },
-        { key: "pepper", title: "Green pepper", desc: "Vegetable", iconFile: FOOD_PATH + "yesilbiber.png", section: VEGETABLE },
+        { key: "apple", text: "Apple", description: "Fruit", iconFile: FOOD_PATH + "elma.png", section: FRUIT },
+        { key: "banana", text: "Banana", description: "Fruit", iconFile: FOOD_PATH + "muz.png", section: FRUIT },
+        { key: "carrot", text: "Carrot", description: "Vegetable", iconFile: FOOD_PATH + "havuc.png", section: VEGETABLE },
+        { key: "strawberry", text: "Strawberry", description: "Fruit", iconFile: FOOD_PATH + "cilek.png", section: FRUIT },
+        { key: "lemon", text: "Lemon", description: "Fruit", iconFile: FOOD_PATH + "limon.png", section: FRUIT },
+        { key: "tomato", text: "Tomato", description: "Vegetable", iconFile: FOOD_PATH + "domates.png", section: VEGETABLE },
+        { key: "eggplant", text: "Eggplant", description: "Vegetable", iconFile: FOOD_PATH + "patlican.png", section: VEGETABLE },
+        { key: "watermelon", text: "Watermelon", description: "Fruit", iconFile: FOOD_PATH + "karpuz.png", section: FRUIT },
+        { key: "pepper", text: "Green pepper", description: "Vegetable", iconFile: FOOD_PATH + "yesilbiber.png", section: VEGETABLE },
     ];
-    const START_FOOD_COUNT = 3; // Apple, Banana, Carrot: the first Add (Strawberry) goes over VEGETABLES, the rows under it move
+    // Apple, Banana, Carrot: the first Add (Strawberry) goes over VEGETABLES, the rows under it move
+    const START_FOOD_COUNT = 3;
 
     const ItemListSample = {};
 
     // A row of the Usage Examples: the name on the left, its file on the right.
     // (createItemView is called only for the items: the sections are drawn by ItemList, style.section.)
     ItemListSample.createExampleRow = function (item) {
-        Label({ plainText: item.title, fontSize: 19, textColor: White(0.85), ellipsis: 1 });
-        that.grow = 1;
-        that.css.minWidth = "0px"; // WHY: A long name ends with "..." before the file name.
-        Label({ plainText: item.desc, fontSize: 12, textColor: White(0.65) });
-        that.shrink = 0;
+        // WHY: A long name ends with "..." before the file name.
+        Label({
+            plainText: item.text,
+            fontSize: 19,
+            textColor: White(0.85),
+            ellipsis: 1,
+            grow: 1,
+            css: { minWidth: "0px" },
+        });
+        Label({ plainText: item.description, fontSize: 12, textColor: White(0.65), shrink: 0 });
     };
 
     // The items of the animated list: the two sections and the first foods under them.
@@ -117,9 +123,9 @@
         const underSection = function (sectionKey) {
             return foods.filter(function (food) { return food.section === sectionKey; });
         };
-        return [{ type: "section", key: FRUIT, title: "FRUITS" }]
+        return [{ type: "section", key: FRUIT, text: "FRUITS" }]
             .concat(underSection(FRUIT))
-            .concat([{ type: "section", key: VEGETABLE, title: "VEGETABLES" }])
+            .concat([{ type: "section", key: VEGETABLE, text: "VEGETABLES" }])
             .concat(underSection(VEGETABLE));
     };
 
@@ -137,10 +143,24 @@
 
     // GROUP: A white card with a title and a short description
     ItemListSample.startCard = function (title, description) {
-        const card = VGroup({ width: "100%", height: "auto", align: "left top", gap: 12, padding: 16, color: "white", round: 14 });
-        that.css = { alignItems: "stretch" };
+        const card = VGroup({
+            width: "100%",
+            height: "auto",
+            align: "left top",
+            gap: 12,
+            padding: 16,
+            color: "white",
+            round: 14,
+            css: { alignItems: "stretch" },
+        });
             Label({ plainText: title, fontSize: 15, textColor: Black(0.8), bold: 1 });
-            Label({ plainText: description, fontSize: 13, textColor: Black(0.5), width: "100%", css: { lineHeight: "1.4" } });
+            Label({
+                plainText: description,
+                fontSize: 13,
+                textColor: Black(0.5),
+                width: "100%",
+                css: { lineHeight: "1.4" },
+            });
         return card;
     };
 
@@ -148,63 +168,87 @@
 
         page.color = PAGE_COLOR;
 
-        const pageBox = startBox(0, 0, "100%", "100%", { color: "transparent", scrollY: 1 });
+        ScrollArea({ align: "center top", gap: 16, padding: [16, 24] });
 
-            VGroup({ width: "100%", height: "auto", align: "center top", gap: 16, padding: [16, 24] });
+            // GROUP: The column of the page
+            VGroup({
+                width: "100%",
+                height: "auto",
+                align: "left top",
+                gap: 16,
+                css: { maxWidth: CONTENT_WIDTH + "px", alignItems: "stretch" },
+            });
 
-                // GROUP: The column of the page
-                VGroup({ width: "100%", height: "auto", align: "left top", gap: 16 });
-                that.css = { maxWidth: CONTENT_WIDTH + "px", alignItems: "stretch" };
+                Label({ plainText: "ItemList: sections and motion", fontSize: 24, textColor: White(0.95), bold: 1 });
+                Label({
+                    plainText: "The Usage Examples list of the mobile template: { type: \"section\" } rows, a search that keeps the section of a match, and a dark flash on a click (style.pressed).",
+                    fontSize: 13,
+                    textColor: White(0.8),
+                    width: "100%",
+                    css: { lineHeight: "1.4" },
+                });
 
-                    Label({ plainText: "ItemList: sections and motion", fontSize: 24, textColor: White(0.95), bold: 1 });
-                    Label({ plainText: "The Usage Examples list of the mobile template: { type: \"section\" } rows, a search that keeps the section of a match, and a dark flash on a click (style.pressed).", fontSize: 13, textColor: White(0.8), width: "100%", css: { lineHeight: "1.4" } });
+                // LIST: Usage Examples (sections, search, the pressed flash)
+                ItemList({
+                    width: "100%",
+                    height: EXAMPLES_HEIGHT,
+                    items: EXAMPLES,
+                    selection: "none",
+                    showSearch: 1,
+                    searchParams: { placeholder: "Search", searchIconOpacity: 0.4 },
+                    style: EXAMPLES_STYLE,
+                    createItemView: ItemListSample.createExampleRow,
+                    onItemClick: function (self, item) {
+                        lblOpened.plainText = "Opened: " + item.text + " (" + item.description + ")";
+                    },
+                });
+                const lblOpened = Label({ plainText: "Click a row: it flashes.", fontSize: 13, textColor: White(0.85) });
 
-                    // LIST: Usage Examples (sections, search, the pressed flash)
-                    ItemList({
+                // GROUP: Card of the animated list
+                ItemListSample.startCard(
+                    "animated: 1 · addItem / removeItem",
+                    "The rows move to their new places (FLIP), a new row fades in, a removed one fades out and then leaves. A section without items goes too. The count changes at once."
+                );
+
+                    const foodList = ItemList({
                         width: "100%",
-                        height: EXAMPLES_HEIGHT,
-                        items: EXAMPLES,
-                        selection: "none",
-                        showSearch: 1,
-                        searchParams: { placeholderText: "Search", searchIconOpacity: 0.4 },
-                        style: EXAMPLES_STYLE,
-                        createItemView: ItemListSample.createExampleRow,
-                        onItemClick: function (self, item) {
-                            lblOpened.plainText = "Opened: " + item.title + " (" + item.desc + ")";
-                        },
+                        height: FOODS_HEIGHT,
+                        styleName: "light",
+                        animated: 1,
+                        items: ItemListSample.getStartFoods(),
+                        onChange: function () { showCount(); },
                     });
-                    const lblOpened = Label({ plainText: "Click a row: it flashes.", fontSize: 13, textColor: White(0.85) });
 
-                    // GROUP: Card of the animated list
-                    ItemListSample.startCard("animated: 1 · addItem / removeItem", "The rows move to their new places (FLIP), a new row fades in, a removed one fades out and then leaves. A section without items goes too. The count changes at once.");
-
-                        const foodList = ItemList({
-                            width: "100%",
-                            height: FOODS_HEIGHT,
-                            styleName: "modern",
-                            animated: 1,
-                            items: ItemListSample.getStartFoods(),
-                            onChange: function () { showCount(); },
+                    // GROUP: Buttons
+                    HGroup({ width: "100%", height: "auto", align: "left center", gap: 8, wrap: 1 });
+                        SmartButton({
+                            height: BUTTON_HEIGHT,
+                            labelText: "Add",
+                            style: BUTTON_STYLE,
+                            onClick: function () { addFood(); },
                         });
-
-                        // GROUP: Buttons
-                        HGroup({ width: "100%", height: "auto", align: "left center", gap: 8, wrap: 1 });
-                            SmartButton({ height: BUTTON_HEIGHT, labelText: "Add", style: BUTTON_STYLE, onClick: function () { addFood(); } });
-                            SmartButton({ height: BUTTON_HEIGHT, labelText: "Remove", style: BUTTON_STYLE, onClick: function () { removeFood(); } });
-                            const btnMotion = SmartButton({ height: BUTTON_HEIGHT, labelText: "Motion: on", styleName: "ozdenType4", style: BUTTON_STYLE, onClick: function () { toggleMotion(); } });
-                        endGroup();
-
-                        const lblCount = Label({ plainText: "", fontSize: 13, textColor: Black(0.5) });
-
+                        SmartButton({
+                            height: BUTTON_HEIGHT,
+                            labelText: "Remove",
+                            style: BUTTON_STYLE,
+                            onClick: function () { removeFood(); },
+                        });
+                        const btnMotion = SmartButton({
+                            height: BUTTON_HEIGHT,
+                            labelText: "Motion: on",
+                            styleName: "ozden4",
+                            style: BUTTON_STYLE,
+                            onClick: function () { toggleMotion(); },
+                        });
                     endGroup();
+
+                    const lblCount = Label({ plainText: "", fontSize: 13, textColor: Black(0.5) });
 
                 endGroup();
 
             endGroup();
 
-        endBox();
-
-        if (typeof ScrollBar !== "undefined") ScrollBar({ scrollableBox: pageBox });
+        endGroup();
 
         // *** THE ANIMATED LIST
 
@@ -237,7 +281,7 @@
         function toggleMotion() {
             const isOn = (foodList.animated == 1);
             foodList.setAnimated(isOn ? 0 : 1);
-            btnMotion.setText(isOn ? "Motion: off" : "Motion: on");
+            btnMotion.setLabelText(isOn ? "Motion: off" : "Motion: on");
         }
 
         showCount();

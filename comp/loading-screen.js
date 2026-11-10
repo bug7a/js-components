@@ -9,19 +9,20 @@ UI COMPONENT
   It covers its container (the page by default) and fades out when close() is called.
 - Parts (all optional): an icon (an image file or an SVG text), a title, a message, a spinner
   ("ring", "dots" or "clock") and a progress bar (setProgress(0 - 1)).
-- spinnerType "clock" (2026-10-29, the user): the clock of the waiting views (comp-m1/ui-waiting-view/clock.png:
-  a white face, a dark edge and dark hands) with moving hands: the minute hand turns fast, the hour hand 12 times
-  slower. Always 30 px (the user): the hour hand 2 px, the minute hand (the long one) 2 px in indianred, and an
+- spinnerType "clock": the clock of the waiting views
+  (a white face, a dark edge and dark hands) with moving hands: the minute hand turns fast, the hour hand 12 times
+  slower. Always 30 px: the hour hand 2 px, the minute hand (the long one) 2 px in indianred, and an
   indianred dot (4 px) in the middle over the place where the hands meet. Drawn as SVG in px (no file);
   style.clock. The hands stand still with prefers-reduced-motion.
-  THE DEFAULT WAIT (the user, 2026-10-29): spinnerType is "clock" by default. Its two looks are LoadingScreen.clocks
+  THE DEFAULT WAIT: spinnerType is "clock" by default. Its two looks are LoadingScreen.clocks
   "ozden" (a white face, dark lines: the default) and "ozdenDark" (a dark face, light lines, a yellow minute hand); the style packages
   "ozden" and "ozdenDark" are the screens made for them.
-- NEEDS comp/smart-button.js, loaded first (2026-10-30): the clock and the dots are the drawings of SmartButton
+- NEEDS comp/smart-button.js, loaded first: the clock and the dots are the drawings of SmartButton
   (SmartButton.clocks, createClockSvg, createDots): one drawing for the whole suite.
 - minDuration: the screen stays at least this long, so a fast load does not show a short flash.
 - The cover takes the clicks, so nothing under it can be clicked while it is open.
-- Style packages: "light" (default), "dark", "ozden", "ozdenDark". Select with styleName. (LoadingScreen.styles)
+- Style packages: "light" (default), "dark", "ozden", "ozdenDark", "minimal", "minimalDark". Select with styleName.
+  (LoadingScreen.styles) The minimal packages wait with the ring of the minimal SmartButton.
 - NOTE: The methods are open() / close(), not show() / hide(): those are basic.js methods of every
   object (they only change "visible").
 
@@ -29,15 +30,17 @@ USAGE:
 const loading = LoadingScreen({ styleName: "dark", iconFile: "icon/icon-192.png", titleText: "My App" });
 loading.close();                                   // Fades out (after minDuration).
 loading.open();                                    // Shows it again.
-loading.setMessage("Loading the data...");
+loading.setMessageText("Loading the data...");
 loading.setProgress(0.4);                          // A progress bar under the spinner. -1 hides it.
 LoadingScreen({ spinnerType: "dots", removeOnClose: 1, onClose: (self) => println("ready") });
 LoadingScreen({ spinnerType: "clock", messageText: "Saving..." });   // The moving clock
 
 Started Date: September 2026
-Developer: Bugra Ozden
-Email: bugra.ozden@gmail.com
 Webpage: https://bug7a.github.io/js-components/
+
+Copyright 2020-2026 Bugra Ozden <bugra.ozden@gmail.com> (https://bug7a.github.io/)
+Licensed under the Apache License, Version 2.0
+SPDX-License-Identifier: Apache-2.0
 
 */
 
@@ -49,11 +52,12 @@ const LoadingScreenDefaults = {
     top: 0,
     width: "100%",
     height: "100%",
-    styleName: "light", // "light", "dark", "ozden", "ozdenDark" or a name added to LoadingScreen.styles
+    styleName: "light", // "light", "dark", "ozden", "ozdenDark", "minimal", "minimalDark" or a name added to LoadingScreen.styles
     iconFile: "", // An image file (Ex: the app icon)
     iconSvg: "", // Or an SVG text (works with no file, also offline)
     titleText: "",
-    messageText: "", // HTML can be used (Ex: "Please wait.<br>It takes a few seconds.")
+    allowHtml: 0, // 1: titleText and messageText are HTML, only for your own texts (Ex: "Please wait.<br>It takes a few seconds.")
+    messageText: "",
     spinnerType: "clock", // "clock" (the default wait, the user), "ring", "dots", "none"
     progress: -1, // 0 - 1: a progress bar is shown. -1: no progress bar
     opened: 1, // 0: created closed, open() shows it
@@ -136,6 +140,12 @@ const LoadingScreen = function (params = {}) {
 
     // *** PRIVATE FUNCTIONS:
 
+    const setText = function (label, text) {
+        const value = (text === undefined || text === null) ? "" : String(text);
+        if (box.allowHtml == 1) label.text = value;
+        else label.plainText = value;
+    };
+
     const clearTimers = function () {
         if (cancelClose) cancelClose();
         if (cancelFade) cancelFade();
@@ -185,15 +195,15 @@ const LoadingScreen = function (params = {}) {
         cancelClose = box.after(wait, fadeOut);
     };
 
-    box.setTitle = function (text) {
+    box.setTitleText = function (text) {
         box.titleText = text || "";
-        box.titleLabel.text = box.titleText;
+        setText(box.titleLabel, box.titleText);
         box.titleLabel.visible = box.titleText ? 1 : 0;
     };
 
-    box.setMessage = function (text) {
+    box.setMessageText = function (text) {
         box.messageText = text || "";
-        box.messageLabel.text = box.messageText;
+        setText(box.messageLabel, box.messageText);
         box.messageLabel.visible = box.messageText ? 1 : 0;
     };
 
@@ -229,20 +239,20 @@ const LoadingScreen = function (params = {}) {
 
         // LABEL: Title
         box.titleLabel = Label({
-            text: box.titleText,
             fontSize: _s.title.fontSize,
             textColor: _s.title.textColor,
         });
+        setText(box.titleLabel, box.titleText);
         if (_s.title.bold) box.titleLabel.css.fontFamily = "opensans-bold";
         box.titleLabel.css.textAlign = "center";
 
         // LABEL: Message
         box.messageLabel = Label({
-            text: box.messageText,
             width: _s.message.width,
             fontSize: _s.message.fontSize,
             textColor: _s.message.textColor,
         });
+        setText(box.messageLabel, box.messageText);
         box.messageLabel.css = {
             textAlign: "center",
             lineHeight: "1.45",
@@ -316,7 +326,7 @@ const LoadingScreen = function (params = {}) {
 
 };
 
-// *** THE CLOCKS: the two looks of the waiting clock (the user, 2026-10-29): the clocks of SmartButton
+// *** THE CLOCKS: the two looks of the waiting clock: the clocks of SmartButton
 LoadingScreen.clocks = SmartButton.clocks;
 
 // *** STYLE PACKAGES:
@@ -374,6 +384,27 @@ LoadingScreen.styles = {
     },
 
 };
+
+// The minimal theme (_designs/minimal-theme.htm): the ground of the window, small texts (15 px title, 13 px message),
+// the waiting ring of the minimal SmartButton, 2 px ink lines for the ring, the other spinners and the progress bar.
+// minimalDark: the same on a dark window.
+LoadingScreen.createMinimalStyle = function (colors) {
+    return {
+        box: { color: colors.ground },
+        layout: { gap: 10, padding: 24 },
+        icon: { size: 48, round: 8, marginBottom: 4 },
+        title: { fontSize: 15, textColor: colors.text, bold: 1 },
+        message: { width: 260, fontSize: 13, textColor: colors.softText },
+        spinner: { size: 24, thickness: 2, color: colors.ink, trackColor: colors.track, speed: 0.8, marginTop: 6 },
+        dots: { size: 6, gap: 5, color: colors.ink },
+        clock: Object.assign({}, colors.ring, { edgeWidth: 2 }), // WHY 2: the line of the progress bar under it (the button ring is drawn smaller)
+        progress: { width: 160, height: 2, color: colors.ink, trackColor: colors.track, round: 1 },
+    };
+};
+LoadingScreen.MINIMAL_COLORS = { ground: "#FFFFFF", text: Black(0.85), softText: Black(0.55), ink: "#1F1F1F", track: Black(0.12), ring: LoadingScreen.clocks.minimal };
+LoadingScreen.styles.minimal = LoadingScreen.createMinimalStyle(LoadingScreen.MINIMAL_COLORS);
+LoadingScreen.MINIMAL_DARK_COLORS = { ground: "#1A1A19", text: White(0.88), softText: White(0.55), ink: "#EDEDEB", track: White(0.14), ring: LoadingScreen.clocks.minimalDark };
+LoadingScreen.styles.minimalDark = LoadingScreen.createMinimalStyle(LoadingScreen.MINIMAL_DARK_COLORS);
 
 // The animations can not be set with inline styles. (the clock and the dots: SmartButton.injectCss)
 LoadingScreen.injectCss = function () {

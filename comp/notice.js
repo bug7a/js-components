@@ -5,27 +5,29 @@
 Notice - v26.10
 
 A short message in the middle of the screen over a soft dark cover: "Process completed", "No internet connection".
-It comes in, stays a moment (displayTime) and goes. The new version of comp-m1/ui-notice.js (notice.show) with the
-same look: a round box with a thin line and a soft shadow, a big text, a color by its type, an icon at the left.
-- Notice.show({ messageText, descText, type, iconFile, displayTime }) makes it on page. Only one at a time: a new
+It comes in, stays a moment (displayTime) and goes. The look:
+a round box with a thin line and a soft shadow, a big text, a color by its type, an icon at the left.
+- Notice.show({ messageText, descriptionText, type, iconFile, displayTime }) makes it on page. Only one at a time: a new
   notice takes the place of the one that is seen.
 - type: "info" (white), "warning" (yellow), "error" (red), "note" (blue), "success" (green). Notice.COLORS
-- descText: a smaller second line. The texts are plain text (allowHtml: 1: HTML, only for your own texts).
+- descriptionText: a smaller second line. The texts are plain text (allowHtml: 1: HTML, only for your own texts).
 - A click (on the cover or the message) or Escape closes it before its time. displayTime 0: it stays until then.
 - Motion: it grows in from a little smaller with a fade in 0.2 s and goes at once; none with reduced motion.
 - Accessibility: role "status" (an error: "alert"), so a screen reader reads it.
 
 USAGE:
 Notice.show({ messageText: "Process completed" });
-Notice.show({ messageText: "No internet connection.", descText: "Please, try again later.", type: "warning" });
+Notice.show({ messageText: "No internet connection.", descriptionText: "Please, try again later.", type: "warning" });
 Notice.show({ messageText: "Failed to copy", type: "error", iconFile: "../assets/icons/alert.png" });
 const notice = Notice.show({ messageText: "Saving...", displayTime: 0 }); notice.close();
 Notice.close(); // the notice that is seen
 
-Started Date: 1 September 2022 (notice), October 2026 (Notice)
-Developer: Bugra Ozden
-Email: bugra.ozden@gmail.com
+Started Date: October 2026
 Webpage: https://bug7a.github.io/js-components/
+
+Copyright 2020-2026 Bugra Ozden <bugra.ozden@gmail.com> (https://bug7a.github.io/)
+Licensed under the Apache License, Version 2.0
+SPDX-License-Identifier: Apache-2.0
 
 */
 
@@ -38,7 +40,7 @@ const NoticeDefaults = {
     width: "100%",
     height: "100%",
     messageText: "No message",
-    descText: "", // "": no second line
+    descriptionText: "", // "": no second line
     type: "info", // "info", "warning", "error", "note", "success"
     iconFile: "", // "": no icon
     allowHtml: 0, // 1: the texts are HTML (only for your own texts)
@@ -46,7 +48,7 @@ const NoticeDefaults = {
     closeOnClick: 1,
     onClose: function (self) {},
     styleName: "classic", // "classic" or a name added to Notice.styles
-    style: { // Classic style package: the look of comp-m1 notice
+    style: { // Classic style package
         cover: { color: "rgba(0, 0, 0, 0.2)", zIndex: 50000 }, // WHY: over the dialogs (Dialog, Modal: 4000 and up), under Tooltip (100000)
         message: { round: 8, border: 2, borderColor: "rgba(0, 0, 0, 0.2)", padding: [24, 18], gap: 20, maxWidth: 480, boxShadow: "0px 0px 12px rgba(0, 0, 0, 0.1)" },
         text: { fontSize: 20, textColor: "rgba(0, 0, 0, 0.8)", fontFamily: "opensans" },
@@ -167,8 +169,8 @@ const Notice = function (params = {}) {
                 // LABEL: Second line
                 box.lblDesc = Label({ ..._s.text, fontSize: _s.desc.fontSize, opacity: _s.desc.opacity, textColor: look.textColor || _s.text.textColor, textAlign: box.iconFile ? "left" : "center" });
                 box.lblDesc.css = { whiteSpace: "normal" };
-                setText(box.lblDesc, box.descText);
-                box.lblDesc.visible = (box.descText !== "" && box.descText !== null && box.descText !== undefined) ? 1 : 0; // (0 is a text too)
+                setText(box.lblDesc, box.descriptionText);
+                box.lblDesc.visible = (box.descriptionText !== "" && box.descriptionText !== null && box.descriptionText !== undefined) ? 1 : 0; // (0 is a text too)
 
             endGroup();
 
@@ -196,7 +198,7 @@ const Notice = function (params = {}) {
 
 // *** STATIC VARIABLES AND FUNCTIONS:
 
-// The colors of the types (comp-m1 notice.colors). textColor: "" -> style.text.textColor
+// The colors of the types. textColor: "" -> style.text.textColor
 Notice.COLORS = {
     info: { color: "white", textColor: "" },
     warning: { color: "#FFD541", textColor: "#141414" },

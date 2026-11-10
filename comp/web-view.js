@@ -5,7 +5,7 @@
 WebView - v26.09
 
 UI COMPONENT TEMPLATE
-- A box that shows a web page or an HTML text in an iframe. The new version of comp-m1/ui-web-view.js.
+- A box that shows a web page or an HTML text in an iframe.
 - load(url), loadHtml(html) (srcdoc), reload(), clear(). The iframe always fills the box (also with width: "100%").
 - Loading overlay (spinner) until the page is ready, a placeholder text when nothing is loaded, and showError(text)
   for your own error messages. A same origin URL that fails (404, missing file) calls onError. Other origins can not be
@@ -29,9 +29,11 @@ WebView({ url: "page.htm", onMessage: (self, data) => println(data.type) });
 WebView({ url: "page.htm", scale: 0.5, interactive: 0, onClick: (self) => basic.go("page.htm") });
 
 Started Date: September 2026
-Developer: Bugra Ozden
-Email: bugra.ozden@gmail.com
 Webpage: https://bug7a.github.io/js-components/
+
+Copyright 2020-2026 Bugra Ozden <bugra.ozden@gmail.com> (https://bug7a.github.io/)
+Licensed under the Apache License, Version 2.0
+SPDX-License-Identifier: Apache-2.0
 
 */
 
@@ -44,7 +46,7 @@ const WebViewDefaults = {
     height: 300,
     url: "", // "": Nothing is loaded (placeholder is shown)
     htmlText: "", // HTML text instead of a URL (srcdoc). NOTE: Not "html": that is the innerHTML setter of a basic.js Box.
-    title: "Web view", // iframe title (accessibility)
+    ariaLabel: "Web view", // the name a screen reader says (the title of the iframe)
     sandbox: null, // null: No sandbox. Ex: "allow-scripts allow-same-origin allow-forms allow-popups"
     allow: "", // Ex: "fullscreen; clipboard-write"
     referrerPolicy: "", // Ex: "no-referrer"
@@ -54,7 +56,7 @@ const WebViewDefaults = {
     autoHeight: 0, // 1: The box height follows the page height. (Same origin pages only)
     toolbar: 0, // 1: A bar with the URL, reload and "open in a new tab" buttons (Only at create time)
     showLoading: 1, // 1: Spinner until the page is loaded
-    placeholderText: "No page", // Shown when nothing is loaded
+    emptyText: "No page", // Shown when nothing is loaded
     loadTimeout: 0, // Seconds. 0: No timeout. Ex: 15 -> onTimeout is called when the page is not loaded in 15 seconds.
     onLoad: function (self) { },
     onError: function (self) { }, // Same origin URL of load() that could not be loaded (the browser shows its error page)
@@ -184,22 +186,74 @@ const WebView = function (params = {}) {
         }
     };
 
-    const onIframeLoad = function () {
-        if (!box) return;
-        // WHY: Chrome fires "load" for about:blank too. Nothing is loaded then.
-        if (!box.url && !box.htmlText) return;
-        // WHY: A failed same origin page (404, missing file) also fires "load", with the error page of the browser. Its document can not be read.
-        //      Only the page opened by load() is checked (isLoading). A link in the page can open another site in the
-        //      iframe (a payment or 3D Secure page of a shop); its document can not be read either, but it is not an error.
-        if (isLoading && box.url && isSameOrigin(box.url) && !box.getDocument()) {
-            setLoading(0);
-            box.onError(box);
-            return;
+    // WHY: a real server (Live Server, nginx, GitHub Pages) answers a missing page with a 404 and its own HTML page: that
+    //      document can be read, so only file:// called onError. The status of the answer tells it.
+    // The status of the page in the iframe. null: the browser does not tell it.
+    const getResponseStatus = function () {
+        try {
+            const entry = iframe.contentWindow.performance.getEntriesByType("navigation")[0];
+            return (entry && entry.responseStatus !== undefined) ? entry.responseStatus : null;
+        } catch (error) {
+            return null;
         }
+    };
+
+    const finishLoad = function () {
         box.isLoaded = 1;
         setLoading(0);
         startHeightObserver();
         box.onLoad(box);
+    };
+
+    const finishWithError = function () {
+        setLoading(0);
+        box.onError(box);
+    };
+
+    // WHY: Safari does not tell the status of a page (no responseStatus), so a 404 page looked like a page that loaded.
+    //      The server is asked once more. WHY HEAD: It sends no page, and a URL that does something on a GET runs only once.
+    const askResponseStatus = function (url) {
+        const finish = function (isError) {
+            // WHY: The box can be removed, or another page can be opened, while the answer comes.
+            if (!box || box.url !== url || !isLoading) return;
+            if (isError) finishWithError();
+            else finishLoad();
+        };
+        fetch(url, { method: "HEAD", cache: "no-cache" }).then(function (response) {
+            const isMethodRefused = (response.status === 405 || response.status === 501);
+            finish(response.status >= 400 && !isMethodRefused);
+        }, function () {
+            finish(false);
+        });
+    };
+
+    const onIframeLoad = function () {
+
+        if (!box) return;
+        // WHY: Chrome fires "load" for about:blank too. Nothing is loaded then.
+        if (!box.url && !box.htmlText) return;
+
+        // WHY: Only the page opened by load() is checked (isLoading). A link in the page can open another site in the
+        //      iframe (a payment or 3D Secure page of a shop); its document can not be read either, but it is not an error.
+        if (!isLoading || !box.url || !isSameOrigin(box.url)) {
+            finishLoad();
+            return;
+        }
+
+        // WHY: A failed same origin page (404, missing file) also fires "load", with the error page of the browser. Its document can not be read.
+        if (!box.getDocument()) {
+            finishWithError();
+            return;
+        }
+
+        const status = getResponseStatus();
+        if (status === null) {
+            askResponseStatus(box.url);
+            return;
+        }
+        if (status >= 400) finishWithError();
+        else finishLoad();
+
     };
 
     // Messages of this iframe only
@@ -414,7 +468,7 @@ const WebView = function (params = {}) {
 
         // IFRAME:
         iframe = document.createElement("iframe");
-        iframe.title = box.title;
+        iframe.title = box.ariaLabel;
         iframe.style.display = "block";
         iframe.style.border = "none";
         iframe.style.width = "100%";
@@ -437,7 +491,7 @@ const WebView = function (params = {}) {
         // GROUP: Placeholder
         box.placeholderBox = VGroup({ width: "100%", height: "100%", align: "center center", color: _s.placeholder.color, position: "absolute" });
         box.placeholderBox.css = { left: "0px", top: "0px" };
-            box.lblPlaceholder = Label({ text: WebView.escapeHtml(box.placeholderText), fontSize: _s.placeholder.fontSize, textColor: _s.placeholder.textColor });
+            box.lblPlaceholder = Label({ text: WebView.escapeHtml(box.emptyText), fontSize: _s.placeholder.fontSize, textColor: _s.placeholder.textColor });
         endGroup();
 
         // GROUP: Loading (spinner)

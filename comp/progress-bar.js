@@ -6,30 +6,43 @@ Progress Bar - v26.09
 
 UI COMPONENT TEMPLATE
 - A horizontal progress bar with a title and a value text.
-- Determinate: value / max (smooth animation when the value changes).
+- Determinate: value / maxValue (smooth animation when the value changes).
 - Indeterminate: a moving bar, when the progress is not known. (Ex: "Connecting...")
 - Status colors: "normal", "success", "error".
 - Value text position: "top" (right of the title), "right" (right of the bar), "none".
-- TWO PARTS (2026-10-29, the user): secondValue is a second part after the value (Ex: 70 done + 5 on the way);
-  its own color (style.secondBar). The value text and onComplete are of the value only.
+- TWO PARTS: secondValue is a second part after the value (Ex: 70 done + 5 on the way);
+  its own color (style.secondBar). The value text and onComplete are of the value only. It is drawn from 0 under the
+  bar: a second part that is not transparent ("ozden") looks like a second bar next to it; bar.joinEdge: 0 leaves
+  out the edge of the bar between them, the two colors meet ("ozden").
 - STRIPES: stripes: 1 (the value) and secondStripes: 1 (the second part) draw light diagonal stripes that move
   slowly (a job is running); setStripes() / setSecondStripes(). Still with prefers-reduced-motion. (style.stripes)
-- LIMITS: limits: [80] or [{ value: 30, color: "#7BA7D9" }, { value: 80, text: "80" }]: vertical lines over the bar
-  at these values (in the units of value / max), a little longer than the bar, a text under a line (style.limit);
-  setLimits().
-- Style packages: "classic" (default), "modern", "ozden" (the lines of comp-m1 UIProgressBar: the track of the
-  default, the bar its main color at 50% with an edge of it, a dark limit line with a text; the user 2026-10-29).
-  Select with styleName. (ProgressBar.styles)
-- THE TRACK of every bar (basic-designer, 2026-10-30): 16 px, #F2F2F2, a 2 px light gray edge, round 4 (the default;
-  "modern" keeps its own: 10 px, no edge, round ends).
+- LIMITS: limits: [80] or [{ value: 30, color: "#7BA7D9" }, { value: 80, text: "80" }]: marks at these values (in
+  the units of value / maxValue), a text under a mark (style.limit); setLimits(). limit.shape "line": a line over the
+  bar, a little longer than it; "dot" ("ozden"): a dot inside the track that has the color of
+  the part under it (limit.barColor on the bar, secondBarColor on the second part, color on the track; on a dark
+  track darkTrack.limitColor), half and half while the end of the bar goes over it. The own color of a limit is
+  its color on the track. limit.dotOpacity: every dot ("ozden": 0.85).
+- Style packages: "light" (default; the old name "classic" works too) and "dark" (the light and dark look of the kit: a
+  thin round track of 10 px with no edge, the bar in the accent: _designs/progress-bar.htm), "modern", "ozden" (the bar is a cyan SmartButton
+  ozden, with its edge and its line at the bottom; a round track, the second part a light bar next to it; a dark
+  limit line with a text). "ozdenDark" (for a dark page). Select with styleName.
+  (ProgressBar.styles)
+- THE ENDS: an end of a bar at an end of the track is as round as the track; an end in the middle of the track has
+  style.bar.innerRound ("": as round as the track; "ozden": 0, straight).
+- A DARK TRACK: darkTrack: 1 gives the track the colors of style.darkTrack (#242424 with a faint white edge;
+  "ozden": Black(0.85) with no edge); the bars keep theirs. setDarkTrack().
+- THE TRACK of the base (ProgressBarDefaults.style): 16 px, #F2F2F2, a 2 px light gray edge, round 4 ("light",
+  "dark" and "modern" have their own: 10 px, no edge, round ends; "ozden" has round ends).
 - Everything is drawn with code (no image files needed).
 
 NOTE: comp/line-progress-bar.js (vertical lines style) is named LineProgressBar, so both can be loaded on the same page.
 
 Started Date: September 2026
-Developer: Bugra Ozden
-Email: bugra.ozden@gmail.com
 Webpage: https://bug7a.github.io/js-components/
+
+Copyright 2020-2026 Bugra Ozden <bugra.ozden@gmail.com> (https://bug7a.github.io/)
+Licensed under the Apache License, Version 2.0
+SPDX-License-Identifier: Apache-2.0
 
 */
 
@@ -40,27 +53,29 @@ const ProgressBarDefaults = {
     key: "0",
     width: 320,
     height: "auto",
-    value: 0, // 0 - max
-    secondValue: 0, // A second part after the value (value + secondValue <= max). 0: none
-    max: 100,
+    value: 0, // 0 - maxValue
+    secondValue: 0, // A second part after the value (value + secondValue <= maxValue). 0: none
+    maxValue: 100,
     stripes: 0, // 1: moving stripes on the value part
     secondStripes: 0, // 1: moving stripes on the second part
     limits: [], // Lines at these values: [80] or [{ value: 80, color: "indianred" }]
+    darkTrack: 0, // 1: the track in the colors of style.darkTrack (the bars keep theirs)
     indeterminate: 0, // 1: Progress is not known, show a moving bar.
     status: "normal", // "normal", "success", "error"
     titleText: "",
+    allowHtml: 0, // 1: titleText and the text of valueFormat are HTML (only for your own texts)
     valuePosition: "top", // "top", "right", "none" (Only at create time)
     valueFormat: function (self) { // Returns the value text.
         return Math.round(self.getPercent()) + "%";
     },
     onChange: function (self) { }, // self.value
-    onComplete: function (self) { }, // Called once when the value reaches max.
-    styleName: "classic", // "classic", "modern" or a name added to ProgressBar.styles
-    style: { // Classic style package (default)
+    onComplete: function (self) { }, // Called once when the value reaches maxValue.
+    styleName: "light", // "light" ("classic": its old name), "dark", "modern", "ozden", "ozdenDark", "minimal", "minimalDark" or a name added to ProgressBar.styles
+    style: { // The base of every package (a thin dark bar on a light gray track): a package changes only some keys
         layout: {
             gap: 6, // Space between the title row and the bar
         },
-        track: { // Background of the bar (basic-designer, 2026-10-30: the default of every bar; was 8 px, Black(0.1), no edge)
+        track: { // Background of the bar
             height: 16,
             color: "#F2F2F2",
             round: 4,
@@ -68,16 +83,25 @@ const ProgressBarDefaults = {
             borderColor: "rgba(0, 0, 0, 0.1)",
             css: {}, // Ex: { backgroundImage: "linear-gradient(#EEE, #D0D0D0)" }
         },
+        darkTrack: { // The track with darkTrack: 1 (its size and its round are of track)
+            color: "#242424",
+            borderColor: White(0.4),
+            limitColor: White(0.7), // a limit dot on it (limit.shape "dot")
+        },
         bar: {
             color: "#141414", // the main color (also of the edge, when borderColor is "")
             fillOpacity: 1, // the inside of the bar: the main color at this opacity (Ex: 0.5 with an edge of 1)
             border: 0,
             borderColor: "", // "": the main color (of the status too)
+            boxShadow: "none", // of both parts (Ex: "inset 0 -2px 0 rgba(0, 0, 0, 0.25)": a line at the bottom)
+            innerRound: "", // px: an end in the middle of the track (0: straight). "": as round as the track
+            joinEdge: 1, // 0: no edge of the bar where the second part starts (the two colors meet)
             motion: 0.3, // Seconds. 0: No animation
         },
         secondBar: { // The second part (secondValue)
-            color: Black(0.35), // "": the main color at fillOpacity (it follows the main color)
-            fillOpacity: 0.2,
+            color: Black(0.35), // "": the main color, lighter (it follows the main color: fillOpacity or lighten)
+            fillOpacity: 0.2, // (color "") the main color at this opacity
+            lighten: 0, // 0 - 1 (color ""): the main color mixed with this much white, not transparent; 0: fillOpacity
             borderOpacity: 0.45, // its edge (when the bar has one): the main color at this opacity
         },
         stripes: {
@@ -86,13 +110,18 @@ const ProgressBarDefaults = {
             speed: 0.8, // seconds for one step of the stripes
         },
         limit: {
-            color: "indianred", // (a limit can have its own color)
-            width: 1, // px
+            shape: "line", // "line": over the track, a little longer; "dot": inside the track, in the color of the part under it
+            color: "indianred", // (a limit can have its own color) a dot: on the track
+            width: 1, // px (a line)
             round: 0,
-            overhang: 6, // px over and under the track
-            textSize: 13, // the text of a limit ({ value, text }) under its line
+            overhang: 6, // px over and under the track (a line)
+            dotSize: 6, // px (a dot)
+            dotOpacity: 1, // a dot, on every part (Ex: 0.85: a little softer)
+            barColor: "white", // a dot on the bar
+            secondBarColor: "", // a dot on the second part ("": the main color)
+            textSize: 13, // the text of a limit ({ value, text }) under it
             textColor: Black(0.7),
-            textSpace: 6, // px between the line and its text
+            textSpace: 6, // px between the line (or the track) and its text
         },
         successBar: {
             color: "#2E9E5B",
@@ -117,7 +146,7 @@ const ProgressBarDefaults = {
 
 const ProgressBar = function (params = {}) {
 
-    // Merge style package: params.style > ProgressBar.styles[styleName] > ProgressBarDefaults.style (classic)
+    // Merge style package: params.style > ProgressBar.styles[styleName] > ProgressBarDefaults.style (the base)
     basic.applyStylePackage(params, ProgressBar.styles, ProgressBarDefaults);
 
     // Merge params:
@@ -135,14 +164,20 @@ const ProgressBar = function (params = {}) {
     const COLOR_MOTION = "background-color 0.2s";
 
     // *** PUBLIC VARIABLES:
-    // NOTE: Default values are also public variables. (box.value, box.max, box.status)
+    // NOTE: Default values are also public variables. (box.value, box.maxValue, box.status)
 
     // *** PRIVATE FUNCTIONS:
+
+    const setText = function (label, text) {
+        const value = (text === undefined || text === null) ? "" : String(text);
+        if (box.allowHtml == 1) label.text = value;
+        else label.plainText = value;
+    };
 
     const clampValue = function (value) {
         value = Number(value);
         if (isNaN(value)) value = 0;
-        return Math.min(Math.max(value, 0), box.max);
+        return Math.min(Math.max(value, 0), box.maxValue);
     };
 
     const getBarMotion = function () {
@@ -159,15 +194,15 @@ const ProgressBar = function (params = {}) {
         box.secondBar.setMotionNow(getBarMotion());
     };
 
-    // The second part fits in what the value leaves (value + secondValue <= max)
+    // The second part fits in what the value leaves (value + secondValue <= maxValue)
     const clampSecondValue = function (value) {
         value = Number(value);
         if (isNaN(value) || value < 0) value = 0;
-        return Math.min(value, Math.max(0, box.max - box.value));
+        return Math.min(value, Math.max(0, box.maxValue - box.value));
     };
 
     const toPercent = function (value) {
-        return (box.max > 0) ? (value / box.max) * 100 : 0;
+        return (box.maxValue > 0) ? (value / box.maxValue) * 100 : 0;
     };
 
     // The inside and the edge of a part from its main color (a status changes the main color)
@@ -178,12 +213,68 @@ const ProgressBar = function (params = {}) {
 
     const paintBars = function () {
         const _b = box.style.bar;
-        const _sb = box.style.secondBar;
         const mainColor = getBarColor();
         paintPart(box.bar, mainColor, Number(_b.fillOpacity), _b.borderColor || mainColor);
-        // WHY "": the second part follows the main color (one color to change for a new look)
-        if (_sb.color) paintPart(box.secondBar, _sb.color, 1, _b.borderColor || mainColor);
-        else paintPart(box.secondBar, mainColor, Number(_sb.fillOpacity), _b.borderColor || Alpha(mainColor, Number(_sb.borderOpacity)));
+        paintSecondBar(mainColor);
+        box.bar.boxShadow = _b.boxShadow;
+        box.secondBar.boxShadow = _b.boxShadow;
+    };
+
+    // WHY color "": the second part follows the main color (one color to change for a new look)
+    const paintSecondBar = function (mainColor) {
+        const _b = box.style.bar;
+        const _sb = box.style.secondBar;
+        if (_sb.color) {
+            paintPart(box.secondBar, _sb.color, 1, _b.borderColor || mainColor);
+            return;
+        }
+        if (Number(_sb.lighten) > 0) {
+            paintPart(box.secondBar, mixWithWhite(mainColor, Number(_sb.lighten)), 1, _b.borderColor || mainColor);
+            return;
+        }
+        paintPart(box.secondBar, mainColor, Number(_sb.fillOpacity), _b.borderColor || Alpha(mainColor, Number(_sb.borderOpacity)));
+    };
+
+    // A lighter color that is not transparent: the track does not show through it (Ex: a dark track)
+    const mixWithWhite = function (color, whiteShare) {
+        const colorPercent = Math.round((1 - whiteShare) * 100);
+        return "color-mix(in srgb, " + color + " " + colorPercent + "%, white)";
+    };
+
+    // The track: its own colors, or the dark ones (darkTrack: 1)
+    const paintTrack = function () {
+        const colors = (box.darkTrack == 1) ? box.style.darkTrack : box.style.track;
+        box.track.color = colors.color;
+        box.track.borderColor = colors.borderColor;
+    };
+
+    // THE ENDS: an end at an end of the track is as round as the track (its edge follows the round of the track);
+    // an end in the middle of the track has bar.innerRound. The moving bar of indeterminate is round at both ends.
+    const paintEnds = function () {
+        const isBarAtRightEnd = (box.indeterminate == 1) || (box.value >= box.maxValue);
+        const isSecondAtRightEnd = (box.value + box.secondValue >= box.maxValue);
+        setEnds(box.bar, 1, isBarAtRightEnd);
+        setEnds(box.secondBar, 1, isSecondAtRightEnd);
+        paintJoin();
+    };
+
+    // bar.joinEdge 0: where the second part starts, the bar has no edge: the two colors meet
+    const paintJoin = function () {
+        const hasSecondAfter = (box.indeterminate != 1) && (box.value > 0) && (box.secondValue > 0);
+        const isSeamless = hasSecondAfter && (box.style.bar.joinEdge == 0);
+        box.bar.css = { borderRightWidth: (isSeamless ? 0 : box.style.bar.border) + "px" };
+    };
+
+    const setEnds = function (bar, isLeftAtEnd, isRightAtEnd) {
+        const left = (isLeftAtEnd ? box.style.track.round : getInnerRound()) + "px";
+        const right = (isRightAtEnd ? box.style.track.round : getInnerRound()) + "px";
+        bar.css = { borderRadius: left + " " + right + " " + right + " " + left };
+    };
+
+    const getInnerRound = function () {
+        const innerRound = box.style.bar.innerRound;
+        if (innerRound === "" || innerRound === undefined || innerRound === null) return box.style.track.round;
+        return Number(innerRound);
     };
 
     // The moving stripes: a CSS class with the colors of style.stripes (css variables)
@@ -196,30 +287,113 @@ const ProgressBar = function (params = {}) {
         bar.elem.style.setProperty("--progress-stripe-speed", _st.speed + "s");
     };
 
-    // LIMITS: thin vertical lines over the track; a number or { value, color }
+    // LIMITS: lines over the track (limit.shape "line") or dots inside it ("dot"), and their texts
     const drawLimits = function () {
         box.limitLines.forEach(function (line) { line.remove(); });
+        box.limitDots.forEach(function (item) { item.dot.remove(); });
         box.limitLines = [];
+        box.limitDots = [];
+        if (isDotLimit()) drawLimitDots();
+        else drawLimitLines();
+        drawLimitTexts();
+        layoutTrackArea();
+    };
+
+    const drawLimitLines = function () {
         const _l = box.style.limit;
         const lineHeight = box.style.track.height + _l.overhang * 2;
         createIn(box.trackArea, function () {
-            box.limits.forEach(function (limit) {
-                const data = (typeof limit === "object" && limit !== null) ? limit : { value: limit };
-                const value = Number(data.value);
-                if (isNaN(value)) return;
-                const left = toPercent(Math.min(Math.max(value, 0), box.max)) + "%";
-                const line = Box({ top: 0, width: _l.width, height: lineHeight, color: data.color || _l.color, round: _l.round });
-                line.css = { left: "calc(" + left + " - " + (_l.width / 2) + "px)" };
+            getLimitList().forEach(function (limit) {
+                const line = Box({ top: 0, width: _l.width, height: lineHeight, color: limit.color || _l.color, round: _l.round });
+                line.css = { left: "calc(" + getLimitLeft(limit) + " - " + (_l.width / 2) + "px)" };
                 box.limitLines.push(line);
-                // LABEL: the text of the limit, under its line
-                if (data.text === undefined || data.text === "") return;
-                const text = Label({ top: lineHeight + _l.textSpace, fontSize: _l.textSize, textColor: data.color || _l.textColor });
-                text.plainText = data.text;
-                text.css = { left: left, transform: "translateX(-50%)", whiteSpace: "nowrap" };
+            });
+        });
+    };
+
+    // A dot for each limit in each holder of dots: the holder of the track is under the bars, the others are inside
+    // the bars. So a bar shows its own dots where it is (also half a dot at its end) and covers the dots of the track.
+    const drawLimitDots = function () {
+        const holders = { track: box.trackDots, second: box.secondDots, bar: box.barDots };
+        Object.keys(holders).forEach(function (part) {
+            const edge = (part === "track") ? 0 : box.style.bar.border; // (a holder in a bar starts inside its edge)
+            createIn(holders[part], function () {
+                getLimitList().forEach(function (limit) {
+                    box.limitDots.push({ dot: createLimitDot(limit, edge), part: part, limit: limit });
+                });
+            });
+        });
+        paintLimitDots();
+    };
+
+    // BOX: A dot in the middle of the track, at the place of its limit.
+    // WHY cqw: the bar layer is a size container, so a dot inside a bar is placed on the width of the track
+    const createLimitDot = function (limit, edge) {
+        const size = box.style.limit.dotSize;
+        const dot = Box({ top: (box.style.track.height - size) / 2 - edge, width: size, height: size, round: size / 2, opacity: box.style.limit.dotOpacity });
+        dot.css = { left: "calc(" + getLimitPercent(limit) + "cqw - " + (edge + size / 2) + "px)" };
+        return dot;
+    };
+
+    // LABEL: the text of a limit, under its line (or under the track)
+    const drawLimitTexts = function () {
+        const _l = box.style.limit;
+        const top = box.style.track.height + getOverhang() * 2 + _l.textSpace;
+        createIn(box.trackArea, function () {
+            getLimitList().forEach(function (limit) {
+                if (limit.text === undefined || limit.text === "") return;
+                const text = Label({ top: top, fontSize: _l.textSize, textColor: limit.color || _l.textColor });
+                text.plainText = limit.text;
+                text.css = { left: getLimitLeft(limit), transform: "translateX(-50%)", whiteSpace: "nowrap" };
                 box.limitLines.push(text);
             });
         });
-        layoutTrackArea();
+    };
+
+    const isDotLimit = function () {
+        return box.style.limit.shape === "dot";
+    };
+
+    // A limit is a number or { value, color, text }; one without a number value is left out
+    const getLimitList = function () {
+        const list = box.limits.map(function (limit) {
+            return (typeof limit === "object" && limit !== null) ? limit : { value: limit };
+        });
+        return list.filter(function (limit) { return !isNaN(Number(limit.value)); });
+    };
+
+    const getLimitPercent = function (limit) {
+        return toPercent(Math.min(Math.max(Number(limit.value), 0), box.maxValue));
+    };
+
+    const getLimitLeft = function (limit) {
+        return getLimitPercent(limit) + "%";
+    };
+
+    // px of a limit line over and under the track (a dot is inside it)
+    const getOverhang = function () {
+        const hasLines = (box.limits.length > 0) && !isDotLimit();
+        return hasLines ? box.style.limit.overhang : 0;
+    };
+
+    // The color of a dot is of the part under it; the own color of a limit is its color on the track
+    const paintLimitDots = function () {
+        box.limitDots.forEach(function (item) {
+            item.dot.color = getDotColor(item.part, item.limit);
+        });
+    };
+
+    const getDotColor = function (part, limit) {
+        const _l = box.style.limit;
+        if (part === "bar") return _l.barColor;
+        if (part === "second") return _l.secondBarColor || getBarColor();
+        if (limit.color) return limit.color;
+        return (box.darkTrack == 1) ? box.style.darkTrack.limitColor : _l.color;
+    };
+
+    // BOX: A holder of the limit dots, as big as the bar (or the track) it is in
+    const createDotHolder = function () {
+        return Box({ left: 0, top: 0, width: "100%", height: "100%", color: "transparent" });
     };
 
     // The track (and the bars over it) are in the middle of the area; the area is taller with limit lines, and
@@ -227,9 +401,8 @@ const ProgressBar = function (params = {}) {
     const layoutTrackArea = function () {
         const _t = box.style.track;
         const _l = box.style.limit;
-        const hasLimits = box.limits.length > 0;
         const hasText = box.limits.some(function (limit) { return limit && typeof limit === "object" && limit.text !== undefined && limit.text !== ""; });
-        const overhang = hasLimits ? _l.overhang : 0;
+        const overhang = getOverhang();
         box.trackArea.height = _t.height + overhang * 2 + (hasText ? _l.textSpace + Math.ceil(_l.textSize * 1.4) : 0);
         box.track.top = overhang;
         box.barLayer.top = overhang;
@@ -283,12 +456,14 @@ const ProgressBar = function (params = {}) {
             box.bar.visible = 1;
             box.bar.width = box.style.indeterminate.barWidth + "%";
             box.secondBar.visible = 0;
+            box.barDots.visible = 0; // WHY: the moving bar would carry the dots of the limits with it
             startMoveAnimation();
             box.aria = { valuenow: null };
         } else {
             stopMoveAnimation();
             box.bar.width = box.getPercent() + "%";
             box.bar.visible = (box.value > 0) ? 1 : 0; // WHY: a bar with an edge was a thin line at 0
+            box.barDots.visible = 1;
             // WHY from 0: the second bar is under the first one, so their round ends meet as one bar
             box.secondValue = clampSecondValue(box.secondValue);
             box.secondBar.width = toPercent(box.value + box.secondValue) + "%";
@@ -296,18 +471,21 @@ const ProgressBar = function (params = {}) {
             box.aria = { valuenow: String(box.value) };
         }
 
+        paintEnds();
+        paintLimitDots();
+
         if (box.valueLabel) {
-            box.valueLabel.text = (box.indeterminate == 1) ? "" : box.valueFormat(box);
+            setText(box.valueLabel, (box.indeterminate == 1) ? "" : box.valueFormat(box));
         }
 
-        box.aria = { valuemax: String(box.max) };
+        box.aria = { valuemax: String(box.maxValue) };
 
     };
 
     // *** PUBLIC FUNCTIONS:
 
     box.getPercent = function () {
-        return (box.max > 0) ? (box.value / box.max) * 100 : 0;
+        return (box.maxValue > 0) ? (box.value / box.maxValue) * 100 : 0;
     };
     // USAGE: progressBar.getPercent() // 0 - 100
 
@@ -316,7 +494,7 @@ const ProgressBar = function (params = {}) {
         value = clampValue(value);
         if (box.value == value && box.indeterminate != 1) return;
 
-        const _wasComplete = (box.value >= box.max);
+        const _wasComplete = (box.value >= box.maxValue);
         box.value = value;
 
         if (box.indeterminate == 1) {
@@ -328,7 +506,7 @@ const ProgressBar = function (params = {}) {
 
         if (!silent) {
             box.onChange(box);
-            if (!_wasComplete && box.value >= box.max) box.onComplete(box);
+            if (!_wasComplete && box.value >= box.maxValue) box.onComplete(box);
         }
 
     };
@@ -359,6 +537,13 @@ const ProgressBar = function (params = {}) {
         paintStripes(box.secondBar, box.secondStripes);
     };
 
+    box.setDarkTrack = function (value) {
+        box.darkTrack = basic.isOn(value) ? 1 : 0;
+        paintTrack();
+        paintLimitDots();
+    };
+    // USAGE: get: progressBar.darkTrack, set: progressBar.setDarkTrack(1) // the colors of style.darkTrack
+
     box.setLimits = function (limits) {
         box.limits = Array.isArray(limits) ? limits.slice() : [];
         drawLimits();
@@ -370,14 +555,14 @@ const ProgressBar = function (params = {}) {
     };
     // USAGE: progressBar.addValue(10)
 
-    box.setMax = function (max) {
-        max = Number(max);
-        box.max = (isNaN(max) || max < 0) ? 0 : max;
+    box.setMaxValue = function (value) {
+        value = Number(value);
+        box.maxValue = (isNaN(value) || value < 0) ? 0 : value;
         box.value = clampValue(box.value);
         updateView();
-        drawLimits(); // (the places of the limits are relative to max)
+        drawLimits(); // (the places of the limits are relative to maxValue)
     };
-    // USAGE: get: progressBar.max, set: progressBar.setMax(20) // Ex: 20 files
+    // USAGE: get: progressBar.maxValue, set: progressBar.setMaxValue(20) // Ex: 20 files
 
     box.setIndeterminate = function (indeterminate) {
         box.indeterminate = basic.isOn(indeterminate) ? 1 : 0;
@@ -393,7 +578,7 @@ const ProgressBar = function (params = {}) {
 
     box.setTitleText = function (text) {
         box.titleText = text;
-        box.titleLabel.text = text;
+        setText(box.titleLabel, text);
         box.titleLabel.visible = (text) ? 1 : 0;
         updateTopRow();
     };
@@ -409,6 +594,7 @@ const ProgressBar = function (params = {}) {
     // USAGE: progressBar.reset() // value: 0, status: "normal"
 
     box.refresh = function () {
+        paintTrack();
         updateView();
     };
 
@@ -436,7 +622,7 @@ const ProgressBar = function (params = {}) {
 
             // LABEL: Title
             box.titleLabel = Label(box.style.title);
-            box.titleLabel.text = box.titleText;
+            setText(box.titleLabel, box.titleText);
             box.titleLabel.css = { flex: "1 1 auto", minWidth: "0" };
             box.titleLabel.ellipsis = 1;
             if (!box.titleText) box.titleLabel.visible = 0;
@@ -491,9 +677,13 @@ const ProgressBar = function (params = {}) {
                     round: box.style.track.round,
                 });
                 box.barLayer.clipContent = 1;
+                box.barLayer.css = { containerType: "inline-size" }; // WHY: the dots of the limits are placed in cqw
+
+                    // BOX: The dots of the limits on the track (limit.shape "dot"), under the bars
+                    box.trackDots = createDotHolder();
 
                     // BOX: Second part (under the bar, from 0 to value + secondValue)
-                    box.secondBar = Box({
+                    box.secondBar = startBox({
                         left: 0,
                         top: 0,
                         width: "0%",
@@ -503,9 +693,11 @@ const ProgressBar = function (params = {}) {
                         border: box.style.bar.border,
                         borderColor: box.style.bar.borderColor,
                     });
+                        box.secondDots = createDotHolder();
+                    endBox();
 
                     // BOX: Bar
-                    box.bar = Box({
+                    box.bar = startBox({
                         left: 0,
                         top: 0,
                         width: "0%",
@@ -515,6 +707,8 @@ const ProgressBar = function (params = {}) {
                         border: box.style.bar.border,
                         borderColor: box.style.bar.borderColor,
                     });
+                        box.barDots = createDotHolder();
+                    endBox();
 
                 endBox();
 
@@ -541,15 +735,19 @@ const ProgressBar = function (params = {}) {
 
     // *** OBJECT INIT CODE:
 
-    box.max = (Number(box.max) >= 0) ? Number(box.max) : 100;
+    box.maxValue = (Number(box.maxValue) >= 0) ? Number(box.maxValue) : 100;
     box.value = clampValue(box.value);
     box.indeterminate = basic.isOn(box.indeterminate) ? 1 : 0;
     box.status = (box.status === "success" || box.status === "error") ? box.status : "normal";
 
     box.limits = Array.isArray(box.limits) ? box.limits.slice() : [];
     box.limitLines = [];
+    box.limitDots = [];
+
+    box.darkTrack = basic.isOn(box.darkTrack) ? 1 : 0;
 
     updateTopRow();
+    paintTrack();
     updateView();
     drawLimits();
     paintStripes(box.bar, box.stripes == 1);
@@ -567,33 +765,73 @@ const ProgressBar = function (params = {}) {
 // USAGE: ProgressBar({ styleName: "modern" })
 // USAGE: ProgressBar({ styleName: "modern", style: { bar: { color: "tomato" } } }) // Change only some keys.
 // USAGE: ProgressBar({ style: ProgressBar.styles.modern }) // The same as styleName: "modern". (The package is copied, never changed.)
-// NOTE: A new package needs only the keys that differ from the default (classic) style.
+// NOTE: A new package needs only the keys that differ from ProgressBarDefaults.style (the base of every package).
 // USAGE: ProgressBar.styles.myStyle = { bar: { color: "red" } };
 ProgressBar.styles = {
 
-    // Thin dark bar on a light gray track.
-    classic: ProgressBarDefaults.style,
+    // The light look of the kit (_designs/progress-bar.htm), the default: a thin round track of 10 px with no edge, the
+    // bar in the accent, the second part the accent at 35 %, a limit a 2 px soft gray line with its text under it, a
+    // 14 px title and a 13 px value.
+    light: {
+        layout: { gap: 6 },
+        track: { height: 10, color: "#E6E7E3", round: 100, border: 0, borderColor: "transparent" },
+        darkTrack: { color: "#2E2E2D", borderColor: "transparent", limitColor: White(0.7) },
+        bar: { color: "#3D7A6B", fillOpacity: 1, border: 0, borderColor: "", boxShadow: "none", innerRound: "", joinEdge: 1, motion: 0.3 },
+        secondBar: { color: "", fillOpacity: 0.35, lighten: 0, borderOpacity: 0.45 }, // the main color at 35 %
+        stripes: { color: "rgba(255, 255, 255, 0.35)", size: 14, speed: 0.8 },
+        limit: { shape: "line", color: Black(0.45), width: 2, round: 1, overhang: 4, dotSize: 6, dotOpacity: 1, barColor: "white", secondBarColor: "", textSize: 12, textColor: Black(0.55), textSpace: 6 },
+        successBar: { color: "#5DB36B" },
+        errorBar: { color: "#D9534F" },
+        title: { fontSize: 14, textColor: Black(0.88) },
+        valueText: { fontSize: 13, textColor: Black(0.55) },
+    },
 
-    // The ozden bar (the user, 2026-10-29): the lines of comp-m1/ui-progress-bar.js (UIProgressBar): the track of the
-    // default (16 px, a 2 px light gray edge, round 4; 2026-10-30, was 20 px, white, a 3 px edge, round ends); the
-    // bar is its main color at 50% with a 2 px edge of the main color, over the edge of the track; a 4 px dark limit
-    // line with its text under it. The main color can change (style.bar.color: the inside, the edge and the second
-    // part follow it); yellow for now (UIProgressBar "yellow").
+    // The dark look of the kit: the same shapes on a dark page.
+    dark: {
+        layout: { gap: 6 },
+        track: { height: 10, color: "#363635", round: 100, border: 0, borderColor: "transparent" },
+        darkTrack: { color: "#111110", borderColor: White(0.2), limitColor: White(0.7) },
+        bar: { color: "#65A293", fillOpacity: 1, border: 0, borderColor: "", boxShadow: "none", innerRound: "", joinEdge: 1, motion: 0.3 },
+        secondBar: { color: "", fillOpacity: 0.35, lighten: 0, borderOpacity: 0.45 },
+        stripes: { color: "rgba(255, 255, 255, 0.25)", size: 14, speed: 0.8 },
+        limit: { shape: "line", color: White(0.5), width: 2, round: 1, overhang: 4, dotSize: 6, dotOpacity: 1, barColor: "#141414", secondBarColor: "", textSize: 12, textColor: White(0.55), textSpace: 6 },
+        successBar: { color: "#7FCB8F" },
+        errorBar: { color: "#FF7B72" },
+        title: { fontSize: 14, textColor: White(0.9) },
+        valueText: { fontSize: 13, textColor: White(0.55) },
+    },
+
+    // The ozden bar: the colors of
+    // SmartButton. The bar is a cyan SmartButton ozden (its edge and its line at the bottom: it looks raised);
+    // the track keeps the colors of the default (#F2F2F2, a 2 px light gray edge) and its two ends are round; an end
+    // in the middle of the track is straight. darkTrack: 1 is a soft black with no edge. The second part is a second
+    // bar next to the bar, the main color mixed with white (not transparent). A limit is a dot, a little soft.
+    // The main color can change (style.bar.color: the second part follows it); the tones of SmartButton fit.
     ozden: {
         layout: {
             gap: 8,
         },
+        track: {
+            round: 100, // the two ends are half circles
+        },
+        darkTrack: {
+            color: Black(0.85),
+            borderColor: "transparent", // no edge: the color of the track fills its place (the same size)
+            limitColor: White(0.7),
+        },
         bar: {
-            color: "#F1C74A",
-            fillOpacity: 0.5,
-            border: 2, // (as wide as the edge of the track: the bar covers it)
-            borderColor: "", // the main color
+            color: "#5BBAC1", // cyan (SmartButton.tones.cyan)
+            fillOpacity: 1,
+            border: 1, // the edge and the bottom line of SmartButton ozden
+            borderColor: "rgba(0, 0, 0, 0.35)",
+            boxShadow: "inset 0 -2px 0 rgba(0, 0, 0, 0.25)",
+            innerRound: 0, // straight in the middle of the track
+            joinEdge: 0, // no edge between the bar and the second part
             motion: 0.3,
         },
         secondBar: {
             color: "", // the main color, lighter
-            fillOpacity: 0.2,
-            borderOpacity: 0.45,
+            lighten: 0.5, // half white: not transparent, so it looks like a second bar next to the bar
         },
         stripes: {
             color: "rgba(255, 255, 255, 0.55)",
@@ -601,14 +839,19 @@ ProgressBar.styles = {
             speed: 0.8,
         },
         successBar: {
-            color: "#40A5AF", // the colors of UIProgressBar
+            color: "#7BC362", // green (SmartButton.tones.green)
         },
         errorBar: {
-            color: "#FE5D49",
+            color: "#DE815B", // orange (SmartButton.tones.orange)
         },
         limit: {
-            color: "rgba(0, 0, 0, 0.7)",
-            width: 4,
+            shape: "dot", // a dot inside the track, in the color of the part under it
+            color: "rgba(0, 0, 0, 0.7)", // on the track
+            dotSize: 6,
+            dotOpacity: 0.85, // every dot
+            barColor: "white", // on the bar
+            secondBarColor: "", // on the second part: the main color
+            width: 4, // shape "line"
             round: 2,
             overhang: 4,
             textSize: 14,
@@ -625,6 +868,57 @@ ProgressBar.styles = {
         },
     },
 
+    // The ozden bar for a dark page: a dark track with a soft edge, the bar in the main color of the kit.
+    ozdenDark: {
+        layout: {
+            gap: 8,
+        },
+        track: {
+            color: "#2A2A29",
+            borderColor: White(0.18),
+        },
+        bar: {
+            color: "#5BBAC1",
+            fillOpacity: 0.5,
+            border: 2,
+            borderColor: "", // the main color
+            motion: 0.3,
+        },
+        secondBar: {
+            color: "", // the main color, lighter
+            fillOpacity: 0.2,
+            borderOpacity: 0.45,
+        },
+        stripes: {
+            color: White(0.25),
+            size: 14,
+            speed: 0.8,
+        },
+        successBar: {
+            color: "#40A5AF",
+        },
+        errorBar: {
+            color: "#FE5D49",
+        },
+        limit: {
+            color: White(0.75),
+            width: 4,
+            round: 2,
+            overhang: 4,
+            textSize: 14,
+            textColor: White(0.75),
+            textSpace: 8,
+        },
+        title: {
+            fontSize: 15,
+            textColor: White(0.88),
+        },
+        valueText: {
+            fontSize: 14,
+            textColor: White(0.6),
+        },
+    },
+
     // Thicker round bar, same colors as the modern CheckBox and RadioButton.
     modern: {
         layout: {
@@ -634,7 +928,7 @@ ProgressBar.styles = {
             height: 10,
             color: "#DFECEC", // 20% of bar color on white
             round: 100,
-            border: 0, // WHY: no edge (the default has one since 2026-10-30)
+            border: 0, // WHY: no edge (the default has one)
             borderColor: "transparent",
         },
         bar: {
@@ -662,6 +956,7 @@ ProgressBar.styles = {
     },
 
 };
+ProgressBar.styles.classic = ProgressBar.styles.light; // the old name of light
 
 // The moving stripes (a class can have an animation; its colors are css variables of the bar)
 ProgressBar.injectCss = function () {
@@ -674,3 +969,24 @@ ProgressBar.injectCss = function () {
         "@keyframes progress-bar-stripes { to { background-position: var(--progress-stripe-size) 0; } }" +
         "@media (prefers-reduced-motion: reduce) { .progress-bar-stripes { animation: none; } }");
 };
+
+// The minimal theme (_designs/minimal-theme.htm): a 2 px track with no edge, the bar in ink, a 12 px title and value;
+// an error in the danger color. minimalDark: the same on a dark window.
+ProgressBar.createMinimalStyle = function (colors) {
+    return {
+        layout: { gap: 6 },
+        track: { height: 2, color: colors.track, round: 1, border: 0, borderColor: "transparent" },
+        darkTrack: { color: colors.track, borderColor: "transparent", limitColor: colors.ink },
+        bar: { color: colors.ink, fillOpacity: 1, border: 0, borderColor: "", boxShadow: "none", innerRound: "", joinEdge: 0, motion: 0.3 },
+        secondBar: { color: colors.softText, fillOpacity: 1, lighten: 0, borderOpacity: 0 },
+        limit: { shape: "line", color: colors.danger, width: 1, overhang: 4, textSize: 11, textColor: colors.softText },
+        successBar: { color: colors.ink },
+        errorBar: { color: colors.danger },
+        title: { fontSize: 12, textColor: colors.text },
+        valueText: { fontSize: 12, textColor: colors.softText },
+    };
+};
+ProgressBar.MINIMAL_COLORS = { ink: "#1F1F1F", track: Black(0.12), text: Black(0.85), softText: Black(0.55), danger: "#C24A36" };
+ProgressBar.styles.minimal = ProgressBar.createMinimalStyle(ProgressBar.MINIMAL_COLORS);
+ProgressBar.MINIMAL_DARK_COLORS = { ink: "#EDEDEB", track: White(0.14), text: White(0.88), softText: White(0.55), danger: "#FF9F93" };
+ProgressBar.styles.minimalDark = ProgressBar.createMinimalStyle(ProgressBar.MINIMAL_DARK_COLORS);

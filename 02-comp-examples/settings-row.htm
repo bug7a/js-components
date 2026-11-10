@@ -11,19 +11,20 @@
     <link rel="preload" href="../basic/font/open-sans/OpenSans-Bold.ttf" as="font" crossorigin="anonymous">
     <link rel="stylesheet" type="text/css" href="../basic/basic.css">
     <script src="../basic/basic.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../basic/scroll-bar.js" type="text/javascript" charset="utf-8"></script>
 
     <script src="../comp/smart-button.js" type="text/javascript" charset="utf-8"></script>
     <script src="../comp/app-bar.js" type="text/javascript" charset="utf-8"></script>
     <script src="../comp/toggle.js" type="text/javascript" charset="utf-8"></script>
     <script src="../comp/stepper.js" type="text/javascript" charset="utf-8"></script>
     <script src="../comp/settings-row.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/scroll-area.js" type="text/javascript" charset="utf-8"></script>
 
     <script>
 
     /* Bismillah */
 
-    // SettingsRow (comp-m4), 2026-11-01: the rows of a settings page of a mobile app, with the look of the old
-    // javascript-mobile-app-template (its Settings tab). A title, a small text and a control at the right
+    // SettingsRow: the rows of a settings page of a mobile app. A title, a small text and a control at the right
     // (Toggle, Stepper, your own objects), or an arrow for a row that opens a page; SettingsRow.createSection()
     // for the bands between the groups. The page is a 600 px design fitted to the screen (page.fit(600, 800)).
 
@@ -35,9 +36,9 @@
     const COLORS = ["#689BD2", "#5ABB9F", "indianred", "#FFD541"];
     const THEMES = ["StarWars", "Supernova", "Metro", "Flatty"];
     const VIDEO_QUALITIES = [
-        { name: "Low", descText: "Current quality: 25%" },
-        { name: "Standard", descText: "" },
-        { name: "High", descText: "Remaining disk space: 2.3GB" },
+        { name: "Low", descriptionText: "Current quality: 25%" },
+        { name: "Standard", descriptionText: "" },
+        { name: "High", descriptionText: "Remaining disk space: 2.3GB" },
     ];
     const RESULT_TIME = 1600; // ms: the last click shows this long
 
@@ -66,7 +67,7 @@
 
     const createToggle = function (value, onColor = BLUE) {
         return Toggle({
-            width: 60,
+            width: 66, // WHY not 60: the OFF mark did not fit the free side of the track (its F was cut)
             height: 40,
             spacing: 4,
             value: value,
@@ -83,8 +84,8 @@
             width: 180,
             height: 50,
             value: 18,
-            min: 18,
-            max: 24,
+            minValue: 18,
+            maxValue: 24,
             unitText: "px",
             ariaLabel: "Font size",
             style: {
@@ -98,7 +99,18 @@
     // A square of the primary color: a click (or Enter / Space) gives it the next color
     const createColorSquare = function () {
         let colorIndex = 0;
-        const square = Box({ width: 40, height: 40, color: COLORS[0], border: 2, borderColor: "#141414", round: 4, cursor: "pointer", role: "button", tabIndex: 0, aria: { label: "Primary color" } });
+        const square = Box({
+            width: 40,
+            height: 40,
+            color: COLORS[0],
+            border: 2,
+            borderColor: "#141414",
+            round: 4,
+            cursor: "pointer",
+            role: "button",
+            tabIndex: 0,
+            aria: { label: "Primary color" },
+        });
         const showNextColor = function () {
             colorIndex = (colorIndex + 1) % COLORS.length;
             square.color = COLORS[colorIndex];
@@ -132,8 +144,8 @@
             onClick: function (self) {
                 qualityIndex = (qualityIndex + 1) % VIDEO_QUALITIES.length;
                 const quality = VIDEO_QUALITIES[qualityIndex];
-                self.setText(quality.name);
-                row.setDescText(quality.descText); // The small text fades, the title slides
+                self.setLabelText(quality.name);
+                row.setDescriptionText(quality.descriptionText); // The small text fades, the title slides
             },
         });
     };
@@ -145,41 +157,78 @@
         page.color = "white";
 
         // APP BAR: The bar of the Settings tab
-        const bar = AppBar({ titleText: "Settings", titleAlign: "left", line: 1, onMenu: function () { showResult("onMenu"); } });
+        const bar = AppBar({
+            titleText: "Settings",
+            titleAlign: "left",
+            line: 1,
+            onMenu: function () { showResult("onMenu"); },
+        });
 
-        // BOX: The list under the bar (it scrolls)
-        startBox(0, bar.height, "100%", "calc(100% - " + bar.height + "px)", { color: "white", scrollY: 1 });
+        // SCROLL AREA: The list under the bar (comp/scroll-area.js)
+        ScrollArea({ top: bar.height, height: "calc(100% - " + bar.height + "px)", color: "white" });
 
-            VGroup({ width: "100%", height: "auto", align: "left top", gap: 0 });
+            SettingsRow.createSection("APPEARANCE");
+            SettingsRow({
+                titleText: "Dark Mode",
+                descriptionText: "Use interface colors inverted.",
+                control: function () { return createToggle(1); },
+            });
+            SettingsRow({ titleText: "Theme", control: createThemeText, arrow: 1, onClick: showNextTheme });
+            SettingsRow({
+                titleText: "Menu Style",
+                descriptionText: "Choose how your navigation menu appears.",
+                arrow: 1,
+                onClick: showClick,
+            });
+            SettingsRow({
+                titleText: "Primary Color",
+                descriptionText: "Choose a color for the colored interface buttons.",
+                control: createColorSquare,
+            });
 
-                SettingsRow.createSection("APPEARANCE");
-                SettingsRow({ titleText: "Dark Mode", descText: "Use interface colors inverted.", control: function () { return createToggle(1); } });
-                SettingsRow({ titleText: "Theme", control: createThemeText, arrow: 1, onClick: showNextTheme });
-                SettingsRow({ titleText: "Menu Style", descText: "Choose how your navigation menu appears.", arrow: 1, onClick: showClick });
-                SettingsRow({ titleText: "Primary Color", descText: "Choose a color for the colored interface buttons.", control: createColorSquare });
+            SettingsRow.createSection("SYSTEM");
+            SettingsRow({
+                titleText: "Only When Charging",
+                descriptionText: "The app only updates when plugged in.",
+                control: function () { return createToggle(1); },
+            });
+            SettingsRow({ titleText: "Font Size", control: createFontSizeStepper });
+            SettingsRow({
+                titleText: "Video Quality",
+                descriptionText: VIDEO_QUALITIES[2].descriptionText,
+                control: createQualityButton,
+            });
 
-                SettingsRow.createSection("SYSTEM");
-                SettingsRow({ titleText: "Only When Charging", descText: "The app only updates when plugged in.", control: function () { return createToggle(1); } });
-                SettingsRow({ titleText: "Font Size", control: createFontSizeStepper });
-                SettingsRow({ titleText: "Video Quality", descText: VIDEO_QUALITIES[2].descText, control: createQualityButton });
+            SettingsRow.createSection("DOWNLOADS");
+            SettingsRow({ titleText: "Download Over Wi-Fi Only", control: function () { return createToggle(1, RED); } });
+            SettingsRow({
+                titleText: "Delete All Downloads",
+                descriptionText: "Nothing will be deleted. It is a demo.",
+                titleColor: "orangered",
+                arrow: 1,
+                onClick: showClick,
+            });
 
-                SettingsRow.createSection("DOWNLOADS");
-                SettingsRow({ titleText: "Download Over Wi-Fi Only", control: function () { return createToggle(1, RED); } });
-                SettingsRow({ titleText: "Delete All Downloads", descText: "Nothing will be deleted. It is a demo.", titleColor: "orangered", arrow: 1, onClick: showClick });
+            SettingsRow.createSection("OTHERS");
+            SettingsRow({ titleText: "Security", arrow: 1, onClick: showClick });
+            SettingsRow({ titleText: "Privacy Policy and Terms of Use", arrow: 1, onClick: showClick });
 
-                SettingsRow.createSection("OTHERS");
-                SettingsRow({ titleText: "Security", arrow: 1, onClick: showClick });
-                SettingsRow({ titleText: "Privacy Policy and Terms of Use", arrow: 1, onClick: showClick });
+            // BOX: The empty band at the end
+            Box({ width: "100%", height: END_SPACE, color: "whitesmoke" });
 
-                // BOX: The empty band at the end
-                Box({ width: "100%", height: END_SPACE, color: "whitesmoke" });
-
-            endGroup();
-
-        endBox();
+        endGroup(); // END SCROLL AREA
 
         // LABEL: The last click (over the list, at the bottom)
-        lblResult = Label({ bottom: 40, left: "50%", fontSize: 18, textColor: "white", color: "#141414", round: 22, padding: [22, 10], visible: 0 });
+        lblResult = Label({
+            bottom: 40,
+            left: "50%",
+            fontSize: 18,
+            textColor: "white",
+            color: "#141414",
+            round: 22,
+            padding: [22, 10],
+            visible: 0,
+        });
         lblResult.css = { transform: "translateX(-50%)", whiteSpace: "nowrap" };
 
     };

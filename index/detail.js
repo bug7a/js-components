@@ -10,8 +10,11 @@ JS Components Website - Detail View - v26.09
 - Dar ekranda (CONFIG.splitBreakpoint altı) ekran bölünmez; üst çubuktaki düğme ile örnek ve kod sırayla gösterilir.
 - When a component is opened the screen is split: the running sample on the left, its code on the right.
 
-Developer: Bugra Ozden
-Email: bugra.ozden@gmail.com
+Webpage: https://bug7a.github.io/js-components/
+
+Copyright 2020-2026 Bugra Ozden <bugra.ozden@gmail.com> (https://bug7a.github.io/)
+Licensed under the Apache License, Version 2.0
+SPDX-License-Identifier: Apache-2.0
 
 */
 
@@ -204,6 +207,8 @@ DetailView.createPreviewPane = function () {
             DetailView.lblLive = Label({ text: SITE.svg("eye", SITE.TEXT_SOFT, 16), width: 16, height: 16 });
             that.elem.style.flexShrink = "0";
             DetailView.lblLiveText = SITE.label(T.liveExample, { bold: 1, fontSize: 13, textColor: SITE.TEXT_SOFT });
+            // WHY: the tabs of the samples give the room (they scroll); this text is never cut in the middle of a word
+            DetailView.lblLiveText.elem.style.flexShrink = "0";
 
             // TABS: Birden fazla örnek var ise
             if (DetailView.samples.length > 1) {
@@ -254,8 +259,8 @@ DetailView.createPreviewPane = function () {
         DetailView.view = WebView({
             width: "100%",
             height: 100,
-            title: DetailView.comp.name,
-            placeholderText: "",
+            ariaLabel: DetailView.comp.name,
+            emptyText: "",
             style: {
                 box: { color: "#FFFFFF", border: 0, round: 0 },
                 loading: { color: "#FFFFFF", spinnerColor: "rgba(0, 0, 0, 0.4)" },
@@ -567,7 +572,7 @@ DetailView.setFiles = function (paths) {
 };
 
 // Sayfanın <script src> etiketlerinden, bileşen klasörlerindeki dosyalar. ("comp/tabs.js")
-// NOTE: Yorum satırı içindeki etiketler ve alt klasördeki kütüphaneler (chart-box/chart.umd.min.js) alınmaz.
+// NOTE: Yorum satırı içindeki etiketler ve alt klasördeki kütüphaneler alınmaz.
 DetailView.findComponentScripts = function (html, samplePath) {
 
     const clean = html.replace(/<!--[\s\S]*?-->/g, "");
@@ -714,11 +719,11 @@ DetailView.copyCode = function () {
     if (!text) return;
 
     const done = function () {
-        if (typeof Toast === "function") Toast.show({ key: "copy", type: "success", message: T.copied });
+        if (typeof Toast === "function") Toast.show({ key: "copy", type: "success", messageText: T.copied });
     };
 
     const fail = function () {
-        if (typeof Toast === "function") Toast.show({ key: "copy", type: "error", message: T.copyFailed });
+        if (typeof Toast === "function") Toast.show({ key: "copy", type: "error", messageText: T.copyFailed });
     };
 
     if (navigator.clipboard && window.isSecureContext) {

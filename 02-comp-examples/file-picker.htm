@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>File Picker</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- LIBRARY FILES -->
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Bold.ttf" as="font" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
+    <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
+
+    <!-- COMPONENT FILES -->
+    <script src="../comp/smart-button.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/file-picker.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/scroll-area.js" type="text/javascript" charset="utf-8"></script>
+
+    <script>
+
+        /* Bismillah */
+
+        // *** VARIABLES:
+        const LIGHT_CARD = { color: "white", borderColor: Black(0.1), titleColor: Black(0.45) };
+        const DARK_CARD = { color: "#1C1C1B", borderColor: White(0.12), titleColor: White(0.55) };
+        // An icon of the page for sample 2 (iconSvg): a picture, drawn with currentColor.
+        const IMAGE_ICON = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"'
+            + ' stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">'
+            + '<rect x="3.5" y="4.5" width="17" height="15" rx="3"/><circle cx="9" cy="9.5" r="1.6"/>'
+            + '<path d="M4.5 17.5l4.5-4.5 3.5 3.5 2.5-2.5 4.5 4.5"/></svg>';
+        let fileSingle, fileImages, fileFolder, fileCompact, fileDark;
+        let lblSingle, lblContent, lblImages, lblErrors, lblFolder;
+
+        const start = function () {
+
+            page.color = "whitesmoke";
+
+            // SCROLL AREA: The page
+            // WHY: page does not scroll. A ScrollArea fills the window; its content scrolls when it is taller.
+            ScrollArea({
+                align: "center top",
+                gap: 30,
+                padding: [16, 50], // WHY 16 at the sides: the cards fill a phone (390 px)
+            });
+
+                // LABEL: Title
+                Label({
+                    text: "File Picker",
+                    fontSize: 26,
+                    fontFamily: "opensans-bold",
+                });
+
+                // LABEL: Note about the file path
+                Label({
+                    width: 420,
+                    text: "Note: Browsers do not give the real disk path of a file (security rule). "
+                        + "You get the name, size, type and the File object (to read or upload it). "
+                        + "In folder selection, <b>path</b> is the relative path in the folder.",
+                    fontSize: 13,
+                    textColor: Black(0.55),
+                    color: "#FFF8E1",
+                    border: 1,
+                    borderColor: "#F1C74A",
+                    round: 8,
+                    padding: [12, 10],
+                    css: { maxWidth: "100%" }, // WHY maxWidth: on a phone the note is as wide as the screen
+                });
+
+                // SAMPLE 1: Single file, read content
+                startCard("1. Single File");
+
+                    fileSingle = FilePicker({
+                        onChange: function (self) {
+                            const info = self.files[0];
+                            if (!info) {
+                                lblSingle.text = "No file.";
+                                lblContent.text = "";
+                                return;
+                            }
+                            println(info);
+                            lblSingle.text = "<b>name:</b> " + FilePicker.escapeHtml(info.name)
+                                + "<br><b>path:</b> " + FilePicker.escapeHtml(info.path)
+                                + "<br><b>size:</b> " + info.sizeText + " (" + info.size + " bytes)"
+                                + "<br><b>type:</b> " + (info.type || "-")
+                                + "<br><b>lastModified:</b> " + new Date(info.lastModified).toLocaleString();
+                            showTextContent(info);
+                        },
+                        css: { maxWidth: "100%" }, // WHY maxWidth: on a phone it is as wide as the card
+                    });
+
+                    lblSingle = Label({
+                        text: "No file.",
+                        fontSize: 13,
+                        textColor: Black(0.6),
+                    });
+
+                    lblContent = Label({
+                        width: "100%",
+                        text: "",
+                        fontSize: 12,
+                        textColor: Black(0.6),
+                        fontFamily: "monospace",
+                        css: { whiteSpace: "pre-wrap" },
+                    });
+
+                endCard();
+
+                // SAMPLE 2: Multiple images with limits
+                startCard("2. Images: an own icon, animated: 1");
+
+                    fileImages = FilePicker({
+                        multiple: 1,
+                        accept: "image/*",
+                        maxSize: 2 * 1024 * 1024,
+                        maxFiles: 5,
+                        titleText: "Drop images here",
+                        descriptionText: "or click to browse",
+                        iconSvg: IMAGE_ICON,
+                        // iconFile: "../assets/icons/plant.png", // a picture in its place (png, jpg, svg file): it keeps its own colors
+                        animated: 1,
+                        onChange: function (self) {
+                            const total = self.files.reduce(function (sum, f) { return sum + f.size; }, 0);
+                            lblImages.text = self.files.length + " image(s), total " + FilePicker.formatSize(total);
+                            lblErrors.text = "";
+                        },
+                        onError: function (self, errors) {
+                            lblErrors.text = errors.map(function (e) { return FilePicker.escapeHtml(e.message); }).join("<br>");
+                        },
+                        css: { maxWidth: "100%" }, // WHY maxWidth: on a phone it is as wide as the card
+                    });
+
+                    lblImages = Label({
+                        text: "0 image(s)",
+                        fontSize: 13,
+                        textColor: Black(0.6),
+                    });
+
+                    lblErrors = Label({
+                        text: "",
+                        fontSize: 13,
+                        textColor: "#FE5D49",
+                    });
+
+                endCard();
+
+                // SAMPLE 3: Folder
+                startCard("3. Folder (relative paths)");
+
+                    fileFolder = FilePicker({
+                        directory: 1,
+                        showPreview: 0,
+                        zoneHeight: 130,
+                        titleText: "Click to select a folder",
+                        descriptionText: "All files in the folder are listed",
+                        onChange: function (self) {
+                            lblFolder.text = self.files.length + " file(s)";
+                        },
+                        css: { maxWidth: "100%" }, // WHY maxWidth: on a phone it is as wide as the card
+                    });
+
+                    lblFolder = Label({
+                        text: "",
+                        fontSize: 13,
+                        textColor: Black(0.6),
+                    });
+
+                endCard();
+
+                // SAMPLE 4: Functions and custom style
+                startCard("4. Functions & Custom Style");
+
+                    fileCompact = FilePicker({
+                        multiple: 1,
+                        accept: ".pdf,.doc,.docx,.txt",
+                        zoneHeight: 110,
+                        showIcon: 0,
+                        enabled: 0,
+                        titleText: "Documents",
+                        descriptionText: "PDF, Word or text",
+                        style: {
+                            zone: { color: "#F4FAF6", borderColor: "#5DB182", round: 14 },
+                            zoneHover: { color: "#E6F4EC", borderColor: "#3E8E62" },
+                            zoneDragOver: { color: "#DFEFE6", borderColor: "#3E8E62" },
+                            icon: { color: "#5DB182", dragOverColor: "#3E8E62" },
+                            title: { textColor: "#3E8E62" },
+                            badge: { color: "#DFEFE6", textColor: "#3E8E62" },
+                        },
+                        css: { maxWidth: "100%" }, // WHY maxWidth: on a phone it is as wide as the card
+                    });
+
+                    // GROUP: Buttons
+                    HGroup({
+                        width: "auto",
+                        height: "auto",
+                        gap: 8,
+                    });
+
+                        SmartButton({
+                            labelText: "Enable",
+                            tone: "white",
+                            onClick: function (self) {
+                                fileCompact.setEnabled(fileCompact.enabled ? 0 : 1);
+                                self.setLabelText((fileCompact.enabled) ? "Disable" : "Enable");
+                            },
+                        });
+
+                        SmartButton({
+                            labelText: "Browse...",
+                            onClick: function () { fileCompact.open(); }, // Works only if enabled
+                        });
+
+                        SmartButton({
+                            labelText: "Clear All",
+                            onClick: function () {
+                                fileSingle.clear();
+                                fileImages.clear();
+                                fileFolder.clear();
+                                fileCompact.clear();
+                            },
+                        });
+
+                    endGroup();
+
+                endCard();
+
+                // SAMPLE 5: On a dark page; a file of a program (a plain object with a real path)
+                startCard("5. On a Dark Page: styleName \"dark\"", DARK_CARD);
+
+                    fileDark = FilePicker({
+                        styleName: "dark",
+                        multiple: 1,
+                        zoneHeight: 130,
+                        css: { maxWidth: "100%" }, // WHY maxWidth: on a phone it is as wide as the card
+                    });
+                    fileDark.addFiles([
+                        { name: "report.pdf", path: "/Users/ada/report.pdf", size: 240000, type: "application/pdf", lastModified: 1 },
+                    ]);
+
+                endCard();
+
+            endGroup();
+
+        };
+
+        // *** OTHER FUNCTIONS:
+
+        // GROUP: A card with a title.
+        const startCard = function (title, look = LIGHT_CARD) {
+            VGroup({
+                width: 420,
+                height: "auto",
+                align: "left top",
+                gap: 12,
+                padding: 20,
+                color: look.color,
+                round: 10,
+                border: 1,
+                borderColor: look.borderColor,
+                css: { maxWidth: "100%" }, // WHY maxWidth: on a phone the card is as wide as the screen
+            });
+            Label({
+                text: title,
+                fontSize: 14,
+                textColor: look.titleColor,
+            });
+        };
+
+        const endCard = function () {
+            endGroup();
+        };
+
+        // Read the first characters of a text file. (The File object can be read or uploaded.)
+        const showTextContent = function (info) {
+
+            const isText = info.type.startsWith("text/") || ["txt", "md", "csv", "json", "js", "html", "htm", "css"].includes(info.extension);
+
+            if (!isText) {
+                lblContent.text = "";
+                return;
+            }
+
+            info.file.text().then(function (content) {
+                const preview = content.slice(0, 300) + ((content.length > 300) ? "\n..." : "");
+                lblContent.text = FilePicker.escapeHtml(preview);
+            });
+
+        };
+
+    </script>
+</head>
+
+<body></body>
+
+</html>

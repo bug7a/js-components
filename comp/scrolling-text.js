@@ -5,8 +5,7 @@
 Scrolling Text - v26.10
 
 A one line text that slides to show its end when it does not fit in its box (a long name, a title, a cell).
-The new version of comp-m1/ui-scrolling-text.js (UIScrollingText: only a sample page, a TODO) with the same motion:
-the text waits at its start, slides to its end, waits, and goes back.
+The text waits at its start, slides to its end, waits, and goes back.
 - mode "always": it slides again and again (the faded edges show that there is more text).
 - The edges: the left one is clear while the text is at its start, the right one fades where the text goes on; at
   the end the text slides a little more (fade.width), so its last letters are clear too.
@@ -21,12 +20,14 @@ USAGE:
 ScrollingText({ width: 200, labelText: "Start. Vegetables are healthy. End." });
 ScrollingText({ width: 120, labelText: "A long name of a file.pdf", mode: "hover" });
 ScrollingText({ width: 200, labelText: "A long title", waitTime: 2, minWaitTime: 0.8, fullWaitDistance: 200 });
-text.setText("Another text");
+text.setLabelText("Another text");
 
-Started Date: 1 October 2022 (UIScrollingText), October 2026 (ScrollingText)
-Developer: Bugra Ozden
-Email: bugra.ozden@gmail.com
+Started Date: October 2026
 Webpage: https://bug7a.github.io/js-components/
+
+Copyright 2020-2026 Bugra Ozden <bugra.ozden@gmail.com> (https://bug7a.github.io/)
+Licensed under the Apache License, Version 2.0
+SPDX-License-Identifier: Apache-2.0
 
 */
 
@@ -223,14 +224,14 @@ const ScrollingText = function (params = {}) {
 
     // *** PUBLIC FUNCTIONS:
 
-    box.setText = function (text) {
+    box.setLabelText = function (text) {
         if (!box) return;
         box.labelText = (text === undefined || text === null) ? "" : String(text);
         if (box.allowHtml == 1) box.label.text = box.labelText;
         else box.label.plainText = box.labelText;
         refreshLayout();
     };
-    // USAGE: get: text.labelText, set: text.setText("A long text")
+ // USAGE: get: text.labelText, set: text.setLabelText("A long text")
 
     box.refresh = function () {
         refreshLayout();
@@ -280,7 +281,7 @@ const ScrollingText = function (params = {}) {
     if (box.mode == "hover") box.clickable = 1; // WHY: a basic.js box gets no mouse events by default
 
     box.onResize(refreshLayout);
-    box.setText(box.labelText);
+    box.setLabelText(box.labelText);
     // WHY: the text is measured again when the font is loaded (a fixed width box gets no resize then)
     if (document.fonts) document.fonts.ready.then(function () { if (box) refreshLayout(); });
 

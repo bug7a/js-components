@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+
+        <title>GridGroup</title>
+
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <!-- LIBRARY FILES -->
+        <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
+        <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../basic/scroll-bar.min.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- COMPONENT FILES -->
+        <script src="../comp/tooltip.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/smart-button.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/text-field.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/grid-group.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/scroll-area.js" type="text/javascript" charset="utf-8"></script>
+
+        <script>
+
+        /* Bismillah */
+
+        // GridGroup (comp/grid-group.js): a group whose objects stand in columns and rows.
+        // 1. The keys of a calculator: four equal columns, a key over two cells.
+        // 2. A form: a column as wide as its titles, and a column that takes the rest.
+        // 3. Tiles: as many columns as fit, so a phone has fewer of them.
+        // 4. columns, gap and align can change while it is on the page.
+
+        // *** VARIABLES:
+        const PAGE_COLOR = "#ECEBE8";
+        const CARD_COLOR = "#FFFFFF";
+        const TILE_COLOR = "#DCEFF1";
+        const SOFT_TEXT = "#6F6E6B";
+        const CARD_MIN_WIDTH = 320;
+        const CARD_MAX_WIDTH = 460;
+        const KEYS = ["7", "8", "9", "÷", "4", "5", "6", "×", "1", "2", "3", "−", "0", ".", "+"];
+        const TILES = ["Photos", "Music", "Notes", "Files", "Maps", "Mail"];
+        const SHOW_NUMBERS = ["One", "Two", "Three", "Four", "Five", "Six"];
+
+        let showGrid;
+        let columnCount = 3;
+        let isAligned = 0;
+
+        // First running function. (basic.js calls it when the page is ready)
+        const start = function () {
+
+            page.color = PAGE_COLOR;
+
+            // SCROLL AREA: Page (it scrolls when the window is lower than the samples)
+            ScrollArea({ align: "center top", gap: 16, padding: [16, 28] });
+
+                Label({ text: "GridGroup", fontSize: 24, bold: 1, textColor: Black(0.8) });
+
+                // GROUP: The samples side by side (one under the other on a narrow screen)
+                HGroup({ width: "100%", height: "auto", align: "center top", gap: 20, wrap: 1, clipContent: 0 });
+                    createKeys();
+                    createForm();
+                    createTiles();
+                    createChanging();
+                endGroup();
+
+            endGroup();
+
+        };
+
+        // *** OTHER FUNCTIONS:
+
+        // GROUP: A white card with a title and a note. endGroup() closes it.
+        const startCard = function (titleText, noteText) {
+            VGroup({
+                width: "auto",
+                height: "auto",
+                align: "left top",
+                gap: 10,
+                padding: 16,
+                color: CARD_COLOR,
+                round: 12,
+                clipContent: 0,
+                css: { flex: "1 1 " + CARD_MIN_WIDTH + "px", maxWidth: CARD_MAX_WIDTH + "px", minWidth: "0" },
+            });
+            Label({ text: titleText, fontSize: 15, bold: 1, textColor: Black(0.75) });
+            Label({ width: "100%", text: noteText, fontSize: 13, textColor: SOFT_TEXT });
+        };
+
+        // Four equal columns; the 0 takes two cells.
+        const createKeys = function () {
+
+            startCard("The keys of a calculator", "columns: 4, gap: 8; place(zero, { columnSpan: 2 })");
+
+                const keys = GridGroup({ columns: 4, gap: 8 });
+                    KEYS.forEach(function (keyText) {
+                        const button = SmartButton({ labelText: keyText, width: "100%" });
+                        if (keyText === "0") keys.place(button, { columnSpan: 2 });
+                    });
+                endGroup();
+
+            endGroup();
+
+        };
+
+        // A column as wide as its titles, and one that takes the rest.
+        const createForm = function () {
+
+            startCard("A form", "columns: [\"auto\", \"1fr\"], align: \"left center\"");
+
+                GridGroup({ columns: ["auto", "1fr"], gap: [12, 8], align: "left center" });
+
+                    Label({ text: "Name", fontSize: 14, textColor: SOFT_TEXT });
+                    Input({ width: "100%", height: 36, placeholder: "Ada" });
+
+                    Label({ text: "A long title", fontSize: 14, textColor: SOFT_TEXT });
+                    Input({ width: "100%", height: 36, placeholder: "It stays in its column" });
+
+                    Label({ text: "City", fontSize: 14, textColor: SOFT_TEXT });
+                    Input({ width: "100%", height: 36, placeholder: "İzmir" });
+
+                endGroup();
+
+            endGroup();
+
+        };
+
+        // As many columns as fit.
+        const createTiles = function () {
+
+            startCard("Tiles", "columns: \"repeat(auto-fill, minmax(90px, 1fr))\": as many as fit");
+
+                GridGroup({ columns: "repeat(auto-fill, minmax(90px, 1fr))", gap: 8 });
+                    TILES.forEach(function (tileText) {
+                        Label({ text: tileText, height: 60, fontSize: 14, textAlign: "center", lineHeight: 60, color: TILE_COLOR, round: 8 });
+                    });
+                endGroup();
+
+            endGroup();
+
+        };
+
+        // setColumns(), setGap() and setAlign() on the page.
+        const createChanging = function () {
+
+            startCard("It changes on the page", "setColumns(), setGap(), setAlign(). None: the objects fill their cells.");
+
+                // GROUP: The buttons
+                HGroup({ width: "100%", height: "auto", align: "left center", gap: 8, wrap: 1, clipContent: 0 });
+                    SmartButton({ labelText: "Columns", onClick: changeColumns });
+                    SmartButton({ labelText: "Align", onClick: changeAlign });
+                endGroup();
+
+                showGrid = GridGroup({ columns: columnCount, gap: 8, height: 170, rows: 2 });
+                    SHOW_NUMBERS.forEach(function (numberText) {
+                        Label({ text: numberText, fontSize: 14, padding: [8, 4], color: TILE_COLOR, round: 6 });
+                    });
+                endGroup();
+
+            endGroup();
+
+        };
+
+        const changeColumns = function () {
+            columnCount = (columnCount === 3) ? 2 : 3;
+            showGrid.setColumns(columnCount);
+            showGrid.setRows(SHOW_NUMBERS.length / columnCount);
+        };
+
+        const changeAlign = function () {
+            isAligned = (isAligned) ? 0 : 1;
+            showGrid.setAlign((isAligned) ? "center" : "");
+        };
+
+        </script>
+    </head>
+
+    <body></body>
+
+</html>

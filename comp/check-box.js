@@ -2,7 +2,7 @@
 
 /*
 
-Check Box - v26.09
+Check Box - v26.11
 
 UI COMPONENT TEMPLATE
 - A customizable check box with a label.
@@ -11,12 +11,23 @@ UI COMPONENT TEMPLATE
 - wrapLabel: 1 -> a long label wraps to more lines (give the check box a width, or grow: 1 in an HGroup).
   The label is HTML: a text of the user goes in with basic.escapeHtml(text).
 - Whole object background can change on hover and checked states (style.hoverBox, style.checkedBox).
-- Style packages: "classic" (default), "modern", "dark". Select with styleName. (CheckBox.styles)
+- The empty square under the mouse: style.hoverMark (its borderColor, and its color when given; v26.11).
+- animated: 1 (context/basic-js-animated-rules.md): the square grows a little under the mouse
+  (1.05) and the tick draws in from 0.6 with a fade, in 0.25 s with a soft stop. Nothing moves at the first view; off
+  when the system asks for reduced motion. animated: 0 (default) keeps the short tick motion it always had.
+  setAnimated(0/1).
+- style.focus.ringColor: the keyboard focus shows on the mark (its edge in this color, 2 px). "": none (the old
+  packages); "minimal" / "minimalDark" have it.
+- Style packages: "light" (default; the old name "classic" works too), "modern", "dark", "minimal", "minimalDark". Select with styleName. (CheckBox.styles)
+  NEW PROJECTS: use "light" on a light page and "dark" on a dark page, unless the user
+  asks for another one ("modern" only when asked).
 
 Started Date: September 2026
-Developer: Bugra Ozden
-Email: bugra.ozden@gmail.com
 Webpage: https://bug7a.github.io/js-components/
+
+Copyright 2020-2026 Bugra Ozden <bugra.ozden@gmail.com> (https://bug7a.github.io/)
+Licensed under the Apache License, Version 2.0
+SPDX-License-Identifier: Apache-2.0
 
 */
 
@@ -30,11 +41,13 @@ const CheckBoxDefaults = {
     checked: 0, // 0, 1
     enabled: 1, // 0, 1
     labelText: "",
+    allowHtml: 0, // 1: labelText is HTML (only for your own texts)
     labelPosition: "right", // "right", "left"
     wrapLabel: 0, // 1: a long label wraps (the check box needs a width); 0: one line
+    animated: 0, // 1: the square grows a little under the mouse, the tick draws in (box.setAnimated(0/1))
     onChange: function (self) { }, // self.checked
-    styleName: "classic", // "classic", "modern", "dark" or a name added to CheckBox.styles
-    style: { // Classic style package (default)
+    styleName: "light", // "light" ("classic": its old name), "modern", "dark", "minimal", "minimalDark" or a name added to CheckBox.styles
+    style: { // Light style package (default)
         box: { // Whole object background
             color: "transparent",
             round: 0,
@@ -62,10 +75,12 @@ const CheckBoxDefaults = {
             round: 5,
         },
         checkedMark: { // Checked square
-            color: "#141414",
-            borderColor: "#141414",
+            // #242424: a soft black
+            color: "#242424",
+            borderColor: "#242424",
         },
-        hoverMark: { // Mouse over (only border)
+        hoverMark: { // Mouse over (the empty square)
+            color: null, // null: uses mark.color, so a package can change it
             borderColor: Black(0.7),
         },
         tick: {
@@ -79,12 +94,15 @@ const CheckBoxDefaults = {
         disabled: {
             opacity: 0.4,
         },
+        focus: { // The keyboard focus: the edge of the mark in this color, 2 px. "": no ring
+            ringColor: "",
+        },
     }
 };
 
 const CheckBox = function (params = {}) {
 
-    // Merge style package: params.style > CheckBox.styles[styleName] > CheckBoxDefaults.style (classic)
+    // Merge style package: params.style > CheckBox.styles[styleName] > CheckBoxDefaults.style (light)
     basic.applyStylePackage(params, CheckBox.styles, CheckBoxDefaults);
 
     // Merge params:
@@ -105,11 +123,35 @@ const CheckBox = function (params = {}) {
     const TICK_HEIGHT_RATIO = 0.58;
     const TICK_RAISE_RATIO = 0.06; // The tick is lifted a little above the center.
     const TICK_HIDDEN_SCALE = 0.4; // The tick grows from this size when checked.
+    // MOTION (animated: 1)
+    const MOTION_TIME = "0.25s";
+    const MOTION_EASE = "cubic-bezier(0.2, 0.8, 0.2, 1)"; // a fast start, a soft stop
+    const HOVER_GROW = 1.05; // the square under the mouse
+    const TICK_COME_SCALE = 0.6; // the tick draws in from this size
+    let wasAnimated = 0;
 
     // *** PUBLIC VARIABLES:
     // NOTE: Default values are also public variables. (box.checked, box.enabled, box.labelText)
 
     // *** PRIVATE FUNCTIONS:
+
+    const setText = function (label, text) {
+        const value = (text === undefined || text === null) ? "" : String(text);
+        if (box.allowHtml == 1) label.text = value;
+        else label.plainText = value;
+    };
+
+    // The keyboard focus (style.focus.ringColor) on the mark: its edge in that color and 1 px more inside it.
+    // WHY on the mark, inside it: a ring around the whole object hid its text, and an outer ring was cut by the groups.
+    // WHY a CSS rule: only :focus-visible knows a focus of the keyboard (not of a click).
+    const showFocusOnMark = function () {
+        const ringColor = box.style.focus.ringColor;
+        if (!ringColor) return;
+        CheckBox.addFocusCss();
+        box.elem.classList.add("check-box-focus");
+        box.mark.elem.classList.add("check-box-mark");
+        box.elem.style.setProperty("--check-box-focus", ringColor);
+    };
 
     // The whole object background. A null color uses the color of the state below it.
     const getBoxColor = function (isHover) {
@@ -130,9 +172,11 @@ const CheckBox = function (params = {}) {
             box.tick.css = { opacity: "1", transform: "rotate(45deg) scale(1)" };
             return;
         }
-        box.mark.color = box.style.mark.color;
+        const hoverColor = box.style.hoverMark.color;
+        box.mark.color = (isHover && hoverColor) ? hoverColor : box.style.mark.color;
         box.mark.borderColor = (isHover) ? box.style.hoverMark.borderColor : box.style.mark.borderColor;
-        box.tick.css = { opacity: "0", transform: "rotate(45deg) scale(" + TICK_HIDDEN_SCALE + ")" };
+        const hiddenScale = (isMotionOn()) ? TICK_COME_SCALE : TICK_HIDDEN_SCALE;
+        box.tick.css = { opacity: "0", transform: "rotate(45deg) scale(" + hiddenScale + ")" };
     };
 
     const paintEnabled = function () {
@@ -142,12 +186,49 @@ const CheckBox = function (params = {}) {
         box.tabIndex = (isEnabled) ? 0 : -1;
     };
 
+    // *** MOTION (animated: 1)
+
+    const isMotionOn = function () {
+        if (box.animated != 1) return false;
+        return !(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+    };
+
+    const getMarkTransform = function () {
+        if (isMouseOver && box.enabled == 1) return "scale(" + HOVER_GROW + ")";
+        return "none";
+    };
+
+    const paintMotion = function () {
+        if (!isMotionOn()) return;
+        box.mark.css = { transform: getMarkTransform() };
+    };
+
+    // The transitions of the motion, or the still look again (only when it was animated)
+    const applyAnimated = function () {
+        const tickTime = (isMotionOn()) ? MOTION_TIME + " " + MOTION_EASE : MOTION_DURATION;
+        if (isMotionOn()) {
+            // WHY the origin at the side of the edge: the grown square does not go out of the box at that edge
+            box.mark.css = { transformOrigin: (box.labelPosition === "left") ? "right center" : "left center" };
+            box.mark.setMotion("background-color " + MOTION_DURATION + ", border-color " + MOTION_DURATION + ", transform " + MOTION_TIME + " " + MOTION_EASE);
+            box.tick.css = { transition: "transform " + tickTime + ", opacity " + tickTime };
+            wasAnimated = 1;
+        } else if (wasAnimated) {
+            // WHY Now: the still look comes back at once (setMotion waits a moment: it is for the first view)
+            box.mark.setMotionNow("background-color " + MOTION_DURATION + ", border-color " + MOTION_DURATION);
+            box.mark.css = { transform: "none" };
+            box.tick.css = { transition: "transform " + tickTime + ", opacity " + tickTime };
+            wasAnimated = 0;
+        }
+        paint();
+    };
+
     // The look of the current state (checked, mouse over, enabled).
     const paint = function () {
         const isHover = (isMouseOver && box.enabled == 1);
         box.color = getBoxColor(isHover);
         paintMark(isHover);
         paintEnabled();
+        paintMotion();
         box.aria = { checked: (box.checked == 1), disabled: (box.enabled != 1) };
     };
 
@@ -180,7 +261,7 @@ const CheckBox = function (params = {}) {
 
     box.setLabelText = function (text) {
         box.labelText = text;
-        box.label.text = text;
+        setText(box.label, text);
         box.label.visible = (text) ? 1 : 0;
     };
     // USAGE: get: checkBox.labelText, set: checkBox.setLabelText("Remember me")
@@ -188,6 +269,12 @@ const CheckBox = function (params = {}) {
     box.refresh = function () {
         paint();
     };
+
+    box.setAnimated = function (value) {
+        box.animated = (value == 1) ? 1 : 0;
+        applyAnimated();
+    };
+    // USAGE: checkBox.setAnimated(1)
 
     // *** OBJECT VIEW:
     box.clickable = 1;
@@ -210,7 +297,7 @@ const CheckBox = function (params = {}) {
     // LABEL: label (left or right of the mark)
     const createLabel = function () {
         box.label = Label(box.style.label);
-        box.label.text = box.labelText;
+        setText(box.label, box.labelText);
         if (!box.labelText) box.label.visible = 0;
         if (!isWrapLabel) {
             box.label.css.whiteSpace = "nowrap";
@@ -233,6 +320,7 @@ const CheckBox = function (params = {}) {
     });
     box.mark.setMotion("background-color " + MOTION_DURATION + ", border-color " + MOTION_DURATION);
     box.mark.css.boxSizing = "border-box";
+    showFocusOnMark();
     box.mark.shrink = 0; // (a wrapping label must not squeeze the mark)
 
     // BOX: tick (drawn with right and bottom borders, rotated 45deg)
@@ -287,7 +375,7 @@ const CheckBox = function (params = {}) {
 
     box.checked = basic.isOn(box.checked) ? 1 : 0;
     box.enabled = basic.isOn(box.enabled) ? 1 : 0;
-    paint();
+    applyAnimated(); // (it paints)
 
     return endObject(box);
 
@@ -302,9 +390,9 @@ const CheckBox = function (params = {}) {
 CheckBox.styles = {
 
     // White box with a border. When checked, dark filled box with a white tick. No background.
-    classic: CheckBoxDefaults.style,
+    light: CheckBoxDefaults.style,
 
-    // Light box, thin border. When checked, only the tick is visible on a light background.
+    // Light box, thin border. When checked, the tick on a white square with an edge.
     modern: {
         box: { // Whole object background
             color: "transparent",
@@ -332,11 +420,12 @@ CheckBox.styles = {
             borderColor: Black(0.7),
             round: 4,
         },
-        checkedMark: { // Checked square (stays without border, behind the tick)
-            color: "#DFECEC", // Same as hoverCheckedBox.color, so the square is not visible on mouse over.
-            borderColor: "transparent",
+        checkedMark: { // Checked square: white with an edge, behind the tick
+            color: "white",
+            borderColor: Black(0.7),
         },
-        hoverMark: { // Mouse over (only border)
+        hoverMark: { // Mouse over: the empty square turns white
+            color: "white",
             borderColor: Black(0.7),
         },
         tick: {
@@ -371,4 +460,31 @@ CheckBox.styles = {
         },
     },
 
+};
+CheckBox.styles.classic = CheckBox.styles.light; // the old name of light: the pages made with it keep their look
+
+// The minimal theme (_designs/minimal-theme.htm): a 14 px square of a line, darker under the mouse; when checked an ink
+// line and an ink tick inside it, no fill; a 13 px text.
+// WHY a strong line: the line is the only thing that shows an empty mark (3:1 at least, as WCAG asks of a control)
+CheckBox.createMinimalStyle = function (colors) {
+    return {
+        layout: { gap: 8, padding: [0, 2], align: "left center" },
+        mark: { width: 14, height: 14, color: "transparent", border: 1, borderColor: colors.line, round: 3 },
+        checkedMark: { color: "transparent", borderColor: colors.ink },
+        hoverMark: { color: null, borderColor: colors.lineHover },
+        tick: { color: colors.ink, thickness: 1.5 },
+        label: { fontSize: 13, textColor: colors.text },
+        disabled: { opacity: 0.4 },
+        focus: { ringColor: colors.focus },
+    };
+};
+CheckBox.MINIMAL_COLORS = { line: Black(0.45), lineHover: Black(0.65), ink: "#1F1F1F", text: Black(0.85), focus: "#3D8BD9" };
+CheckBox.styles.minimal = CheckBox.createMinimalStyle(CheckBox.MINIMAL_COLORS);
+CheckBox.MINIMAL_DARK_COLORS = { line: White(0.42), lineHover: White(0.62), ink: "#EDEDEB", text: White(0.88), focus: "#7FB6DE" };
+CheckBox.styles.minimalDark = CheckBox.createMinimalStyle(CheckBox.MINIMAL_DARK_COLORS);
+
+// The rule of the keyboard focus (style.focus.ringColor). WHY !important: the edge of the mark is an inline style.
+CheckBox.addFocusCss = function () {
+    basic.addCss("check-box-focus", ".check-box-focus:focus { outline: none; }" +
+        ".check-box-focus:focus-visible .check-box-mark { border-color: var(--check-box-focus) !important; box-shadow: inset 0 0 0 1px var(--check-box-focus); }");
 };

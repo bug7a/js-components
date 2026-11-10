@@ -8,13 +8,18 @@ UI COMPONENT TEMPLATE
 - A dropdown select: a field that opens a list (popup) under or above it.
 - Single or multiple selection (multiple: 1). "Select all" and "Clear" for multiple.
 - Search in the list (searchable: "auto" -> when there are more than 8 options). Matches are highlighted.
-- The search box is a SearchInput (comp/search-input-v2.js, with its clear button) when that file is loaded
+- The search box is a SearchInput (comp/search-input.js, with its clear button) when that file is loaded
   before this one (useSearchInput: 1). Its look: style.searchInput (the params of SearchInput). Without it the
   search box is an own input (its look: style.search).
 - The list at the full height of the page (fullHeightList: 1): as wide as the field, at its left, from the top
-  of the page to its bottom, and it stays that high when a search leaves a few rows (the comp-m1 SelectItem
-  selection_fullScreen). A resize of the page places it again (the normal list closes).
+  of the page to its bottom, and it stays that high when a search leaves a few rows.
+  A resize of the page places it again (the normal list closes).
 - Options can have a description, an icon, a group title and can be disabled.
+- style.optionSelected.canSelectAgain: 0 (ozden, ozdenDark): the selected row (single) can not be chosen again:
+  no look under the mouse or the keys, the keys skip it, a click on it does nothing.
+- An edge around the rows (style.option.border, borderColor; optionActive.borderColor, optionSelected.borderColor) and
+  space between them (style.option.space): the minimal packages frame the row under the mouse and the selected one.
+  optionSelected.tickSize: the tick of the selected row (16).
 - Clear button in the field (clearable: 1).
 - Keyboard: Enter / Space / ArrowDown opens. ArrowUp / ArrowDown / Home / End move, Enter selects,
   Escape closes, Tab closes. Typing on the closed field opens the search with the typed letter.
@@ -23,15 +28,17 @@ UI COMPONENT TEMPLATE
 - Big lists: Only the first "maxRenderCount" matches are drawn. (Search shows the others.)
 - The list scrolls with basic/scroll-bar.js (useScrollBar: 1, style.scrollBar) when it is loaded before.
 - Your own rows: createItemView(option, row, self) draws an option with your objects. The list is then a
-  comp-m4 ItemList (load comp/item-list.js before this file; without it: a warning and the normal rows).
+  ItemList (load comp/item-list.js before this file; without it: a warning and the normal rows).
   The search box, the keyboard, single / multiple, disabled options and onChange work the same.
   (Not in this mode: the group titles, the highlight of the search and maxRenderCount.) The list: box.itemList.
   The search finds the label, the description, the group and option.searchText (Turkish letters without marks).
 - Your own field: createValueView(option, field, self) draws the selected option in the field with your
   objects (single selection; the placeholder and the multiple text stay as they are).
-- Style packages: "classic" (default), "dark", "ozden" (the look of the old comp-m1 SelectItem / SelectText
-  as a package of params: 350 x 50, a search box, the list goes down to the bottom of the page).
-  Select with styleName. (SelectBox.styles) ("legacy" was merged into "ozden" on 2026-10-31.)
+- Style packages: "light" (default; the old name "classic" works too), "dark", "ozden" (a package of params: 350 x 50, a search box, the list goes down to the bottom of the page),
+  "ozdenDark" (the same on a dark page). Select with styleName. (SelectBox.styles)
+  NEW PROJECTS: use "light" (the default) on a light page and "dark" on a dark page, the
+  looks of 02-comp-examples/select-box.htm, unless the user asks for another look ("ozden" / "ozdenDark" only when
+  asked).
 - scale: multiplies every size (the style, width / height / panelMinWidth / panelMaxHeight, the spaces in the
   code, the search box, the rows, the checks). Its default is basic.uiScale: on a page fitted with page.fit()
   (basic.uiScale = 1 / page.zoom) the field and its list keep their size on the screen. The objects of
@@ -69,9 +76,11 @@ const country = SelectBox({
 });
 
 Started Date: September 2026
-Developer: Bugra Ozden
-Email: bugra.ozden@gmail.com
 Webpage: https://bug7a.github.io/js-components/
+
+Copyright 2020-2026 Bugra Ozden <bugra.ozden@gmail.com> (https://bug7a.github.io/)
+Licensed under the Apache License, Version 2.0
+SPDX-License-Identifier: Apache-2.0
 
 */
 
@@ -102,7 +111,7 @@ const SelectBoxDefaults = {
     maxRenderCount: 300,
     enabled: 1,
     useScrollBar: 1, // basic/scroll-bar.js on the list (load it first). 0: the scrollbar of the browser (hidden by basic.css in Chrome).
-    useSearchInput: 1, // 1: the search box is a SearchInput when comp/search-input-v2.js is loaded first (style.searchInput). 0: the own input (style.search)
+    useSearchInput: 1, // 1: the search box is a SearchInput when comp/search-input.js is loaded first (style.searchInput). 0: the own input (style.search)
     fullHeightList: 0, // 1: the list opens from the top of the page to its bottom, as wide as the field, at its left. (box.setFullHeightList())
     scale: null, // Multiplies every size. null: basic.uiScale (1, or 1 / page.zoom on a fitted page). (Only at create time)
     ariaLabel: "",
@@ -111,8 +120,8 @@ const SelectBoxDefaults = {
     onChange: function (self) { }, // self.value, self.getSelectedOptions()
     onOpen: function (self) { },
     onClose: function (self) { },
-    styleName: "classic", // "classic", "dark", "ozden" or a name added to SelectBox.styles
-    style: { // Classic style package (default)
+    styleName: "light", // "light" ("classic": its old name), "dark", "ozden", "ozdenDark", "minimal", "minimalDark" or a name added to SelectBox.styles
+    style: { // Light style package (default)
         field: {
             color: White(1),
             border: 1,
@@ -163,9 +172,9 @@ const SelectBoxDefaults = {
             startScale: 0.9,
         },
         // The search box when it is a SearchInput: its params (a styleName of SearchInput.styles and its look params).
-        // An icon file without a folder ("search.svg") is taken from the folder of comp/search-input-v2.js.
+        // Its icons are the ones of SearchInput (searchIconFile, clearIconFile: your own pictures).
         searchInput: {
-            styleName: "classic",
+            styleName: "original", // the first look of SearchInput
             height: 38,
             searchIconLeft: 10, // WHY: the icon and the text at the place of the own search input (icon 18, text 42)
             color: Black(0.04),
@@ -176,8 +185,6 @@ const SelectBoxDefaults = {
             fontSize: 14,
             textColor: Black(0.85),
             placeholderColor: "",
-            searchIconFile: "search.svg",
-            clearIconFile: "clear.svg",
             searchIconSize: 16,
             searchIconGap: 8, // Between the icon and the text (the default of SearchInput: here, so that scale changes it)
             searchIconOpacity: 0.55,
@@ -207,9 +214,14 @@ const SelectBoxDefaults = {
             iconSize: 22,
             iconRound: 0,
             iconMargin: [0, 0], // [left, top and bottom]
+            border: 0, // px: an edge around every row (its color: borderColor, optionActive / optionSelected.borderColor)
+            borderColor: "transparent",
+            space: 0, // px between two rows (Ex: 2: the edges of two rows do not meet)
         },
         optionActive: {
             color: Black(0.06),
+            lineColor: "", // A line above and under the active row (1 px, inside it: no row moves). "": none
+            borderColor: "", // The edge of the active row (option.border). "": the edge of the row
             showAtOpen: 1, // 0: no row is marked when the list opens (only under the mouse / the keyboard)
         },
         optionSelected: {
@@ -218,7 +230,10 @@ const SelectBoxDefaults = {
             checkTickColor: White(1),
             fontFamily: "opensans-bold", // Single selection. "": the font does not change
             showTick: 1, // Single selection: a tick on the right
+            tickSize: 16, // px of the tick
+            borderColor: "", // The edge of the selected row (option.border). "": the edge of the row
             opacity: 1,
+            canSelectAgain: 1, // 0 (single): the selected row can not be chosen again: no look under the mouse or the keys, the keys skip it, a click on it does nothing
         },
         optionDisabled: {
             opacity: 0.4,
@@ -249,13 +264,15 @@ const SelectBoxDefaults = {
         disabled: {
             opacity: 0.4,
         },
-        // The style of the ItemList of createItemView (the keys of ItemList.styles.classic: row, hover, selected,
+        // The package of the ItemList of createItemView (ItemList.styles)
+        itemListStyleName: "ozden",
+        // The style of the ItemList of createItemView (the keys of ItemList.styles.ozden: row, hover, selected,
         // disabled, check...). Its empty text takes style.empty. The check mark is shown only for multiple.
         itemList: {
             box: { color: "transparent", border: 0, round: 0, padding: 0 },
             list: { gap: 0 },
             row: { height: "auto", padding: [8, 8], gap: 10, color: "transparent", round: 6, motion: "" },
-            hover: { color: Black(0.06) },
+            hover: { color: Black(0.06), lineColor: "" }, // WHY: "": no lines above and under the row (ItemList ozden has them).
             selected: { color: Black(0.04), opacity: 1 },
             disabled: { opacity: 0.4 },
             focus: { ringColor: "transparent" }, // WHY: The keyboard stays in the field / search box (the active row is painted).
@@ -278,8 +295,9 @@ const SelectBoxDefaults = {
 
 const SelectBox = function (params = {}) {
 
-    // Merge style package: params.style > SelectBox.styles[styleName] > SelectBoxDefaults.style (classic)
+    // Merge style package: params.style > SelectBox.styles[styleName] > SelectBoxDefaults.style (light)
     basic.applyStylePackage(params, SelectBox.styles, SelectBoxDefaults);
+    SelectBox.fillSearchInputPackage(params.style);
 
     // Merge params:
     mergeIntoIfMissing(params, SelectBoxDefaults);
@@ -310,7 +328,7 @@ const SelectBox = function (params = {}) {
     const SCREEN_MARGIN = 8 * scale; // px: the panel stays this far from the edges of the page
     const MIN_LIST_HEIGHT = 80 * scale; // px: the list is not made shorter than this when the space is small
     const CHECK_SIZE = 18 * scale; // The check box of a row (multiple)
-    const TICK_SIZE = 16 * scale; // The tick of the selected row (single)
+    const TICK_SIZE = _s.optionSelected.tickSize; // The tick of the selected row (single; the style is scaled already)
     const CLEAR_BUTTON_SIZE = 20 * scale; // The clear button of the field
     const CLEAR_ICON_SIZE = 14 * scale;
     const BUTTON_ROUND = 4 * scale; // The clear button and the footer buttons
@@ -330,7 +348,7 @@ const SelectBox = function (params = {}) {
     // createItemView: the list is an ItemList (box.itemList), made at the first open.
     const usesItemList = (typeof box.createItemView === "function") && SelectBox.canUseItemList();
     let fieldViewOption = null; // The option that createValueView has drawn in the field
-    // The search box is a SearchInput (box.searchGroup) when comp/search-input-v2.js is loaded. box.searchInput: its input.
+    // The search box is a SearchInput (box.searchGroup) when comp/search-input.js is loaded. box.searchInput: its input.
     const usesSearchInput = (box.useSearchInput == 1) && SelectBox.canUseSearchInput();
 
     // *** PUBLIC VARIABLES:
@@ -357,6 +375,16 @@ const SelectBox = function (params = {}) {
     const isSelected = function (option) {
         if (isMultiple()) return box.value.some(function (v) { return sameValue(v, option.value); });
         return sameValue(box.value, option.value);
+    };
+
+    // single, style.optionSelected.canSelectAgain: 0 (ozden): the selected row can not be chosen again.
+    const isLockedOption = function (option) {
+        return _s.optionSelected.canSelectAgain == 0 && !isMultiple() && isSelected(option);
+    };
+
+    // A row the mouse and the keys can make active (and choose): not disabled, not the locked selected one.
+    const isActivatable = function (option) {
+        return !option.disabled && !isLockedOption(option);
     };
 
     const findOption = function (value) {
@@ -406,10 +434,10 @@ const SelectBox = function (params = {}) {
     };
 
     // Creates the objects of a container again, in one group (container.wrapper).
-    const renderInto = function (container, buildContent) {
+    const renderInto = function (container, buildContent, gap = 0) {
         if (container.wrapper) container.wrapper.remove();
         createIn(container, function () {
-            container.wrapper = VGroup({ width: "100%", height: "auto", align: "left top", gap: 0, position: "relative" });
+            container.wrapper = VGroup({ width: "100%", height: "auto", align: "left top", gap: gap, position: "relative" });
             container.wrapper.css.alignItems = "stretch";
                 buildContent();
             endGroup();
@@ -554,7 +582,7 @@ const SelectBox = function (params = {}) {
                 Label({ text: moreText, width: "100%", textAlign: "center", padding: MORE_MESSAGE_PADDING, ..._s.empty });
             }
 
-        });
+        }, _s.option.space);
 
         setActive(getStartActiveIndex(), 0);
 
@@ -575,10 +603,10 @@ const SelectBox = function (params = {}) {
     const toListItem = function (option, index) {
         return {
             key: String(index),
-            title: option.label,
-            desc: option.description,
+            text: option.label,
+            description: option.description,
             searchText: [option.group, option.searchText || ""].join(" "),
-            disabled: option.disabled,
+            enabled: basic.isOn(option.disabled) ? 0 : 1,
             option: option,
         };
     };
@@ -589,7 +617,10 @@ const SelectBox = function (params = {}) {
 
     const getItemListStyle = function () {
         const check = Object.assign({}, _s.itemList.check, { visible: isMultiple() ? 1 : 0 });
-        return Object.assign({}, _s.itemList, { empty: _s.itemList.empty || _s.empty, check: check });
+        // WHY: The rows of the ItemList follow optionSelected.canSelectAgain: one setting for both kinds of rows (the
+        //      ozden package of ItemList has 0, so a classic SelectBox must give its 1).
+        const selected = Object.assign({}, _s.itemList.selected, { canSelectAgain: _s.optionSelected.canSelectAgain });
+        return Object.assign({}, _s.itemList, { empty: _s.itemList.empty || _s.empty, check: check, selected: selected });
     };
 
     const createListItemView = function (item, row) {
@@ -613,6 +644,7 @@ const SelectBox = function (params = {}) {
                 ariaLabel: box.ariaLabel || "List",
                 onItemClick: onListItemClick,
                 onChange: onListChange,
+                styleName: _s.itemListStyleName,
                 style: getItemListStyle(),
                 scale: 1, // WHY: style.itemList is scaled already (with the style of SelectBox).
             });
@@ -631,21 +663,24 @@ const SelectBox = function (params = {}) {
 
     const prepareListRow = function (item, row, index) {
         row.elem.id = id + "-option-" + index;
-        if (item.option.disabled) row.cursor = "default";
         row.on("mousemove", function () {
             const rowIndex = rows.findIndex(function (shown) { return shown.row === row; });
-            if (rowIndex >= 0 && rowIndex != activeIndex && !item.option.disabled) setActive(rowIndex, 0);
-        });
-        // WHY: The ItemList paints the row again when the mouse leaves it; the keyboard row keeps its color.
-        row.onHoverChange(function () {
-            if (rows[activeIndex] && rows[activeIndex].row === row) row.color = getActiveColor();
+            onRowMouseMove(rowIndex, item.option);
         });
     };
+
+    // The mouse on a row makes it active. WHY: On the locked selected row no row is active (the last one is not
+    // left white): the row under the mouse can not be chosen.
+    const onRowMouseMove = function (index, option) {
+        if (index < 0 || index == activeIndex || option.disabled) return;
+        setActive(isLockedOption(option) ? -1 : index, 0);
+    };
+
 
     // The search, the selection and the active row of the ItemList (its rows are made only once).
     const renderItemList = function () {
         if (!box.itemList) createItemList();
-        syncListSelection();
+        syncListSelection(); // WHY: Also the cursors: the ItemList gives a hand only to a row that can be chosen.
         box.itemList.search(searchText);
         rows = [];
         box.itemList.forEach(function (item, row) {
@@ -663,8 +698,9 @@ const SelectBox = function (params = {}) {
     };
 
     // A click on a row: the ItemList changes its selection (onListChange). The selected row clicked again
-    // (single) is not a change, but the list closes like the normal rows.
+    // (single) is not a change, but the list closes like the normal rows (not the locked one: nothing happens).
     const onListItemClick = function (list, item) {
+        if (isLockedOption(item.option)) return;
         if (!isMultiple() && isSelected(item.option)) afterSelect(JSON.stringify(box.value));
     };
 
@@ -695,17 +731,20 @@ const SelectBox = function (params = {}) {
         return getFilteredOptions();
     };
 
-    const getActiveColor = function () {
-        return (usesItemList) ? _s.itemList.hover.color : _s.optionActive.color;
+    // The edge of an own row (option.border): selected, active, or its own
+    const getOptionBorderColor = function (row, isActive) {
+        if (row.isSelectedOption && _s.optionSelected.borderColor) return _s.optionSelected.borderColor;
+        if (isActive && _s.optionActive.borderColor) return _s.optionActive.borderColor;
+        return _s.option.borderColor;
     };
 
-    // The look of a row that is not active any more.
-    const paintInactiveRow = function (row) {
-        if (usesItemList) {
-            box.itemList.refresh(); // WHY: The ItemList knows its look (selected, under the mouse).
-            return;
-        }
-        row.color = "transparent";
+    // The look of an own row (not of an ItemList), active (under the mouse or the arrow keys) or not: style.optionActive.
+    const paintOptionRow = function (row, isActive) {
+        row.color = isActive ? _s.optionActive.color : "transparent";
+        if (_s.option.border) row.borderColor = getOptionBorderColor(row, isActive);
+        const lineColor = _s.optionActive.lineColor;
+        // WHY: Only with lines: a package without them never touches the shadow of a row.
+        if (lineColor) row.boxShadow = isActive ? "inset 0 1px 0 " + lineColor + ", inset 0 -1px 0 " + lineColor : "";
     };
 
     // Scrolls the list to show a row.
@@ -723,12 +762,12 @@ const SelectBox = function (params = {}) {
         else if (bottom > area.scrollTop + area.clientHeight) area.scrollTop = bottom - area.clientHeight;
     };
 
-    // Active row after the list is drawn: the first selected one, or the first enabled one
+    // Active row after the list is drawn: the first selected one, or the first one that can be chosen
     const getStartActiveIndex = function () {
         if (_s.optionActive.showAtOpen == 0) return -1;
-        const selectedIndex = rows.findIndex(function (item) { return isSelected(item.option) && !item.option.disabled; });
+        const selectedIndex = rows.findIndex(function (item) { return isSelected(item.option) && isActivatable(item.option); });
         if (selectedIndex >= 0) return selectedIndex;
-        return rows.findIndex(function (item) { return !item.option.disabled; });
+        return rows.findIndex(function (item) { return isActivatable(item.option); });
     };
 
     const createDescription = function (html) {
@@ -752,11 +791,13 @@ const SelectBox = function (params = {}) {
             clickable: 1,
         });
         if (_s.option.minHeight) row.css.minHeight = _s.option.minHeight + "px";
+        row.isSelectedOption = selected;
+        if (_s.option.border) row.props({ border: _s.option.border, borderColor: getOptionBorderColor(row, 0) });
         if (selected && _s.optionSelected.opacity != 1) row.opacity = _s.optionSelected.opacity;
         row.elem.id = id + "-option-" + index;
         row.role = "option";
         row.aria = { selected: (selected) ? "true" : "false" };
-        row.cursor = (option.disabled) ? "default" : "pointer";
+        row.cursor = isActivatable(option) ? "pointer" : "default";
         if (option.disabled) {
             row.aria = { disabled: "true" };
             row.opacity = _s.optionDisabled.opacity;
@@ -798,11 +839,11 @@ const SelectBox = function (params = {}) {
         endGroup();
 
         row.on("mousemove", function () {
-            if (activeIndex != index && !option.disabled) setActive(index, 0);
+            onRowMouseMove(index, option);
         });
 
         row.on("click", function () {
-            if (!option.disabled) selectOption(option);
+            if (isActivatable(option)) selectOption(option);
         });
 
         return row;
@@ -812,31 +853,33 @@ const SelectBox = function (params = {}) {
     // scroll: 1 -> Move the list to show the active row.
     const setActive = function (index, scroll = 1) {
 
-        if (rows[activeIndex]) paintInactiveRow(rows[activeIndex].row);
+        if (rows[activeIndex] && !usesItemList) paintOptionRow(rows[activeIndex].row, 0);
         activeIndex = index;
 
         const item = rows[activeIndex];
+        // WHY: The ItemList paints its own rows: it knows their look (selected, under the mouse).
+        if (usesItemList && box.itemList) box.itemList.setActiveKey(item ? getListKey(item.option) : null);
         if (!item) {
             box.panel.aria = { activedescendant: null };
             box.aria = { activedescendant: null };
             return;
         }
 
-        item.row.color = getActiveColor();
+        if (!usesItemList) paintOptionRow(item.row, 1);
         box.aria = { activedescendant: item.row.elem.id };
         if (box.searchInput) box.searchInput.inputElement.setAttribute("aria-activedescendant", item.row.elem.id);
         if (scroll) scrollToRow(item.row);
 
     };
 
-    // step: +1 or -1. Skips disabled options.
+    // step: +1 or -1. Skips the rows that can not be chosen (disabled, the locked selected one).
     const moveActive = function (step) {
         if (rows.length == 0) return;
         // WHY: With no active row (-1), ArrowUp starts from the end: (-1 - 1) % length was the row before the last one.
         let index = (activeIndex < 0 && step < 0) ? rows.length : activeIndex;
         for (let i = 0; i < rows.length; i++) {
             index = (index + step + rows.length) % rows.length;
-            if (!rows[index].option.disabled) return setActive(index);
+            if (isActivatable(rows[index].option)) return setActive(index);
         }
     };
 
@@ -886,7 +929,9 @@ const SelectBox = function (params = {}) {
             const scrollTop = box.list.elem.scrollTop;
             renderList();
             box.list.elem.scrollTop = scrollTop; // WHY: The list must not jump after a click.
-            setActive(keepActive, 0);
+            // WHY: The row just chosen may be the locked selected one now (canSelectAgain: 0): no active row then.
+            const keptRow = rows[keepActive];
+            setActive((keptRow && isActivatable(keptRow.option)) ? keepActive : -1, 0);
         }
 
         // WHY: The selected option clicked again is not a change.
@@ -975,7 +1020,7 @@ const SelectBox = function (params = {}) {
     // The height of the panel and the list for fullHeightList (1) or the normal list (0).
     const applyListHeightMode = function () {
         const isFullHeight = (box.fullHeightList == 1);
-        // WHY: a full height list touches the top and the bottom of the page: square corners, like the old SelectItem.
+        // WHY: a full height list touches the top and the bottom of the page: square corners.
         box.panel.round = isFullHeight ? 0 : _s.panel.round;
         box.panel.height = "auto";
         box.panel.css.minHeight = "";
@@ -1014,7 +1059,7 @@ const SelectBox = function (params = {}) {
 
     const selectActiveRow = function () {
         const item = rows[activeIndex];
-        if (item && !item.option.disabled) selectOption(item.option);
+        if (item && isActivatable(item.option)) selectOption(item.option);
     };
 
     // A letter typed without Ctrl / Cmd / Alt
@@ -1106,15 +1151,13 @@ const SelectBox = function (params = {}) {
         input.setAttribute("autocomplete", "off");
     };
 
-    // A SearchInput of comp/search-input-v2.js (style.searchInput), with its clear button.
+    // A SearchInput of comp/search-input.js (style.searchInput), with its clear button.
     const createSearchInput = function () {
         const params = Object.assign({}, _s.searchInput);
-        params.searchIconFile = SelectBox.getSearchIconFile(params.searchIconFile);
-        params.clearIconFile = SelectBox.getSearchIconFile(params.clearIconFile);
         params.width = "100%";
         params.scale = 1; // WHY: style.searchInput is scaled already (with the style of SelectBox).
-        params.placeholderText = box.searchPlaceholder;
-        params.onSearch = onSearchTextChange; // WHY: also after its clear button (that is not an "input" event).
+        params.placeholder = box.searchPlaceholder;
+        params.onChange = onSearchTextChange; // WHY: also after its clear button (that is not an "input" event).
         box.searchGroup = SearchInput(params);
         box.searchInput = box.searchGroup.txtSearch;
     };
@@ -1146,7 +1189,7 @@ const SelectBox = function (params = {}) {
     };
 
     const setSearchBoxText = function (text) {
-        if (usesSearchInput) box.searchGroup.setText(text);
+        if (usesSearchInput) box.searchGroup.setValue(text, 1);
         else box.searchInput.text = text;
     };
 
@@ -1171,6 +1214,10 @@ const SelectBox = function (params = {}) {
         setSearchBoxText(searchText);
         box.footer.visible = (isMultiple() && box.showSelectAll == 1) ? 1 : 0;
 
+        // WHY at open: a field in a Dialog or a SidePanel (their layer is over 1001) opens its list over them
+        const layerZIndex = basic.zIndexAbove(box, OVERLAY_Z_INDEX);
+        box.overlay.zIndex = layerZIndex;
+        box.panel.zIndex = layerZIndex + 1;
         box.overlay.visible = 1;
         box.panel.visible = 1;
         applyListHeightMode();
@@ -1216,7 +1263,10 @@ const SelectBox = function (params = {}) {
 
     // silent: 1 -> onChange is not called.
     box.setValue = function (value, silent = 0) {
-        box.value = normalizeValue(value);
+        const next = normalizeValue(value);
+        // WHY JSON: a multiple selection is a list (setOptions compares the same way)
+        if (JSON.stringify(next) === JSON.stringify(box.value)) return;
+        box.value = next;
         updateField();
         if (isOpen) renderList();
         if (!silent) box.onChange(box);
@@ -1515,20 +1565,24 @@ SelectBox.canUseItemList = function () {
     return false;
 };
 
-// The search box is a SearchInput when comp/search-input-v2.js is loaded (no warning without it: the own box).
-// WHY: SearchInput.styles: the comp-m1 SearchInput had the same global name and not the same params.
+// The search box is a SearchInput when comp/search-input.js is loaded (no warning without it: the own box).
+// WHY SearchInput.styles: an older SearchInput had the same global name and not the same params.
 SelectBox.canUseSearchInput = function () {
     return (typeof SearchInput === "function") && !!SearchInput.styles;
 };
 
-// An icon file of style.searchInput: a name without a folder ("search.svg") is taken from the folder of the
-// loaded comp/search-input-v2.js. WHY: SearchInput gives paths from a page in a samples folder ("../comp/");
-// a page of another folder did not find them. A path ("../my/search.svg") or a data: URL is used as it is.
-SelectBox.getSearchIconFile = function (file) {
-    if (!file || file.includes("/")) return file;
-    const script = document.querySelector('script[src*="search-input-v2"]');
-    if (!script) return file;
-    return script.getAttribute("src").replace(/search-input-v2(\.min)?\.js.*$/, "search-input-v2/") + file;
+// A search box in a package of SearchInput (style.searchInput.styleName): the params of that package fill
+// style.searchInput before SelectBoxDefaults does. The keys of the SelectBox package still win.
+// WHY: The look keys of the classic search box of SelectBoxDefaults filled every missing key, so a search box with
+//      styleName "ozden" kept the classic icons, sizes and colors (the search box of SelectBox ozden looked old).
+SelectBox.fillSearchInputPackage = function (style) {
+    const searchInput = style.searchInput;
+    if (!searchInput || !SelectBox.canUseSearchInput()) return;
+    const searchPackage = SearchInput.styles[searchInput.styleName];
+    if (!searchPackage) return;
+    const packageParams = Object.assign({}, searchPackage);
+    delete packageParams.style;
+    mergeIntoIfMissing(searchInput, packageParams);
 };
 
 // "Apple" -> { value: "Apple", label: "Apple", description: "", iconFile: "", group: "", disabled: 0 }
@@ -1556,7 +1610,7 @@ SelectBox.getArrowSvg = function (color, size = 16) {
     return '<svg xmlns="http://www.w3.org/2000/svg" width="' + size + '" height="' + size + '" viewBox="0 0 24 24" fill="none" stroke="' + color + '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>';
 };
 
-// Up and down arrows (the "unfold more" icon of the comp-m1 SelectItem)
+// Up and down arrows (the "unfold more" icon)
 SelectBox.getUnfoldSvg = function (color, size = 20) {
     return '<svg xmlns="http://www.w3.org/2000/svg" width="' + size + '" height="' + size + '" viewBox="0 -960 960 960" fill="' + color + '"><path d="M480-80 240-320l57-57 183 183 183-183 57 57L480-80ZM298-584l-58-56 240-240 240 240-58 56-182-182-182 182Z"/></svg>';
 };
@@ -1593,9 +1647,9 @@ SelectBox.getCheckSvg = function (checked, style, size = 18) {
 SelectBox.styles = {
 
     // White field, dark text, a soft line.
-    classic: SelectBoxDefaults.style,
+    light: SelectBoxDefaults.style,
 
-    // Dark theme. (The other dark packages of comp-m4 use these colors.)
+    // Dark theme. (The other dark packages use these colors.)
     dark: {
         field: { color: "#232322", border: 1, borderColor: "rgba(255, 255, 255, 0.10)", round: 8, padding: [12, 0] },
         fieldHover: { borderColor: "rgba(255, 255, 255, 0.30)" },
@@ -1605,7 +1659,7 @@ SelectBox.styles = {
         arrow: { color: "rgba(255, 255, 255, 0.55)" },
         panel: { color: "#232322", border: 1, borderColor: "rgba(255, 255, 255, 0.12)", round: 10, padding: 6, shadow: "0 8px 24px rgba(0, 0, 0, 0.5)" },
         searchInput: {
-            styleName: "classic",
+            styleName: "original", // the first look of SearchInput
             height: 38,
             searchIconLeft: 10, // WHY: the icon and the text at the place of the own search input (icon 18, text 42)
             color: "rgba(255, 255, 255, 0.05)",
@@ -1642,11 +1696,12 @@ SelectBox.styles = {
     },
 
 };
+SelectBox.styles.classic = SelectBox.styles.light; // the old name of light: the pages made with it keep their look
 
 
-// The look of the old comp-m1 SelectItem and SelectText: a whitesmoke box with a thin border, the list opens
-// over the field with a fade, a yellow search box (SearchInput), rows that get white under the mouse, the
-// selected one half transparent. A package of params: a 350 x 50 field, a search box, the list down to the
+// A whitesmoke box with a thin border, the list opens over the field with a fade, a white search box (SearchInput),
+// rows that get white with a thin line above and under them under the mouse, the selected one half transparent.
+// A package of params: a 350 x 50 field, a search box, the list down to the
 // bottom of the page. Text rows; your own rows and field: createItemView / createValueView
 // (02-comp-examples/select-box-ozden-item.htm). The params of the package are used when the page does not give them.
 SelectBox.styles.ozden = {
@@ -1677,33 +1732,24 @@ SelectBox.styles.ozden = {
             motionDuration: 200,
             startScale: 0.9,
         },
-        // The yellow search bar of the comp-m1 SelectItem: it was this SearchInput (the comp-m1 one) with these params.
+        // The search bar: the ozden SearchInput (its icons, its font and icon sizes, its bottom line) in white, nearly
+        // square and without a border: the search box of ItemList ozden.
         searchInput: {
-            styleName: "classic",
-            height: 40,
-            color: "#FFFCD6",
+            styleName: "ozden",
+            height: 44, // as ItemList ozden; ozdenDark takes it too
+            searchIconLeft: 16, // WHY: the default of SearchInput, as ItemList ozden (SelectBoxDefaults has 10)
+            color: "white",
             border: 0,
-            borderColor: "transparent",
-            borderBottomStyle: "2px solid rgba(0, 0, 0, 0.06)",
             round: 2,
-            fontSize: 18,
-            textColor: "rgba(0, 0, 0, 0.8)",
-            placeholderColor: "",
-            searchIconFile: "search.svg",
-            clearIconFile: "clear.svg",
-            searchIconSize: 22,
-            searchIconOpacity: 1,
-            clearIconOpacity: 0.6,
-            invertIconColor: 0,
         },
         search: {
-            color: "#FFFCD6",
+            color: "white", // (as searchInput)
             border: 0,
             borderColor: "transparent",
             round: 2,
             fontSize: 18,
             textColor: "rgba(0, 0, 0, 0.8)",
-            height: 40,
+            height: 44, // as searchInput (this own search box: a page without comp/search-input.js)
             padding: [16, 0],
             iconSize: 22,
             borderBottom: "2px solid rgba(0, 0, 0, 0.06)",
@@ -1719,22 +1765,98 @@ SelectBox.styles.ozden = {
             iconRound: 4,
             iconMargin: [0, 0],
         },
-        optionActive: { color: "white", showAtOpen: 0 },
-        optionSelected: { textColor: "rgba(0, 0, 0, 0.8)", checkColor: "#373836", checkTickColor: "white", fontFamily: "", showTick: 0, opacity: 0.5 },
-        description: { fontSize: 14, textColor: "gray", marginTop: -4 }, // WHY: -4: the old title (top 25) and description (top 49) overlap a little.
+        optionActive: { color: "white", lineColor: Black(0.2), showAtOpen: 0 }, // as ItemList ozden
+        // WHY canSelectAgain 0: the selected item is half transparent and not clickable: it does not get the white under
+        //     the mouse and a click on it does nothing.
+        optionSelected: { textColor: "rgba(0, 0, 0, 0.8)", checkColor: "#373836", checkTickColor: "white", fontFamily: "", showTick: 0, opacity: 0.5, canSelectAgain: 0 },
+        description: { fontSize: 14, textColor: "gray", marginTop: -4 }, // WHY -4: the title and the description overlap a little.
         highlight: { color: "transparent" },
         empty: { fontSize: 16, textColor: Black(0.45) },
-        // createItemView: the rows of the comp-m1 SelectItem list (white under the mouse, the selected one half transparent).
+        // createItemView: rows that are white with a thin line above and under them under the mouse, the selected one
+        // half transparent, as ItemList ozden.
         itemList: {
-            row: { padding: [19, 0], gap: 20, round: 0, motion: "background-color 0.2s" }, // WHY: 19: see option.padding
-            hover: { color: "white" },
-            selected: { color: "transparent", opacity: 0.5 }, // WHY: transparent: a selected row does not get white under the mouse.
+            row: { padding: [19, 0], gap: 20, round: 0, motion: "background-color 0.2s, box-shadow 0.2s" }, // WHY: 19: see option.padding
+            hover: { color: "white", lineColor: Black(0.2) },
+            selected: { color: "transparent", opacity: 0.5 }, // WHY: transparent: no look of its own (it can not be chosen again).
             check: { size: 22, color: "#373836", iconColor: "white", borderColor: Black(0.25) },
         },
-        // The scroll bar of the comp-m1 ItemList: always shown, with the dots at its ends.
+        // The scroll bar: always shown, with the dots at its ends.
         scrollBar: { bar_color: "#373836", bar_mouseOverColor: "#373836", bar_opacity: 0.4, bar_mouseOverOpacity: 0.9, neverHide: 1, showDots: 1 },
     },
 };
 
+// The dark theme of ozden: the shapes of ozden in the dark tones of the kit, as ItemList
+// ozdenDark: a field and a list of #1A1A19 (on a darker page, Ex: #141414), the active row #262624 with a thin light
+// line above and under it, the selected one half transparent, the ozdenDark search box (02-comp-examples/
+// select-box-ozden-dark-text.htm). Only the colors are here: the sizes and the params come from ozden (below).
+SelectBox.styles.ozdenDark = {
+    style: {
+        field: { color: "#1A1A19", borderColor: White(0.22) },
+        fieldHover: { borderColor: White(0.22) },
+        fieldFocus: { borderColor: White(0.22) },
+        fieldText: { textColor: White(0.88) },
+        placeholder: { textColor: White(0.4) },
+        arrow: { color: "white" },
+        panel: { color: "#1A1A19", borderColor: White(0.22) },
+        searchInput: { styleName: "ozdenDark", color: "#262624" },
+        search: { color: "#262624", textColor: White(0.88), borderBottom: "2px solid " + White(0.06) },
+        option: { textColor: White(0.88) },
+        optionActive: { color: "#262624", lineColor: White(0.14) },
+        optionSelected: { textColor: White(0.88), checkColor: "#E6E6E4", checkTickColor: "#1A1A19" },
+        description: { textColor: White(0.45) },
+        group: { textColor: White(0.45) },
+        empty: { textColor: White(0.45) },
+        footerButton: { textColor: White(0.8) },
+        divider: { color: White(0.08) },
+        itemListStyleName: "ozdenDark",
+        itemList: {
+            hover: { color: "#262624", lineColor: White(0.14) },
+            check: { color: "#E6E6E4", iconColor: "#1A1A19", borderColor: White(0.3) },
+        },
+        scrollBar: { bar_color: "#CFCFCD", bar_mouseOverColor: "#CFCFCD" },
+    },
+};
+// WHY: The shapes, the sizes and the params of ozden (350 x 50, the search box, the list to the bottom of the page).
+mergeIntoIfMissing(SelectBox.styles.ozdenDark, SelectBox.styles.ozden);
+
 // The old name of the dark package. (Kept: pages may use it.)
 SelectBox.DARK_STYLE = SelectBox.styles.dark;
+
+// The minimal theme (_designs/minimal-theme.htm): a 28 px field of a line (darker under the mouse, ink while open),
+// a 13 px text, a 14 px chevron; the list on the ground of the window with a line and no shadow, a line around the row
+// under the mouse, the selected row in ink with a check. minimalDark: the same on a dark window.
+SelectBox.createMinimalStyle = function (colors) {
+    return {
+        height: 28,
+        style: {
+            field: { color: "transparent", border: 1, borderColor: colors.edge, round: 4, padding: [10, 0] }, // WHY edge: 3:1 at least (a control)
+            fieldHover: { borderColor: colors.edgeHover },
+            fieldFocus: { borderColor: colors.ink },
+            fieldText: { fontSize: 13, textColor: colors.text },
+            placeholder: { textColor: colors.faintText },
+            arrow: { color: colors.softText, icon: "chevron", size: 14, opacity: 1, marginRight: 0 },
+            panel: { color: colors.ground, border: 1, borderColor: colors.line, round: 4, padding: 4, shadow: "none", gap: 4 },
+            searchInput: { styleName: colors.searchStyleName, height: 28, fontSize: 13, searchIconSize: 14, searchIconLeft: 10, searchIconGap: 6, round: 14 },
+            search: { color: "transparent", border: 1, borderColor: colors.edge, round: 4, fontSize: 13, textColor: colors.text, height: 28, padding: [10, 0], iconSize: 14 },
+            option: { fontSize: 13, textColor: colors.text, round: 3, padding: [8, 4], gap: 8, iconSize: 14, border: 1, borderColor: "transparent", space: 2 },
+            optionActive: { color: "transparent", lineColor: "", borderColor: colors.lineHover },
+            optionSelected: { textColor: colors.ink, checkColor: colors.ink, checkTickColor: colors.onInk, fontFamily: "", showTick: 1, tickSize: 12, borderColor: colors.ink },
+            description: { fontSize: 12, textColor: colors.softText },
+            group: { fontSize: 11, textColor: colors.faintText },
+            empty: { fontSize: 12, textColor: colors.softText },
+            footerButton: { fontSize: 12, textColor: colors.ink },
+            divider: { color: colors.line },
+            itemListStyleName: colors.itemListStyleName,
+        },
+    };
+};
+SelectBox.MINIMAL_COLORS = {
+    ground: "#FFFFFF", text: Black(0.85), softText: Black(0.55), faintText: Black(0.54),
+    line: Black(0.2), lineHover: Black(0.45), edge: Black(0.45), edgeHover: Black(0.65), ink: "#1F1F1F", onInk: "#FFFFFF", searchStyleName: "minimal", itemListStyleName: "minimal",
+};
+SelectBox.styles.minimal = SelectBox.createMinimalStyle(SelectBox.MINIMAL_COLORS);
+SelectBox.MINIMAL_DARK_COLORS = {
+    ground: "#1A1A19", text: White(0.88), softText: White(0.55), faintText: White(0.48),
+    line: White(0.18), lineHover: White(0.42), edge: White(0.42), edgeHover: White(0.62), ink: "#EDEDEB", onInk: "#1A1A19", searchStyleName: "minimalDark", itemListStyleName: "minimalDark",
+};
+SelectBox.styles.minimalDark = SelectBox.createMinimalStyle(SelectBox.MINIMAL_DARK_COLORS);

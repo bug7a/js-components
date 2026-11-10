@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+
+        <title>TextField JS Component</title>
+
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"><!-- , user-scalable=no -->
+
+        <!-- LIBRARY FILES -->
+        <!-- <link rel="preload" href="image.png" as="image"> -->
+        <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+        <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
+        <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
+
+        <script src="../comp/smart-button.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/tooltip.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/text-field.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/number-field.js" type="text/javascript" charset="utf-8"></script>
+
+        <script>
+
+        // TextField and NumberField: a title set after creation, a description, a unit, and a letter counter in the unit (onChange).
+
+        const start = function () {
+
+            page.color = "white";
+
+            // GROUP: The fields, one under the other, in the middle
+            VGroup({
+                gap: 20,
+            });
+
+                // INPUT: #1
+                const myInput1 = TextField({
+                    styleName: "modern",
+                    key: "1",
+                    required: 1,
+                    placeholder: "Jack",
+                    leftPadding: 20,
+                });
+                myInput1.setTitleText("FIRST NAME");
+
+                // INPUT: #2
+                const myInput2 = NumberField({
+                    styleName: "modern",
+                    key: "2",
+                    titleText: "HEIGHT",
+                    placeholder: "175",
+                    descriptionText: "The vertical size...",
+                    unitText: "cm",
+                    maxLength: 3,
+                    required: 0,
+                    allowNegative: 0,
+                    allowDecimal: 0,
+                });
+                myInput2.onChange = function () {
+                    console.log(myInput2.getValue());
+                };
+
+                // INPUT: #3
+                const myInput3 = TextField({
+                    styleName: "modern",
+                    key: "3",
+                    placeholder: "",
+                    titleText: "COUNT",
+                    descriptionText: "As you type something, it will write the number of characters.",
+                    required: 1,
+                    maxLength: 20,
+                    unitText: "0/20",
+                    unitStyle: {
+                        fontSize: 16,
+                    },
+                });
+                myInput3.onChange = function () {
+                    const currentLength = myInput3.input.text.length;
+                    myInput3.setUnitText(`${currentLength}/${myInput3.maxLength}`);
+                };
+
+            endGroup();
+
+            // GROUP: Setting buttons
+            HGroup({
+                align: "left top",
+                gap: 8,
+                padding: [20, 20],
+            });
+
+                createSettingButton("Button A");
+                createSettingButton("Button B");
+
+            endGroup();
+
+        };
+
+        // A button of the sample (SmartButton, its gray): its text goes to the console
+        const createSettingButton = function (text) {
+            SmartButton({
+                labelText: text,
+                onClick: function () { console.log(text); },
+            });
+        };
+
+        </script>
+
+    </head>
+    <body>
+
+        <!-- HTML content -->
+
+    </body>
+</html>

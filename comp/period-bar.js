@@ -6,22 +6,21 @@ PeriodBar - v26.11
 
 UI COMPONENT
 - A month switcher: a white capsule with the selected month in its middle (a small title over a big name) and a
-  round button with a chevron at each side. The new version of the period bar of javascript-mobile-app-template
-  (js/custom/ui-period-bar/ui-period-bar.js), with the same look and the same motions.
+  round button with a chevron at each side.
 - The months are this month and the months before it (monthCount):
   "TODAY" / "1 November" (this month, with the day of today), "LAST MONTH" / "October", "2 MONTHS AGO" / "September"...
   A month of another year gets its year: "December 2025".
 - language: "en" or "tr" (PeriodBar.TEXTS: the titles, the month names of basic.js, the aria labels).
   Another language: PeriodBar.TEXTS.de = { today: "HEUTE", ... } (the keys of PeriodBar.TEXTS.en).
 - value is the index of the selected month: 0 is the oldest one, monthCount - 1 is this month (the default).
-- MOTIONS (the old ones): the new month comes in from the side it goes to (the next one from the right), growing and
+- MOTIONS: the new month comes in from the side it goes to (the next one from the right), growing and
   fading in, while the old one leaves to the other side, shrinking and fading out (0.2 s). setVisible(0 / 1): the bar
   goes up / drops in from above, with a fade (0.3 s). Only transform and opacity move. No motion at the first view;
   none when the system asks for reduced motion. (style.motion: the times; 0 -> no motion)
 - KEYBOARD AND ACCESSIBILITY: Left / Right arrows when the bar has the focus (Tab reaches it; a ring around the capsule,
   only for the keyboard). The buttons have the role "button", aria labels ("Previous month") and aria-disabled at the
   first / last month. The month in the capsule is read by a screen reader when it changes (aria-live).
-- THE SIZES are px of a 600 px design (the page is fitted with page.fit(600, 800)), like the old template.
+- THE SIZES are px of a 600 px design (the page is fitted with page.fit(600, 800)).
   The capsule follows the size of the box (style.pill.space from its edges).
 - onChange is NOT called when the component is created or when the value is set with silent: 1.
 - NEEDS basic.js v26.10.23 (role, aria, tabIndex, basic.addCss, basic.isOn).
@@ -43,10 +42,12 @@ periodBar.getSelectedDate();         // { year, month (1-12) }
 periodBar.setVisible(0);             // it goes up (setVisible(1): it drops in)
 PeriodBar({ language: "tr", monthCount: 24 });
 
-Started Date: November 2026 (the old periodBar: 2022)
-Developer: Bugra Ozden
-Email: bugra.ozden@gmail.com
+Started Date: November 2026
 Webpage: https://bug7a.github.io/js-components/
+
+Copyright 2020-2026 Bugra Ozden <bugra.ozden@gmail.com> (https://bug7a.github.io/)
+Licensed under the Apache License, Version 2.0
+SPDX-License-Identifier: Apache-2.0
 
 */
 

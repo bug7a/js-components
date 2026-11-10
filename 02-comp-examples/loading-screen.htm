@@ -15,6 +15,7 @@
     <!-- COMPONENT FILES -->
     <script src="../comp/smart-button.js" type="text/javascript" charset="utf-8"></script> <!-- the clock and the dots -->
     <script src="../comp/loading-screen.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/scroll-area.js" type="text/javascript" charset="utf-8"></script>
 
     <script>
 
@@ -22,6 +23,8 @@
 
         // *** VARIABLES:
         let cardLoading, clockLoading, splash;
+
+        const CARD_MAX_WIDTH = 600;
 
         // App icon of the samples (SVG: no file needed)
         const APP_ICON_SVG =
@@ -34,143 +37,160 @@
 
             page.color = "#F4F5F2";
 
-            startBox(0, 0, "100%", "100%", { color: "transparent", scrollY: 1 });
+            // WHY 16 at the sides: the cards fill a phone (390 px)
+            ScrollArea({ align: "center top", gap: 30, padding: [16, 50] });
 
-                VGroup({ width: "100%", height: "auto", align: "center top", gap: 30, padding: 50 });
+                Label({ text: "LoadingScreen", fontSize: 26, fontFamily: "opensans-bold" });
 
-                    Label({ text: "LoadingScreen", fontSize: 26, fontFamily: "opensans-bold" });
+                // SAMPLE 1: Full page
+                startCard("1. Full page", "Covers the page, closes after 2 seconds. minDuration keeps it at least 600 ms.");
 
-                    // SAMPLE 1: Full page
-                    startCard("1. Full page", "Covers the page, closes after 2 seconds. minDuration keeps it at least 600 ms.");
-
-                        HGroup({ hug: 1, gap: 8 });
-                            addButton("Light", function () {
-                                const loading = LoadingScreen({
-                                    titleText: "Loading",
-                                    messageText: "Please wait a moment.",
-                                    removeOnClose: 1,
-                                });
-                                setTimeout(loading.close, 2000);
+                    startButtonRow();
+                        addButton("Light", function () {
+                            const loading = LoadingScreen({
+                                titleText: "Loading",
+                                messageText: "Please wait a moment.",
+                                removeOnClose: 1,
                             });
-                            addButton("Dark + icon", function () {
-                                const loading = LoadingScreen({
-                                    styleName: "dark",
-                                    iconSvg: APP_ICON_SVG,
-                                    titleText: "My App",
-                                    spinnerType: "dots",
-                                    removeOnClose: 1,
-                                });
-                                setTimeout(loading.close, 2000);
+                            setTimeout(loading.close, 2000);
+                        });
+                        addButton("Dark + icon", function () {
+                            const loading = LoadingScreen({
+                                styleName: "dark",
+                                iconSvg: APP_ICON_SVG,
+                                titleText: "My App",
+                                spinnerType: "dots",
+                                removeOnClose: 1,
                             });
-                            addButton("Progress", function () {
-                                const loading = LoadingScreen({
-                                    styleName: "dark",
-                                    iconSvg: APP_ICON_SVG,
-                                    titleText: "Downloading",
-                                    messageText: "0%",
-                                    spinnerType: "none",
-                                    progress: 0,
-                                    removeOnClose: 1,
-                                });
-                                let value = 0;
-                                const timer = setInterval(function () {
-                                    value = Math.min(1, value + 0.1);
-                                    loading.setProgress(value);
-                                    loading.setMessage(Math.round(value * 100) + "%");
-                                    if (value >= 1) { clearInterval(timer); loading.close(); }
-                                }, 250);
+                            setTimeout(loading.close, 2000);
+                        });
+                        addButton("Progress", function () {
+                            const loading = LoadingScreen({
+                                styleName: "dark",
+                                iconSvg: APP_ICON_SVG,
+                                titleText: "Downloading",
+                                messageText: "0%",
+                                spinnerType: "none",
+                                progress: 0,
+                                removeOnClose: 1,
                             });
-                        endGroup();
+                            let value = 0;
+                            const timer = setInterval(function () {
+                                value = Math.min(1, value + 0.1);
+                                loading.setProgress(value);
+                                loading.setMessageText(Math.round(value * 100) + "%");
+                                if (value >= 1) {
+                                    clearInterval(timer);
+                                    loading.close();
+                                }
+                            }, 250);
+                        });
+                    endGroup();
 
-                    endCard();
+                endCard();
 
-                    // SAMPLE 2: The clock (spinnerType: "clock")
-                    startCard("2. The clock", "The default wait: the clock of the waiting views with moving hands (the minute hand fast, the hour hand 12 times slower), always 30 px. Its looks: LoadingScreen.clocks \"ozden\" and \"ozdenDark\"; the style packages \"ozden\" and \"ozdenDark\" are the screens made for them.");
+                // SAMPLE 2: The clock (spinnerType: "clock")
+                startCard(
+                    "2. The clock",
+                    "The default wait: the clock of the waiting views with moving hands (the minute hand fast, the hour hand 12 times slower), always 30 px. Its looks: LoadingScreen.clocks \"ozden\" and \"ozdenDark\"; the style packages \"ozden\" and \"ozdenDark\" are the screens made for them."
+                );
 
-                        startBox({ width: "100%", height: 200, color: "white", round: 8, border: 1, borderColor: Black(0.1) });
-                        that.elem.style.overflow = "hidden";
+                    startBox({
+                        width: "100%",
+                        height: 200,
+                        color: "white",
+                        round: 8,
+                        border: 1,
+                        borderColor: Black(0.1),
+                        css: { overflow: "hidden" },
+                    });
 
-                            clockLoading = LoadingScreen({
+                        clockLoading = LoadingScreen({
+                            spinnerType: "clock",
+                            messageText: "Saving your changes...",
+                            minDuration: 0,
+                            style: { message: { fontSize: 14 } },
+                        });
+
+                    endBox();
+
+                    startButtonRow();
+                        addButton("Full page", function () {
+                            const loading = LoadingScreen({
                                 spinnerType: "clock",
-                                messageText: "Saving your changes...",
-                                minDuration: 0,
-                                style: { message: { fontSize: 14 } },
+                                titleText: "Please wait",
+                                messageText: "Preparing your report.",
+                                removeOnClose: 1,
                             });
-
-                        endBox();
-
-                        HGroup({ hug: 1, gap: 8, wrap: 1 });
-                            addButton("Full page", function () {
-                                const loading = LoadingScreen({
-                                    spinnerType: "clock",
-                                    titleText: "Please wait",
-                                    messageText: "Preparing your report.",
-                                    removeOnClose: 1,
-                                });
-                                setTimeout(loading.close, 3000);
+                            setTimeout(loading.close, 3000);
+                        });
+                        addButton("ozden", function () {
+                            const loading = LoadingScreen({
+                                styleName: "ozden",
+                                titleText: "Please wait",
+                                messageText: "Saving your changes.",
+                                removeOnClose: 1,
                             });
-                            addButton("ozden", function () {
-                                const loading = LoadingScreen({
-                                    styleName: "ozden",
-                                    titleText: "Please wait",
-                                    messageText: "Saving your changes.",
-                                    removeOnClose: 1,
-                                });
-                                setTimeout(loading.close, 3000);
+                            setTimeout(loading.close, 3000);
+                        });
+                        addButton("ozdenDark", function () {
+                            const loading = LoadingScreen({
+                                styleName: "ozdenDark",
+                                titleText: "Please wait",
+                                messageText: "Saving your changes.",
+                                removeOnClose: 1,
                             });
-                            addButton("ozdenDark", function () {
-                                const loading = LoadingScreen({
-                                    styleName: "ozdenDark",
-                                    titleText: "Please wait",
-                                    messageText: "Saving your changes.",
-                                    removeOnClose: 1,
-                                });
-                                setTimeout(loading.close, 3000);
+                            setTimeout(loading.close, 3000);
+                        });
+                        addButton("Slow", function () {
+                            const loading = LoadingScreen({
+                                spinnerType: "clock",
+                                messageText: "A slow clock: style.clock { minuteTurn: 4, hourTurn: 48 }",
+                                style: { clock: { minuteTurn: 4, hourTurn: 48 } },
+                                removeOnClose: 1,
                             });
-                            addButton("Slow", function () {
-                                const loading = LoadingScreen({
-                                    spinnerType: "clock",
-                                    messageText: "A slow clock: style.clock { minuteTurn: 4, hourTurn: 48 }",
-                                    style: { clock: { minuteTurn: 4, hourTurn: 48 } },
-                                    removeOnClose: 1,
-                                });
-                                setTimeout(loading.close, 4000);
-                            });
-                            addButton("open() / close()", function () {
-                                if (clockLoading.opened) clockLoading.close();
-                                else clockLoading.open();
-                            });
-                        endGroup();
+                            setTimeout(loading.close, 4000);
+                        });
+                        addButton("open() / close()", function () {
+                            if (clockLoading.opened) clockLoading.close();
+                            else clockLoading.open();
+                        });
+                    endGroup();
 
-                    endCard();
+                endCard();
 
-                    // SAMPLE 3: Inside a box
-                    startCard("3. Inside a box", "It covers only its container. open() and close() can be called again and again.");
+                // SAMPLE 3: Inside a box
+                startCard("3. Inside a box", "It covers only its container. open() and close() can be called again and again.");
 
-                        startBox({ width: "100%", height: 260, color: "white", round: 8, border: 1, borderColor: Black(0.1) });
-                        that.elem.style.overflow = "hidden";
+                    startBox({
+                        width: "100%",
+                        height: 260,
+                        color: "white",
+                        round: 8,
+                        border: 1,
+                        borderColor: Black(0.1),
+                        css: { overflow: "hidden" },
+                    });
 
-                            Label({ left: 20, top: 20, text: "The content of the box", fontSize: 16 });
+                        Label({ left: 20, top: 20, text: "The content of the box", fontSize: 16 });
 
-                            cardLoading = LoadingScreen({
-                                opened: 0,
-                                messageText: "Loading the list...",
-                                minDuration: 0,
-                                style: { message: { fontSize: 14 } },
-                            });
+                        cardLoading = LoadingScreen({
+                            opened: 0,
+                            messageText: "Loading the list...",
+                            minDuration: 0,
+                            style: { message: { fontSize: 14 } },
+                        });
 
-                        endBox();
+                    endBox();
 
-                        HGroup({ hug: 1, gap: 8 });
-                            addButton("open()", function () { cardLoading.open(); });
-                            addButton("close()", function () { cardLoading.close(); });
-                        endGroup();
+                    startButtonRow();
+                        addButton("open()", function () { cardLoading.open(); });
+                        addButton("close()", function () { cardLoading.close(); });
+                    endGroup();
 
-                    endCard();
+                endCard();
 
-                endGroup();
-
-            endBox();
+            endGroup();
 
             // SAMPLE 0: The splash screen of this page (a real use: shown until the page is ready)
             splash = LoadingScreen({
@@ -189,23 +209,27 @@
 
         const startCard = function (title, description = "") {
             VGroup({
-                width: 600, height: "auto", align: "left top", gap: 16, padding: 20,
+                width: "100%", height: "auto", align: "left top", gap: 16, padding: 20,
                 color: "white", round: 10, border: 1, borderColor: Black(0.1),
+                css: { maxWidth: CARD_MAX_WIDTH + "px", alignItems: "stretch" },
             });
-            that.elem.style.alignItems = "stretch";
             Label({ text: title, fontSize: 14, textColor: Black(0.45) });
             if (description) {
-                Label({ text: description, fontSize: 13, textColor: Black(0.35) });
-                that.elem.style.marginTop = "-10px";
+                Label({ text: description, fontSize: 13, textColor: Black(0.35), css: { marginTop: "-10px" } });
             }
         };
 
-        const endCard = function () { endGroup(); };
+        const endCard = function () {
+            endGroup();
+        };
 
         const addButton = function (text, onClick) {
-            const btn = Button({ text: text, width: 110, height: 34, fontSize: 14 });
-            btn.on("click", onClick);
-            return btn;
+            return SmartButton({ tone: "white", labelText: text, onClick: onClick });
+        };
+
+        // GROUP: a row of buttons (endGroup closes it); it wraps on a narrow screen
+        const startButtonRow = function () {
+            HGroup({ hug: 1, gap: 8, wrap: 1, clipContent: 0 }); // WHY clipContent 0: a SmartButton lifts under the mouse
         };
 
     </script>

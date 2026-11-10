@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <title>Minimal theme in a color</title>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- LIBRARY FILES -->
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Bold.ttf" as="font" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="../basic/basic.css">
+    <script src="../basic/basic.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../basic/scroll-bar.js" type="text/javascript" charset="utf-8"></script>
+
+    <!-- COMPONENT FILES -->
+    <script src="../comp/smart-button.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/check-box.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/radio-button.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/toggle.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/tooltip.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/text-field.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/search-input.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/item-list.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/select-box.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/date-picker.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/slider.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/progress-bar.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/tabs.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/step-bar.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/dialog.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/toast.js" type="text/javascript" charset="utf-8"></script>
+    <!-- after the components: it gives every one of them the packages of the color -->
+    <script src="../comp/minimal-accent.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/scroll-area.js" type="text/javascript" charset="utf-8"></script>
+
+    <script>
+
+    /* Bismillah */
+
+    // The minimal theme in a color of the page: MinimalAccent.addPackages("minimalBlue", ACCENT) makes the packages
+    // "minimalBlue" (a light window) and "minimalBlueDark" (a dark one) for every minimal component loaded before it.
+    // The color goes where minimal draws its ink: an on toggle, a checked box, the fill of a slider, the selected
+    // tab, row and step, the edge of a field while typing; the main button takes the tone "minimalBlue".
+    // The lines, the texts and the focus ring stay as they are. Any color works: change ACCENT.
+    // The dark window gets the color lighter, until it reads on the dark ground; ACCENT_DARK chooses it.
+
+    // *** THE COLORS AND SIZES OF THE PAGE
+    const ACCENT = "#2A78D6"; // reads on white (4.5:1): it is the text of a selected tab too
+    const ACCENT_DARK = ""; // "": made from ACCENT
+    const PAGE_COLOR = "#EDEDEB";
+    const LIGHT_WINDOW_COLOR = "#FFFFFF";
+    const DARK_WINDOW_COLOR = "#1A1A19";
+    const LIGHT_TITLE_COLOR = Black(0.85);
+    const DARK_TITLE_COLOR = White(0.88);
+    const LIGHT_CAPTION_COLOR = Black(0.45);
+    const DARK_CAPTION_COLOR = White(0.45);
+    const WINDOW_WIDTH = 400;
+    const PAGE_SIDE_SPACE = 16; // px at the sides of the windows (a phone)
+    const FRUITS = ["Apple", "Banana", "Cherry", "Grape"];
+    const STEPS = ["Cart", "Address", "Payment", "Done"];
+    const TODAY = new Date();
+
+    const start = function () {
+
+        MinimalAccent.addPackages("minimalBlue", ACCENT, ACCENT_DARK);
+
+        page.color = PAGE_COLOR;
+
+        // SCROLL AREA: Scrolling page
+        ScrollArea();
+
+            HGroup({ width: "100%", height: "auto", align: "center top", gap: 24, padding: [PAGE_SIDE_SPACE, 40], wrap: 1, clipContent: 0 });
+
+                // GROUP: The light window (minimalBlue)
+                VGroup({ width: "100%", height: "auto", align: "left top", gap: 14, padding: 28, color: LIGHT_WINDOW_COLOR, round: 10, clipContent: 0 });
+                that.css = { maxWidth: WINDOW_WIDTH + "px" }; // WHY: on a phone the window is as wide as the screen
+
+                    Label({ text: "minimalBlue", fontSize: 18, bold: 1, textColor: LIGHT_TITLE_COLOR });
+
+                    Label({ text: "BUTTONS", fontSize: 11, bold: 1, textColor: LIGHT_CAPTION_COLOR });
+                    HGroup({ hug: 1, align: "left center", gap: 8, wrap: 1, clipContent: 0 });
+                        SmartButton({ styleName: "minimalBlue", labelText: "Cancel" });
+                        SmartButton({ styleName: "minimalBlue", tone: "minimalBlue", labelText: "Send" });
+                        SmartButton({ styleName: "minimalBlue", labelText: "A dialog", onClick: function () {
+                            Dialog.confirm({ styleName: "minimalBlue", titleText: "Send the report?", messageText: "It goes to the three people of the team.", confirmText: "Send" });
+                        } });
+                        SmartButton({ styleName: "minimalBlue", labelText: "A toast", onClick: function () {
+                            Toast.show({ theme: "minimalBlue", type: "success", titleText: "Sent", messageText: "The report is sent.", action: { text: "Undo", onClick: function () { } } });
+                        } });
+                    endGroup();
+
+                    Label({ text: "CHOICES", fontSize: 11, bold: 1, textColor: LIGHT_CAPTION_COLOR });
+                    HGroup({ hug: 1, align: "left center", gap: 20, clipContent: 0 });
+                        CheckBox({ styleName: "minimalBlue", labelText: "Remember me", checked: 1 });
+                        CheckBox({ styleName: "minimalBlue", labelText: "Send the news" });
+                    endGroup();
+                    HGroup({ hug: 1, align: "left center", gap: 20, clipContent: 0 });
+                        RadioButton({ styleName: "minimalBlue", group: "lightPlan", labelText: "Monthly", checked: 1 });
+                        RadioButton({ styleName: "minimalBlue", group: "lightPlan", labelText: "Yearly" });
+                    endGroup();
+                    HGroup({ hug: 1, align: "left center", gap: 10, clipContent: 0 });
+                        Toggle({ styleName: "minimalBlue", value: 1 });
+                        Label({ text: "Sounds", fontSize: 13, textColor: LIGHT_TITLE_COLOR });
+                    endGroup();
+
+                    Label({ text: "FIELDS", fontSize: 11, bold: 1, textColor: LIGHT_CAPTION_COLOR });
+                    TextField({ styleName: "minimalBlue", width: 260, titleText: "Name", placeholder: "Your name" });
+                    SelectBox({ styleName: "minimalBlue", width: 260, options: FRUITS, value: "Cherry" });
+                    DatePicker({ styleName: "minimalBlue", width: 140, date: TODAY });
+
+                    Label({ text: "LIST", fontSize: 11, bold: 1, textColor: LIGHT_CAPTION_COLOR });
+                    ItemList({ styleName: "minimalBlue", width: 260, height: "auto", selectedKeys: ["1"], items: [
+                        { text: "Projects" },
+                        { text: "Designs" },
+                        { text: "Archive" },
+                    ] });
+
+                    Label({ text: "SLIDER, PROGRESS", fontSize: 11, bold: 1, textColor: LIGHT_CAPTION_COLOR });
+                    Slider({ styleName: "minimalBlue", width: 260, value: 40 });
+                    ProgressBar({ styleName: "minimalBlue", width: 260, titleText: "Uploading files", value: 62 });
+
+                    Label({ text: "TABS, STEPS", fontSize: 11, bold: 1, textColor: LIGHT_CAPTION_COLOR });
+                    Tabs({ styleName: "minimalBlue", width: 300, tabs: ["General", "Sound", "Advanced"], panelHeight: 0 });
+                    StepBar({ styleName: "minimalBlue", width: "100%", steps: STEPS, currentStep: 2 });
+
+                endGroup();
+
+                // GROUP: The dark window (minimalBlueDark)
+                VGroup({ width: "100%", height: "auto", align: "left top", gap: 14, padding: 28, color: DARK_WINDOW_COLOR, round: 10, clipContent: 0 });
+                that.css = { maxWidth: WINDOW_WIDTH + "px" };
+
+                    Label({ text: "minimalBlueDark", fontSize: 18, bold: 1, textColor: DARK_TITLE_COLOR });
+
+                    Label({ text: "BUTTONS", fontSize: 11, bold: 1, textColor: DARK_CAPTION_COLOR });
+                    HGroup({ hug: 1, align: "left center", gap: 8, wrap: 1, clipContent: 0 });
+                        SmartButton({ styleName: "minimalBlueDark", labelText: "Cancel" });
+                        SmartButton({ styleName: "minimalBlueDark", tone: "minimalBlueDark", labelText: "Send" });
+                        SmartButton({ styleName: "minimalBlueDark", labelText: "A dialog", onClick: function () {
+                            Dialog.confirm({ styleName: "minimalBlueDark", titleText: "Send the report?", messageText: "It goes to the three people of the team.", confirmText: "Send" });
+                        } });
+                        SmartButton({ styleName: "minimalBlueDark", labelText: "A toast", onClick: function () {
+                            Toast.show({ theme: "minimalBlueDark", type: "success", titleText: "Sent", messageText: "The report is sent.", action: { text: "Undo", onClick: function () { } } });
+                        } });
+                    endGroup();
+
+                    Label({ text: "CHOICES", fontSize: 11, bold: 1, textColor: DARK_CAPTION_COLOR });
+                    HGroup({ hug: 1, align: "left center", gap: 20, clipContent: 0 });
+                        CheckBox({ styleName: "minimalBlueDark", labelText: "Remember me", checked: 1 });
+                        CheckBox({ styleName: "minimalBlueDark", labelText: "Send the news" });
+                    endGroup();
+                    HGroup({ hug: 1, align: "left center", gap: 20, clipContent: 0 });
+                        RadioButton({ styleName: "minimalBlueDark", group: "darkPlan", labelText: "Monthly", checked: 1 });
+                        RadioButton({ styleName: "minimalBlueDark", group: "darkPlan", labelText: "Yearly" });
+                    endGroup();
+                    HGroup({ hug: 1, align: "left center", gap: 10, clipContent: 0 });
+                        Toggle({ styleName: "minimalBlueDark", value: 1 });
+                        Label({ text: "Sounds", fontSize: 13, textColor: DARK_TITLE_COLOR });
+                    endGroup();
+
+                    Label({ text: "FIELDS", fontSize: 11, bold: 1, textColor: DARK_CAPTION_COLOR });
+                    TextField({ styleName: "minimalBlueDark", width: 260, titleText: "Name", placeholder: "Your name" });
+                    SelectBox({ styleName: "minimalBlueDark", width: 260, options: FRUITS, value: "Cherry" });
+                    DatePicker({ styleName: "minimalBlueDark", width: 140, date: TODAY });
+
+                    Label({ text: "LIST", fontSize: 11, bold: 1, textColor: DARK_CAPTION_COLOR });
+                    ItemList({ styleName: "minimalBlueDark", width: 260, height: "auto", selectedKeys: ["1"], items: [
+                        { text: "Projects" },
+                        { text: "Designs" },
+                        { text: "Archive" },
+                    ] });
+
+                    Label({ text: "SLIDER, PROGRESS", fontSize: 11, bold: 1, textColor: DARK_CAPTION_COLOR });
+                    Slider({ styleName: "minimalBlueDark", width: 260, value: 40 });
+                    ProgressBar({ styleName: "minimalBlueDark", width: 260, titleText: "Uploading files", value: 62 });
+
+                    Label({ text: "TABS, STEPS", fontSize: 11, bold: 1, textColor: DARK_CAPTION_COLOR });
+                    Tabs({ styleName: "minimalBlueDark", width: 300, tabs: ["General", "Sound", "Advanced"], panelHeight: 0 });
+                    StepBar({ styleName: "minimalBlueDark", width: "100%", steps: STEPS, currentStep: 2 });
+
+                endGroup();
+
+            endGroup();
+
+        endGroup();
+
+    };
+
+    </script>
+
+</head>
+<body>
+</body>
+</html>

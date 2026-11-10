@@ -5,21 +5,34 @@
 ItemList - v26.11
 
 UI COMPONENT TEMPLATE
+- NEW PROJECTS: use styleName "ozden" on a light page (the default: rows that are white with a thin line above
+  and under them under the mouse; its search box the ozden SearchInput in white) and "ozdenDark" on a dark page (02-comp-examples/item-list.htm), unless the user asks for
+  another look.
 - A list of items: an icon, a title and a description on every row, or your own row (createItemView).
-  The new version of comp-m1/item-list.js (ItemList.create / setItemCreationFunction).
 - Layouts: "vertical" (a list), "horizontal" (one row of tiles: categories, cards) and "grid" (tiles that
-  wrap: files, icons, pictures). setLayout() changes it later.
+  wrap: files, icons, pictures). setLayout() changes it later. style.tile.fitRow: 1: the tiles of a grid share the
+  whole row (as many as fit at tile.width, then wider), so no empty end is left before the scroll bar.
 - Selection: "single", "multiple" or "none". The selected keys: getSelectedKeys(), the items: getSelected().
+  style.selected.canSelectAgain: 0 (ozden, ozdenDark; light and dark: 1): in a single list the selected row can not
+  be chosen again: a click, Enter or Space does nothing (no onItemClick), no look under the mouse, no hand cursor.
+  The keys can still go to it (its focus ring; a screen reader reads it as selected).
   onChange(self, selectedItems) is NOT called at create time, by setItems() or with silent: 1.
-- Search box: showSearch: 1 puts a SearchInput (comp/search-input-v2.js, load it first) over the list;
+- Search box: showSearch: 1 puts a SearchInput (comp/search-input.js, load it first) over the list;
   its look is style.search, more params in searchParams (Ex: the icon paths for your page). box.searchInput.
-- Search: search(text) shows only the matching items (title, desc and searchText; Turkish letters are
+- Search: search(text) shows only the matching items (text, description and searchText; Turkish letters are
   matched without their marks: "isik" finds "Işık"). It returns the count of the shown items.
-- Keyboard: the arrow keys move the focus (Up / Down in a list, Left / Right in a row, all four in a grid),
-  Home / End, Enter or Space selects. Only one row is in the Tab order.
-- Items: strings or objects { key, title, desc, iconFile, searchText, disabled }. Any other keys stay on the
-  item for your createItemView. An item without a key gets its index as its key.
-- Sections: an item { type: "section", title: "VIEWS" } is a title row between the items (style.section). It is
+- Keyboard (a listbox): the arrow keys move the focus (Up / Down in a list, Left / Right in a row, all four in a
+  grid), Home / End, PageUp / PageDown (a page of rows), letters (type-ahead: the next item whose text starts with
+  them). Enter or Space is a click (onItemClick and the selection). Only one row is in the Tab order: the focused
+  one, or the first selected one, or the first one. multiple: Shift + a move, Shift + Space and Shift + click select
+  the rows from the last clicked one; Ctrl / Cmd + A selects all the shown items (again: none). With a search box:
+  the arrow down goes from it into the list, the arrow up from the first line back to it, Escape clears it.
+- A combobox whose keyboard stays in its field (SelectBox) shows its active row with setActiveKey(key): the look of
+  the mouse (style.hover), also on a selected row, and only on that row. null: none.
+- Items: strings or objects { key, text, description, iconFile, searchText, enabled }. Any other keys stay on the
+  item for your createItemView. An item without a key gets its index as its key. style.title and style.desc are the
+  look of its text and its description.
+- Sections: an item { type: "section", text: "VIEWS" } is a title row between the items (style.section). It is
   never selected, focused, hovered or clicked, the arrow keys skip it, and getSelected(), search() and the empty
   text count only the items. It is shown while at least one item under it (until the next section) is shown: in
   a search, only the sections with a match (a section without items is hidden too).
@@ -34,8 +47,11 @@ UI COMPONENT TEMPLATE
   setAnimated(0/1).
 - height: "auto" -> The list grows with its rows (no scrolling). Otherwise it scrolls with basic/scroll-bar.js
   (if it is loaded).
-- Style packages: "classic" (default: the rows of the comp-m1 SelectItem list, 02-comp-m1-samples/select-item.htm,
-  and the tiles of javascript-mobile-app-template), "modern", "dark".
+- Style packages: "ozden" (default; the name "classic" still works), "ozdenDark" (the same on a dark page), "gallery" and
+  "galleryDark" (pictures: layout "grid", a big photo on every tile with its title under it),
+  "light" and "dark" (the light and dark look of the kit: a white box with one thin line, flat 56 px rows, the
+  selected one in a tint of the accent with a full mark: _designs/item-list.htm), "minimal" and "minimalDark"
+  (lines, 28 px rows: _designs/minimal-theme.htm).
   Select with styleName. (ItemList.styles)
 
 USAGE:
@@ -43,35 +59,37 @@ const list = ItemList({
     width: 360,
     height: 400,
     items: [
-        { key: "broccoli", title: "Broccoli", desc: "Vegetable", iconFile: "assets/fruids/brokoli.png" },
-        { key: "strawberry", title: "Strawberry", desc: "Fruit", iconFile: "assets/fruids/cilek.png" },
+        { key: "broccoli", text: "Broccoli", description: "Vegetable", iconFile: "assets/fruids/brokoli.png" },
+        { key: "strawberry", text: "Strawberry", description: "Fruit", iconFile: "assets/fruids/cilek.png" },
     ],
     onChange: function (self, selectedItems) { println(self.getSelectedKeys()); },
 });
 list.search("fruit");                       // 1 (the count of the shown items)
 list.setSelected(["broccoli"], 1);          // silent: onChange is not called
-list.addItem({ key: "tomato", title: "Tomato", desc: "Vegetable" });
-list.updateItem("tomato", { desc: "Fruit, really" });
+list.addItem({ key: "tomato", text: "Tomato", description: "Vegetable" });
+list.updateItem("tomato", { description: "Fruit, really" });
 list.setLayout("grid");
-ItemList({ selection: "multiple", styleName: "modern" });
+ItemList({ selection: "multiple", styleName: "light" });
 ItemList({ layout: "horizontal", height: 200, styleName: "dark" });
-ItemList({ showSearch: 1, searchParams: { placeholderText: "Ara" } });
+ItemList({ showSearch: 1, searchParams: { placeholder: "Ara" } });
 ItemList({
     style: { row: { height: "auto" } },
     createItemView: function (item, row, self) {     // Objects created here go into the row.
-        Label({ plainText: item.title, fontSize: 18 });
+        Label({ plainText: item.text, fontSize: 18 });
     },
 });
-ItemList({ items: [{ type: "section", title: "FRUITS" }, "Apple", "Banana", { type: "section", title: "VEGETABLES" }, "Carrot"] });
+ItemList({ items: [{ type: "section", text: "FRUITS" }, "Apple", "Banana", { type: "section", text: "VEGETABLES" }, "Carrot"] });
 ItemList({ style: { hover: {} } }); // No look under the mouse
 ItemList({ selection: "none", style: { pressed: { color: Black(0.2) }, row: { motion: "background-color 0.3s" } } });
 const animatedList = ItemList({ animated: 1, items: ["A", "B", "C"] });
 animatedList.removeItem("0");               // "A" fades out, then "B" and "C" move up
 
-Started Date: 14 March 2022 (comp-m1), October 2026 (comp-m4)
-Developer: Bugra Ozden
-Email: bugra.ozden@gmail.com
+Started Date: October 2026
 Webpage: https://bug7a.github.io/js-components/
+
+Copyright 2020-2026 Bugra Ozden <bugra.ozden@gmail.com> (https://bug7a.github.io/)
+Licensed under the Apache License, Version 2.0
+SPDX-License-Identifier: Apache-2.0
 
 */
 
@@ -82,7 +100,7 @@ const ItemListDefaults = {
     key: "0", // Your name for this object: read it in a callback (self.key)
     width: 600,
     height: 400, // "auto": grows with the rows (no scrolling)
-    items: [], // Strings or { key, title, desc, iconFile, searchText, disabled }. A title row: { type: "section", title: "VIEWS" }
+    items: [], // Strings or { key, text, description, iconFile, searchText, enabled }. A title row: { type: "section", text: "VIEWS" }
     layout: "vertical", // "vertical", "horizontal", "grid"
     selection: "single", // "single", "multiple", "none"
     selectedKeys: [], // The keys selected at create time
@@ -90,8 +108,8 @@ const ItemListDefaults = {
     createItemView: null, // function (item, row, self) { ... } Objects created here go into the row (instead of the icon and texts). Not called for a section.
     createSectionView: null, // function (item, row, self) { ... } Your own section row (instead of its title)
     animated: 0, // 1: addItem / removeItem move the rows (a new row fades in, a removed one fades out). setAnimated(0/1)
-    showSearch: 0, // 1: a search box over the list (comp/search-input-v2.js SearchInput must be loaded)
-    searchParams: {}, // More params of the SearchInput. Ex: { placeholderText: "Ara", searchIconFile: "../comp/search-input-v2/search.svg" }
+    showSearch: 0, // 1: a search box over the list (comp/search-input.js SearchInput must be loaded)
+    searchParams: {}, // More params of the SearchInput. Ex: { placeholder: "Ara", searchIconFile: "../comp/search-input/search.svg" }
     emptyText: "No items",
     noResultText: "No results",
     enabled: 1,
@@ -99,20 +117,20 @@ const ItemListDefaults = {
     ariaLabel: "List",
     onItemClick: function (self, item, index, event) { },
     onChange: function (self, selectedItems) { }, // Not at create time, not by setItems(), not with silent: 1
-    styleName: "classic", // "classic", "modern", "dark" or a name added to ItemList.styles
-    style: { // Classic style package (default): the rows of the comp-m1 SelectItem list, the tiles of javascript-mobile-app-template
+    styleName: "ozden", // "ozden", "ozdenDark", "light", "dark", "gallery", "galleryDark", "minimal", "minimalDark" or a name added to ItemList.styles
+    style: { // The ozden style package (default)
         box: {
-            color: "transparent",
+            color: "whitesmoke", // WHY: A row is white under the mouse: on a white page a list with no color of its own shows nothing.
             border: 1,
             borderColor: "rgba(20, 20, 20, 0.45)",
-            round: 8,
+            round: 6,
             padding: 0, // Around the rows of the vertical layout
         },
         list: {
             gap: 0, // Between the rows of the vertical layout
         },
-        // A row of the vertical layout (the list of comp-m1 SelectItem, 02-comp-m1-samples/select-item.htm):
-        // as wide as the list, white under the mouse, the selected one half transparent.
+        // A row of the vertical layout:
+        // as wide as the list, white under the mouse with a thin line above and under it, the selected one half transparent.
         row: {
             height: 80, // "auto": as high as its content (a createItemView)
             padding: [20, 12],
@@ -123,7 +141,8 @@ const ItemListDefaults = {
             round: 0,
             opacity: 1,
             boxShadow: "",
-            motion: "background-color 0.2s",
+            lineColor: "", // A line at the top and at the bottom of the row (1 px, inside it: no row moves). "": none
+            motion: "background-color 0.2s, box-shadow 0.2s", // WHY: box-shadow: the lines come and go with the color.
         },
         // An item of the horizontal and grid layouts: the icon on top, the texts under it
         // (the category items of the home page of the template)
@@ -134,11 +153,13 @@ const ItemListDefaults = {
             gap: 15,
             spacing: 4, // Between the tiles
             listPadding: [12, 5], // Around the tiles
+            fitRow: 0, // 1 (layout "grid"): the tiles share a row: as many as fit at their width, then wider: no empty end
             iconSize: 70,
             frameSize: 90, // A circle behind the icon. 0: no circle
             frameColor: White(0.3),
             frameRound: 100,
             iconFilter: "grayscale(100%)", // "": none
+            iconFit: "", // How a picture fills its square: "cover" (a photo), "contain". "": as the Icon does
             iconMotion: "transform 0.3s",
             hover: {}, // The look under the mouse (the rows use style.hover)
             selectedColor: "white", // "": the color of style.selected (the rows)
@@ -147,7 +168,7 @@ const ItemListDefaults = {
             selectedIconFilter: "grayscale(30%)",
             selectedFontFamily: "opensans-bold", // "": the font does not change
         },
-        // A section: an item { type: "section", title: "VIEWS" }, a title between the items
+        // A section: an item { type: "section", text: "VIEWS" }, a title between the items
         section: {
             height: "auto",
             padding: [20, 8],
@@ -156,30 +177,28 @@ const ItemListDefaults = {
             textColor: Black(0.4),
         },
         // A state: only the keys that change
-        hover: { color: "white" }, // style: { hover: {} }: no look under the mouse
+        hover: { color: "white", lineColor: Black(0.2) }, // style: { hover: {} }: no look under the mouse.
         pressed: { color: null }, // A click, Enter or Space: this color at once, then it fades back (style.row.motion). null: none
-        selected: { color: "transparent", opacity: 0.5 }, // WHY: transparent: a selected row does not get white under the mouse.
+        // WHY: a selected row does not get the white and its lines under the mouse.
+        // canSelectAgain 0 (single, as SelectBox ozden): it can not be
+        // chosen again: a click, Enter or Space does nothing (no onItemClick), no look under the mouse, no hand.
+        selected: { color: "transparent", lineColor: "", opacity: 0.5, canSelectAgain: 0 },
         disabled: { opacity: 0.4 },
         focus: { ringColor: "rgba(55, 56, 54, 0.5)" }, // The ring of the keyboard focus
         icon: { size: 50, round: 4, color: "transparent" },
         title: { fontSize: 20, textColor: "rgba(0, 0, 0, 0.8)", fontFamily: "", selectedTextColor: "" },
-        desc: { fontSize: 14, textColor: "gray", marginTop: -4 }, // WHY: -4: the old title (top 25) and description (top 49) overlap a little.
+        desc: { fontSize: 14, textColor: "gray", marginTop: -4 }, // WHY -4: the title and the description overlap a little.
         check: { visible: 0, size: 22, color: "#373836", iconColor: "white", borderColor: Black(0.25) }, // A mark on the selected rows
         empty: { fontSize: 16, textColor: Black(0.4) },
-        // The search box (showSearch: 1): the params of SearchInput. The old UISearchBox of the template, a little smaller.
+        // The search box (showSearch: 1): the params of SearchInput: its ozden package (its font and icon sizes, its
+        // icons, its bottom line), white, nearly square and without a border, 44 px high (ozdenDark takes it too).
         search: {
-            height: 40,
+            styleName: "ozden", // A package of SearchInput.styles
+            height: 44,
             padding: [0, 0, 0, 0], // left, top, right, bottom: 0, as wide as the list
-            fontSize: 18,
             color: "white",
-            textColor: "rgba(0, 0, 0, 0.8)",
-            placeholderColor: "",
-            border: 0,
-            borderColor: "rgba(0, 0, 0, 0.1)",
-            borderBottomStyle: "2px solid rgba(0, 0, 0, 0.06)",
-            round: 6,
-            searchIconSize: 20,
-            invertIconColor: 0,
+            border: 0, // WHY: the list has its own border: only the bottom line of the package
+            round: 2,
         },
         scrollBar: {
             bar_border: 0,
@@ -204,7 +223,7 @@ const ItemList = function (params = {}) {
     const givenHover = params.style && params.style.hover;
     const isHoverOff = !!givenHover && Object.keys(givenHover).length === 0;
 
-    // Merge style package: params.style > ItemList.styles[styleName] > ItemListDefaults.style (classic)
+    // Merge style package: params.style > ItemList.styles[styleName] > ItemListDefaults.style (ozden)
     basic.applyStylePackage(params, ItemList.styles, ItemListDefaults);
 
     // Merge params:
@@ -225,10 +244,16 @@ const ItemList = function (params = {}) {
     let removedEntries = []; // animated: the removed items whose rows still fade out (they leave after the motion)
     let selectedKeys = []; // Strings, in the order they were selected
     let focusedKey = null;
+    let activeKey = null; // The active row of a combobox (setActiveKey)
+    let anchorKey = null; // multiple: a Shift range starts at this row (the last click, Enter or Space without Shift)
+    let rangeBaseKeys = []; // multiple: the selection at that time (a Shift range is added to it)
+    let typedText = ""; // Type-ahead: the letters typed one after the other
+    let cancelTypedText = null;
     let searchText = "";
     let wasAnimated = 0;
     const EMPTY_TEXT_TOP = 24; // The "No results" text under the top of the list
     const PRESS_HOLD_TIME = 50; // ms: the pressed color stays this long, then it fades back with the row motion
+    const TYPE_AHEAD_TIME = 600; // ms: the letters typed in this time make one word
 
     // animated: 1
     const MOTION_TIME = 0.25; // s
@@ -257,7 +282,7 @@ const ItemList = function (params = {}) {
     };
 
     const toItemObject = function (item) {
-        if (typeof item === "string") return { title: item };
+        if (typeof item === "string") return { text: item };
         return item || {};
     };
 
@@ -285,7 +310,17 @@ const ItemList = function (params = {}) {
     };
 
     const isEntryEnabled = function (entry) {
-        return box.enabled == 1 && !basic.isOn(entry.data.disabled);
+        return box.enabled == 1 && (entry.data.enabled === undefined || basic.isOn(entry.data.enabled));
+    };
+
+    // single, style.selected.canSelectAgain: 0 (ozden): the selected row can not be chosen again.
+    const isLockedEntry = function (entry) {
+        return box.selection === "single" && _s.selected.canSelectAgain == 0 && isSelected(entry);
+    };
+
+    // A row a click, Enter or Space chooses: enabled, not the locked selected one.
+    const isEntryChoosable = function (entry) {
+        return isEntryEnabled(entry) && !isLockedEntry(entry);
     };
 
     const getSelectedItems = function () {
@@ -314,7 +349,7 @@ const ItemList = function (params = {}) {
 
     const getSearchableText = function (entry) {
         const data = entry.data;
-        return normalizeText([data.title, data.desc, data.searchText].join(" "));
+        return normalizeText([data.text, data.description, data.searchText].join(" "));
     };
 
     const isMatch = function (entry) {
@@ -343,7 +378,12 @@ const ItemList = function (params = {}) {
         const isTile = entry.row.isTile;
         const hoverLook = isTile ? _s.tile.hover : _s.hover;
         const selectedLook = isTile ? { color: _s.tile.selectedColor || _s.selected.color, borderColor: _s.selected.borderColor } : _s.selected;
-        const look = Object.assign({}, _s.row, entry.isHover ? hoverLook : {}, isOn ? selectedLook : {});
+        // WHY: The active row takes the look of the mouse after the selection: the keyboard sees it on a selected row too.
+        // WHY: The locked selected row gets no look of the mouse (canSelectAgain: 0).
+        const isLocked = isLockedEntry(entry);
+        const activeLook = (entry.key === activeKey && !isLocked) ? hoverLook : {};
+        const mouseLook = (entry.isHover && !isLocked) ? hoverLook : {};
+        const look = Object.assign({}, _s.row, mouseLook, isOn ? selectedLook : {}, activeLook);
         if (look.opacity === undefined) look.opacity = 1;
         // WHY: In the look, not only in the click: a paint of the selection or of the mouse keeps the pressed color.
         if (entry.isPressed && _s.pressed.color) look.color = _s.pressed.color;
@@ -360,12 +400,28 @@ const ItemList = function (params = {}) {
 
         row.color = look.color;
         row.borderColor = look.borderColor;
+        paintLines(row, look.lineColor || "");
+        row.cursor = isEntryChoosable(entry) ? "pointer" : "default";
         row.css.opacity = String(isEntryEnabled(entry) ? look.opacity : _s.disabled.opacity);
         row.aria = { selected: isOn ? "true" : "false", disabled: isEntryEnabled(entry) ? "false" : "true" };
 
         if (row.lblTitle) row.lblTitle.textColor = (isOn && _s.title.selectedTextColor) ? _s.title.selectedTextColor : _s.title.textColor;
         if (row.check) paintCheck(row.check, isOn);
         if (row.isTile) paintTile(row, isOn);
+    };
+
+    // The lines at the top and at the bottom of a row (look.lineColor): inset shadows, so no row moves.
+    // WHY: Only when the lines change: the own shadow of a row (style.row.boxShadow, or one set by createItemView)
+    //      stays under them, and a package without lines never touches it.
+    const paintLines = function (row, lineColor) {
+        const shownLineColor = row.shownLineColor || "";
+        if (lineColor === shownLineColor) return;
+        if (!shownLineColor) row.ownShadow = row.boxShadow;
+        row.shownLineColor = lineColor;
+        const shadows = [];
+        if (lineColor) shadows.push("inset 0 1px 0 " + lineColor, "inset 0 -1px 0 " + lineColor);
+        if (row.ownShadow) shadows.push(row.ownShadow);
+        row.boxShadow = shadows.join(", ");
     };
 
     // The effects of a selected tile: the circle goes, the icon grows and gets its colors, the title is bold.
@@ -391,11 +447,18 @@ const ItemList = function (params = {}) {
         entries.forEach(paintRow);
     };
 
-    // Only one row is in the Tab order: the focused one (or the first shown one).
-    const refreshTabOrder = function () {
-        const shown = getShownEntries();
+    // The row of the Tab order: the focused one, or else the first selected shown one, or else the first shown one.
+    // WHY: A listbox is entered at its selection, not always at its top.
+    const getTabEntry = function () {
         const focused = findEntry(focusedKey);
-        const tabEntry = (focused && focused.isShown) ? focused : shown[0];
+        if (focused && focused.isShown) return focused;
+        const shown = getShownEntries();
+        return shown.find(isSelected) || shown[0] || null;
+    };
+
+    // Only one row is in the Tab order (getTabEntry).
+    const refreshTabOrder = function () {
+        const tabEntry = getTabEntry();
         entries.forEach(function (e) {
             // WHY: A section gets no tabIndex: even a click does not focus it.
             if (!e.row || e.isSection) return;
@@ -411,12 +474,17 @@ const ItemList = function (params = {}) {
         return icon;
     };
 
+    const fitTileIcon = function (row) {
+        if (row.icon && _s.tile.iconFit) row.icon.imageFit = _s.tile.iconFit;
+    };
+
     // A tile icon may sit in a circle (style.tile.frameSize).
     const createTileIcon = function (row, entry) {
         const tile = _s.tile;
         if (!entry.data.iconFile) return;
         if (!(tile.frameSize > 0)) {
             row.icon = createIcon(entry, tile.iconSize);
+            fitTileIcon(row);
             return;
         }
         // GROUP: The circle behind the icon
@@ -426,6 +494,7 @@ const ItemList = function (params = {}) {
         row.iconFrame.clipContent = 0; // WHY: The selected icon grows out of the circle.
         row.iconFrame.setMotion("background-color 0.3s");
             row.icon = createIcon(entry, tile.iconSize);
+            fitTileIcon(row);
         endGroup();
     };
 
@@ -434,11 +503,11 @@ const ItemList = function (params = {}) {
         row.texts = VGroup({ width: isTile ? "100%" : "auto", height: "auto", align: isTile ? "center top" : "left center", gap: 0 });
         row.texts.css = { flex: isTile ? "" : "1 1 0", minWidth: "0", alignItems: "stretch" };
 
-            row.lblTitle = Label({ plainText: entry.data.title || "", width: "100%", fontSize: _s.title.fontSize, ellipsis: 1 });
+            row.lblTitle = Label({ plainText: entry.data.text || "", width: "100%", fontSize: _s.title.fontSize, ellipsis: 1 });
             if (_s.title.fontFamily) row.lblTitle.fontFamily = _s.title.fontFamily;
 
-            if (entry.data.desc) {
-                row.lblDesc = Label({ plainText: entry.data.desc, width: "100%", fontSize: _s.desc.fontSize, textColor: _s.desc.textColor, ellipsis: 1 });
+            if (entry.data.description) {
+                row.lblDesc = Label({ plainText: entry.data.description, width: "100%", fontSize: _s.desc.fontSize, textColor: _s.desc.textColor, ellipsis: 1 });
                 row.lblDesc.css.marginTop = (_s.desc.marginTop || 0) + "px";
             }
 
@@ -475,9 +544,15 @@ const ItemList = function (params = {}) {
         createTexts(row, entry, isTile);
     };
 
+    const isFitRowGrid = function () {
+        return box.layout === "grid" && basic.isOn(_s.tile.fitRow);
+    };
+
     const createRowBox = function (isTile) {
         if (isTile) {
-            return VGroup({ width: _s.tile.width, height: _s.tile.height, align: "center top", gap: _s.tile.gap, padding: _s.tile.padding });
+            // WHY "auto": a cell of the grid of fitRow gives the width (createListGroup)
+            const width = isFitRowGrid() ? "auto" : _s.tile.width;
+            return VGroup({ width: width, height: _s.tile.height, align: "center top", gap: _s.tile.gap, padding: _s.tile.padding });
         }
         return HGroup({ width: "100%", height: _s.row.height, align: "left center", gap: _s.row.gap, padding: _s.row.padding });
     };
@@ -493,13 +568,12 @@ const ItemList = function (params = {}) {
         row.shrink = 0;
         row.round = _s.row.round;
         row.border = _s.row.border;
-        row.cursor = "pointer";
         row.clickable = 1;
         row.clipContent = 0; // WHY: The focus ring is drawn on the edge of the row.
         if (_s.row.boxShadow) row.boxShadow = _s.row.boxShadow;
         setStartMotion(row, entry);
         row.role = "option";
-        row.aria = { label: entry.data.title || entry.key };
+        row.aria = { label: entry.data.text || entry.key };
         row.setFocusRing(_s.focus.ringColor);
 
             createRowContent(row, entry, isTile);
@@ -526,7 +600,7 @@ const ItemList = function (params = {}) {
             if (typeof box.createSectionView === "function") {
                 box.createSectionView(entry.item, row, box);
             } else {
-                row.lblTitle = Label({ plainText: entry.data.title || "", width: width, fontSize: section.fontSize, textColor: section.textColor, ellipsis: 1 });
+                row.lblTitle = Label({ plainText: entry.data.text || "", width: width, fontSize: section.fontSize, textColor: section.textColor, ellipsis: 1 });
                 if (section.fontFamily) row.lblTitle.fontFamily = section.fontFamily;
             }
 
@@ -560,12 +634,8 @@ const ItemList = function (params = {}) {
         const row = entry.row;
         row.on("click", function (self, event) {
             // WHY: A removed row that still fades out is not clicked (a button made in it by createItemView).
-            if (entry.isLeaving || !isEntryEnabled(entry)) return;
-            flashRow(entry);
-            focusedKey = entry.key;
-            refreshTabOrder();
-            box.onItemClick(box, entry.item, indexOf(entry), event);
-            toggleEntry(entry, 0);
+            if (entry.isLeaving) return;
+            activateEntry(entry, event);
         });
         row.onHoverChange(function (self, isOver) {
             entry.isHover = (isOver && isEntryEnabled(entry)) ? 1 : 0;
@@ -583,7 +653,10 @@ const ItemList = function (params = {}) {
             return group;
         }
         if (box.layout === "grid") {
-            return HGroup({ width: "100%", height: "auto", align: "left top", gap: _s.tile.spacing, padding: _s.tile.listPadding, wrap: 1 });
+            const grid = HGroup({ width: "100%", height: "auto", align: "left top", gap: _s.tile.spacing, padding: _s.tile.listPadding, wrap: 1 });
+            // tile.fitRow: columns of tile.width at least that fill the row (the browser counts them at every width)
+            if (isFitRowGrid()) grid.css = { display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(" + _s.tile.width + "px, 1fr))" };
+            return grid;
         }
         const group = VGroup({ width: "100%", height: "auto", align: "left top", gap: _s.list.gap, padding: _s.box.padding });
         group.css.alignItems = "stretch";
@@ -639,7 +712,11 @@ const ItemList = function (params = {}) {
             box.wrapper.css.boxSizing = "border-box";
             box.wrapper.clipContent = 0;
             box.wrapper.role = "listbox";
-            box.wrapper.aria = { label: box.ariaLabel, multiselectable: (box.selection === "multiple") ? "true" : "false" };
+            box.wrapper.aria = {
+                label: box.ariaLabel,
+                multiselectable: (box.selection === "multiple") ? "true" : "false",
+                orientation: (box.layout === "horizontal") ? "horizontal" : null, // (the default of a listbox: vertical)
+            };
                 entries.forEach(createRow);
             endGroup();
         });
@@ -863,8 +940,69 @@ const ItemList = function (params = {}) {
         const before = selectedKeys.join("\n");
         selectedKeys = keys;
         paintAll();
+        refreshTabOrder(); // WHY: The Tab order goes to the selection while no row was focused.
         if (silent || before === selectedKeys.join("\n")) return;
         box.onChange(box, getSelectedItems());
+    };
+
+    // A click, Enter or Space on a row: the pressed flash, onItemClick and the selection. With Shift in a multiple
+    // list: the rows from the anchor to this one (selectRange).
+    // WHY: Enter and Space did not call onItemClick: a list without selection (a menu) could not be used with keys.
+    const activateEntry = function (entry, event) {
+        if (!isEntryChoosable(entry)) return;
+        flashRow(entry);
+        focusedKey = entry.key;
+        refreshTabOrder();
+        box.onItemClick(box, entry.item, indexOf(entry), event);
+        if (isRangeEvent(event)) {
+            selectRange(entry, entry);
+            return;
+        }
+        toggleEntry(entry, 0);
+        setAnchor(entry);
+    };
+
+    const isRangeEvent = function (event) {
+        return box.selection === "multiple" && !!event && event.shiftKey;
+    };
+
+    // multiple: a Shift range starts at this row and is added to the selection of this time.
+    const setAnchor = function (entry) {
+        anchorKey = entry.key;
+        rangeBaseKeys = selectedKeys.slice();
+    };
+
+    // WHY: A selection changed by code: the next Shift range must not bring its old keys back.
+    const forgetAnchor = function () {
+        anchorKey = null;
+        rangeBaseKeys = [];
+    };
+
+    // multiple: the enabled shown rows from the anchor to this one are selected, over the selection of the anchor
+    // time. A Shift move back makes the range shorter (the rows it leaves are not selected any more).
+    // startEntry: the anchor when there is none yet (the row the Shift move started from).
+    const selectRange = function (entry, startEntry) {
+        const shown = getShownEntries();
+        const anchor = findEntry(anchorKey);
+        if (!anchor || !anchor.isShown) setAnchor(startEntry);
+        const from = shown.indexOf(findEntry(anchorKey));
+        const to = shown.indexOf(entry);
+        const rangeKeys = shown.slice(Math.min(from, to), Math.max(from, to) + 1)
+            .filter(isEntryEnabled)
+            .map(function (e) { return e.key; });
+        const newKeys = rangeKeys.filter(function (key) { return !rangeBaseKeys.includes(key); });
+        setSelectedKeys(rangeBaseKeys.concat(newKeys), 0);
+    };
+
+    // multiple: Ctrl / Cmd + A selects every shown enabled item; when they are all selected, none of them.
+    // The hidden ones (a search) keep their selection.
+    const toggleAllShown = function (shown) {
+        const keys = shown.filter(isEntryEnabled).map(function (e) { return e.key; });
+        const isAllSelected = keys.every(function (key) { return selectedKeys.includes(key); });
+        const otherKeys = selectedKeys.filter(function (key) { return !keys.includes(key); });
+        const newKeys = keys.filter(function (key) { return !selectedKeys.includes(key); });
+        setSelectedKeys(isAllSelected ? otherKeys : selectedKeys.concat(newKeys), 0);
+        forgetAnchor();
     };
 
     // A click, Enter or Space on a row.
@@ -986,34 +1124,118 @@ const ItemList = function (params = {}) {
         return shown[Math.max(0, Math.min(shown.length - 1, position + step))];
     };
 
+    // PageDown / PageUp: as many rows (in a grid: lines) as the list shows, less one. null: an "auto" height list
+    // (it does not scroll in itself: the key scrolls the page).
+    const getPageTarget = function (entry, shown, direction) {
+        if (isAutoHeight) return null;
+        const isHorizontal = (box.layout === "horizontal");
+        const visibleSize = isHorizontal ? box.scrollBox.elem.clientWidth : box.scrollBox.elem.clientHeight;
+        const rowSize = isHorizontal ? entry.row.elem.offsetWidth : entry.row.elem.offsetHeight;
+        const count = Math.max(1, Math.floor(visibleSize / Math.max(1, rowSize)) - 1);
+        if (box.layout === "grid") {
+            let target = entry;
+            for (let i = 0; i < count; i++) target = getGridNeighbor(target, shown, direction);
+            return target;
+        }
+        const position = shown.indexOf(entry) + direction * count;
+        return shown[Math.max(0, Math.min(shown.length - 1, position))];
+    };
+
+    // The row a key moves the focus to: an arrow, Home / End, PageUp / PageDown. null: the key does not move it.
+    const getMoveTarget = function (entry, key, shown) {
+        if (key === "Home") return shown[0];
+        if (key === "End") return shown[shown.length - 1];
+        if (key === "PageDown") return getPageTarget(entry, shown, 1);
+        if (key === "PageUp") return getPageTarget(entry, shown, -1);
+        return getArrowTarget(entry, key, shown);
+    };
+
+    // WHY: The arrow up from the first line of the list goes back to the search box over it.
+    const isOnFirstLine = function (entry, shown) {
+        if (box.layout === "horizontal") return true;
+        return entry.row.elem.offsetTop === shown[0].row.elem.offsetTop;
+    };
+
+    const isSelectAllKey = function (event) {
+        const isCommand = event.ctrlKey || event.metaKey;
+        return box.selection === "multiple" && isCommand && event.key.toLowerCase() === "a";
+    };
+
+    // A letter of a word (type-ahead): not a key with Ctrl, Cmd or Alt.
+    const isTypedLetter = function (event) {
+        return event.key.length === 1 && !event.ctrlKey && !event.metaKey && !event.altKey;
+    };
+
+    // Type-ahead: the letters typed one after the other move the focus to the next item whose text starts with them
+    // (Turkish letters without their marks). The same letter again goes on to the next item with that letter.
+    const typeAhead = function (entry, letter, shown) {
+        if (cancelTypedText) cancelTypedText();
+        typedText += normalizeText(letter);
+        cancelTypedText = box.after(TYPE_AHEAD_TIME, function () {
+            typedText = "";
+            cancelTypedText = null;
+        });
+        const isOneLetter = typedText.split("").every(function (c) { return c === typedText[0]; });
+        const word = isOneLetter ? typedText[0] : typedText;
+        // WHY: One letter starts after the focused row (the same letter goes on); a word may stay on it.
+        const start = shown.indexOf(entry) + (isOneLetter ? 1 : 0);
+        const ordered = shown.slice(start).concat(shown.slice(0, start));
+        const target = ordered.find(function (e) { return normalizeText(e.data.text).startsWith(word); });
+        if (target) focusEntry(target);
+    };
+
     const onRowKeyDown = function (entry, event) {
+        // WHY: the keys of a field inside the row (createItemView) are its own: a space could not be typed in it
+        if (event.target !== entry.row.elem) return;
         if (box.enabled != 1 || entry.isLeaving) return;
         const shown = getShownEntries();
 
-        if (event.key === "Enter" || event.key === " ") {
+        if (isSelectAllKey(event)) {
             event.preventDefault();
-            if (!isEntryEnabled(entry)) return;
-            flashRow(entry);
-            toggleEntry(entry, 0);
+            toggleAllShown(shown);
             return;
         }
-        if (event.key === "Home" || event.key === "End") {
+        // WHY: A space while a word is typed is a letter of the word (type-ahead).
+        const isSpace = (event.key === " " && typedText === "");
+        if (event.key === "Enter" || isSpace) {
             event.preventDefault();
-            focusEntry(event.key === "Home" ? shown[0] : shown[shown.length - 1]);
+            // WHY: A key held down repeats: it would open an item again and again, or turn its selection on and off.
+            if (event.repeat) return;
+            activateEntry(entry, event);
             return;
         }
+        if (event.key === "ArrowUp" && box.searchInput && isOnFirstLine(entry, shown)) {
+            event.preventDefault();
+            box.searchInput.focus();
+            return;
+        }
+        const target = getMoveTarget(entry, event.key, shown);
+        if (target) {
+            event.preventDefault();
+            focusEntry(target);
+            if (isRangeEvent(event)) selectRange(target, entry);
+            return;
+        }
+        if (isTypedLetter(event)) {
+            event.preventDefault();
+            typeAhead(entry, event.key, shown);
+        }
+    };
 
-        const target = getArrowTarget(entry, event.key, shown);
-        if (!target) return;
+    // The arrow down in the search box goes into the list: to its row of the Tab order (getTabEntry).
+    const onSearchKeyDown = function (self, event) {
+        if (event.key !== "ArrowDown") return;
+        const tabEntry = getTabEntry();
+        if (!tabEntry) return;
         event.preventDefault();
-        focusEntry(target);
+        focusEntry(tabEntry);
     };
 
     // The search box over the list (showSearch: 1). Returns its height with its padding (0: no search box).
     const createSearch = function () {
         if (box.showSearch != 1) return 0;
         if (typeof SearchInput === "undefined") {
-            console.warn("ItemList: showSearch needs comp/search-input-v2.js (SearchInput).");
+            console.warn("ItemList: showSearch needs comp/search-input.js (SearchInput).");
             return 0;
         }
         const search = _s.search;
@@ -1022,12 +1244,14 @@ const ItemList = function (params = {}) {
         // GROUP: Search area
         box.searchArea = HGroup({ width: "100%", height: search.height + padding[1] + padding[3], align: "left top", padding: padding });
         if (isAutoHeight) box.searchArea.position = "relative";
-            const searchParams = Object.assign({}, search, box.searchParams);
+            // WHY clearOnEscape: Escape clears the search (as the clear icon); searchParams can turn it off.
+            const searchParams = Object.assign({ clearOnEscape: 1 }, search, box.searchParams);
             delete searchParams.padding;
             searchParams.width = "100%";
             searchParams.position = "relative";
-            searchParams.onSearch = function (text) { box.search(text); };
+            searchParams.onChange = function (self) { box.search(self.getSearchText()); };
             box.searchInput = SearchInput(searchParams);
+            box.searchInput.txtSearch.on("keydown", onSearchKeyDown);
         endGroup();
 
         return search.height + padding[1] + padding[3];
@@ -1037,8 +1261,8 @@ const ItemList = function (params = {}) {
     // WHY: Only when it is another text: the box gives a lower case text to search(); it must not change what is typed.
     const syncSearchInput = function (text) {
         if (!box.searchInput) return;
-        if (normalizeText(box.searchInput.getText()).trim() === normalizeText(text).trim()) return;
-        box.searchInput.setText(String(text || ""));
+        if (normalizeText(box.searchInput.value).trim() === normalizeText(text).trim()) return;
+        box.searchInput.setValue(String(text || ""), 1);
     };
 
     // *** PUBLIC FUNCTIONS:
@@ -1047,9 +1271,10 @@ const ItemList = function (params = {}) {
         entries = (Array.isArray(items) ? items : []).map(toEntry);
         selectedKeys = selectedKeys.filter(isSelectableKey);
         if (!findEntry(focusedKey)) focusedKey = null;
+        forgetAnchor();
         createRows();
     };
-    // USAGE: list.setItems([{ key: "a", title: "A" }, "B"]) // onChange is not called. Selected keys that are still there stay selected.
+    // USAGE: list.setItems([{ key: "a", text: "A" }, "B"]) // onChange is not called. Selected keys that are still there stay selected.
 
     box.getItems = function () {
         return entries.map(function (e) { return e.item; });
@@ -1092,7 +1317,7 @@ const ItemList = function (params = {}) {
             applySearch(isMotionOn());
         });
     };
-    // USAGE: list.addItem({ key: "x", title: "X" }) or list.addItem({ key: "y", title: "Y" }, 0)
+    // USAGE: list.addItem({ key: "x", text: "X" }) or list.addItem({ key: "y", text: "Y" }, 0)
 
     // silent: 1 -> onChange is not called (when the removed item was selected). Returns the removed item.
     // animated: 1 -> its row fades out, then it leaves and the rows under it move up. (The data changes at once.)
@@ -1126,7 +1351,7 @@ const ItemList = function (params = {}) {
         oldRow.remove();
         applySearch();
     };
-    // USAGE: list.updateItem("tomato", { desc: "Fruit", iconFile: "tomato.png" })
+    // USAGE: list.updateItem("tomato", { description: "Fruit", iconFile: "tomato.png" })
 
     box.getSelectedKeys = function () {
         return selectedKeys.slice();
@@ -1140,6 +1365,7 @@ const ItemList = function (params = {}) {
     // silent: 1 -> onChange is not called.
     box.setSelected = function (keys, silent = 0) {
         setSelectedKeys(cleanKeys(keys), silent);
+        forgetAnchor();
         scrollToFirstSelected();
     };
     // USAGE: list.setSelected("broccoli") or list.setSelected(["a", "b"], 1)
@@ -1148,15 +1374,18 @@ const ItemList = function (params = {}) {
         const entry = findEntry(key);
         if (!entry || entry.isSection || isSelected(entry)) return;
         toggleEntry(entry, silent);
+        forgetAnchor();
         if (box.scrollToSelected == 1) scrollRowIntoView(entry);
     };
 
     box.unselect = function (key, silent = 0) {
         setSelectedKeys(selectedKeys.filter(function (k) { return k !== String(key); }), silent);
+        forgetAnchor();
     };
 
     box.clearSelection = function (silent = 0) {
         setSelectedKeys([], silent);
+        forgetAnchor();
     };
 
     // Shows only the matching items (and the sections over them). Returns the count of the shown items. "": all of them.
@@ -1166,7 +1395,7 @@ const ItemList = function (params = {}) {
         applySearch();
         return getShownEntries().length;
     };
-    // USAGE: searchInput.onSearch = function (text) { list.search(text); };
+    // USAGE: searchInput.onChange = function (self) { list.search(self.getSearchText()); };
 
     box.setLayout = function (layout) {
         box.layout = normalizeLayout(layout);
@@ -1178,6 +1407,7 @@ const ItemList = function (params = {}) {
     box.setSelection = function (selection) {
         box.selection = selection;
         selectedKeys = cleanKeys(selectedKeys);
+        forgetAnchor();
         createRows(); // WHY: The check marks are made (or not) with the rows.
     };
     // USAGE: list.setSelection("multiple")
@@ -1212,6 +1442,22 @@ const ItemList = function (params = {}) {
     box.refresh = function () {
         paintAll();
         refreshEmptyText();
+    };
+
+    // The active row of a combobox (SelectBox: the row of its arrow keys) gets the look of the mouse (style.hover),
+    // also when it is selected. It is then the only row with that look. null: none.
+    // WHY: The keyboard stays in the field of the combobox: the list does not get the focus, it only shows the row.
+    //      The mouse makes its row active itself (SelectBox: mousemove), so the row under the mouse loses its look
+    //      when the arrow keys move the active row: two rows were white.
+    box.setActiveKey = function (key) {
+        const oldEntries = entries.filter(function (e) { return e.isHover || e.key === activeKey; });
+        activeKey = (key === null || key === undefined) ? null : String(key);
+        oldEntries.forEach(function (e) {
+            e.isHover = 0;
+            paintRow(e);
+        });
+        const entry = findEntry(activeKey);
+        if (entry) paintRow(entry);
     };
 
     // *** OBJECT VIEW:
@@ -1270,40 +1516,52 @@ ItemList.getCheckSvg = function (color, size) {
 };
 
 // *** STYLE PACKAGES:
-// USAGE: ItemList({ styleName: "modern" })
+// USAGE: ItemList({ styleName: "light" })
 // USAGE: ItemList({ styleName: "dark", style: { row: { round: 4 } } }) // Change only some keys.
 // USAGE: ItemList({ style: ItemList.styles.dark }) // The same as styleName: "dark". (The package is copied, never changed.)
-// NOTE: A new package needs only the keys that differ from the default (classic) style.
+// NOTE: A new package needs only the keys that differ from the default (ozden) style.
 // USAGE: ItemList.styles.myStyle = { row: { color: "ivory" } };
 ItemList.styles = {
 
-    // The rows of the comp-m1 SelectItem list (white under the mouse, the selected one half transparent) and the
-    // tiles of javascript-mobile-app-template (a grey icon in a circle that grows when it is selected).
+    // The rows: white under the mouse, the selected one half transparent. The tiles: a grey icon in a circle that
+    // grows when it is selected.
+    ozden: ItemListDefaults.style,
+
+    // WHY: The old name of ozden: a page written with styleName: "classic" gets the same look without a warning.
     classic: ItemListDefaults.style,
 
-    // Light cards with a thin border and a check mark on the selected rows.
-    modern: {
-        box: { padding: 8 },
-        list: { gap: 8 },
-        row: {
-            height: 64,
-            padding: [14, 10],
-            gap: 14,
-            color: "white",
-            border: 1,
-            borderColor: Black(0.08),
-            round: 12,
-            boxShadow: "0px 1px 2px rgba(0, 0, 0, 0.04)",
-            motion: "background-color 0.2s, border-color 0.2s",
-        },
-        // WHY: The effects of the classic tiles (a grey icon in a circle that grows) are turned off.
+    // The dark theme of ozden: the same shapes on a dark page (#1A1A19). A row gets a lighter
+    // gray with a thin light line above and under it under the mouse, the selected one is half transparent, the
+    // search box is the ozdenDark SearchInput in the gray of the mouse.
+    ozdenDark: {
+        box: { color: "#1A1A19", borderColor: White(0.22) },
+        hover: { color: "#262624", lineColor: White(0.14) },
+        focus: { ringColor: White(0.5) },
+        title: { textColor: White(0.88) },
+        desc: { textColor: White(0.45) },
+        section: { textColor: White(0.4) },
+        check: { color: "#E6E6E4", iconColor: "#1A1A19", borderColor: White(0.3) },
+        empty: { textColor: White(0.4) },
+        tile: { frameColor: White(0.06), selectedColor: "#262624" },
+        search: { styleName: "ozdenDark", color: "#262624" },
+        scrollBar: { bar_color: "#CFCFCD", bar_mouseOverColor: "#CFCFCD" },
+    },
+
+    // The light look of the kit (_designs/item-list.htm): a white box with one thin line and round 10 corners, flat
+    // rows of 56 px; the row under the mouse in a soft gray, the selected one in a tint of the accent with a full
+    // mark (an empty circle on the other rows).
+    light: {
+        box: { color: "#FFFFFF", border: 1, borderColor: Black(0.12), round: 10, padding: 6 },
+        list: { gap: 2 }, // WHY: the colors of two rows never meet
+        row: { height: 56, padding: [12, 10], gap: 12, color: "transparent", round: 8 },
+        // WHY: The effects of the ozden tiles (a grey icon in a circle that grows) are turned off.
         tile: {
             width: 132,
             height: "auto",
             padding: [12, 14],
             gap: 8,
             spacing: 8,
-            listPadding: 8,
+            listPadding: 6, // as box.padding
             iconSize: 56,
             frameSize: 0,
             iconFilter: "",
@@ -1311,53 +1569,42 @@ ItemList.styles = {
             selectedIconFilter: "",
             selectedFontFamily: "",
             selectedColor: "",
-            hover: { color: "#F7F8F6", borderColor: Black(0.14) },
+            hover: { color: "#F2F3F0" },
         },
-        section: { padding: [14, 6], fontSize: 13, textColor: Black(0.45) }, // WHY: 14: over the texts of the cards
-        hover: { color: "#F7F8F6", borderColor: Black(0.14) },
-        selected: { color: "#EEF6F3", borderColor: "#3D7A6B", opacity: 1 },
-        focus: { ringColor: "rgba(61, 122, 107, 0.6)" },
-        icon: { size: 40, round: 10, color: "#F1F2EF" },
-        title: { fontSize: 15, textColor: Black(0.85), fontFamily: "opensans-bold" },
-        desc: { fontSize: 13, textColor: Black(0.5), marginTop: 0 },
-        check: { visible: 1, size: 20, color: "#3D7A6B", iconColor: "white", borderColor: Black(0.2) },
-        empty: { fontSize: 14, textColor: Black(0.45) },
+        section: { padding: [12, 6], fontSize: 13, textColor: Black(0.55) }, // WHY 12: over the icons of the rows
+        hover: { color: "#F2F3F0", lineColor: "" }, // WHY: "": the lines of ozden are not filled in.
+        selected: { color: "#E4EFEB", opacity: 1, canSelectAgain: 1 }, // WHY 1: a click on it is an onItemClick again (the rule of ozden is its own)
+        focus: { ringColor: "rgba(61, 122, 107, 0.5)" },
+        icon: { size: 36, round: 8, color: "#F2F3F0" },
+        title: { fontSize: 15, textColor: Black(0.88), fontFamily: "opensans" },
+        desc: { fontSize: 13, textColor: Black(0.55), marginTop: 0 },
+        check: { visible: 1, size: 20, color: "#3D7A6B", iconColor: "#FFFFFF", borderColor: Black(0.25) },
+        empty: { fontSize: 14, textColor: Black(0.55) },
+        // The search field of the light look: SearchInput light, round 8 as the rows.
+        // WHY border and round: the search box of ozden (the default) has border 0 and round 2, and its keys fill
+        // this package.
         search: {
-            height: 40,
-            padding: [8, 8, 8, 4],
-            fontSize: 15,
-            color: "white",
+            styleName: "light", // A package of SearchInput.styles
+            padding: [6, 6, 6, 0], // left, top, right, bottom: as box.padding (the rows have their own 6 under it)
             border: 1,
-            borderColor: Black(0.1),
-            borderBottomStyle: "1px solid " + Black(0.1),
-            round: 10,
-            searchIconSize: 18,
+            round: 8,
         },
         scrollBar: { bar_color: "#A0A0A0", bar_mouseOverColor: "#6E6E6C", neverHide: 0, showDots: 0 },
     },
 
-    // The dark cards of the Ozden Panel (webpage-ozden-panel, theme "dark").
+    // The dark look of the kit: the same shapes on the dark surface (#232322, on a #1A1A19 page).
     dark: {
-        box: { padding: 8 },
-        list: { gap: 8 },
-        row: {
-            height: 64,
-            padding: [14, 10],
-            gap: 14,
-            color: "#1A1A19", // surface: a card
-            border: 1,
-            borderColor: White(0.08),
-            round: 10,
-            motion: "background-color 0.2s, border-color 0.2s",
-        },
-        // WHY: The effects of the classic tiles (a grey icon in a circle that grows) are turned off.
+        box: { color: "#232322", border: 1, borderColor: White(0.12), round: 10, padding: 6 },
+        list: { gap: 2 },
+        row: { height: 56, padding: [12, 10], gap: 12, color: "transparent", round: 8 },
+        // WHY: The effects of the ozden tiles (a grey icon in a circle that grows) are turned off.
         tile: {
             width: 132,
             height: "auto",
             padding: [12, 14],
             gap: 8,
             spacing: 8,
-            listPadding: 8,
+            listPadding: 6, // as box.padding
             iconSize: 56,
             frameSize: 0,
             iconFilter: "",
@@ -1365,32 +1612,129 @@ ItemList.styles = {
             selectedIconFilter: "",
             selectedFontFamily: "",
             selectedColor: "",
-            hover: { color: "#232322" },
+            hover: { color: White(0.07) },
         },
-        section: { padding: [14, 6], fontSize: 13, textColor: White(0.45) }, // WHY: 14: over the texts of the cards
-        hover: { color: "#232322" }, // surface2
-        selected: { color: "#2C2C2A", borderColor: "#65A293", opacity: 1 }, // surface3, accent
-        focus: { ringColor: "#65A293" },
-        icon: { size: 40, round: 8, color: "#232322" },
-        title: { fontSize: 15, textColor: White(0.9), fontFamily: "opensans-bold" },
-        desc: { fontSize: 13, textColor: White(0.45), marginTop: 0 },
-        check: { visible: 1, size: 20, color: "#65A293", iconColor: "#141414", borderColor: White(0.25) },
-        empty: { fontSize: 14, textColor: White(0.45) },
+        section: { padding: [12, 6], fontSize: 13, textColor: White(0.55) }, // WHY 12: over the icons of the rows
+        hover: { color: White(0.07), lineColor: "" }, // WHY: "": the lines of ozden are not filled in.
+        selected: { color: "rgba(101, 162, 147, 0.2)", opacity: 1, canSelectAgain: 1 }, // WHY 1: as light
+        focus: { ringColor: "rgba(101, 162, 147, 0.55)" },
+        icon: { size: 36, round: 8, color: White(0.07) },
+        title: { fontSize: 15, textColor: White(0.9), fontFamily: "opensans" },
+        desc: { fontSize: 13, textColor: White(0.55), marginTop: 0 },
+        check: { visible: 1, size: 20, color: "#65A293", iconColor: "#0F1F1B", borderColor: White(0.3) },
+        empty: { fontSize: 14, textColor: White(0.55) },
+        // The search field of the dark look: SearchInput dark, round 8 as the rows.
+        // WHY color, border and round: the search box of ozden (the default) is white with border 0 and round 2, and
+        // its keys fill this package.
         search: {
-            height: 40,
-            padding: [8, 8, 8, 4],
-            fontSize: 15,
-            color: "#232322", // surface2: a field
-            textColor: White(0.9),
-            placeholderColor: White(0.35),
+            styleName: "dark", // A package of SearchInput.styles
+            padding: [6, 6, 6, 0], // left, top, right, bottom: as box.padding (the rows have their own 6 under it)
+            color: "#232322",
             border: 1,
-            borderColor: White(0.1),
-            borderBottomStyle: "1px solid " + White(0.1),
             round: 8,
-            searchIconSize: 18,
-            invertIconColor: 1,
         },
         scrollBar: { bar_color: "#8A8A88", bar_mouseOverColor: "#BFBFBD", neverHide: 0, showDots: 0 },
     },
 
+    // Pictures (layout "grid"): a big photo in its square with no filter, its title and description under it, a ring
+    // around the selected one. A picture of any shape fills its square (cover).
+    gallery: {
+        box: { color: "transparent", border: 0, padding: 0 },
+        tile: {
+            width: 132, // WHY: two in a row on a phone too
+            height: "auto",
+            padding: [8, 8],
+            gap: 6,
+            spacing: 8,
+            listPadding: 6,
+            iconSize: 116,
+            frameSize: 0,
+            iconFilter: "",
+            iconFit: "cover",
+            iconMotion: "",
+            selectedIconScale: 1,
+            selectedIconFilter: "",
+            selectedFontFamily: "",
+            selectedColor: "",
+            hover: { color: Black(0.05) },
+        },
+        row: { round: 10, border: 1, borderColor: "transparent", motion: "background-color 0.2s, border-color 0.2s" },
+        hover: { color: Black(0.05), lineColor: "" }, // WHY: "": the lines of ozden are not filled in.
+        selected: { color: "rgba(63, 141, 148, 0.1)", borderColor: "#3F8D94", opacity: 1, canSelectAgain: 1 },
+        focus: { ringColor: "rgba(63, 141, 148, 0.8)" },
+        icon: { round: 6, color: Black(0.05) },
+        title: { fontSize: 14, textColor: Black(0.82), fontFamily: "" },
+        desc: { fontSize: 12, textColor: Black(0.5), marginTop: 0 },
+        empty: { fontSize: 14, textColor: Black(0.45) },
+    },
+
+    // The pictures on a dark page.
+    galleryDark: {
+        box: { color: "transparent", border: 0, padding: 0 },
+        tile: {
+            width: 132, // WHY: two in a row on a phone too
+            height: "auto",
+            padding: [8, 8],
+            gap: 6,
+            spacing: 8,
+            listPadding: 6,
+            iconSize: 116,
+            frameSize: 0,
+            iconFilter: "",
+            iconFit: "cover",
+            iconMotion: "",
+            selectedIconScale: 1,
+            selectedIconFilter: "",
+            selectedFontFamily: "",
+            selectedColor: "",
+            hover: { color: White(0.06) },
+        },
+        row: { round: 10, border: 1, borderColor: "transparent", motion: "background-color 0.2s, border-color 0.2s" },
+        hover: { color: White(0.06), lineColor: "" },
+        selected: { color: "rgba(91, 186, 193, 0.14)", borderColor: "#5BBAC1", opacity: 1, canSelectAgain: 1 },
+        focus: { ringColor: "rgba(111, 198, 205, 0.8)" },
+        icon: { round: 6, color: White(0.06) },
+        title: { fontSize: 14, textColor: White(0.88), fontFamily: "" },
+        desc: { fontSize: 12, textColor: White(0.5), marginTop: 0 },
+        empty: { fontSize: 14, textColor: White(0.45) },
+        check: { color: "#E6E6E4", iconColor: "#1A1A19", borderColor: White(0.3) },
+        search: { styleName: "ozdenDark", color: "#262624" },
+        scrollBar: { bar_color: "#CFCFCD", bar_mouseOverColor: "#CFCFCD" },
+    },
+
 };
+
+// The minimal theme (_designs/minimal-theme.htm): no fill (the window shows through: its states are lines, so it
+// reads on any ground), a line around the list; 28 px rows with a 13 px title and a 14 px icon; a line around the
+// row under the mouse, an ink line, an ink title and a tick on the selected one; 2 px between the rows, so the lines
+// of two rows never meet. The search box is the head of the list, a line under it. A row with a description needs
+// more room: style: { row: { height: 44 } }. minimalDark: the same on a dark window.
+ItemList.createMinimalStyle = function (colors) {
+    return {
+        box: { color: "transparent", border: 1, borderColor: colors.line, round: 4, padding: 4 },
+        list: { gap: 2 },
+        row: { height: 28, padding: [8, 0], gap: 8, color: "transparent", border: 1, borderColor: "transparent", round: 3, lineColor: "" },
+        section: { padding: [8, 6], fontSize: 11, fontFamily: "opensans-bold", textColor: colors.faintText },
+        hover: { color: "transparent", lineColor: "", borderColor: colors.lineHover },
+        selected: { color: "transparent", lineColor: "", borderColor: colors.ink, opacity: 1, canSelectAgain: 0 },
+        disabled: { opacity: 0.4 },
+        focus: { ringColor: colors.focus },
+        icon: { size: 14, round: 0, color: "transparent" },
+        title: { fontSize: 13, textColor: colors.text, selectedTextColor: colors.ink },
+        desc: { fontSize: 12, textColor: colors.softText, marginTop: 0 },
+        check: { visible: 1, size: 14, color: "transparent", iconColor: colors.ink, borderColor: "transparent" },
+        empty: { fontSize: 12, textColor: colors.softText },
+        search: { styleName: colors.searchStyleName, height: 30, padding: [0, 0, 0, 0], color: "transparent", border: 0, round: 0, borderBottomStyle: "1px solid " + colors.line, searchIconLeft: 13 },
+        scrollBar: { bar_color: colors.scrollBar, bar_mouseOverColor: colors.scrollBar, bar_width: 3, bar_mouseOverWidth: 4, showDots: 0 },
+    };
+};
+ItemList.MINIMAL_COLORS = {
+    text: Black(0.85), softText: Black(0.55), faintText: Black(0.54), line: Black(0.2), lineHover: Black(0.45),
+    ink: "#1F1F1F", focus: "#3D8BD9", searchStyleName: "minimal", scrollBar: "#373836",
+};
+ItemList.styles.minimal = ItemList.createMinimalStyle(ItemList.MINIMAL_COLORS);
+ItemList.MINIMAL_DARK_COLORS = {
+    text: White(0.88), softText: White(0.55), faintText: White(0.48), line: White(0.18), lineHover: White(0.42),
+    ink: "#EDEDEB", focus: "#7FB6DE", searchStyleName: "minimalDark", scrollBar: "#CFCFCD",
+};
+ItemList.styles.minimalDark = ItemList.createMinimalStyle(ItemList.MINIMAL_DARK_COLORS);

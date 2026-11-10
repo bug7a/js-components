@@ -9,9 +9,11 @@ UI COMPONENT TEMPLATE
 
 
 Started Date: June 2024
-Developer: Bugra Ozden
-Email: bugra.ozden@gmail.com
 Webpage: https://bug7a.github.io/js-components/
+
+Copyright 2020-2026 Bugra Ozden <bugra.ozden@gmail.com> (https://bug7a.github.io/)
+Licensed under the Apache License, Version 2.0
+SPDX-License-Identifier: Apache-2.0
 
 */
 
@@ -23,17 +25,21 @@ const FormDefaults = {
     maxWidth: 700,
     buttonColor:  "#65A293",
     buttonText: "SEND",
+    allowHtml: 0, // 1: buttonText and the texts of showMessage() are HTML (only for your own texts)
     showDetailWarning: 1,
     missingEntryText: "{{count}} missing entry",
     missingEntriesText: "{{count}} missing entries",
-    warningText: "<b>{{name}}</b> can't be empty",
-    errorText: "<b>{{name}}</b> is not valid",
+    warningText: "<b>{{name}}</b> can't be empty", // HTML of the page; {{name}}: the title of the field, as it is written
+    errorText: "<b>{{name}}</b> is not valid", // HTML of the page, as warningText
     minimalButton: 0,
     doubleInputAlwaysHorizontal: 0,
     showPassiveButtonHint: 1, // 1: A hint is shown when the mouse is over the passive send button.
     passiveButtonHintText: "Please fill in the missing fields to send the form.",
-    onEdit: function(input) {},
-    onSendClick: function(json) {},
+    // px: the round corners of the hints of the form: the list of the missing entries and the hint of the passive
+    // send button (one value, so they have the same corners)
+    hintRound: 4,
+    onChange: function(self, input) {}, // the user changed an input of the form
+    onSendClick: function(self, json) {},
 };
 
 const Form = function(params = {}) {
@@ -69,6 +75,12 @@ const Form = function(params = {}) {
 
     // *** PRIVATE FUNCTIONS:
 
+    const setText = function (label, text) {
+        const value = (text === undefined || text === null) ? "" : String(text);
+        if (box.allowHtml == 1) label.text = value;
+        else label.plainText = value;
+    };
+
     // Give effects to a button
     const actionButtonEffect = function(btn) {
 
@@ -92,17 +104,17 @@ const Form = function(params = {}) {
 
     };
 
-    // pageKey: "success", "error"
+    // The message over the form after sending. A key that messageData does not give comes from the success message.
     box.showMessage = function(messageData) {
 
-        if (!messageData) messageData = {
+        messageData = Object.assign({
             iconColor: "#3C8553",
-            iconFile: "assets/success.png",
+            iconFile: "data:image/svg+xml;utf8," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" preserveAspectRatio="none" fill="none" stroke="#141414" stroke-width="8"><path d="M24 63L50 89L104 35"/></svg>'), // a check mark (drawn inverted: white)
             messageText: "Data sent successfully.",
             buttonText: "OKAY",
             backgroundColor: "rgba(255,255,255,0.85)",
             onClose: function() {},
-        };
+        }, messageData);
 
         // GROUP: Sent Message
         const messageBox = VGroup({
@@ -139,13 +151,11 @@ const Form = function(params = {}) {
             endGroup();
 
             // LABEL: Message
-            Label({
-                text: messageData.messageText,
-            });
+            Label();
+            setText(that, messageData.messageText);
 
             // LABEL: Close button
             Label({
-                text: messageData.buttonText,
                 padding: [12, 4],
                 round: 12,
                 color: "#373836",
@@ -153,6 +163,7 @@ const Form = function(params = {}) {
                 fontSize: 14,
                 clickable: 1,
             });
+            setText(that, messageData.buttonText);
             that.cursor = "pointer";
             that.on("click", function(self) {
                 messageData.onClose();
@@ -187,8 +198,9 @@ const Form = function(params = {}) {
 
     // The detail line of one input. status: 1 empty, 2 not valid ("" for any other status)
     const getWarningLine = function(item) {
-        if (item.status == 1) return box.warningText.replace("{{name}}", item.titleText) + "<br>";
-        if (item.status == 2) return box.errorText.replace("{{name}}", item.titleText) + "<br>";
+        const name = basic.escapeHtml(item.titleText);
+        if (item.status == 1) return box.warningText.replace("{{name}}", name) + "<br>";
+        if (item.status == 2) return box.errorText.replace("{{name}}", name) + "<br>";
         return "";
     };
 
@@ -238,7 +250,7 @@ const Form = function(params = {}) {
             itemData.key = item.key;
             itemData.type = item.type;
             itemData.titleText = item.titleText;
-            itemData.inputValue = item.getInputValue();
+            itemData.value = item.getValue();
 
             result.push(itemData);
 
@@ -259,7 +271,7 @@ const Form = function(params = {}) {
                 if (xhr.status >= 200 && xhr.status < 300) {
                     try {
                         const result = JSON.parse(xhr.responseText);
-                        callback(null, result); // Başarılı cevap
+                        callback(null, result); // a successful answer
                     } catch (e) {
                         callback(new Error("Geçersiz JSON cevabı"));
                     }
@@ -381,9 +393,9 @@ const Form = function(params = {}) {
     // The form is checked again on every edit, focus and blur of the input.
     const watchInput = function(input) {
 
-        input.onEdit = function() {
+        input.onChange = function() {
             checkForm();
-            box.onEdit(input);
+            box.onChange(box, input);
         };
 
         input.onFocus = function() {
@@ -456,12 +468,12 @@ const Form = function(params = {}) {
                     // BUTTON: Send Button
                     box.btnSend = Button({
                         width: "100%",
-                        text: box.buttonText,
                         color: box.buttonColor,
                         minimal: box.minimalButton,
                     });
+                    setText(box.btnSend, box.buttonText);
                     actionButtonEffect(that);
-                    // WHY click (it was mousedown): a right click, or a press dragged away from the button, sent the
+                    // WHY click, not mousedown: a right click, or a press dragged away from the button, sent the
                     //     form; and Enter / Space on the focused button (a <button>: they give a click) did nothing
                     that.on("click", function(self, event) {
                         // NOTE: The button is ready only when the form is checked (checkForm). The keyboard reaches
@@ -469,7 +481,7 @@ const Form = function(params = {}) {
                         if (box.btnSend.clickable != 1) return;
                         if (event.detail > 1) return; // (the second click of a double click)
                         const formJSON = createJSON();
-                        box.onSendClick(formJSON);
+                        box.onSendClick(box, formJSON);
                     });
                     that.on("keydown", function(self, event) {
                         // WHY: a held Enter repeats the click of a <button>
@@ -503,7 +515,7 @@ const Form = function(params = {}) {
                             lbl_borderColor: "#141414",
                             lbl_border: 1,
                             lbl_fontSize: 14,
-                            lbl_round: 2,
+                            lbl_round: box.hintRound,
                         });
 
                         layoutSendCover();
@@ -535,7 +547,7 @@ const Form = function(params = {}) {
                         padding: [8, 2],
                         position: "absolute",
                         fontSize: 12,
-                        round: 4,
+                        round: box.hintRound,
                         border: 1,
                         opacity: 0,
                     });

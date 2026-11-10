@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Time Picker</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- LIBRARY FILES -->
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Bold.ttf" as="font" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
+    <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../basic/scroll-bar.min.js" type="text/javascript" charset="utf-8"></script>
+
+    <!-- COMPONENT FILES -->
+    <script src="../comp/smart-button.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/time-picker.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/scroll-area.js" type="text/javascript" charset="utf-8"></script>
+
+    <script>
+
+        /* Bismillah */
+
+        // *** VARIABLES:
+        let timeStart, timeEnd, timeInline, timeFunctions;
+        let lblDefault, lblMeeting, lblInline, lblFunctions;
+
+        const start = function () {
+
+            page.color = "whitesmoke";
+
+            // SCROLL AREA: The page
+            // WHY: page does not scroll. A ScrollArea fills the window; its content scrolls when it is taller.
+            ScrollArea({
+                align: "center top",
+                gap: 30,
+                padding: [16, 50], // WHY 16 at the sides: the cards fill a phone (390 px)
+                useScrollBar: 0,
+            });
+
+                // LABEL: Title
+                Label({
+                    text: "Time Picker",
+                    fontSize: 26,
+                    fontFamily: "opensans-bold",
+                });
+
+                // SAMPLE 1: Default (popup)
+                startCard("1. Default (minuteStep: 5)");
+
+                    TimePicker({
+                        width: 180,
+                        time: "19:30",
+                        onChange: function (self) {
+                            lblDefault.text = "value: \"" + self.value + "\", hours: " + self.hours + ", minutes: " + self.minutes;
+                        },
+                    });
+
+                    lblDefault = infoLabel("value: \"19:30\"");
+
+                endCard();
+
+                // SAMPLE 2: Turkish, min / max, minuteStep 15
+                startCard("2. Türkçe, Min / Max, 15 dakika (Toplantı: 09:00 - 18:00)");
+
+                    // GROUP: Start, end
+                    HGroup({ width: "auto", height: "auto", gap: 12, align: "left center" });
+
+                        timeStart = TimePicker({
+                            width: 150,
+                            language: "tr",
+                            placeholder: "Başlangıç",
+                            minuteStep: 15,
+                            minTime: "09:00",
+                            maxTime: "17:45",
+                            onChange: function (self) {
+                                // End must be after start.
+                                timeEnd.setMinTime((self.minutesOfDay !== null) ? TimePicker.format(self.minutesOfDay + 15) : "09:15");
+                                if (timeEnd.minutesOfDay !== null && self.minutesOfDay !== null && timeEnd.minutesOfDay <= self.minutesOfDay) {
+                                    timeEnd.setTime(null, 1);
+                                }
+                                refreshMeeting();
+                            },
+                        });
+
+                        Label({ text: "–", fontSize: 18, textColor: Black(0.4) });
+
+                        timeEnd = TimePicker({
+                            width: 150,
+                            language: "tr",
+                            placeholder: "Bitiş",
+                            minuteStep: 15,
+                            minTime: "09:15",
+                            maxTime: "18:00",
+                            onChange: refreshMeeting,
+                        });
+
+                    endGroup();
+
+                    lblMeeting = infoLabel("Saatler dışındaki değerler seçilemez.");
+
+                endCard();
+
+                // SAMPLE 3: Over midnight, 12h text
+                startCard("3. Over midnight (22:00 - 02:00), format: \"h:mm A\"");
+
+                    TimePicker({
+                        width: 180,
+                        minTime: "22:00",
+                        maxTime: "02:00",
+                        minuteStep: 30,
+                        format: "h:mm A",
+                        placeholder: "Night shift",
+                    });
+
+                endCard();
+
+                // SAMPLE 4: Inline with custom style
+                startCard("4. Inline (Custom Style, minuteStep: 1, closeOnSelect is not used)");
+
+                    timeInline = TimePicker({
+                        inline: 1,
+                        time: new Date(),
+                        minuteStep: 1,
+                        showClearButton: 0,
+                        onChange: function (self) {
+                            lblInline.text = "Selected: <b>" + self.value + "</b>";
+                        },
+                        style: {
+                            panel: { border: 0, padding: 4, shadow: "none" },
+                            cell: { width: 72, round: 10, hoverColor: "#DFEFE6" },
+                            selectedCell: { color: "#5DB182" },
+                            columnTitle: { activeTextColor: "#3E8E62" },
+                            footerButton: { textColor: "#3E8E62" },
+                        },
+                    });
+
+                    lblInline = infoLabel("Selected: <b>" + timeInline.value + "</b>");
+
+                endCard();
+
+                // SAMPLE 5: Public functions
+                startCard("5. Functions");
+
+                    timeFunctions = TimePicker({
+                        width: 180,
+                        onChange: function (self) {
+                            lblFunctions.text = "onChange: \"" + self.value + "\"";
+                        },
+                    });
+
+                    // GROUP: Buttons
+                    HGroup({ width: "100%", height: "auto", align: "left center", gap: 8, wrap: 1 });
+
+                        smallButton("setTime(\"08:45\")", function () {
+                            timeFunctions.setTime("08:45");
+                        });
+
+                        smallButton("setTime(null)", function () {
+                            timeFunctions.setTime(null);
+                        });
+
+                        smallButton("minuteStep: 10", function (self) {
+                            const step = (timeFunctions.minuteStep == 10) ? 5 : 10;
+                            timeFunctions.setMinuteStep(step);
+                            self.setLabelText("minuteStep: " + ((step == 10) ? 5 : 10));
+                        });
+
+                        smallButton("Disable", function (self) {
+                            timeFunctions.setEnabled(timeFunctions.enabled ? 0 : 1);
+                            self.setLabelText((timeFunctions.enabled) ? "Disable" : "Enable");
+                        });
+
+                    endGroup();
+
+                    lblFunctions = infoLabel("Keyboard: Tab to the field, Enter to open, ↑ ↓ change, ← → column, Enter to close.");
+
+                endCard();
+
+            endGroup();
+
+        };
+
+        // *** OTHER FUNCTIONS:
+
+        const refreshMeeting = function () {
+            if (timeStart.minutesOfDay === null || timeEnd.minutesOfDay === null) {
+                lblMeeting.text = "Saatler dışındaki değerler seçilemez.";
+                return;
+            }
+            const minutes = timeEnd.minutesOfDay - timeStart.minutesOfDay;
+            lblMeeting.text = "Toplantı: <b>" + timeStart.value + " - " + timeEnd.value + "</b> (" + Math.floor(minutes / 60) + " sa " + (minutes % 60) + " dk)";
+        };
+
+        // GROUP: A white card with a title.
+        const startCard = function (title) {
+            VGroup({
+                width: 460,
+                height: "auto",
+                align: "left top",
+                gap: 12,
+                padding: 20,
+                color: "white",
+                round: 10,
+                border: 1,
+                borderColor: Black(0.1),
+                css: { maxWidth: "100%" }, // WHY maxWidth: on a phone the card is as wide as the screen
+            });
+            Label({
+                text: title,
+                fontSize: 14,
+                textColor: Black(0.45),
+            });
+        };
+
+        const endCard = function () {
+            endGroup();
+        };
+
+        const infoLabel = function (text) {
+            return Label({
+                text: text,
+                fontSize: 13,
+                textColor: Black(0.55),
+            });
+        };
+
+        // A button of the sample (SmartButton, its gray)
+        const smallButton = function (text, onClick) {
+            return SmartButton({ labelText: text, onClick: onClick });
+        };
+
+    </script>
+</head>
+
+<body></body>
+
+</html>

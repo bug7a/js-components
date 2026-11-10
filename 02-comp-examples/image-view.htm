@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+
+        <title>ImageView</title>
+
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <!-- LIBRARY FILES -->
+        <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
+        <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../basic/scroll-bar.min.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- COMPONENT FILES -->
+        <script src="../comp/smart-button.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/image-view.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/scroll-area.js" type="text/javascript" charset="utf-8"></script>
+
+        <script>
+
+        /* Bismillah */
+
+        // ImageView (comp/image-view.js): a place to look at a picture, in the two themes.
+        // The wheel zooms around the mouse, a drag moves it, a double click goes to 100% and back. Keys: + - 0 1 and arrows.
+        // The buttons change the picture of both of them. "Draw the plot again" is a plot that a program keeps drawing:
+        // the same size, so it does not blink and it keeps the zoom and the place. Zoom in first, then try it.
+
+        // *** VARIABLES:
+        const PAGE_COLOR = "#ECEBE8";
+        const SOFT_TEXT = "#6F6E6B";
+        const PANEL_MIN_WIDTH = 340;
+        const PANEL_MAX_WIDTH = 620;
+        const VIEW_HEIGHT = 380;
+        const PHOTO_FILE = "../assets/cards/olives.png";
+        const BROKEN_FILE = "../assets/there-is-no-such-file.png";
+        const PLOT_PHASE_STEP = 0.4;
+
+        let imageViews = [];
+        let plotPhase = 0; // The plot moves a little at every drawing.
+
+        // First running function. (basic.js calls it when the page is ready)
+        const start = function () {
+
+            page.color = PAGE_COLOR;
+
+            // SCROLL AREA: Page (it scrolls when the window is lower than the samples)
+            ScrollArea({ align: "center top", gap: 16, padding: [16, 28] });
+
+                Label({ text: "ImageView", fontSize: 24, bold: 1, textColor: Black(0.8) });
+
+                // GROUP: The buttons
+                HGroup({ width: "100%", height: "auto", align: "center center", gap: 8, wrap: 1 });
+                    SmartButton({
+                        labelText: "A plot",
+                        tone: "cyan",
+                        onClick: function () { setImage(makePlot(), "A plot of two curves"); },
+                    });
+                    SmartButton({ labelText: "Draw the plot again", onClick: drawPlotAgain });
+                    SmartButton({ labelText: "A picture", onClick: function () { setImage(PHOTO_FILE, "A bowl of olives"); } });
+                    SmartButton({
+                        labelText: "Small, from a canvas",
+                        onClick: function () { setImage(makeSmallPicture(), "A small picture"); },
+                    });
+                    SmartButton({ labelText: "A missing file", onClick: function () { setImage(BROKEN_FILE, ""); } });
+                    SmartButton({ labelText: "Empty", onClick: function () { setImage("", ""); } });
+                endGroup();
+
+                // GROUP: The two themes side by side (one under the other on a narrow screen)
+                HGroup({ width: "100%", height: "auto", align: "center top", gap: 20, wrap: 1 });
+                    imageViews.push(createPanel("Light", "styleName: \"light\" (default)", "light"));
+                    imageViews.push(createPanel("Dark", "styleName: \"dark\"", "dark"));
+                endGroup();
+
+            endGroup();
+
+        };
+
+        // *** OTHER FUNCTIONS:
+
+        const setImage = function (file, altText) {
+            imageViews.forEach(function (view) {
+                view.setImage(file, altText);
+                if (!file) view.lblSize.plainText = "-";
+            });
+        };
+
+        // GROUP: A title, an ImageView and its zoom. Returns the ImageView.
+        const createPanel = function (titleText, noteText, styleName) {
+            VGroup({
+                width: "auto",
+                height: "auto",
+                align: "left top",
+                gap: 8,
+                css: { flex: "1 1 " + PANEL_MIN_WIDTH + "px", maxWidth: PANEL_MAX_WIDTH + "px", minWidth: "0" },
+            });
+
+                HGroup({ width: "100%", height: "auto", align: "left center", gap: 8 });
+                    Label({ text: titleText, fontSize: 15, bold: 1, textColor: Black(0.75) });
+                    Label({ text: basic.escapeHtml(noteText), fontSize: 12, textColor: SOFT_TEXT });
+                endGroup();
+
+                const lblSize = Label({ text: "-", fontSize: 12, textColor: SOFT_TEXT });
+
+                const view = ImageView({
+                    styleName: styleName,
+                    height: VIEW_HEIGHT,
+                    imageFile: makePlot(),
+                    altText: "A plot of two curves",
+                    enlargeToFit: 1, // WHY: The plot is a vector drawing, so it stays sharp when it grows.
+                    style: { image: { color: "white" } }, // WHY: A plot has black lines: a white ground in the dark theme too.
+                    onZoomChange: function (self) {
+                        lblSize.plainText = self.naturalWidth + " x " + self.naturalHeight + " at " + Math.round(self.zoomLevel * 100) + "%";
+                    },
+                    onError: function () { lblSize.plainText = "onError: the file was not found"; },
+                });
+
+            endGroup();
+            view.lblSize = lblSize;
+            return view;
+        };
+
+        const drawPlotAgain = function () {
+            plotPhase += PLOT_PHASE_STEP;
+            setImage(makePlot(), "A plot of two curves");
+        };
+
+        // A plot like the one a Python program saves: an SVG address, no file. (It could be a PNG in a data: address.)
+        const makePlot = function () {
+            const WIDTH = 640;
+            const HEIGHT = 480;
+            const LEFT = 70;
+            const TOP = 40;
+            const PLOT_WIDTH = 530;
+            const PLOT_HEIGHT = 380;
+            const AXIS_LIMIT = 1.2; // The value at the top of the plot
+
+            const curve = function (func) {
+                const points = [];
+                for (let x = 0; x <= PLOT_WIDTH; x += 6) {
+                    const y = func((x / PLOT_WIDTH) * Math.PI * 4 + plotPhase);
+                    points.push((LEFT + x) + "," + (TOP + PLOT_HEIGHT / 2 - (y / AXIS_LIMIT) * (PLOT_HEIGHT / 2)).toFixed(1));
+                }
+                return points.join(" ");
+            };
+
+            let grid = "";
+            for (let i = 0; i <= 8; i++) {
+                const x = LEFT + (PLOT_WIDTH * i) / 8;
+                grid += '<line x1="' + x + '" y1="' + TOP + '" x2="' + x + '" y2="' + (TOP + PLOT_HEIGHT) + '"/>';
+                grid += '<text x="' + x + '" y="' + (TOP + PLOT_HEIGHT + 22) + '" text-anchor="middle" stroke="none">' + (i * Math.PI / 2).toFixed(1) + "<\/text>";
+            }
+            for (let i = 0; i <= 4; i++) {
+                const y = TOP + (PLOT_HEIGHT * i) / 4;
+                grid += '<line x1="' + LEFT + '" y1="' + y + '" x2="' + (LEFT + PLOT_WIDTH) + '" y2="' + y + '"/>';
+                grid += '<text x="' + (LEFT - 12) + '" y="' + (y + 5) + '" text-anchor="end" stroke="none">' + (AXIS_LIMIT - (i * AXIS_LIMIT) / 2).toFixed(1) + "<\/text>";
+            }
+
+            const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="' + WIDTH + '" height="' + HEIGHT + '" viewBox="0 0 ' + WIDTH + " " + HEIGHT + '" font-family="sans-serif" font-size="14">'
+                + '<rect width="100%" height="100%" fill="white"/>'
+                + '<g stroke="#DDDDDD" fill="#333333">' + grid + "<\/g>"
+                + '<rect x="' + LEFT + '" y="' + TOP + '" width="' + PLOT_WIDTH + '" height="' + PLOT_HEIGHT + '" fill="none" stroke="#333333"/>'
+                + '<polyline points="' + curve(Math.sin) + '" fill="none" stroke="#1F77B4" stroke-width="2.5"/>'
+                + '<polyline points="' + curve(Math.cos) + '" fill="none" stroke="#FF7F0E" stroke-width="2.5"/>'
+                + '<text x="' + (WIDTH / 2) + '" y="26" text-anchor="middle" font-size="17" fill="#222222">Two curves<\/text>'
+                + "<\/svg>";
+
+            return "data:image/svg+xml;utf8," + encodeURIComponent(svg);
+        };
+
+        // A very small picture made with a canvas: a data: address, like a picture of Pillow. Zoom in: its pixels stay sharp.
+        const makeSmallPicture = function () {
+            const SIZE = 32;
+            const canvas = document.createElement("canvas");
+            canvas.width = SIZE;
+            canvas.height = SIZE;
+            const drawing = canvas.getContext("2d");
+            for (let y = 0; y < SIZE; y++) {
+                for (let x = 0; x < SIZE; x++) {
+                    const hue = Math.round(((x + y) / (SIZE * 2)) * 300);
+                    const isDark = ((x >> 2) + (y >> 2)) % 2 === 0;
+                    drawing.fillStyle = "hsl(" + hue + ", 70%, " + (isDark ? 45 : 70) + "%)";
+                    drawing.fillRect(x, y, 1, 1);
+                }
+            }
+            return canvas.toDataURL("image/png");
+        };
+
+        </script>
+
+    </head>
+    <body>
+    </body>
+</html>

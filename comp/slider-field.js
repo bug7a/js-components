@@ -2,38 +2,51 @@
 
 /*
 
-SliderField - v26.09
+SliderField - v26.11
 
 UI COMPONENT TEMPLATE
 - A slider in the shape of a field: [ Width  |  ·  ·  ·  ·  ·     3 ]
   The label is at the left, the value at the right, the filled part ends with a small handle,
   and the dots in the empty part show the steps. (Like the property sliders of design tools.)
 - Drag anywhere on the field, or click a point to jump there. A click on the value opens the typing (editable: 1).
-- min, max, step and precision (decimals, "auto": from the step). Unit text after the value ("px", "%")
+- minValue, maxValue, step and precision (decimals, "auto": from the step). Unit text after the value ("px", "%")
   and a valueFormat() for your own text.
 - Keyboard: ArrowRight / ArrowUp one step, ArrowLeft / ArrowDown one step back, PageUp / PageDown ten steps,
   Home / End min / max, Enter (or a digit) starts the typing, Escape cancels it.
-- Step dots: one dot for each step, up to maxTicks (then fewer dots that divide the range evenly).
-  Dots under the fill, the label or the value are hidden. showTicks: 0 hides them all.
+- Step dots: one dot for each step, up to maxTicks and as many as there is room for (tick.minSpace; then fewer dots
+  that divide the range evenly). Dots under the fill, the label or the value are hidden. showTicks: 0 hides them all.
 - Width can be a percent ("100%"): the view is updated with box.onResize (basic.js removes it with the box).
 - onChange is called while dragging (every new value), onChangeEnd when the change is finished
   (the drag is released, a key step, a typed value). Neither is called at create time or with silent: 1.
 - Everything is drawn with code (no image files needed). Accessibility: role="slider", aria-valuenow...
-- Style packages: "classic" (default), "modern", "dark". Select with styleName. (SliderField.styles)
-- Not the same as comp/slider.js (Slider: a Material style track with a round thumb).
+- Style packages: "light" (default; the old name "classic" works too) and "dark" (the light and dark look of the kit:
+  a quiet gray field, a fill in a tint of the accent, the handle and the focus in the accent: _designs/slider-field.htm),
+  "modern", "ozden", "minimal", "minimalDark".
+  Select with styleName. (SliderField.styles)
+  "ozden" (a more usable look for general use), in the colors of SmartButton: a cyan fill with
+  an edge and a white knob, a focus ring. Its sample: 02-comp-examples/slider-field-ozden.htm.
+- The handle never crosses a text (style.fill.aroundLabel and beforeValue, 1 by default): at min the fill holds the
+  label (and the handle stands 6 px after it), at max it ends before the value; the handle is always seen. 0: the
+  handle can go under them (it hides there).
+- Not the same as comp/slider.js (Slider: a track with a round thumb). THE SLIDER OF NEW PAGES is Slider "round";
+  SliderField is the parallel design, for a page that asks for its shape.
 
 USAGE:
-const sfWidth = SliderField({ labelText: "Width", value: 3, min: 0, max: 10, onChange: (self) => println(self.value) });
+const sfWidth = SliderField({ labelText: "Width", value: 3, minValue: 0, maxValue: 10, onChange: (self) => println(self.value) });
 sfWidth.setValue(5);                // onChange and onChangeEnd are called
 sfWidth.setValue(5, 1);             // silent
-SliderField({ labelText: "Opacity", value: 80, min: 0, max: 100, step: 5, unitText: "%" });
-SliderField({ labelText: "Scale", value: 1.5, min: 0.5, max: 3, step: 0.1 }); // precision "auto" -> 1 decimal
+SliderField({ labelText: "Opacity", value: 80, minValue: 0, maxValue: 100, step: 5, unitText: "%" });
+SliderField({ labelText: "Scale", value: 1.5, minValue: 0.5, maxValue: 3, step: 0.1 }); // precision "auto" -> 1 decimal
 SliderField({ labelText: "Blur", width: "100%", valueFormat: (value) => (value === 0) ? "Off" : value + " px" });
+SliderField({ styleName: "ozden", labelText: "Volume", value: 60, minValue: 0, maxValue: 100, unitText: "%" });
+SliderField({ styleName: "ozden", labelText: "Speed", style: { fill: { color: "#7BC362", hoverColor: "#70B756", activeColor: "#67AD4D" } } }); // the green of SmartButton
 
 Started Date: September 2026
-Developer: Bugra Ozden
-Email: bugra.ozden@gmail.com
 Webpage: https://bug7a.github.io/js-components/
+
+Copyright 2020-2026 Bugra Ozden <bugra.ozden@gmail.com> (https://bug7a.github.io/)
+Licensed under the Apache License, Version 2.0
+SPDX-License-Identifier: Apache-2.0
 
 */
 
@@ -46,8 +59,8 @@ const SliderFieldDefaults = {
     height: 44,
     labelText: "", // Text at the left. Ex: "Width"
     value: 0,
-    min: 0,
-    max: 10,
+    minValue: 0,
+    maxValue: 10,
     step: 1,
     precision: "auto", // Decimals shown and used for rounding. "auto": the decimals of the step (0.25 -> 2)
     unitText: "", // After the value. Ex: "px", " kg" (with the space)
@@ -59,16 +72,20 @@ const SliderFieldDefaults = {
     valueFormat: function (value, self) { return self.formatNumber(value) + self.unitText; }, // Text of the value
     onChange: function (self) { }, // self.value (also while dragging)
     onChangeEnd: function (self) { }, // After a drag, a key step or a typed value
-    styleName: "classic", // "classic", "modern", "dark" or a name added to SliderField.styles
-    style: { // Classic style package (default)
+    styleName: "light", // "light" ("classic": its old name), "dark", "modern", "ozden", "minimal", "minimalDark" or a name added to SliderField.styles
+    style: { // The base of every package (a light gray field with a gray fill): a package changes only some keys
         box: {
             color: "#F2F2F4",
+            hoverColor: "", // Under the mouse. "": the same color
             border: 1,
             borderColor: "#E8E8EB",
             round: 12,
+            boxShadow: "none",
         },
         boxFocus: { // Keyboard focus
             borderColor: "#9A9AA0",
+            ringColor: "", // A ring inside the edge, over the fill. "": no ring
+            ringWidth: 2,
         },
         fill: {
             color: "#E1E1E4",
@@ -76,6 +93,14 @@ const SliderFieldDefaults = {
             activeColor: "#D5D5DA", // While dragging
             minWidth: 26, // Fill width at min (the handle stays visible)
             round: 11,
+            innerRound: "", // The right corners while the fill ends inside the field. "": the same as round, 0: straight
+            aroundLabel: 1, // 1: at min the fill holds the label (labelSpace after it): the handle never crosses the label. 0: it can go under it
+            labelSpace: 16,
+            beforeValue: 1, // 1: at max the fill ends before the value (valueSpace before it): the handle never crosses the value. 0: it can go under it
+            valueSpace: 16,
+            border: 0,
+            borderColor: "transparent",
+            boxShadow: "none", // Ex: a line at its bottom: "inset 0 -2px 0 rgba(0, 0, 0, 0.25)"
         },
         handle: {
             width: 3,
@@ -85,6 +110,9 @@ const SliderFieldDefaults = {
             hoverColor: "#86868C",
             activeColor: "#5E5E64",
             round: 2,
+            border: 0,
+            borderColor: "transparent",
+            boxShadow: "none",
         },
         tick: {
             size: 3,
@@ -110,13 +138,14 @@ const SliderFieldDefaults = {
         },
         disabled: {
             opacity: 0.5,
+            filter: "none", // Ex: "grayscale(1)": a colored fill turns gray
         },
     }
 };
 
 const SliderField = function (params = {}) {
 
-    // Merge style package: params.style > SliderField.styles[styleName] > SliderFieldDefaults.style (classic)
+    // Merge style package: params.style > SliderField.styles[styleName] > SliderFieldDefaults.style (the base)
     basic.applyStylePackage(params, SliderField.styles, SliderFieldDefaults);
 
     // Merge params:
@@ -149,15 +178,17 @@ const SliderField = function (params = {}) {
     const PAGE_STEPS = 10; // PageUp / PageDown
     const LABEL_DOT_SPACE = 8; // px: no dots this close to the label
     const VALUE_DOT_SPACE = 10; // px: no dots this close to the value text
-    const TEXT_OVERLAP = 4; // px: the handle may touch a text this much before it is hidden
+    const TEXT_OVERLAP = 4; // px: the handle may touch a text this much before it is hidden (aroundLabel / beforeValue 0)
+    const HANDLE_LABEL_SPACE = 6; // px between the label and the handle at min (aroundLabel)
     const FILL_DOT_SPACE = 4; // px: no dots this close to the end of the fill
+    const HANDLE_DOT_SPACE = 8; // px: no dots this close to the right side of the handle
     const VALUE_CLICK_SPACE = 6; // px: a click this close to the value text starts the typing
     const INPUT_MIN_WIDTH = 64;
     const INPUT_EXTRA_WIDTH = 28; // The input is wider than the value text
     const INPUT_SPACE = 6; // px: between the input and the sides of the box
 
     // *** PUBLIC VARIABLES:
-    // NOTE: Default values are also public variables. (box.value, box.min, box.max, box.step)
+    // NOTE: Default values are also public variables. (box.value, box.minValue, box.maxValue, box.step)
 
     // *** PRIVATE FUNCTIONS:
 
@@ -175,15 +206,15 @@ const SliderField = function (params = {}) {
     // Snaps to the steps (from min) and keeps the value in [min, max].
     const clampValue = function (value) {
         value = Number(value);
-        if (isNaN(value)) value = box.min;
-        value = Math.min(Math.max(value, box.min), box.max);
-        value = box.min + Math.round((value - box.min) / box.step) * box.step;
-        return roundValue(Math.min(Math.max(value, box.min), box.max));
+        if (isNaN(value)) value = box.minValue;
+        value = Math.min(Math.max(value, box.minValue), box.maxValue);
+        value = box.minValue + Math.round((value - box.minValue) / box.step) * box.step;
+        return roundValue(Math.min(Math.max(value, box.minValue), box.maxValue));
     };
 
     const getRatio = function () {
-        const range = box.max - box.min;
-        return (range > 0) ? (box.value - box.min) / range : 0;
+        const range = box.maxValue - box.minValue;
+        return (range > 0) ? (box.value - box.minValue) / range : 0;
     };
 
     // Inner width (without the border)
@@ -192,40 +223,77 @@ const SliderField = function (params = {}) {
         return (w > 0) ? w : (Number(box.width) || 0);
     };
 
+    // The widest value text of min, max and the value: the end of the track does not move while the text changes.
+    const getWidestValueWidth = function () {
+        const texts = [box.valueFormat(box.minValue, box), box.valueFormat(box.maxValue, box), box.valueFormat(box.value, box)];
+        const widths = texts.map(function (text) { return SliderField.measureText(text, box.lblValue.elem); });
+        return Math.max.apply(null, widths);
+    };
+
+    // Where the end of the fill moves: { start, end } (the fill width at min and at max).
+    // fill.aroundLabel: at min the fill holds the label, so the label is always on the fill.
+    // fill.beforeValue: at max the fill ends before the value, so the value is never on the fill.
+    // WHY: the end of a colored fill that crossed a text cut its letters in two colors.
+    const getTrack = function () {
+        const width = getWidth();
+        let start = _s.fill.minWidth;
+        let end = width;
+        if (_s.fill.aroundLabel == 1 && box.labelText) {
+            // WHY the room of the handle: a thin handle inside the end of the fill stood on the label at min (hidden)
+            const handleRoom = _s.handle.inset + _s.handle.width + HANDLE_LABEL_SPACE;
+            start = Math.max(start, _s.label.padding + box.lblLabel.elem.offsetWidth + Math.max(_s.fill.labelSpace, handleRoom));
+        }
+        if (_s.fill.beforeValue == 1) {
+            end = width - _s.value.padding - getWidestValueWidth() - _s.fill.valueSpace;
+        }
+        return { start: start, end: Math.max(start, end) };
+    };
+
     // Fill width for a ratio (0-1)
-    const getFillWidth = function (ratio) {
-        const minWidth = _s.fill.minWidth;
-        return minWidth + ratio * Math.max(0, getWidth() - minWidth);
+    const getFillWidth = function (ratio, track) {
+        return track.start + ratio * (track.end - track.start);
     };
 
     // Value for an x position inside the box (the handle follows the pointer).
     const getValueAt = function (x) {
-        const minWidth = _s.fill.minWidth;
-        const space = Math.max(1, getWidth() - minWidth);
-        const ratio = Math.min(1, Math.max(0, (x + _s.handle.inset + _s.handle.width / 2 - minWidth) / space));
-        return clampValue(box.min + ratio * (box.max - box.min));
+        const track = getTrack();
+        const space = Math.max(1, track.end - track.start);
+        const fillWidth = x + _s.handle.inset + _s.handle.width / 2; // the fill that puts the middle of the handle at x
+        const ratio = Math.min(1, Math.max(0, (fillWidth - track.start) / space));
+        return clampValue(box.minValue + ratio * (box.maxValue - box.minValue));
     };
 
+    // WHY: with fill.aroundLabel a click on the label is not a click on the track (it gave min).
+    const isOnLabelOfFill = function (x) {
+        return (_s.fill.aroundLabel == 1 && box.labelText && x < getTrack().start);
+    };
+
+    // The x of the pointer in the px of the box. WHY the scale: in a scaled parent (page.fit, a transform,
+    // the layer of a game UI) the rect is in screen px and the width in the own px of the box: a drag to 80 % gave
+    // 60 % (the game Fishing Company Tycoon fixed it in its copy).
     const getPointerX = function (event) {
         const rect = box.elem.getBoundingClientRect();
-        return event.clientX - rect.left - box.elem.clientLeft;
+        const scale = (box.elem.offsetWidth > 0) ? rect.width / box.elem.offsetWidth : 1;
+        return (event.clientX - rect.left) / (scale || 1) - box.elem.clientLeft;
     };
 
-    // Number of dot spaces: every step, or a divisor of the steps up to maxTicks.
-    const getTickCount = function () {
+    // Number of dot spaces: every step, or a divisor of the steps, up to maxTicks and as many as the track has room for
+    // (tick.minSpace). WHY the room: dots that were too close were all hidden, a short track showed none.
+    const getTickCount = function (trackLength) {
         if (box.showTicks != 1) return 0;
-        const steps = Math.round((box.max - box.min) / box.step);
+        const steps = Math.round((box.maxValue - box.minValue) / box.step);
         if (steps < 1) return 0;
-        if (steps <= box.maxTicks) return steps;
-        for (let count = box.maxTicks; count >= 2; count--) {
+        const maxCount = Math.min(box.maxTicks, Math.floor(trackLength / _s.tick.minSpace));
+        if (steps <= maxCount) return steps;
+        for (let count = maxCount; count >= 2; count--) {
             if (steps % count === 0) return count;
         }
         return 0;
     };
 
     // Creates the dots again when the count changes.
-    const buildTicks = function () {
-        const count = getTickCount();
+    const buildTicks = function (trackLength) {
+        const count = getTickCount(trackLength);
         if (count === tickCount && ticks.length === ((count > 0) ? count + 1 : 0)) return;
         ticks.forEach(function (tick) { tick.remove(); });
         ticks = [];
@@ -244,40 +312,53 @@ const SliderField = function (params = {}) {
                 tick.css = {
                     top: "calc(50% - " + (_s.tick.size / 2) + "px)",
                     transition: "opacity " + FADE_TIME,
+                    opacity: "0", // WHY: a new dot under the label faded out from 1 (the dots are made again when the field is resized)
                 };
                 ticks.push(tick);
             }
         });
     };
 
+    // WHY: at the right end of the field the fill is as round as the field, or the round corner cuts its edge
+    const setFillCorners = function (fillWidth, width) {
+        const round = _s.fill.round;
+        const isInside = (fillWidth < width - 0.5);
+        const endRound = (isInside && _s.fill.innerRound !== "") ? _s.fill.innerRound : round;
+        box.fill.css.borderRadius = round + "px " + endRound + "px " + endRound + "px " + round + "px";
+    };
+
     // Positions: fill, handle, value text, dots.
     const refreshLayout = function () {
 
         const width = getWidth();
-        const fillWidth = getFillWidth(getRatio());
+        const track = getTrack();
+        const fillWidth = getFillWidth(getRatio(), track);
         const handleLeft = fillWidth - _s.handle.inset - _s.handle.width;
 
         box.fill.width = fillWidth;
+        setFillCorners(fillWidth, width);
         box.handle.left = handleLeft;
+        buildTicks(track.end - track.start);
 
         // Areas that hide the dots
         const labelRight = (box.labelText) ? _s.label.padding + box.lblLabel.elem.offsetWidth + LABEL_DOT_SPACE : 0;
         const valueLeft = width - _s.value.padding - box.lblValue.elem.offsetWidth - VALUE_DOT_SPACE;
 
-        // WHY: At the ends the handle would be drawn on the label or the value text.
+        // WHY: At the ends the handle would be drawn on the label or the value text. Only without aroundLabel /
+        //      beforeValue: with them the handle stays beside the texts and is always seen.
         const handleRight = handleLeft + _s.handle.width;
-        const isOnLabel = (box.labelText && handleRight > _s.label.padding - TEXT_OVERLAP && handleLeft < labelRight - TEXT_OVERLAP);
-        const isOnValue = (handleRight > valueLeft + TEXT_OVERLAP);
+        const isOnLabel = (_s.fill.aroundLabel != 1 && box.labelText && handleRight > _s.label.padding - TEXT_OVERLAP && handleLeft < labelRight - TEXT_OVERLAP);
+        const isOnValue = (_s.fill.beforeValue != 1 && handleRight > valueLeft + TEXT_OVERLAP);
         box.handle.css.opacity = (isOnLabel || isOnValue) ? "0" : "1";
 
         if (tickCount > 0) {
-            const space = (width - _s.fill.minWidth) / tickCount;
-            const isTooClose = (space < _s.tick.minSpace);
+            // WHY the handle: a knob is wider than the end of the fill (ozden)
+            const dotsLeft = Math.max(fillWidth + FILL_DOT_SPACE, handleRight + HANDLE_DOT_SPACE);
             for (let i = 0; i <= tickCount; i++) {
-                const x = getFillWidth(i / tickCount) - _s.handle.inset - _s.handle.width / 2;
+                const x = getFillWidth(i / tickCount, track) - _s.handle.inset - _s.handle.width / 2;
                 const tick = ticks[i];
                 tick.left = x - _s.tick.size / 2;
-                const isVisible = !isTooClose && x > fillWidth + FILL_DOT_SPACE && x > labelRight && x < valueLeft;
+                const isVisible = x > dotsLeft && x > labelRight && x < valueLeft;
                 tick.css.opacity = (isVisible) ? "1" : "0";
             }
         }
@@ -292,9 +373,13 @@ const SliderField = function (params = {}) {
     };
 
     const paintState = function () {
+        const isHoverColor = (isHover && box.enabled == 1 && _s.box.hoverColor);
+        box.color = (isHoverColor) ? _s.box.hoverColor : _s.box.color;
         box.fill.color = getStateColor(_s.fill);
         box.handle.color = getStateColor(_s.handle);
-        box.borderColor = ((isFocused && isKeyboardFocus) || isEditing) ? _s.boxFocus.borderColor : _s.box.borderColor;
+        const isFocusLook = ((isFocused && isKeyboardFocus) || isEditing);
+        box.borderColor = (isFocusLook) ? _s.boxFocus.borderColor : _s.box.borderColor;
+        box.focusRing.visible = (isFocusLook && _s.boxFocus.ringColor) ? 1 : 0;
     };
 
     const updateView = function () {
@@ -302,8 +387,8 @@ const SliderField = function (params = {}) {
         box.lblValue.plainText = text;
         box.aria = {
             valuenow: String(box.value),
-            valuemin: String(box.min),
-            valuemax: String(box.max),
+            valuemin: String(box.minValue),
+            valuemax: String(box.maxValue),
             valuetext: text,
         };
         refreshLayout();
@@ -349,7 +434,9 @@ const SliderField = function (params = {}) {
 
     // apply: 1 -> The typed value is used. 0 -> Cancel.
     const endEdit = function (apply) {
-        if (!isEditing) return;
+        // WHY: Chrome fires blur when a focused field is removed: a half typed value went to onChange of a field that
+        //      was removed (a panel built again while the user typed)
+        if (!isEditing || box.isRemoved) return;
         isEditing = 0;
         box.input.visible = 0;
         box.lblValue.visible = 1;
@@ -379,8 +466,8 @@ const SliderField = function (params = {}) {
         ArrowLeft: function () { stepValue(-1); },
         PageUp: function () { stepValue(PAGE_STEPS); },
         PageDown: function () { stepValue(-PAGE_STEPS); },
-        Home: function () { changeValue(box.min, 1); },
-        End: function () { changeValue(box.max, 1); },
+        Home: function () { changeValue(box.minValue, 1); },
+        End: function () { changeValue(box.maxValue, 1); },
     };
 
     const isTypingKey = function (key) {
@@ -425,7 +512,12 @@ const SliderField = function (params = {}) {
     // *** POINTER (drag or click):
 
     const onPointerDown = function (self, event) {
-        if (box.enabled != 1 || isEditing || event.button !== 0) return;
+        // WHY: a click on a disabled field took the focus (and drew the focus of the keyboard on it)
+        if (box.enabled != 1) {
+            event.preventDefault();
+            return;
+        }
+        if (isEditing || event.button !== 0) return;
         if (event.target === box.input.inputElement) return;
         event.preventDefault(); // WHY: No text selection, the focus is given below.
         isKeyboardFocus = 0;
@@ -462,12 +554,13 @@ const SliderField = function (params = {}) {
             if (box.value !== startValueOfDrag) box.onChangeEnd(box);
             return;
         }
-        // A click: on the value text -> typing, anywhere else -> jump there.
+        // A click: on the value text -> typing, on the label of a fill around it -> only the focus, anywhere else -> jump there.
         const valueLeft = getWidth() - _s.value.padding - box.lblValue.elem.offsetWidth - VALUE_CLICK_SPACE;
         if (box.editable == 1 && x >= valueLeft) {
             startEdit();
             return;
         }
+        if (isOnLabelOfFill(x)) return;
         changeValue(getValueAt(x), 1);
     };
 
@@ -511,24 +604,22 @@ const SliderField = function (params = {}) {
     };
 
     box.setRange = function (min, max) {
-        box.min = Number(min) || 0;
-        box.max = Math.max(box.min, Number(max) || 0);
-        buildTicks();
-        box.setValue(box.value, 1);
+        box.minValue = Number(min) || 0;
+        box.maxValue = Math.max(box.minValue, Number(max) || 0);
+        box.setValue(box.value, 1); // (the dots are made again in refreshLayout)
     };
     // USAGE: slider.setRange(0, 100)
 
-    box.setMin = function (min) {
-        box.setRange(min, Math.max(Number(min) || 0, box.max));
+    box.setMinValue = function (min) {
+        box.setRange(min, Math.max(Number(min) || 0, box.maxValue));
     };
 
-    box.setMax = function (max) {
-        box.setRange(Math.min(box.min, Number(max) || 0), max);
+    box.setMaxValue = function (max) {
+        box.setRange(Math.min(box.minValue, Number(max) || 0), max);
     };
 
     box.setStep = function (step) {
         box.step = Math.abs(Number(step)) || 1;
-        buildTicks();
         box.setValue(box.value, 1);
     };
 
@@ -553,7 +644,6 @@ const SliderField = function (params = {}) {
 
     box.setShowTicks = function (showTicks) {
         box.showTicks = basic.isOn(showTicks) ? 1 : 0;
-        buildTicks();
         refreshLayout();
     };
 
@@ -566,6 +656,7 @@ const SliderField = function (params = {}) {
             setSlideMotion(1);
         }
         box.css.opacity = (isEnabled) ? "1" : String(_s.disabled.opacity);
+        box.css.filter = (isEnabled) ? "none" : _s.disabled.filter;
         box.cursor = (isEnabled) ? "pointer" : "default";
         box.tabIndex = (isEnabled) ? 0 : -1;
         box.aria = { disabled: (isEnabled) ? "false" : "true" };
@@ -595,10 +686,11 @@ const SliderField = function (params = {}) {
     box.css = {
         outline: "none",
         boxSizing: "border-box",
-        transition: "border-color " + FADE_TIME,
+        transition: "border-color " + FADE_TIME + ", background-color " + FADE_TIME,
         touchAction: "pan-y", // WHY: A horizontal drag moves the slider, a vertical one still scrolls the page.
         userSelect: "none",
     };
+    box.boxShadow = _bs.boxShadow;
     box.clipContent = 1;
 
     // BOX: Filled part
@@ -609,6 +701,9 @@ const SliderField = function (params = {}) {
         height: "100%",
         color: _s.fill.color,
         round: _s.fill.round,
+        border: _s.fill.border,
+        borderColor: _s.fill.borderColor,
+        boxShadow: _s.fill.boxShadow,
     });
 
     // BOX: Layer of the step dots
@@ -622,6 +717,9 @@ const SliderField = function (params = {}) {
         height: _s.handle.height,
         color: _s.handle.color,
         round: _s.handle.round,
+        border: _s.handle.border,
+        borderColor: _s.handle.borderColor,
+        boxShadow: _s.handle.boxShadow,
     });
     box.handle.css.top = "calc(50% - " + (_s.handle.height / 2) + "px)";
 
@@ -654,6 +752,19 @@ const SliderField = function (params = {}) {
     styleTextLabel(box.lblLabel, _s.label);
     styleTextLabel(box.lblValue, _s.value);
 
+    // BOX: Ring of the keyboard focus (boxFocus.ringColor). WHY a box: an outline of the field is drawn under the fill
+    box.focusRing = Box({
+        left: 0,
+        top: 0,
+        width: "100%",
+        height: "100%",
+        color: "transparent",
+        border: _s.boxFocus.ringWidth,
+        borderColor: _s.boxFocus.ringColor,
+        round: Math.max(0, _s.box.round - _s.box.border),
+    });
+    box.focusRing.visible = 0;
+
     // INPUT: Typing the value (hidden until the edit starts)
     box.input = Input({
         left: 0,
@@ -679,7 +790,7 @@ const SliderField = function (params = {}) {
     box.input.visible = 0;
 
     // WHY: Only the box gets the pointer events, so event.target is always the box (or the input).
-    [box.fill, box.tickLayer, box.handle].forEach(function (obj) { obj.clickable = 0; });
+    [box.fill, box.tickLayer, box.handle, box.focusRing].forEach(function (obj) { obj.clickable = 0; });
 
     // *** OBJECT INIT CODE:
 
@@ -714,15 +825,16 @@ const SliderField = function (params = {}) {
     box.input.inputElement.addEventListener("keydown", onKeyDown);
 
     box.onResize(function () { refreshLayout(); });
+    // WHY: the label and the value are measured; a font that is loaded later changes their widths.
+    if (document.fonts) document.fonts.ready.then(function () { if (!box.isRemoved) refreshLayout(); });
 
-    box.min = Number(box.min) || 0;
-    box.max = Number(box.max);
-    if (isNaN(box.max)) box.max = box.min;
-    if (box.max < box.min) box.max = box.min;
+    box.minValue = Number(box.minValue) || 0;
+    box.maxValue = Number(box.maxValue);
+    if (isNaN(box.maxValue)) box.maxValue = box.minValue;
+    if (box.maxValue < box.minValue) box.maxValue = box.minValue;
     box.step = Math.abs(Number(box.step)) || 1;
     box.maxTicks = Math.max(2, Number(box.maxTicks) || SliderFieldDefaults.maxTicks);
     box.value = clampValue(startValue);
-    buildTicks();
     setSlideMotion(1);
     box.setEnabled(box.enabled);
     updateView();
@@ -736,16 +848,68 @@ const SliderField = function (params = {}) {
 // WHY: Label.text uses innerHTML. Texts must not be read as HTML.
 SliderField.escapeHtml = basic.escapeHtml; // (the name is kept: other code may use it)
 
+// The width of a text in the font of an element, measured on a canvas (nothing changes in the page).
+SliderField.measureText = function (text, elem) {
+    if (!SliderField.textCanvas) SliderField.textCanvas = document.createElement("canvas").getContext("2d");
+    const css = getComputedStyle(elem);
+    SliderField.textCanvas.font = css.fontStyle + " " + css.fontWeight + " " + css.fontSize + " " + css.fontFamily;
+    return SliderField.textCanvas.measureText(String(text)).width;
+};
+
 // *** STYLE PACKAGES:
 // USAGE: SliderField({ styleName: "modern" })
 // USAGE: SliderField({ styleName: "dark", style: { fill: { color: "#3D7A6B" } } }) // Change only some keys.
 // USAGE: SliderField({ style: SliderField.styles.dark }) // The same as styleName: "dark". (The package is copied, never changed.)
-// NOTE: A new package needs only the keys that differ from the default (classic) style.
+// NOTE: A new package needs only the keys that differ from SliderFieldDefaults.style (the base of every package).
 // USAGE: SliderField.styles.myStyle = { fill: { color: "gold" } };
 SliderField.styles = {
 
-    // Light gray field, gray fill. (Like the property sliders of design tools)
-    classic: SliderFieldDefaults.style,
+    // The light look of the kit (_designs/slider-field.htm), the default: a quiet gray field with round 6 corners, a
+    // fill in a tint of the accent that ends with a handle in the accent, a bold value, dots for the steps; the keyboard
+    // focus is the accent edge with a soft ring inside.
+    light: {
+        box: { color: "#F2F3F0", hoverColor: "", border: 1, borderColor: Black(0.08), round: 6, boxShadow: "none" },
+        boxFocus: { borderColor: "#3D7A6B", ringColor: "rgba(61, 122, 107, 0.5)", ringWidth: 2 },
+        fill: { color: "#D8E8E2", hoverColor: "#CCE1DA", activeColor: "#BFD9D0", minWidth: 26, round: 6 }, // the accent on the field at 22 %, 30 %, 38 %
+        handle: { width: 4, height: 18, inset: 11, color: "#3D7A6B", hoverColor: "#356C5E", activeColor: "#2E5F53", round: 2 },
+        tick: { size: 3, color: Black(0.15), minSpace: 9 },
+        label: { fontSize: 15, textColor: Black(0.55), fontFamily: "", padding: 14 },
+        value: { fontSize: 15, textColor: Black(0.88), fontFamily: "opensans-bold", padding: 14 },
+        input: { color: "#FFFFFF", textColor: Black(0.88), round: 6 },
+        disabled: { opacity: 0.45, filter: "none" },
+    },
+
+    // The dark look of the kit: the same shapes on the dark surface.
+    dark: {
+        box: { color: "#232322", hoverColor: "", border: 1, borderColor: White(0.08), round: 6, boxShadow: "none" },
+        boxFocus: { borderColor: "#65A293", ringColor: "rgba(101, 162, 147, 0.55)", ringWidth: 2 },
+        fill: { color: "rgba(101, 162, 147, 0.22)", hoverColor: "rgba(101, 162, 147, 0.28)", activeColor: "rgba(101, 162, 147, 0.34)", minWidth: 26, round: 6 },
+        handle: { width: 4, height: 18, inset: 11, color: "#65A293", hoverColor: "#74B0A2", activeColor: "#8CC2B5", round: 2 },
+        tick: { size: 3, color: White(0.2), minSpace: 9 },
+        label: { fontSize: 15, textColor: White(0.55), fontFamily: "", padding: 14 },
+        value: { fontSize: 15, textColor: White(0.9), fontFamily: "opensans-bold", padding: 14 },
+        input: { color: White(0.08), textColor: White(0.9), round: 6 },
+        disabled: { opacity: 0.4, filter: "none" },
+    },
+
+    // For general use: the colors of SmartButton and of ProgressBar
+    // ozden. The fill is a cyan SmartButton ozden (an edge and a line at its bottom) that ends with a white knob,
+    // straight inside the field. The label is always on the fill (aroundLabel) and the value never (beforeValue): the
+    // end of the fill cuts no text. A ring for the keyboard focus, a gray fill when it is off.
+    // Another tone: style: { fill: { color, hoverColor, activeColor } }.
+    // handle.inset -6: the middle of the knob is at the end of the fill. WHY a dark focus ring: the focus color of the
+    // kit (cadetblue) did not show on the cyan fill; black 50 % has a contrast of 3 on the fill and on the field.
+    ozden: {
+        box: { color: "#F2F2F2", hoverColor: "#EDEDED", border: 1, borderColor: "rgba(0, 0, 0, 0.12)", round: 8, boxShadow: "none" },
+        boxFocus: { borderColor: "rgba(0, 0, 0, 0.5)", ringColor: "rgba(0, 0, 0, 0.5)", ringWidth: 2 },
+        fill: { color: "#5BBAC1", hoverColor: "#50AEB5", activeColor: "#4AA5AC", minWidth: 28, round: 7, innerRound: 0, aroundLabel: 1, labelSpace: 16, beforeValue: 1, valueSpace: 16, border: 1, borderColor: "rgba(0, 0, 0, 0.35)", boxShadow: "inset 0 -2px 0 rgba(0, 0, 0, 0.25)" },
+        handle: { width: 12, height: 30, inset: -6, color: "#FFFFFF", hoverColor: "#FFFFFF", activeColor: "#F2F2F2", round: 4, border: 1, borderColor: "rgba(0, 0, 0, 0.35)", boxShadow: "inset 0 -2px 0 rgba(0, 0, 0, 0.25)" },
+        tick: { size: 4, color: "rgba(0, 0, 0, 0.2)", minSpace: 10 },
+        label: { fontSize: 16, textColor: "rgba(0, 0, 0, 0.7)", fontFamily: "", padding: 14 },
+        value: { fontSize: 16, textColor: "rgba(0, 0, 0, 0.8)", fontFamily: "opensans-bold", padding: 14 },
+        input: { color: "#FFFFFF", textColor: "rgba(0, 0, 0, 0.8)", round: 6 },
+        disabled: { opacity: 0.55, filter: "grayscale(1)" },
+    },
 
     // Cadetblue fill. Same colors as the modern CheckBox, RadioButton, ProgressBar, Tabs and Stepper.
     modern: {
@@ -760,17 +924,29 @@ SliderField.styles = {
         disabled: { opacity: 0.5 },
     },
 
-    // Dark theme, same colors as SelectBox, TagInput, Tabs and Stepper "dark".
-    dark: {
-        box: { color: "#232322", border: 1, borderColor: "rgba(255, 255, 255, 0.08)", round: 12 },
-        boxFocus: { borderColor: "#65A293" },
-        fill: { color: "rgba(255, 255, 255, 0.09)", hoverColor: "rgba(255, 255, 255, 0.12)", activeColor: "rgba(255, 255, 255, 0.16)", minWidth: 26, round: 11 },
-        handle: { width: 3, height: 16, inset: 11, color: "rgba(255, 255, 255, 0.35)", hoverColor: "rgba(255, 255, 255, 0.55)", activeColor: "#65A293", round: 2 },
-        tick: { size: 3, color: "rgba(255, 255, 255, 0.22)", minSpace: 9 },
-        label: { fontSize: 15, textColor: "rgba(255, 255, 255, 0.50)", fontFamily: "", padding: 14 },
-        value: { fontSize: 15, textColor: "rgba(255, 255, 255, 0.90)", fontFamily: "", padding: 16 },
-        input: { color: "rgba(255, 255, 255, 0.08)", textColor: "rgba(255, 255, 255, 0.90)", round: 6 },
-        disabled: { opacity: 0.4 },
-    },
-
 };
+SliderField.styles.classic = SliderField.styles.light; // the old name of light
+
+// The minimal theme (_designs/minimal-theme.htm): a 28 px field with no fill and an edge of 3:1 at least (it is a
+// control), a faint gray fill for the value, a thin handle that darkens under the mouse and is ink while it is dragged,
+// a 12 px label and a 13 px value. WHY aroundLabel and beforeValue: the thin handle never crosses a text. The keyboard focus: a blue edge of 2 px. minimalDark: the same on a dark window.
+SliderField.createMinimalStyle = function (colors) {
+    return {
+        height: 28,
+        style: {
+            box: { color: "transparent", hoverColor: "", border: 1, borderColor: colors.edge, round: 4, boxShadow: "none" },
+            boxFocus: { borderColor: colors.focus, ringColor: colors.focus, ringWidth: 1 },
+            fill: { color: colors.fill, hoverColor: colors.fillHover, activeColor: colors.fillActive, minWidth: 20, round: 3, innerRound: 0, aroundLabel: 1, labelSpace: 16, beforeValue: 1, valueSpace: 6, border: 0, borderColor: "transparent", boxShadow: "none" },
+            handle: { width: 2, height: 12, inset: 6, color: colors.edge, hoverColor: colors.edgeHover, activeColor: colors.ink, round: 1, border: 0, borderColor: "transparent", boxShadow: "none" },
+            tick: { size: 2, color: colors.line, minSpace: 8 },
+            label: { fontSize: 12, textColor: colors.softText, fontFamily: "", padding: 10 },
+            value: { fontSize: 13, textColor: colors.text, fontFamily: "", padding: 10 },
+            input: { color: colors.ground, textColor: colors.text, round: 3 },
+            disabled: { opacity: 0.4, filter: "none" },
+        },
+    };
+};
+SliderField.MINIMAL_COLORS = { ground: "#FFFFFF", text: Black(0.85), softText: Black(0.55), line: Black(0.2), edge: Black(0.45), edgeHover: Black(0.65), ink: "#1F1F1F", fill: Black(0.06), fillHover: Black(0.08), fillActive: Black(0.11), focus: "#3D8BD9" };
+SliderField.styles.minimal = SliderField.createMinimalStyle(SliderField.MINIMAL_COLORS);
+SliderField.MINIMAL_DARK_COLORS = { ground: "#1A1A19", text: White(0.88), softText: White(0.55), line: White(0.18), edge: White(0.42), edgeHover: White(0.62), ink: "#EDEDEB", fill: White(0.08), fillHover: White(0.11), fillActive: White(0.14), focus: "#7FB6DE" };
+SliderField.styles.minimalDark = SliderField.createMinimalStyle(SliderField.MINIMAL_DARK_COLORS);

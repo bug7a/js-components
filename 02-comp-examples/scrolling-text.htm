@@ -18,8 +18,7 @@
 
     /* Bismillah */
 
-    // ScrollingText (comp-m4): a one line text that slides to show its end when it does not fit.
-    // The new version of comp-m1/ui-scrolling-text.js (the first box is its sample).
+    // ScrollingText: a one line text that slides to show its end when it does not fit.
 
     const FILES = [
         "Annual report 2026 - final version with the comments of the board.pdf",
@@ -46,18 +45,40 @@
 
             Label({ text: "ScrollingText", fontSize: 26, bold: 1, textColor: Black(0.8) });
 
-            // The box of the comp-m1 sample
+            // A box with the text
             startSample("mode: \"always\" (it slides again and again)");
-                HGroup({ width: 220, height: 50, align: "center", color: "white", round: 8, border: 1, borderColor: Black(0.1), padding: [10, 0] });
+                HGroup({
+                    width: 220,
+                    height: 50,
+                    align: "center",
+                    color: "white",
+                    round: 8,
+                    border: 1,
+                    borderColor: Black(0.1),
+                    padding: [10, 0],
+                });
                     ScrollingText({ width: "100%", labelText: "Start. Vegetables are healthy. End." });
                 endGroup();
             endSample();
 
             // A list of long file names: "..." until the mouse comes
             startSample("mode: \"hover\" (it slides under the mouse; a text that fits never moves)");
-                VGroup({ width: 260, height: "auto", align: "left top", gap: 0, color: "whitesmoke", round: 8, padding: [0, 6] });
+                VGroup({
+                    width: 260,
+                    height: "auto",
+                    align: "left top",
+                    gap: 0,
+                    color: "whitesmoke",
+                    round: 8,
+                    padding: [0, 6],
+                });
                     FILES.forEach(function (name) {
-                        ScrollingText({ width: "100%", labelText: name, mode: "hover", style: { box: { padding: [14, 8] }, label: { fontSize: 15 } } });
+                        ScrollingText({
+                            width: "100%",
+                            labelText: name,
+                            mode: "hover",
+                            style: { box: { padding: [14, 8] }, label: { fontSize: 15 } },
+                        });
                     });
                 endGroup();
             endSample();

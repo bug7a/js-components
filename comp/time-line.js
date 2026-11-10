@@ -6,14 +6,17 @@ Time Line - v26.09
 
 UI COMPONENT TEMPLATE
 - A simple vertical time line: a dot for every item and a line between the dots.
-- An item has a time, a title and a text. All of them are optional.
+- An item has a time, a text and a description. All of them are optional.
 - The component grows with its items (height is always "auto"). Put it in a scrolling
   Box or in a VGroup for a long list.
 - Every color, size and space is in the style object. Nothing else is needed: no image
   files, no other component.
+- What happened, and when: a history that grows (addItem). For the steps of a job and the step of now: StepBar.
+- Style packages: "light" (default), "dark", "minimal", "minimalDark". Select with styleName (TimeLine.styles), or
+  later with setTheme(). minimal and minimalDark also give the sizes (dotSize, lineWidth, itemGap) the page does not give.
 
-ITEM: { time, title, text, color, key, data }
-- A string is also accepted: "Order created" -> { title: "Order created" }
+ITEM: { time, text, description, color, key, data } (style.title and style.description are the look of the two texts)
+- A string is also accepted: "Order created" -> { text: "Order created" }
 - color: The color of the dot of that item. (Empty: style.dot.color)
 - key and data are not shown. They come back in onClick.
 
@@ -21,19 +24,23 @@ USAGE:
 const timeLine = TimeLine({
     width: 320,
     items: [
-        { time: "09:30", title: "Order created", text: "Order #1024 was created." },
-        { time: "11:00", title: "Packed", color: "#E0A038" },
+        { time: "09:30", text: "Order created", description: "Order #1024 was created." },
+        { time: "11:00", text: "Packed", color: "#E0A038" },
     ],
     clickableItems: 1,
-    onClick: function (self, item, index) { println(item.title); },
+    onClick: function (self, item, index) { println(item.text); },
 });
-timeLine.addItem({ time: "14:20", title: "Sent" });
+timeLine.addItem({ time: "14:20", text: "Sent" });
 timeLine.setItems([]);
+TimeLine({ styleName: "dark", items: ["Order created", "Packed"] }); // On a dark page
+timeLine.setTheme("minimal");
 
 Started Date: September 2026
-Developer: Bugra Ozden
-Email: bugra.ozden@gmail.com
 Webpage: https://bug7a.github.io/js-components/
+
+Copyright 2020-2026 Bugra Ozden <bugra.ozden@gmail.com> (https://bug7a.github.io/)
+Licensed under the Apache License, Version 2.0
+SPDX-License-Identifier: Apache-2.0
 
 */
 
@@ -43,7 +50,7 @@ Webpage: https://bug7a.github.io/js-components/
 const TimeLineDefaults = {
     key: "0",
     width: 320, // A number or "100%". (The height always grows with the items.)
-    items: [], // [{ time, title, text, color, key, data }] or ["Order created"]
+    items: [], // [{ time, text, description, color, key, data }] or ["Order created"]
     itemGap: 20, // Space between two items. (The line is drawn in it.)
     dotSize: 12,
     lineWidth: 2,
@@ -51,7 +58,8 @@ const TimeLineDefaults = {
     clickableItems: 0, // 1: An item can be clicked. (onClick)
     enabled: 1,
     onClick: function (self, item, index) { },
-    style: {
+    styleName: "light", // "light", "dark", "minimal", "minimalDark" or a name added to TimeLine.styles
+    style: { // Light style package (default)
         row: {
             gap: 12, // Space between the dots and the texts
         },
@@ -66,14 +74,14 @@ const TimeLineDefaults = {
         },
         time: {
             fontSize: 12,
-            textColor: Black(0.4),
+            textColor: Black(0.54), // WHY: 4.5:1 on white, as WCAG asks of a text
         },
         title: {
             fontSize: 15,
             textColor: Black(0.85),
             bold: 1,
         },
-        text: {
+        description: {
             fontSize: 14,
             textColor: Black(0.55),
             lineHeight: "1.45",
@@ -89,6 +97,10 @@ const TimeLineDefaults = {
 
 const TimeLine = function (params = {}) {
 
+    // Merge style package: params.style > TimeLine.styles[styleName] > TimeLineDefaults.style (light)
+    const pageParams = Object.assign({}, params); // WHY: setTheme() puts what the page gave over another package.
+    basic.applyStylePackage(params, TimeLine.styles, TimeLineDefaults);
+
     // Merge params:
     mergeIntoIfMissing(params, TimeLineDefaults);
 
@@ -100,22 +112,30 @@ const TimeLine = function (params = {}) {
     let box = startObject(params);
 
     // *** PRIVATE VARIABLES:
-    const _s = box.style;
-    const TEXT_GAP = 2; // Space between the time, the title and the text
+    let _s = box.style;
+    const TEXT_GAP = 2; // Space between the time, the text and the description
     const HOVER_MOTION = "opacity 0.15s";
     let rows = []; // Created item rows
 
     // *** PUBLIC VARIABLES:
-    // [var] Items: [{ time, title, text, color, key, data }]
+    // [var] Items: [{ time, text, description, color, key, data }]
     box.items = [];
 
     // *** PRIVATE FUNCTIONS:
 
+    // The params of a package (its style, and the sizes of a package of params), with what the page gave over them.
+    const paramsOfPackage = function (styleName) {
+        const fresh = Object.assign({}, pageParams, { styleName: styleName });
+        basic.applyStylePackage(fresh, TimeLine.styles, TimeLineDefaults);
+        mergeIntoIfMissing(fresh, TimeLineDefaults);
+        return fresh;
+    };
+
     const normalizeItem = function (item) {
         if (typeof item == "string" || typeof item == "number") {
-            return { title: String(item) };
+            return { time: "", text: String(item), description: "" }; // WHY: an undefined time made an empty label; its gap moved the text.
         }
-        return Object.assign({ time: "", title: "", text: "" }, item);
+        return Object.assign({ time: "", text: "", description: "" }, item);
     };
 
     // A row: the rail (dot + line) and the texts next to it.
@@ -190,24 +210,24 @@ const TimeLine = function (params = {}) {
                 }
 
                 // LABEL: Title
-                if (item.title !== "") {
+                if (item.text !== "") {
                     row.lblTitle = Label({
                         width: "100%",
-                        plainText: item.title,
+                        plainText: item.text,
                         fontSize: _s.title.fontSize,
                         textColor: _s.title.textColor,
                         bold: _s.title.bold,
                     });
                 }
 
-                // LABEL: Text
-                if (item.text !== "") {
+                // LABEL: Description
+                if (item.description !== "") {
                     row.lblText = Label({ // WHY: not row.text. Box.text writes innerHTML.
                         width: "100%",
-                        plainText: item.text,
-                        fontSize: _s.text.fontSize,
-                        textColor: _s.text.textColor,
-                        lineHeight: _s.text.lineHeight,
+                        plainText: item.description,
+                        fontSize: _s.description.fontSize,
+                        textColor: _s.description.textColor,
+                        lineHeight: _s.description.lineHeight,
                     });
                 }
 
@@ -271,7 +291,7 @@ const TimeLine = function (params = {}) {
         box.items = (items || []).map(normalizeItem);
         drawAll();
     };
-    // USAGE: timeLine.setItems([{ time: "09:30", title: "Order created" }, "Packed"])
+    // USAGE: timeLine.setItems([{ time: "09:30", text: "Order created" }, "Packed"])
 
     box.getItems = function () {
         return box.items.slice();
@@ -282,7 +302,7 @@ const TimeLine = function (params = {}) {
         box.items.push(normalizeItem(item));
         drawAll();
     };
-    // USAGE: timeLine.addItem({ time: "14:20", title: "Sent" })
+    // USAGE: timeLine.addItem({ time: "14:20", text: "Sent" })
 
     box.clear = function () {
         box.setItems([]);
@@ -298,6 +318,18 @@ const TimeLine = function (params = {}) {
         drawAll();
     };
 
+    // Another style package while it is on the page. What the page gave (its style, a dotSize) stays over it.
+    box.setTheme = function (styleName) {
+        const fresh = paramsOfPackage(styleName);
+        box.styleName = styleName;
+        box.style = fresh.style;
+        _s = fresh.style;
+        box.dotSize = fresh.dotSize;
+        box.lineWidth = fresh.lineWidth;
+        box.itemGap = fresh.itemGap;
+        drawAll();
+    };
+    // USAGE: timeLine.setTheme("dark")
 
     // *** OBJECT VIEW:
 
@@ -322,3 +354,45 @@ const TimeLine = function (params = {}) {
     return endObject(box);
 
 };
+
+// *** STYLE PACKAGES:
+// USAGE: TimeLine({ styleName: "dark" })
+// USAGE: TimeLine({ styleName: "dark", style: { dot: { color: "tomato" } } }) // Change only some keys.
+// NOTE: A new package needs only the keys that differ from the default (light) style.
+TimeLine.styles = {
+
+    // Blue dots on a light page.
+    light: TimeLineDefaults.style,
+
+    // For a dark page: a lighter blue, light texts. borderColor: the ring of a dot with a border, in the color of the page.
+    dark: {
+        dot: { color: "#6C98EF", borderColor: "#1A1A19" },
+        line: { color: White(0.16) },
+        time: { textColor: White(0.5) },
+        title: { textColor: White(0.88) },
+        description: { textColor: White(0.6) },
+    },
+
+};
+
+// The minimal theme (_designs/minimal-theme.htm): small ink dots on a 1 px line, a 13 px title of the normal weight and
+// 12 px texts. A package of params: it gives the sizes too, when the page does not give them. minimalDark: on a dark window.
+TimeLine.createMinimalStyle = function (palette) {
+    return {
+        dotSize: 7, // WHY odd: the 1 px line in the middle of the dot stays on a whole pixel.
+        lineWidth: 1,
+        itemGap: 16,
+        style: {
+            row: { gap: 10 },
+            dot: { color: palette.ink, borderColor: palette.ground, topSpace: 5 },
+            line: { color: palette.line },
+            time: { fontSize: 11, textColor: palette.softText },
+            title: { fontSize: 13, textColor: palette.text, bold: 0 },
+            description: { fontSize: 12, textColor: palette.softText },
+        },
+    };
+};
+TimeLine.MINIMAL_COLORS = { ground: "#FFFFFF", text: Black(0.85), softText: Black(0.55), line: Black(0.2), ink: "#1F1F1F" };
+TimeLine.styles.minimal = TimeLine.createMinimalStyle(TimeLine.MINIMAL_COLORS);
+TimeLine.MINIMAL_DARK_COLORS = { ground: "#1A1A19", text: White(0.88), softText: White(0.55), line: White(0.18), ink: "#EDEDEB" };
+TimeLine.styles.minimalDark = TimeLine.createMinimalStyle(TimeLine.MINIMAL_DARK_COLORS);

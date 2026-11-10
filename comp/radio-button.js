@@ -2,7 +2,7 @@
 
 /*
 
-Radio Button - v26.09
+Radio Button - v26.11
 
 UI COMPONENT TEMPLATE
 - A customizable radio button with a label.
@@ -11,12 +11,19 @@ UI COMPONENT TEMPLATE
 - Supports: checked, enabled, value, label position (left/right),
   keyboard (Space/Enter to select, Arrow keys to move in the group).
 - Whole object background can change on hover and checked states (style.hoverBox, style.checkedBox).
-- Style packages: "classic" (default), "modern", "dark". Select with styleName. (RadioButton.styles)
+- The empty circle under the mouse: style.hoverMark (its borderColor, and its color when given; v26.11).
+- style.focus.ringColor: the keyboard focus shows on the mark (its edge in this color, 2 px). "": none (the old
+  packages); "minimal" / "minimalDark" have it.
+- Style packages: "light" (default; the old name "classic" works too), "modern", "dark", "minimal", "minimalDark". Select with styleName. (RadioButton.styles)
+  NEW PROJECTS: use "light" on a light page and "dark" on a dark page, unless the user
+  asks for another one ("modern" only when asked).
 
 Started Date: September 2026
-Developer: Bugra Ozden
-Email: bugra.ozden@gmail.com
 Webpage: https://bug7a.github.io/js-components/
+
+Copyright 2020-2026 Bugra Ozden <bugra.ozden@gmail.com> (https://bug7a.github.io/)
+Licensed under the Apache License, Version 2.0
+SPDX-License-Identifier: Apache-2.0
 
 */
 
@@ -32,10 +39,11 @@ const RadioButtonDefaults = {
     checked: 0, // 0, 1
     enabled: 1, // 0, 1
     labelText: "",
+    allowHtml: 0, // 1: labelText is HTML (only for your own texts)
     labelPosition: "right", // "right", "left"
     onChange: function (self) { }, // Called when this radio button is selected.
-    styleName: "classic", // "classic", "modern", "dark" or a name added to RadioButton.styles
-    style: { // Classic style package (default)
+    styleName: "light", // "light" ("classic": its old name), "modern", "dark", "minimal", "minimalDark" or a name added to RadioButton.styles
+    style: { // Light style package (default)
         box: { // Whole object background
             color: "transparent",
             round: 0,
@@ -64,13 +72,14 @@ const RadioButtonDefaults = {
         },
         checkedMark: { // Checked circle
             color: White(1),
-            borderColor: "#141414",
+            borderColor: "#242424", // the checked color of CheckBox
         },
-        hoverMark: { // Mouse over (only border)
+        hoverMark: { // Mouse over (the empty circle)
+            color: null, // null: uses mark.color (a package could not change it)
             borderColor: Black(0.7),
         },
         dot: {
-            color: "#141414",
+            color: "#242424", // (as the edge above)
             size: 0.5, // Ratio of the inner circle size (0 - 1)
             round: 100,
         },
@@ -81,12 +90,15 @@ const RadioButtonDefaults = {
         disabled: {
             opacity: 0.4,
         },
+        focus: { // The keyboard focus: the edge of the mark in this color, 2 px. "": no ring
+            ringColor: "",
+        },
     }
 };
 
 const RadioButton = function (params = {}) {
 
-    // Merge style package: params.style > RadioButton.styles[styleName] > RadioButtonDefaults.style (classic)
+    // Merge style package: params.style > RadioButton.styles[styleName] > RadioButtonDefaults.style (light)
     basic.applyStylePackage(params, RadioButton.styles, RadioButtonDefaults);
 
     // Merge params:
@@ -108,6 +120,24 @@ const RadioButton = function (params = {}) {
     // NOTE: Default values are also public variables. (box.checked, box.value, box.group)
 
     // *** PRIVATE FUNCTIONS:
+
+    const setText = function (label, text) {
+        const value = (text === undefined || text === null) ? "" : String(text);
+        if (box.allowHtml == 1) label.text = value;
+        else label.plainText = value;
+    };
+
+    // The keyboard focus (style.focus.ringColor) on the mark: its edge in that color and 1 px more inside it.
+    // WHY on the mark, inside it: a ring around the whole object hid its text, and an outer ring was cut by the groups.
+    // WHY a CSS rule: only :focus-visible knows a focus of the keyboard (not of a click).
+    const showFocusOnMark = function () {
+        const ringColor = box.style.focus.ringColor;
+        if (!ringColor) return;
+        RadioButton.addFocusCss();
+        box.elem.classList.add("radio-button-focus");
+        box.mark.elem.classList.add("radio-button-mark");
+        box.elem.style.setProperty("--radio-button-focus", ringColor);
+    };
 
     const getGroupList = function () {
         return RadioButton.getGroup(box.group);
@@ -132,7 +162,8 @@ const RadioButton = function (params = {}) {
             box.dot.css = { opacity: "1", transform: "scale(1)" };
             return;
         }
-        box.mark.color = box.style.mark.color;
+        const hoverColor = box.style.hoverMark.color;
+        box.mark.color = (isHover && hoverColor) ? hoverColor : box.style.mark.color;
         box.mark.borderColor = (isHover) ? box.style.hoverMark.borderColor : box.style.mark.borderColor;
         box.dot.css = { opacity: "0", transform: "scale(" + DOT_HIDDEN_SCALE + ")" };
     };
@@ -217,7 +248,7 @@ const RadioButton = function (params = {}) {
 
     box.setLabelText = function (text) {
         box.labelText = text;
-        box.label.text = text;
+        setText(box.label, text);
         box.label.visible = (text) ? 1 : 0;
     };
     // USAGE: get: radio.labelText, set: radio.setLabelText("Option A")
@@ -254,7 +285,7 @@ const RadioButton = function (params = {}) {
     // LABEL: label (left or right of the mark)
     const createLabel = function () {
         box.label = Label(box.style.label);
-        box.label.text = box.labelText;
+        setText(box.label, box.labelText);
         box.label.css.whiteSpace = "nowrap";
         if (!box.labelText) box.label.visible = 0;
     };
@@ -272,6 +303,7 @@ const RadioButton = function (params = {}) {
     });
     box.mark.setMotion("background-color " + MOTION_DURATION + ", border-color " + MOTION_DURATION);
     box.mark.css.boxSizing = "border-box";
+    showFocusOnMark();
 
     // BOX: dot (inner circle)
     const innerWidth = box.style.mark.width - (box.style.mark.border * 2);
@@ -391,9 +423,9 @@ RadioButton.clear = function (group = "default") {
 RadioButton.styles = {
 
     // White circle with a border. When checked, dark border and dark dot. No background.
-    classic: RadioButtonDefaults.style,
+    light: RadioButtonDefaults.style,
 
-    // Light circle, thin border. When checked, the circle stays without border behind the dot, on a light background.
+    // Light circle, thin border. When checked, the dot in a white circle with an edge.
     modern: {
         box: { // Whole object background
             color: "transparent",
@@ -421,11 +453,12 @@ RadioButton.styles = {
             borderColor: Black(0.7),
             round: 100,
         },
-        checkedMark: { // Checked circle (stays without border, behind the dot)
-            color: "#DFECEC", // Same as hoverCheckedBox.color, so the circle is not visible on mouse over.
-            borderColor: "transparent",
+        checkedMark: { // Checked circle: white with an edge, behind the dot
+            color: "white",
+            borderColor: Black(0.7),
         },
-        hoverMark: { // Mouse over (only border)
+        hoverMark: { // Mouse over: the empty circle turns white
+            color: "white",
             borderColor: Black(0.7),
         },
         dot: {
@@ -464,4 +497,31 @@ RadioButton.styles = {
         },
     },
 
+};
+RadioButton.styles.classic = RadioButton.styles.light; // the old name of light: the pages made with it keep their look
+
+// The minimal theme (_designs/minimal-theme.htm): a 14 px circle of a line, darker under the mouse; when checked an ink
+// line and a 6 px ink dot inside it, no fill; a 13 px text.
+// WHY a strong line: the line is the only thing that shows an empty mark (3:1 at least, as WCAG asks of a control)
+RadioButton.createMinimalStyle = function (colors) {
+    return {
+        layout: { gap: 8, padding: [0, 2], align: "left center" },
+        mark: { width: 14, height: 14, color: "transparent", border: 1, borderColor: colors.line, round: 100 },
+        checkedMark: { color: "transparent", borderColor: colors.ink },
+        hoverMark: { color: null, borderColor: colors.lineHover },
+        dot: { color: colors.ink, size: 0.5, round: 100 },
+        label: { fontSize: 13, textColor: colors.text },
+        disabled: { opacity: 0.4 },
+        focus: { ringColor: colors.focus },
+    };
+};
+RadioButton.MINIMAL_COLORS = { line: Black(0.45), lineHover: Black(0.65), ink: "#1F1F1F", text: Black(0.85), focus: "#3D8BD9" };
+RadioButton.styles.minimal = RadioButton.createMinimalStyle(RadioButton.MINIMAL_COLORS);
+RadioButton.MINIMAL_DARK_COLORS = { line: White(0.42), lineHover: White(0.62), ink: "#EDEDEB", text: White(0.88), focus: "#7FB6DE" };
+RadioButton.styles.minimalDark = RadioButton.createMinimalStyle(RadioButton.MINIMAL_DARK_COLORS);
+
+// The rule of the keyboard focus (style.focus.ringColor). WHY !important: the edge of the mark is an inline style.
+RadioButton.addFocusCss = function () {
+    basic.addCss("radio-button-focus", ".radio-button-focus:focus { outline: none; }" +
+        ".radio-button-focus:focus-visible .radio-button-mark { border-color: var(--radio-button-focus) !important; box-shadow: inset 0 0 0 1px var(--radio-button-focus); }");
 };

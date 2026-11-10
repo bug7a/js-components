@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        
+        <title>PhoneField JS Component</title>
+        
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"><!-- , user-scalable=no -->
+
+        <!-- LIBRARY FILES -->
+        <!-- <link rel="preload" href="image.png" as="image"> -->
+        <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+        <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
+        <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../basic/scroll-bar.js" type="text/javascript" charset="utf-8"></script>
+
+        <script src="../comp/tooltip.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/text-field.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/phone-field.js" type="text/javascript" charset="utf-8"></script>
+        
+        <!-- The country list: SelectBox with its own rows (createItemView) in an ItemList (load it first). -->
+        <script src="../comp/item-list.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/search-input.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/select-box.js" type="text/javascript" charset="utf-8"></script>
+
+        <script>
+        
+        // *** VARIABLES:          
+        let myInput;
+
+        const start = function () {
+
+            page.color = "white";
+
+            // PageContainer
+            HGroup();
+
+                // ItemGroup
+                VGroup({
+                    gap: 12,
+                    width: 350,
+                });
+
+                    // SelectCountryGroup
+                    VGroup({
+                        gap: 0,
+                        width: "100%",
+                        height: "auto",
+                    });
+
+                        // CountryCodeTitle
+                        Label({
+                            text: "COUNTRY CODE:",
+                            width: "100%",
+                            padding: [20, 0],
+                            fontSize: 16,
+                            textColor: "#555555",
+                        });
+
+                        // SELECT: Country ("ozden", with a search box).
+                        // The rows and the field are drawn by this page: the code in a gray pill and the name.
+                        SelectBox({
+                            styleName: "ozden",
+                            fullHeightList: 1, // the list from the top of the page to its bottom
+                            width: "100%",
+                            height: COUNTRY_FIELD_HEIGHT,
+                            options: countryList.map(toCountryOption),
+                            value: countryList[0].shortName,
+                            style: { itemList: { row: { gap: COUNTRY_GAP } } },
+                            createItemView: createCountryRow,
+                            createValueView: createCountryView,
+                            onChange: function (self) {
+                                selectCountry(self.value);
+                            },
+                            css: { marginTop: "8px" },
+                        });
+
+                    endGroup();
+
+                    // INPUT: Phone
+                    myInput = PhoneField({
+                        styleName: "modern",
+                        key: "1",
+                        required: 1,
+                        titleText: "PHONE NUMBER",
+                        placeholder: "(auto)",
+                        warningText: "Invalid phone number format",
+                        warningColor: "#E5885E",
+                        countryCode: countryList[0].code,
+                        phoneMask: " (___) ___-____",
+                        unitText: countryList[0].shortName,
+                        width: "100%",
+                    });
+
+                endGroup(); // END GROUP
+
+            endGroup(); // End Page
+
+            // Get value
+            myInput.onChange = function () {
+                console.log(myInput.getValue());
+            };
+
+        };
+
+        const COUNTRY_FIELD_HEIGHT = 60;
+        const COUNTRY_ROW_HEIGHT = 60;
+        const COUNTRY_GAP = 12; // Between the code and the name
+        const ROW_LINE = "inset 0px -1px 0px rgba(0, 0, 0, 0.05)"; // The light line under a row
+
+        // An option of the country list. The search finds the name, the code (the description, not shown) and
+        // the other names of a country (searchText: "Turkey" for "Türkiye").
+        const toCountryOption = function (country) {
+            return {
+                value: country.shortName,
+                label: country.name,
+                description: country.code,
+                code: country.code,
+                searchText: country.searchText,
+            };
+        };
+
+        // The code of a country in a gray round pill
+        const createCodePill = function (code) {
+            return Label({
+                plainText: code,
+                fontSize: 16,
+                padding: [6, 2],
+                color: "rgba(0, 0, 0, 0.05)",
+                textColor: "#373836",
+                round: 8,
+            });
+        };
+
+        // A row of the list: the code and the name, a light line under it (white under the mouse: the package).
+        const createCountryRow = function (option, row) {
+            row.height = COUNTRY_ROW_HEIGHT;
+            row.boxShadow = ROW_LINE;
+            createCountryView(option);
+        };
+
+        // The chosen country in the field: the same as its row.
+        const createCountryView = function (option) {
+            createCodePill(option.code);
+            Label({ plainText: option.label, fontSize: 20, ellipsis: 1 });
+        };
+
+        // The phone field takes the code, the mask and the short name of the chosen country
+        const selectCountry = function (shortName) {
+            const country = countryList.find(function (item) { return item.shortName === shortName; });
+            if (!country) return;
+            myInput.setCountryCode(country.code);
+            myInput.setPhoneMask(country.phoneMask);
+            myInput.setUnitText(country.shortName);
+            myInput.setValue("");
+            myInput.fillAutoPlaceholder();
+        };
+
+        // *** THE COUNTRIES:
+        const countryList = [
+            { name: "United States", shortName: "US", code: "+1", searchText: "United States", phoneMask: " (___) ___-____" },
+            { name: "Canada", shortName: "CA", code: "+1", searchText: "Canada", phoneMask: " (___) ___-____" },
+            { name: "United Kingdom", shortName: "GB", code: "+44", searchText: "United Kingdom", phoneMask: " ____ ______" },
+            { name: "Germany", shortName: "DE", code: "+49", searchText: "Germany", phoneMask: " ____ ______" },
+            { name: "France", shortName: "FR", code: "+33", searchText: "France", phoneMask: " _ __ __ __ __" },
+            { name: "Türkiye", shortName: "TR", code: "+90", searchText: "Turkey Türkiye Turkiye", phoneMask: " (___) ___-____" },
+            { name: "Russia", shortName: "RU", code: "+7", searchText: "Russia", phoneMask: " (___) ___-__-__" },
+            { name: "Italy", shortName: "IT", code: "+39", searchText: "Italy", phoneMask: " ___ ________" },
+            { name: "Spain", shortName: "ES", code: "+34", searchText: "Spain", phoneMask: " ___ ___ ___" },
+            { name: "Brazil", shortName: "BR", code: "+55", searchText: "Brazil", phoneMask: " (__) _____-____" },
+            { name: "India", shortName: "IN", code: "+91", searchText: "India", phoneMask: " _____-_____" },
+            { name: "China", shortName: "CN", code: "+86", searchText: "China", phoneMask: " ___ ____ ____" },
+            { name: "Japan", shortName: "JP", code: "+81", searchText: "Japan", phoneMask: " __-____-____" },
+            { name: "South Korea", shortName: "KR", code: "+82", searchText: "South Korea", phoneMask: " __-____-____" },
+            { name: "Australia", shortName: "AU", code: "+61", searchText: "Australia", phoneMask: " _ ____ ____" },
+            { name: "Mexico", shortName: "MX", code: "+52", searchText: "Mexico", phoneMask: " (___) ___-____" },
+            { name: "Netherlands", shortName: "NL", code: "+31", searchText: "Netherlands", phoneMask: " __ ________" },
+            { name: "Switzerland", shortName: "CH", code: "+41", searchText: "Switzerland", phoneMask: " __ ___ __ __" },
+            { name: "Sweden", shortName: "SE", code: "+46", searchText: "Sweden", phoneMask: " __-___ __ __" },
+            { name: "Belgium", shortName: "BE", code: "+32", searchText: "Belgium", phoneMask: " ___ __ __ __" },
+            { name: "Austria", shortName: "AT", code: "+43", searchText: "Austria", phoneMask: " ___ ___ ____" },
+            { name: "Denmark", shortName: "DK", code: "+45", searchText: "Denmark", phoneMask: " __ __ __ __" },
+            { name: "Norway", shortName: "NO", code: "+47", searchText: "Norway", phoneMask: " ___ __ ___" },
+            { name: "Finland", shortName: "FI", code: "+358", searchText: "Finland", phoneMask: " __ ___ ____" },
+            { name: "Poland", shortName: "PL", code: "+48", searchText: "Poland", phoneMask: " ___ ___ ___" },
+            { name: "Portugal", shortName: "PT", code: "+351", searchText: "Portugal", phoneMask: " ___ ___ ___" },
+            { name: "Greece", shortName: "GR", code: "+30", searchText: "Greece", phoneMask: " ___ ________" },
+            { name: "Czech Republic", shortName: "CZ", code: "+420", searchText: "Czech Republic", phoneMask: " ___ ___ ___" },
+            { name: "Hungary", shortName: "HU", code: "+36", searchText: "Hungary", phoneMask: " ___ ___ ___" },
+            { name: "Romania", shortName: "RO", code: "+40", searchText: "Romania", phoneMask: " ___ ___ ___" },
+            { name: "Bulgaria", shortName: "BG", code: "+359", searchText: "Bulgaria", phoneMask: " ___ ___ ___" },
+            { name: "Slovakia", shortName: "SK", code: "+421", searchText: "Slovakia", phoneMask: " ___ ___ ___" },
+            { name: "Slovenia", shortName: "SI", code: "+386", searchText: "Slovenia", phoneMask: " ___ ___ ___" },
+            { name: "Croatia", shortName: "HR", code: "+385", searchText: "Croatia", phoneMask: " ___ ___ ___" },
+            { name: "Serbia", shortName: "RS", code: "+381", searchText: "Serbia", phoneMask: " __ ___ ____" },
+            { name: "Ukraine", shortName: "UA", code: "+380", searchText: "Ukraine", phoneMask: " __ ___ ____" },
+            { name: "Belarus", shortName: "BY", code: "+375", searchText: "Belarus", phoneMask: " __ ___-__-__" },
+            { name: "Estonia", shortName: "EE", code: "+372", searchText: "Estonia", phoneMask: " ___ ____" },
+            { name: "Latvia", shortName: "LV", code: "+371", searchText: "Latvia", phoneMask: " ____ ____" },
+            { name: "Lithuania", shortName: "LT", code: "+370", searchText: "Lithuania", phoneMask: " ___ ____" },
+            { name: "Ireland", shortName: "IE", code: "+353", searchText: "Ireland", phoneMask: " ___ ___ ___" },
+            { name: "Iceland", shortName: "IS", code: "+354", searchText: "Iceland", phoneMask: " ___ ____" },
+            { name: "Luxembourg", shortName: "LU", code: "+352", searchText: "Luxembourg", phoneMask: " ___ ___ ___" },
+            { name: "Liechtenstein", shortName: "LI", code: "+423", searchText: "Liechtenstein", phoneMask: " ___ ___ ____" },
+            { name: "Monaco", shortName: "MC", code: "+377", searchText: "Monaco", phoneMask: " __ ___ ___" },
+            { name: "San Marino", shortName: "SM", code: "+378", searchText: "San Marino", phoneMask: " ___ ___ ___" },
+            { name: "Vatican City", shortName: "VA", code: "+39", searchText: "Vatican City", phoneMask: " ___ ________" },
+            { name: "Andorra", shortName: "AD", code: "+376", searchText: "Andorra", phoneMask: " ___ ___" },
+            { name: "Malta", shortName: "MT", code: "+356", searchText: "Malta", phoneMask: " ____ ____" },
+            { name: "Cyprus", shortName: "CY", code: "+357", searchText: "Cyprus", phoneMask: " ____ ____" },
+            { name: "Israel", shortName: "IL", code: "+972", searchText: "Israel", phoneMask: " _-___-____" },
+            { name: "Egypt", shortName: "EG", code: "+20", searchText: "Egypt", phoneMask: " ___ ___ ____" },
+            { name: "South Africa", shortName: "ZA", code: "+27", searchText: "South Africa", phoneMask: " __ ___ ____" },
+            { name: "Morocco", shortName: "MA", code: "+212", searchText: "Morocco", phoneMask: " ___-___-___" },
+            { name: "Algeria", shortName: "DZ", code: "+213", searchText: "Algeria", phoneMask: " ___-___-___" },
+            { name: "Tunisia", shortName: "TN", code: "+216", searchText: "Tunisia", phoneMask: " ___ ___ ___" },
+            { name: "Nigeria", shortName: "NG", code: "+234", searchText: "Nigeria", phoneMask: " ___ ___ ____" },
+            { name: "Kenya", shortName: "KE", code: "+254", searchText: "Kenya", phoneMask: " ___ ___ ___" },
+            { name: "Saudi Arabia", shortName: "SA", code: "+966", searchText: "Saudi Arabia", phoneMask: " _-___-____" },
+            { name: "United Arab Emirates", shortName: "AE", code: "+971", searchText: "United Arab Emirates", phoneMask: " _-___-____" },
+            { name: "Qatar", shortName: "QA", code: "+974", searchText: "Qatar", phoneMask: " ____ ____" },
+            { name: "Kuwait", shortName: "KW", code: "+965", searchText: "Kuwait", phoneMask: " ____ ____" },
+            { name: "Bahrain", shortName: "BH", code: "+973", searchText: "Bahrain", phoneMask: " ____ ____" },
+            { name: "Oman", shortName: "OM", code: "+968", searchText: "Oman", phoneMask: " ____ ____" },
+            { name: "Jordan", shortName: "JO", code: "+962", searchText: "Jordan", phoneMask: " _-____-____" },
+            { name: "Lebanon", shortName: "LB", code: "+961", searchText: "Lebanon", phoneMask: " _-___-___" },
+            { name: "Iran", shortName: "IR", code: "+98", searchText: "Iran", phoneMask: " ___ ___ ____" },
+            { name: "Pakistan", shortName: "PK", code: "+92", searchText: "Pakistan", phoneMask: " ___-_______" },
+            { name: "Bangladesh", shortName: "BD", code: "+880", searchText: "Bangladesh", phoneMask: " _-____-____" },
+            { name: "Indonesia", shortName: "ID", code: "+62", searchText: "Indonesia", phoneMask: " ___-____-___" },
+            { name: "Malaysia", shortName: "MY", code: "+60", searchText: "Malaysia", phoneMask: " _-___-____" },
+            { name: "Singapore", shortName: "SG", code: "+65", searchText: "Singapore", phoneMask: " ____ ____" },
+            { name: "Thailand", shortName: "TH", code: "+66", searchText: "Thailand", phoneMask: " _-____-____" },
+            { name: "Vietnam", shortName: "VN", code: "+84", searchText: "Vietnam", phoneMask: " ___ ____ ___" },
+            { name: "Philippines", shortName: "PH", code: "+63", searchText: "Philippines", phoneMask: " ___ ___ ____" },
+            { name: "New Zealand", shortName: "NZ", code: "+64", searchText: "New Zealand", phoneMask: " ___ ___ ___" },
+            { name: "Argentina", shortName: "AR", code: "+54", searchText: "Argentina", phoneMask: " ___ ___-____" },
+            { name: "Chile", shortName: "CL", code: "+56", searchText: "Chile", phoneMask: " _ ____ ____" },
+            { name: "Colombia", shortName: "CO", code: "+57", searchText: "Colombia", phoneMask: " ___ ___ ____" },
+            { name: "Peru", shortName: "PE", code: "+51", searchText: "Peru", phoneMask: " ___ ___ ___" },
+            { name: "Venezuela", shortName: "VE", code: "+58", searchText: "Venezuela", phoneMask: " ___-___-____" },
+            { name: "Ecuador", shortName: "EC", code: "+593", searchText: "Ecuador", phoneMask: " ___-___-___" },
+            { name: "Uruguay", shortName: "UY", code: "+598", searchText: "Uruguay", phoneMask: " ___ ___ ___" },
+            { name: "Paraguay", shortName: "PY", code: "+595", searchText: "Paraguay", phoneMask: " ___ ___ ___" },
+            { name: "Bolivia", shortName: "BO", code: "+591", searchText: "Bolivia", phoneMask: " ___ ___ ___" },
+            { name: "Costa Rica", shortName: "CR", code: "+506", searchText: "Costa Rica", phoneMask: " ____ ____" },
+            { name: "Panama", shortName: "PA", code: "+507", searchText: "Panama", phoneMask: " ____-____" },
+            { name: "Cuba", shortName: "CU", code: "+53", searchText: "Cuba", phoneMask: " _-___-____" },
+            { name: "Dominican Republic", shortName: "DO", code: "+1", searchText: "Dominican Republic", phoneMask: " (___) ___-____" },
+            { name: "Jamaica", shortName: "JM", code: "+1", searchText: "Jamaica", phoneMask: " (___) ___-____" },
+            { name: "Trinidad and Tobago", shortName: "TT", code: "+1", searchText: "Trinidad and Tobago", phoneMask: " (___) ___-____" },
+            { name: "Puerto Rico", shortName: "PR", code: "+1", searchText: "Puerto Rico", phoneMask: " (___) ___-____" },
+            { name: "Hong Kong", shortName: "HK", code: "+852", searchText: "Hong Kong", phoneMask: " ____ ____" },
+            { name: "Taiwan", shortName: "TW", code: "+886", searchText: "Taiwan", phoneMask: " ____-____" },
+            { name: "South Sudan", shortName: "SS", code: "+211", searchText: "South Sudan", phoneMask: " ___ ___ ___" },
+            { name: "Sudan", shortName: "SD", code: "+249", searchText: "Sudan", phoneMask: " ___ ___ ___" },
+            { name: "Ethiopia", shortName: "ET", code: "+251", searchText: "Ethiopia", phoneMask: " ___ ___ ___" },
+            { name: "Ghana", shortName: "GH", code: "+233", searchText: "Ghana", phoneMask: " ___ ___ ___" },
+            { name: "Ivory Coast", shortName: "CI", code: "+225", searchText: "Ivory Coast", phoneMask: " __-__-__-__" },
+            { name: "Cameroon", shortName: "CM", code: "+237", searchText: "Cameroon", phoneMask: " ____ ____" },
+            { name: "Senegal", shortName: "SN", code: "+221", searchText: "Senegal", phoneMask: " ___ ___ ___" },
+            { name: "Tanzania", shortName: "TZ", code: "+255", searchText: "Tanzania", phoneMask: " ___ ___ ___" },
+            { name: "Uganda", shortName: "UG", code: "+256", searchText: "Uganda", phoneMask: " ___ ___ ___" },
+            { name: "Zimbabwe", shortName: "ZW", code: "+263", searchText: "Zimbabwe", phoneMask: " _ ___ ____" },
+            { name: "Zambia", shortName: "ZM", code: "+260", searchText: "Zambia", phoneMask: " ___ ___ ___" },
+            { name: "Mozambique", shortName: "MZ", code: "+258", searchText: "Mozambique", phoneMask: " __ ___ ___" },
+            { name: "Angola", shortName: "AO", code: "+244", searchText: "Angola", phoneMask: " ___ ___ ___" },
+            { name: "Dem. Rep. of the Congo", shortName: "CD", code: "+243", searchText: "Democratic Republic of the Congo", phoneMask: " ___ ___ ___" },
+            { name: "Albania", shortName: "AL", code: "+355", searchText: "Albania", phoneMask: " ___ ___ ___" },
+            { name: "Georgia", shortName: "GE", code: "+995", searchText: "Georgia", phoneMask: " ___ ___ ___" },
+            { name: "Armenia", shortName: "AM", code: "+374", searchText: "Armenia", phoneMask: " __ ___ ___" },
+            { name: "Azerbaijan", shortName: "AZ", code: "+994", searchText: "Azerbaijan", phoneMask: " __ ___ __ __" },
+            { name: "Kazakhstan", shortName: "KZ", code: "+7", searchText: "Kazakhstan", phoneMask: " (___) ___-__-__" },
+            { name: "Uzbekistan", shortName: "UZ", code: "+998", searchText: "Uzbekistan", phoneMask: " __ ___ __ __" },
+            { name: "Kyrgyzstan", shortName: "KG", code: "+996", searchText: "Kyrgyzstan", phoneMask: " ___ ___ ___" },
+            { name: "Turkmenistan", shortName: "TM", code: "+993", searchText: "Turkmenistan", phoneMask: " _ ___ ____" },
+            { name: "Mongolia", shortName: "MN", code: "+976", searchText: "Mongolia", phoneMask: " ___ ____" },
+            { name: "Nepal", shortName: "NP", code: "+977", searchText: "Nepal", phoneMask: " ___-___-___" },
+            { name: "Sri Lanka", shortName: "LK", code: "+94", searchText: "Sri Lanka", phoneMask: " __-___-____" },
+            { name: "Afghanistan", shortName: "AF", code: "+93", searchText: "Afghanistan", phoneMask: " __ ___ ____" }
+        ];
+
+        </script>
+
+    </head>
+    <body>
+        
+        <!-- HTML content -->
+        
+    </body>
+</html>

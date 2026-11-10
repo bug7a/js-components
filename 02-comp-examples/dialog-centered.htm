@@ -13,34 +13,39 @@
     <script src="../basic/basic.js" type="text/javascript" charset="utf-8"></script>
 
     <script src="../comp/tooltip.js" type="text/javascript" charset="utf-8"></script>
-    <script src="../comp/input-b.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/text-field.js" type="text/javascript" charset="utf-8"></script>
     <script src="../comp/smart-button.js" type="text/javascript" charset="utf-8"></script>
     <script src="../comp/dialog.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/scroll-area.js" type="text/javascript" charset="utf-8"></script>
 
     <script>
 
     /* Bismillah */
 
-    // Dialog (comp-m4), variant: "centered": an icon at the top, the texts in the middle, the buttons one under
-    // the other. A layout the user drew, with the colors of the ozden package.
+    // Dialog, variant: "centered": an icon at the top, the texts in the middle, the buttons one under
+    // the other, with the colors of the ozden package. The icon is in a light circle of its
+    // color (topIconTone: three tones of a tone of SmartButton); it is drawn in two tones and moves once when its
+    // dialog opens. The buttons take the tones of SmartButton too: Delete orange (danger), OK of Saved green (success).
+    // Three more dialogs that projects often need: turn on the notifications, no connection
+    // (Try again waits), leave without saving. And three more: the session has ended, something went wrong (Try again
+    // waits), check your inbox (Send again waits and says under the message that the link is sent). And three more: the
+    // order is placed, rate the app, allow the location.
 
     const WORK_TIME = 1200; // ms: a job that takes time (the sample)
 
-    // The icons at the top: drawn with lines in the color of the style (currentColor)
-    const svgLines = function (body) {
-        return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + body + "</svg>";
-    };
-    const TRASH_ICON = svgLines('<path d="M4 7l16-2.5"/><path d="M10 5.5V3.8h4v1"/><path d="M6.5 8.5l1 11.5h9l1-11.5"/><path d="M10.5 11v6M13.5 11v6"/>');
-    const LOGOUT_ICON = svgLines('<path d="M14 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4"/><path d="M10 16l-4-4 4-4"/><path d="M6 12h10"/>');
-    const CHECK_ICON = svgLines('<path d="M5 12.5l4.5 4.5L19 7.5"/>');
+    const MOTION_EASE = "cubic-bezier(0.2, 0.8, 0.2, 1)"; // a fast start, a soft stop
 
-    // The yellow button (Delete, Log out): the hover a little darker, the text of the package (not the white of
-    // danger); the same as the Delete of dialog.htm
+    // The yellow button of Log out: the hover a little darker, the text of the package (not the white of danger)
     const YELLOW_BUTTON_STYLE = {
         box: { color: "#F8E57A" },
         hover: { color: "#EFDA62" },
         active: { color: "#EFDA62" },
-        label: { textColor: SmartButton.styles.ozdenType1.label.textColor },
+        label: { textColor: SmartButton.styles.ozden.label.textColor },
+    };
+
+    // An icon at the top: its drawing as an "<svg" text (the dialog fills its colors in)
+    const svgIcon = function (body) {
+        return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">' + body + "<\/svg>";
     };
 
     let lblResult;
@@ -49,77 +54,426 @@
         lblResult.plainText = text;
     };
 
-    const wait = function (ms) {
-        return new Promise(function (resolve) { setTimeout(resolve, ms); });
-    };
-
-    // The dialog of the design: Delete (yellow, it asks again, then it waits) and Cancel
+    // The dialog of the design: Delete (orange: danger, it asks again, then it waits) and Cancel
     const openDeleteDialog = function () {
         Dialog({
             variant: "centered",
             width: 420,
-            style: { buttons: { primary: { style: YELLOW_BUTTON_STYLE } } },
-            topIconFile: TRASH_ICON,
+            topIconTone: "orange",
+            topIconFile: svgIcon(TRASH_ICON),
             titleText: "Delete Account?",
             messageText: "Are you sure you want to delete your account?",
             buttons: [
                 { key: "cancel", text: "Cancel", type: "secondary" },
                 {
-                    key: "delete", text: "Delete", type: "primary",
+                    key: "delete", text: "Delete", type: "danger",
                     ask: "Click again to delete your account.",
-                    onClick: function () {
-                        return wait(WORK_TIME).then(function () { showResult("The account is deleted."); });
+                    onClick: async function () {
+                        await basic.sleep(WORK_TIME);
+                        showResult("The account is deleted.");
                     },
                 },
             ],
-            onClose: function (dialog, reason, buttonKey) {
-                if (reason != "button") showResult("Closed: " + reason);
-                else if (buttonKey == "cancel") showResult("Canceled.");
-            },
+            onClose: function (dialog, reason, buttonKey) { showClose(reason, buttonKey, "cancel"); },
         });
     };
 
-    const openConfirm = async function () {
+    // LOG OUT: Dialog.confirm (a Promise of true / false)
+    const openLogoutConfirm = async function () {
         const isSure = await Dialog.confirm({
             variant: "centered",
-            topIconFile: LOGOUT_ICON,
+            topIconTone: "yellow",
+            topIconFile: svgIcon(LOGOUT_ICON),
             titleText: "Log out?",
             messageText: "You can log in again with your e-mail address.",
             confirmText: "Log out",
             danger: 1,
             style: { buttons: { danger: { style: YELLOW_BUTTON_STYLE } } },
         });
-        showResult("confirm: " + isSure);
+        showResult("log out: " + isSure);
     };
 
-    const openAlert = async function () {
-        await Dialog.alert({ variant: "centered", topIconFile: CHECK_ICON, titleText: "Saved", messageText: "Your changes are saved." });
-        showResult("alert: closed");
+    // SAVED: Dialog.alert (a Promise that ends when it closes)
+    const openSavedAlert = async function () {
+        await Dialog.alert({
+            variant: "centered",
+            topIconTone: "green",
+            topIconFile: svgIcon(SAVED_ICON),
+            titleText: "Saved",
+            messageText: "Your changes are saved.",
+            buttonType: "success",
+        });
+        showResult("saved: closed");
+    };
+
+    // The page tells how a dialog was closed (keyOfNo: the button that says no)
+    const showClose = function (reason, buttonKey, keyOfNo) {
+        if (reason != "button") showResult("Closed: " + reason);
+        else if (buttonKey == keyOfNo) showResult("Canceled.");
+    };
+
+    // NOTIFICATIONS: the page asks before it sends them
+    const openNotificationsDialog = function () {
+        Dialog({
+            variant: "centered",
+            width: 420,
+            topIconTone: "cyan",
+            topIconFile: svgIcon(BELL_ICON),
+            titleText: "Turn on notifications?",
+            messageText: "We tell you when your order is on its way. You can turn them off in the settings.",
+            buttons: [
+                { key: "later", text: "Not now", type: "secondary" },
+                {
+                    key: "turnOn", text: "Turn on", type: "primary",
+                    onClick: function () { showResult("Notifications are on."); },
+                },
+            ],
+            onClose: function (dialog, reason, buttonKey) { showClose(reason, buttonKey, "later"); },
+        });
+    };
+
+    // NO CONNECTION: Try again waits (its clock) while the page checks the connection
+    const openOfflineDialog = function () {
+        Dialog({
+            variant: "centered",
+            width: 420,
+            topIconTone: "blue",
+            topIconFile: svgIcon(OFFLINE_ICON),
+            titleText: "No connection",
+            messageText: "Check your internet connection, then try again.",
+            buttons: [
+                { key: "cancel", text: "Cancel", type: "secondary" },
+                {
+                    key: "retry", text: "Try again", type: "info",
+                    onClick: async function () {
+                        await basic.sleep(WORK_TIME);
+                        showResult("Connected again.");
+                    },
+                },
+            ],
+            onClose: function (dialog, reason, buttonKey) { showClose(reason, buttonKey, "cancel"); },
+        });
+    };
+
+    // UNSAVED CHANGES: Leave loses them (the yellow of a warning), Stay keeps the page
+    const openUnsavedConfirm = async function () {
+        const isLeaving = await Dialog.confirm({
+            variant: "centered",
+            topIconTone: "yellow",
+            topIconFile: svgIcon(UNSAVED_ICON),
+            titleText: "Leave without saving?",
+            messageText: "Your changes are not saved. They will be lost if you leave now.",
+            confirmText: "Leave",
+            cancelText: "Stay",
+            confirmType: "warning",
+        });
+        showResult("unsaved changes: " + (isLeaving ? "left" : "stayed"));
+    };
+
+    // SESSION ENDED: the page logged the user out after a while; one button
+    const openSessionAlert = async function () {
+        await Dialog.alert({
+            variant: "centered",
+            topIconTone: "blue",
+            topIconFile: svgIcon(LOCK_ICON),
+            titleText: "Your session has ended",
+            messageText: "For your safety, you were logged out after a while. Log in again to go on.",
+            buttonText: "Log in again",
+        });
+        showResult("session: log in again");
+    };
+
+    // SOMETHING WENT WRONG: Try again waits (its clock); Close gives up
+    const openErrorDialog = function () {
+        Dialog({
+            variant: "centered",
+            width: 420,
+            topIconTone: "orange",
+            topIconFile: svgIcon(ERROR_ICON),
+            titleText: "Something went wrong",
+            messageText: "We could not save your changes. Please try again in a moment.",
+            buttons: [
+                { key: "close", text: "Close", type: "secondary" },
+                {
+                    key: "retry", text: "Try again", type: "primary",
+                    onClick: async function () {
+                        await basic.sleep(WORK_TIME);
+                        showResult("Saved on the second try.");
+                    },
+                },
+            ],
+            onClose: function (dialog, reason, buttonKey) { showClose(reason, buttonKey, "close"); },
+        });
+    };
+
+    // CHECK YOUR INBOX: after a sign-up. Send again waits (its clock), then the dialog stays open and says that the
+    // link is sent.
+    const openInboxDialog = function () {
+        Dialog({
+            variant: "centered",
+            width: 420,
+            topIconTone: "cyan",
+            topIconFile: svgIcon(INBOX_ICON),
+            titleText: "Check your inbox",
+            messageText: "We sent a link to ayse@example.com. Open it to verify your e-mail address.",
+            buttons: [
+                {
+                    key: "again", text: "Send again", type: "secondary",
+                    onClick: function (dialog) {
+                        sendLinkAgain(dialog);
+                        return false; // WHY: the dialog stays open: it says that the link is sent
+                    },
+                },
+                { key: "ok", text: "Got it", type: "primary", onClick: function () { showResult("inbox: got it"); } },
+            ],
+            onClose: function (dialog, reason) {
+                if (reason != "button") showResult("Closed: " + reason);
+            },
+        });
+    };
+
+    // WHY setBusy, not a Promise from onClick: a Promise closes the dialog when it ends
+    const sendLinkAgain = async function (dialog) {
+        dialog.setStatus("");
+        dialog.setBusy(1, "again"); // its clock; the other button waits
+        await basic.sleep(WORK_TIME);
+        if (!dialog.isOpen()) return;
+        dialog.setBusy(0);
+        dialog.setStatus("A new link is sent.", "success");
+    };
+
+    // ORDER PLACED: after a payment; Track the order is the next step (the green of a good result)
+    const openOrderDialog = function () {
+        Dialog({
+            variant: "centered",
+            width: 420,
+            topIconTone: "green",
+            topIconFile: svgIcon(ORDER_ICON),
+            titleText: "Your order is placed",
+            messageText: "Thank you! We sent the details to ayse@example.com. It arrives on Friday.",
+            buttons: [
+                { key: "shop", text: "Keep shopping", type: "secondary" },
+                {
+                    key: "track", text: "Track the order", type: "success",
+                    onClick: function () { showResult("order: track the order"); },
+                },
+            ],
+            onClose: function (dialog, reason, buttonKey) {
+                if (reason != "button") showResult("Closed: " + reason);
+                else if (buttonKey == "shop") showResult("order: keep shopping");
+            },
+        });
+    };
+
+    // RATE THE APP: asked once in a while; Not now asks again later
+    const openRateDialog = function () {
+        Dialog({
+            variant: "centered",
+            width: 420,
+            topIconTone: "yellow",
+            topIconFile: svgIcon(RATE_ICON),
+            titleText: "Do you like the app?",
+            messageText: "A rating in the store helps us a lot. It takes a few seconds.",
+            buttons: [
+                { key: "later", text: "Not now", type: "secondary" },
+                {
+                    key: "rate", text: "Rate the app", type: "primary",
+                    onClick: function () { showResult("rate: the store opens"); },
+                },
+            ],
+            onClose: function (dialog, reason, buttonKey) { showClose(reason, buttonKey, "later"); },
+        });
+    };
+
+    // LOCATION: the page asks before the browser does, and says why
+    const openLocationDialog = function () {
+        Dialog({
+            variant: "centered",
+            width: 420,
+            topIconTone: "blue",
+            topIconFile: svgIcon(LOCATION_ICON),
+            titleText: "Allow your location?",
+            messageText: "We use it to show the stores near you. It is never shared.",
+            buttons: [
+                { key: "later", text: "Not now", type: "secondary" },
+                { key: "allow", text: "Allow", type: "primary", onClick: function () { showResult("location: allowed"); } },
+            ],
+            onClose: function (dialog, reason, buttonKey) { showClose(reason, buttonKey, "later"); },
+        });
+    };
+
+    // GROUP: a small title and the buttons of its dialogs (they wrap on a narrow screen)
+    const createGroup = function (group) {
+        VGroup({ hug: 1, align: "center top", gap: 8, clipContent: 0 });
+            Label({ text: group.titleText, fontSize: 13, textColor: Black(0.5) });
+            HGroup({ hug: 1, gap: 10, wrap: 1, align: "center top", clipContent: 0 });
+                group.buttons.forEach(function (button) { createButton(button.text, button.open); });
+            endGroup();
+        endGroup();
     };
 
     const createButton = function (text, onClick) {
-        return SmartButton({ styleName: "ozdenType1", labelText: text, height: 40, style: { box: { color: "white" } }, onClick: onClick }); // white inside (its hover stays gray)
+        return SmartButton({
+            styleName: "ozden",
+            labelText: text,
+            height: 40,
+            style: { box: { color: "white" } }, // white inside (its hover stays gray)
+            onClick: onClick,
+        });
     };
 
     const start = function () {
 
         page.color = "#F0F1EE";
+        basic.addCss("dialog-centered-icons", ICON_MOTION_CSS);
 
-        VGroup({ align: "center", gap: 14 });
+        // SCROLL AREA: the page scrolls when its buttons are higher than the screen (a phone)
+        // WHY gap 22 (8 in a group): a title is nearer to its own buttons than to the buttons of the group above
+        ScrollArea({ align: "center", gap: 22, padding: [16, 24] });
 
             Label({ text: "Dialog: centered", fontSize: 26, bold: 1, textColor: Black(0.8) });
 
-            HGroup({ hug: 1, gap: 10, wrap: 1, clipContent: 0 });
-                createButton("Delete account", openDeleteDialog);
-                createButton("Dialog.confirm", openConfirm);
-                createButton("Dialog.alert", openAlert);
-            endGroup();
+            // The dialogs by their situation: a small title and their buttons
+            [
+                { titleText: "Before a change", buttons: [
+                    { text: "Delete account", open: openDeleteDialog },
+                    { text: "Log out", open: openLogoutConfirm },
+                    { text: "Leave without saving", open: openUnsavedConfirm },
+                ] },
+                { titleText: "After a good result", buttons: [
+                    { text: "Saved", open: openSavedAlert },
+                    { text: "Order placed", open: openOrderDialog },
+                    { text: "Check your inbox", open: openInboxDialog },
+                ] },
+                { titleText: "When something is wrong", buttons: [
+                    { text: "Something went wrong", open: openErrorDialog },
+                    { text: "No connection", open: openOfflineDialog },
+                    { text: "Session ended", open: openSessionAlert },
+                ] },
+                { titleText: "Requests", buttons: [
+                    { text: "Notifications", open: openNotificationsDialog },
+                    { text: "Location", open: openLocationDialog },
+                    { text: "Rate the app", open: openRateDialog },
+                ] },
+            ].forEach(createGroup);
 
             lblResult = Label({ plainText: "-", fontSize: 14, textColor: Black(0.5) });
 
         endGroup();
 
     };
+
+    // *** THE DRAWINGS
+
+    // THE ICONS AT THE TOP (the styles of 02-comp-examples/smart-button-alternatif.htm):
+    // a thing is two-tone (a big LIGHT shape with STRONG details), a state is a circle mark (a STRONG circle, a white
+    // mark). The dialog fills LIGHT and STRONG in with the tones of its topIconTone (Dialog.ICON_TONES).
+    // The bin: the lid and its handle, the bin, its two lines
+    const TRASH_ICON =
+        '<g class="top-icon-lid">' +
+            '<path d="M9.6 4.6V3.9a1.4 1.4 0 0 1 1.4-1.4h2a1.4 1.4 0 0 1 1.4 1.4v.7" fill="none" stroke="STRONG" stroke-width="2" stroke-linecap="round"/>' +
+            '<rect x="3.5" y="4.6" width="17" height="3" rx="1.5" fill="STRONG"/>' +
+        '<\/g>' +
+        '<path d="M5.2 9.2h13.6l-1.05 10.2a2.3 2.3 0 0 1-2.29 2.1H8.54a2.3 2.3 0 0 1-2.29-2.1z" fill="LIGHT"/>' +
+        '<path d="M10 12.4v5.4M14 12.4v5.4" fill="none" stroke="STRONG" stroke-width="2" stroke-linecap="round"/>';
+    // A door and the arrow that goes out of it
+    const LOGOUT_ICON =
+        '<rect x="3" y="2.5" width="13" height="19" rx="3" fill="LIGHT"/>' +
+        '<path class="top-icon-arrow" d="M9 12h11.5M17 8.3l3.7 3.7-3.7 3.7" fill="none" stroke="STRONG" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>';
+    // A circle mark: the check (pathLength 1: it is drawn from its start)
+    const SAVED_ICON =
+        '<circle class="top-icon-mark" cx="12" cy="12" r="11" fill="STRONG"/>' +
+        '<path class="top-icon-check" pathLength="1" d="M7.4 12.4l3.1 3.1 6.1-6.4" fill="none" stroke="white" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>';
+    // The bell: its knob and its clapper come out of it (written first), the bell, a shine on it
+    const BELL_ICON =
+        '<g class="top-icon-bell">' +
+            '<rect x="10.6" y="1.8" width="2.8" height="3.6" rx="1.4" fill="STRONG"/>' +
+            '<circle cx="12" cy="19.4" r="2.5" fill="STRONG"/>' +
+            '<path d="M12 4.2c-3.6 0-6.3 2.9-6.3 6.6v3.4l-1.7 2.5a1 1 0 0 0 .83 1.56h14.34a1 1 0 0 0 .83-1.56l-1.7-2.5v-3.4c0-3.7-2.7-6.6-6.3-6.6z" fill="LIGHT"/>' +
+            '<path d="M8.6 10.6a3.4 3.4 0 0 1 2.1-3" fill="none" stroke="STRONG" stroke-width="2" stroke-linecap="round"/>' +
+        '<\/g>';
+    // A cloud and the line over it (pathLength 1: it is drawn from its start)
+    const OFFLINE_ICON =
+        '<path d="M7.2 19.5a4.7 4.7 0 0 1-.9-9.3 6 6 0 0 1 11.5-.6 4.95 4.95 0 0 1-.3 9.9z" fill="LIGHT"/>' +
+        '<path class="top-icon-slash" pathLength="1" d="M4.5 4.5l15 15" fill="none" stroke="STRONG" stroke-width="2.2" stroke-linecap="round"/>';
+    // A page, its lines, and the pencil over its corner
+    const UNSAVED_ICON =
+        '<rect x="3.5" y="2.5" width="13.5" height="19" rx="2.6" fill="LIGHT"/>' +
+        '<path d="M7.2 7.6h6.2M7.2 11.4h4" fill="none" stroke="STRONG" stroke-width="2" stroke-linecap="round"/>' +
+        '<path class="top-icon-pencil" d="M18.9 9.9a1.6 1.6 0 0 1 2.3 2.3l-7.4 7.4-3.4.9.9-3.4z" fill="STRONG"/>';
+    // A lock: its shackle comes out of it (written first), the lock, its keyhole
+    const LOCK_ICON =
+        '<path class="top-icon-shackle" d="M8 10.5V7.8a4 4 0 0 1 8 0v2.7" fill="none" stroke="STRONG" stroke-width="2.2" stroke-linecap="round"/>' +
+        '<rect x="4" y="9.5" width="16" height="12" rx="3.2" fill="LIGHT"/>' +
+        '<circle cx="12" cy="14.6" r="1.8" fill="STRONG"/>' +
+        '<path d="M12 15.6v2.3" fill="none" stroke="STRONG" stroke-width="2" stroke-linecap="round"/>';
+    // A circle mark: an exclamation mark
+    const ERROR_ICON =
+        '<g class="top-icon-shake">' +
+            '<circle cx="12" cy="12" r="11" fill="STRONG"/>' +
+            '<path d="M12 6.8v6.4" fill="none" stroke="white" stroke-width="2.4" stroke-linecap="round"/>' +
+            '<circle cx="12" cy="16.9" r="1.5" fill="white"/>' +
+        '<\/g>';
+    // An envelope, its flap, and the dot of a new mail (a ring in the color of the circle cuts it out of the envelope)
+    const INBOX_ICON =
+        '<rect x="2.5" y="5" width="19" height="14" rx="3" fill="LIGHT"/>' +
+        '<path d="M6 9l6 4.2L18 9" fill="none" stroke="STRONG" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>' +
+        '<g class="top-icon-dot">' +
+            '<circle cx="19.2" cy="5.4" r="3.5" fill="CIRCLE"/>' +
+            '<circle cx="19.2" cy="5.4" r="2.4" fill="STRONG"/>' +
+        '<\/g>';
+    // A shopping bag: its handle comes out of it (written first), the bag, a check on it (it is drawn from its start)
+    const ORDER_ICON =
+        '<path d="M8.5 9V7a3.5 3.5 0 0 1 7 0v2" fill="none" stroke="STRONG" stroke-width="2.2" stroke-linecap="round"/>' +
+        '<path d="M5.6 8h12.8a1.5 1.5 0 0 1 1.5 1.4l.8 10a2.1 2.1 0 0 1-2.1 2.3H5.4a2.1 2.1 0 0 1-2.1-2.3l.8-10A1.5 1.5 0 0 1 5.6 8z" fill="LIGHT"/>' +
+        '<path class="top-icon-check" pathLength="1" d="M8.7 14.7l2.3 2.3 4.4-4.6" fill="none" stroke="STRONG" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>';
+    // A star of a rating: half of it full (its corners rounded by its own line), and a sparkle beside it
+    const RATE_ICON =
+        '<g class="top-icon-star">' +
+            '<path d="M11 4.47L13.64 9.82L19.54 10.67L15.27 14.83L16.28 20.71L11 17.93L5.72 20.71L6.73 14.83L2.46 10.67L8.36 9.82z" fill="LIGHT" stroke="LIGHT" stroke-width="2.4" stroke-linejoin="round"/>' +
+            '<path d="M11 4.47L8.36 9.82L2.46 10.67L6.73 14.83L5.72 20.71L11 17.93z" fill="STRONG"/>' +
+        '<\/g>' +
+        '<path class="top-icon-sparkle" d="M19.6 1.8c.3 1.6 1 2.3 2.6 2.6-1.6.3-2.3 1-2.6 2.6-.3-1.6-1-2.3-2.6-2.6 1.6-.3 2.3-1 2.6-2.6z" fill="STRONG"/>';
+    // A pin on the ground: the ground (written first), the pin, its dot
+    const LOCATION_ICON =
+        '<path d="M8.2 21.6h7.6" fill="none" stroke="STRONG" stroke-width="2" stroke-linecap="round"/>' +
+        '<g class="top-icon-pin">' +
+            '<path d="M12 2.5a7.3 7.3 0 0 0-7.3 7.3c0 4.9 5.5 9.8 6.4 10.6a1.4 1.4 0 0 0 1.8 0c.9-.8 6.4-5.7 6.4-10.6A7.3 7.3 0 0 0 12 2.5z" fill="LIGHT"/>' +
+            '<circle cx="12" cy="9.8" r="2.8" fill="STRONG"/>' +
+        '<\/g>';
+
+    // Each icon moves once when its dialog opens, after the card comes: the lid of the bin lifts and falls back, the
+    // arrow goes out, the circle grows in and its check is drawn, the bell rings, the line over the cloud is drawn,
+    // the pencil writes, the lock closes, the exclamation mark shakes ("no"), the dot of the new mail grows in, the
+    // check of the bag is drawn, the star turns in and its sparkle follows, the pin drops onto the ground.
+    // Nothing with reduced motion.
+    const ICON_MOTION_CSS = [
+        ".top-icon-lid, .top-icon-arrow, .top-icon-mark, .top-icon-bell, .top-icon-pencil, .top-icon-dot, .top-icon-star, .top-icon-sparkle, .top-icon-pin { transform-box: fill-box; }",
+        ".top-icon-lid { transform-origin: 100% 100%; animation: top-icon-lift 0.5s 0.2s ease-in-out both; }",
+        ".top-icon-arrow { animation: top-icon-go 0.25s 0.15s " + MOTION_EASE + " both; }",
+        ".top-icon-mark { transform-origin: 50% 50%; animation: top-icon-pop 0.25s 0.1s " + MOTION_EASE + " both; }",
+        ".top-icon-check { stroke-dasharray: 1; animation: top-icon-draw 0.25s 0.3s " + MOTION_EASE + " both; }",
+        ".top-icon-bell { transform-origin: 50% 0%; animation: top-icon-ring 0.6s 0.15s ease-in-out both; }",
+        ".top-icon-slash { stroke-dasharray: 1; animation: top-icon-draw 0.3s 0.25s " + MOTION_EASE + " both; }",
+        ".top-icon-pencil { animation: top-icon-write 0.5s 0.2s ease-in-out both; }",
+        ".top-icon-shackle { animation: top-icon-close 0.35s 0.2s " + MOTION_EASE + " both; }",
+        ".top-icon-shake { animation: top-icon-shake 0.45s 0.2s ease-in-out both; }",
+        ".top-icon-dot { transform-origin: 50% 50%; animation: top-icon-pop 0.25s 0.3s " + MOTION_EASE + " both; }",
+        ".top-icon-star { transform-origin: 50% 50%; animation: top-icon-twinkle 0.35s 0.15s " + MOTION_EASE + " both; }",
+        ".top-icon-sparkle { transform-origin: 50% 50%; animation: top-icon-pop 0.25s 0.35s " + MOTION_EASE + " both; }",
+        ".top-icon-pin { animation: top-icon-drop 0.45s 0.15s ease-out both; }",
+        "@keyframes top-icon-lift { 50% { transform: translateY(-1.5px) rotate(8deg); } }",
+        "@keyframes top-icon-go { from { opacity: 0; transform: translateX(-4px); } }",
+        "@keyframes top-icon-pop { from { opacity: 0; transform: scale(0.6); } }",
+        "@keyframes top-icon-draw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }",
+        "@keyframes top-icon-ring { 20% { transform: rotate(12deg); } 45% { transform: rotate(-9deg); } 70% { transform: rotate(5deg); } }",
+        "@keyframes top-icon-write { 35% { transform: translate(-1.2px, 1.2px); } 70% { transform: translate(0.8px, -0.8px); } }",
+        "@keyframes top-icon-close { from { transform: translateY(-2.5px); } }",
+        "@keyframes top-icon-shake { 15% { transform: translateX(-2px); } 35% { transform: translateX(2px); } 55% { transform: translateX(-1.5px); } 75% { transform: translateX(1px); } }",
+        "@keyframes top-icon-twinkle { from { opacity: 0; transform: scale(0.6) rotate(-25deg); } }",
+        "@keyframes top-icon-drop { 0% { opacity: 0; transform: translateY(-5px); } 60% { opacity: 1; transform: translateY(0.8px); } }",
+        "@media (prefers-reduced-motion: reduce) { .top-icon-lid, .top-icon-arrow, .top-icon-mark, .top-icon-check, .top-icon-bell, .top-icon-slash, .top-icon-pencil, .top-icon-shackle, .top-icon-shake, .top-icon-dot, .top-icon-star, .top-icon-sparkle, .top-icon-pin { animation: none; } }",
+    ].join("\n");
 
     </script>
 

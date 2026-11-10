@@ -13,17 +13,18 @@
 
     <!-- COMPONENT FILES -->
     <script src="../comp/tabs.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/scroll-area.js" type="text/javascript" charset="utf-8"></script>
 
     <script>
 
         /* Bismillah */
 
-        // Tabs (comp-m4) with the look of the old UITabs sample: 02-comp-m1-samples/ui-tabs.htm
-        // - variant: "pill" + a style for every bar (the colors, sizes and rounds of the old sample).
+        // Tabs with big icon tabs.
+        // - variant: "pill" + a style for every bar.
         // - selectedColor, selectedTextColor and selectedIconFile of a tab: the active tab takes its own colors and icon.
 
-        // ICONS: The image files of the old sample.
-        const ICON_PATH = "tabs-2/"; // (copied from the old UITabs sample, archived on 2026-10-30)
+        // ICONS: Image files.
+        const ICON_PATH = "tabs-2/";
 
         const tabList1 = [
             { key: "1", text: "LOW", iconFile: ICON_PATH + "lamp.png", selectedColor: "white", selectedIconFile: ICON_PATH + "lamp-on.png" },
@@ -108,73 +109,63 @@
 
             page.color = "whitesmoke";
 
-            // BOX: Full screen scrollable container
-            // WHY: page does not scroll. Scrollable content must be inside a Box with scrollY: 1.
-            startBox(0, 0, "100%", "100%", {
-                color: "transparent",
-                scrollY: 1,
+            // SCROLL AREA: The page
+            // WHY: page does not scroll. A ScrollArea fills the window; its content scrolls when it is taller.
+            // The page layout (top: 100, 80 between the bars)
+            ScrollArea({
+                align: "center top",
+                gap: 80,
+                padding: [0, 100],
             });
 
-                // GROUP: Page layout (top: 100, 80 between the bars, like the old sample)
-                VGroup({
-                    width: "100%",
-                    height: "auto",
-                    align: "center top",
-                    gap: 80,
-                    padding: [0, 100],
+                // *** EXAMPLE 1:
+                tabs1 = Tabs({
+                    variant: "pill",
+                    width: "calc(100% - 40px)",
+                    tabs: tabList1,
+                    value: "2",
+                    style: getTabsStyle("dark"),
+                    onChange: function (self) {
+                        console.log("tabs1: " + self.value);
+                    },
+                });
+                // WHY: A fixed width bar (autoWidth: 0): the tabs stay in the middle.
+                tabs1.stripInner.css.margin = "0 auto";
+
+                // *** EXAMPLE 2:
+                tabs2 = Tabs({
+                    variant: "pill",
+                    tabs: tabList2,
+                    value: "3",
+                    style: getTabsStyle("colorful"),
+                    onChange: function (self) {
+                        console.log("tabs2: " + self.value);
+                    },
                 });
 
-                    // *** EXAMPLE 1:
-                    tabs1 = Tabs({
-                        variant: "pill",
-                        width: "calc(100% - 40px)",
-                        tabs: tabList1,
-                        value: "2",
-                        style: getTabsStyle("dark"),
-                        onChange: function (self) {
-                            console.log("tabs1: " + self.value);
-                        },
-                    });
-                    // WHY: A fixed width bar (autoWidth: 0 in the old sample): the tabs stay in the middle.
-                    tabs1.stripInner.elem.style.margin = "0 auto";
+                // *** EXAMPLE 3:
+                tabs3 = Tabs({
+                    variant: "pill",
+                    tabs: tabList3,
+                    style: getTabsStyle("light"),
+                    onChange: function (self) {
+                        console.log("tabs3: " + self.value);
+                    },
+                    css: { maxWidth: "100%" }, // WHY maxWidth: on a phone the bar is as wide as the screen, its tabs scroll
+                });
 
-                    // *** EXAMPLE 2:
-                    tabs2 = Tabs({
-                        variant: "pill",
-                        tabs: tabList2,
-                        value: "3",
-                        style: getTabsStyle("colorful"),
-                        onChange: function (self) {
-                            console.log("tabs2: " + self.value);
-                        },
-                    });
+                // *** EXAMPLE 4:
+                tabs4 = Tabs({
+                    variant: "pill",
+                    tabs: tabList4,
+                    value: "3",
+                    style: getTabsStyle("round"),
+                    onChange: function (self) {
+                        console.log("tabs4: " + self.value);
+                    },
+                });
 
-                    // *** EXAMPLE 3:
-                    tabs3 = Tabs({
-                        variant: "pill",
-                        tabs: tabList3,
-                        style: getTabsStyle("light"),
-                        onChange: function (self) {
-                            console.log("tabs3: " + self.value);
-                        },
-                    });
-
-                    // *** EXAMPLE 4:
-                    tabs4 = Tabs({
-                        variant: "pill",
-                        tabs: tabList4,
-                        value: "3",
-                        style: getTabsStyle("round"),
-                        onChange: function (self) {
-                            console.log("tabs4: " + self.value);
-                        },
-                    });
-
-                endGroup();
-
-            endBox();
-            const pageBox = that;
-            if (typeof ScrollBar === "function") ScrollBar({ scrollableBox: pageBox });
+            endGroup();
 
         };
 

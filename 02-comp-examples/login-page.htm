@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Login</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <!-- LIBRARY FILES -->
+        <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+        <link rel="preload" href="../basic/font/open-sans/OpenSans-Bold.ttf" as="font" crossorigin="anonymous">
+        <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
+        <script src="../basic/basic.min.js" charset="utf-8" ></script>
+        <script src="../basic/scroll-bar.min.js" charset="utf-8" ></script>
+
+        <script src="../comp/ui-effects.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/tooltip.js" charset="utf-8" ></script>
+        <script src="../comp/text-field.js" charset="utf-8" ></script>
+        <script src="../comp/email-field.js" charset="utf-8" ></script>
+        <script src="../comp/password-field.js" charset="utf-8" ></script>
+        <script src="../comp/tabs.js" charset="utf-8" ></script>
+        <script src="../comp/smart-button.js" charset="utf-8" ></script>
+        <script src="../comp/loading-screen.js" charset="utf-8" ></script>
+        <script src="../comp/login-page.js" type="text/javascript" charset="utf-8" ></script>
+
+        <script>
+
+    
+        // LoginPage (comp/login-page.js): a ready login and sign up page; onLoginClick, onSignupClick and the rules of a new password.
+
+        let loginPage = null;
+        let userData = null;
+
+        const PANEL_WIDTH = 420;
+        const PAGE_SIDE_PADDING = 30; // px: the padding of LoginPage at the sides of the page
+
+        // First running function.
+        const start = function () {
+
+            page.color = "white";
+
+            checkIfLoggedIn({
+                onSuccess: initPageView,
+                onFail: initLoginView,
+            });
+
+        };
+
+        const fillTestData = function () {
+
+            // TEST DATA: Fill the user data
+            loginPage.loginEmail.setValue("bugra.ozden@gmail.com");
+            loginPage.loginPassword.setValue("123456");
+            // Call manuel to check form with out edit
+            loginPage.loginEmail.onChange();
+
+        };
+
+        const initLoginView = function () {
+                
+            // WHY: a phone narrower than the panel (390 px): the panel takes the screen without the sides of the page
+            const panelWidth = Math.min(PANEL_WIDTH, page.width - PAGE_SIDE_PADDING * 2);
+
+            // Show Login Page
+            loginPage = LoginPage({
+                panelWidth: panelWidth,
+                inputStyleName: "ozden", // the fields: the TextField package "ozden"
+                primaryColor: "#2C5A38",
+                panelName: "MY PANEL v25.08.11",
+                onLoginClick: onLoginClick,
+                onSignupClick: onSignupClick,
+                signupPasswordParams: {
+                    minLength: 8,
+                    minLengthWarningText: "Password must be at least 8 characters",
+                    mustUseNumber: 1,
+                    mustUseLetter: 1,
+                    mustUseUppercase: 0,
+                    mustUseLowercase: 0,
+                    mustUseSpecialChar: 0,
+                },
+                ...LoginPageLightStyle, // (its tab bar too: one light gray, a soft edge, a white selected tab)
+                // (after the light style: these win over it)
+                buttonStyleName: "ozden3", // LOGIN / SIGN UP: SmartButtons of the kit, in the text color of the tone
+                buttonTone: "green", // the green of SmartButton
+            });
+
+            // Add custom login buttons:
+            // (Their logos are drawn by LoginPage: the apple in the text color of its button)
+            loginPage.createButtonWithIcon("Sign in with Google", LoginPage.GOOGLE_LOGO, onLoginWithGoogle);
+            const appleLogo = LoginPage.getAppleLogo(loginPage.style.customLoginButton.textColor);
+            loginPage.createButtonWithIcon("Sign in with Apple", appleLogo, onLoginWithApple);
+
+            // TEST
+            fillTestData();
+
+        };
+
+        const initPageView = function () {
+
+            if (!userData) {
+                logout();
+                return;
+            }
+
+            // or go to your page
+
+            page.color = "whitesmoke";
+
+            HGroup({
+                    gap: 20,
+                });
+
+                Label({
+                    text: "Logged In.",
+                });
+
+                const lblLogout = Label({
+                    text: "Logout",
+                    color: "indianred",
+                    textColor: "white",
+                    padding: [8, 2],
+                    round: 4,
+                    cursor: "pointer",
+                });
+                lblLogout.on("click", logout);
+
+            endGroup();
+
+        };
+
+        const checkIfLoggedIn = function (callback) {
+
+            // callback: { onSuccess: func, onFail: func }
+
+            // TODO: Check logged in with your service
+
+            // TEST LOGIN:
+            userData = basic.storage.load("appid_login");
+
+            if (userData) {
+                callback.onSuccess();
+            } else {
+                callback.onFail();
+            }
+
+        };
+
+        const logout = function () {
+
+            // TEST LOGIN:
+            userData = null;
+            basic.storage.save("appid_login", userData);
+
+            // Try to logout with your service
+            window.location.reload();
+
+        };
+
+        // Actions
+        const onLoginClick = function () {
+
+            loginPage.showAlert("login");
+
+            const email = loginPage.loginEmail.getValue();
+            const password = loginPage.loginPassword.getValue();
+
+            if (!email || !password) {
+                loginPage.showAlert("Please enter email and password");
+                return;
+            }
+
+            const onSuccess = function () {
+
+                window.location.reload();
+
+            };
+
+            const onFail = function (message) {
+                loginPage.showAlert("Login failed: " + message);
+            };
+
+            loginPage.waiting.show();
+
+            try {
+                
+                // TEST LOGIN:
+                userData = { user: "test" };
+                basic.storage.save("appid_login", userData);
+
+                // TODO: Try to login with your service
+                onSuccess();
+                //onFail();
+
+
+            } catch (e) {
+                loginPage.showAlert("Login error");
+
+            } finally {
+                loginPage.waiting.hide();
+            }
+
+        };
+
+        const onSignupClick = function () {
+
+            const email = loginPage.signupEmail.getValue();
+            const p1 = loginPage.signupPassword.getValue();
+            const p2 = loginPage.signupPassword2.getValue();
+
+            if (!email || !p1 || !p2) {
+                loginPage.showAlert("Please fill all fields");
+                return;
+            }
+            if (p1 !== p2) {
+                loginPage.showAlert("Passwords do not match");
+                return;
+            }
+
+            const onSuccess = function () {
+
+                loginPage.showAlert("Sign up successful. Check your email to confirm.", "#5DB182");
+                loginPage.signupPassword.setValue("");
+                loginPage.signupPassword2.setValue("");
+                loginPage.loginEmail.setValue(loginPage.signupEmail.getValue());
+                loginPage.setActiveTab(0); // (the tab bar follows it)
+
+            };
+
+            const onFail = function (message) {
+                loginPage.showAlert("Sign up failed: " + message);
+            };
+
+            loginPage.waiting.show();
+
+            try {
+                
+                // TODO: Try to Signup with your service
+                onSuccess();
+                //onFail();
+                
+            } catch (e) {
+                loginPage.showAlert("Sign up error");
+
+            } finally {
+                loginPage.waiting.hide();
+            }
+
+        };
+
+        const onLoginWithGoogle = function () {
+
+            // TODO: Login with Google
+            loginPage.showAlert("Logged in with Google.", "#5DB182");
+
+        };
+
+        const onLoginWithApple = function () {
+
+            // TODO: Login with Apple
+            loginPage.showAlert("Logged in with Apple.", "#5DB182");
+
+        };
+
+        </script>
+        
+    </head>
+    <body></body>
+</html>

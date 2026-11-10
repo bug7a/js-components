@@ -5,24 +5,36 @@ Toggle - v25.08
 
 UI COMPONENT TEMPLATE
 - An on / off switch: a round knob (box.button) slides on a track (box.background). A click switches it.
-- Style packages: "modern" (default: the knob is smaller when off) and "classic" (the old UIToggle). Select with
-  styleName. (Toggle.styles)
--- "classic": the look of comp-m1/ui-toggle.js (javascript-mobile-app-template, a 600 px design): 60 x 40, a light
+- Style packages: "ozden" (default: the knob is smaller when off), "ozdenDark" (for a dark page), "light" and
+  "dark" (the light and dark look of the kit), "classic" and more shapes (toggle-2.htm). Select with styleName.
+  (Toggle.styles)
+-- "ozden": a darker line around the colored track when on (selectedBorderColor: the light
+   look had no clear edge when on). Its size: 70 x 40, a round knob.
+   When on, a shadow to the left of the knob and a thin line around it, so the white knob stands
+   out on the track (buttonStyle.selectedShadow). A page with its own selectedShadow keeps that.
+-- "light" / "dark" (_designs/toggle.htm): a flat pill track of 52 x 30 that turns to the accent of the kit when on, a
+   white (dark: light gray) knob of the same size on and off with a soft shadow, 12 px marks. A mark in the knob
+   (markPlace "knob"): give it a dark color, markStyle: { color: Black(0.6), selectedColor: Black(0.6) }.
+-- "classic": for a 600 px design: 60 x 40, a light
    gray track that turns blue, a white knob of the same size on and off, with a shadow.
 -- A package is a package of params (basic.js v26.10.27): its keys fill the params you did not give, also the
    keys inside backgroundStyle and buttonStyle (Ex: the classic package with your own selectedColor).
--- "float", "round", "slim", "outline", "square": the other shapes of the old UIToggle, with their sizes, in soft colors
+-- "float", "round", "slim", "outline", "square": other shapes, with their sizes, in soft colors
    (the "Soft" palette of basic-designer). "float": a knob bigger than its track, "round": a big knob, "slim": a low
    track, "outline": a line around the track when off, "square": small corners.
 -- "tick", "badge", "label": with marks. "tick": a check or a cross on the track, "badge": in the knob, on a green or
    red track, "label": ON / OFF on the track, small corners.
 - onMark, offMark: what shows when on / off: "check", "cross" or a text ("ON"). "": nothing. setMarks() changes them.
   markPlace: "track" (on the free side of the track) or "knob" (in the knob). markStyle: its size and colors.
-- animated: 1 (the default) gives a toggle with marks small motions (not at the first view): a mark on the track grows
-  in behind the knob, a mark in the knob turns in with a small spring, the mark grows a little under the mouse, the knob
-  gets flatter while pressed. A toggle without marks does not change. Off with prefers-reduced-motion. setAnimated().
+- animated: 1 (the default) gives a toggle with marks small motions (not at the first view): a drawn mark (check,
+  cross) on the track grows in behind the knob, in the knob it turns in with a small spring, it grows a little under
+  the mouse; the knob gets flatter while pressed. A text mark (ON / OFF) has no motion: it shows and goes at once. A
+  toggle without marks does not change. Off with prefers-reduced-motion. setAnimated().
 - offButtonScale: the size of the knob when off (1: the same size as on).
-- backgroundStyle.selectedBorderColor: the line of the track when on ("": the same as borderColor).
+- focusRingColor: the ring of the keyboard focus ("": the ring of basic.js). The ring follows the round of the track.
+- backgroundStyle.selectedBorderColor: the line of the track when on ("": the same as borderColor). A page that gives
+  its own borderColor and no selectedBorderColor keeps that line when on too (the line of "ozden" when on is for
+  its own colors).
 - backgroundStyle.left, top, width, height: a track of another size than the box (Ex: "float").
 - buttonStyle.shadow / buttonStyle.selectedShadow: the shadow of the knob when off / on.
 
@@ -30,6 +42,7 @@ USAGE:
 const toggle = Toggle({ value: 1, onChange: (self) => println(self.value) });
 toggle.switch();
 toggle.setValue(0);                             // onChange is called
+toggle.setValue(1, 1);                          // silent: onChange is not called
 toggle.setBackgroundSelectedColor("tomato");
 Toggle({ styleName: "classic" });
 Toggle({ styleName: "classic", backgroundStyle: { selectedColor: "#6AC966" } }); // A green classic toggle
@@ -39,9 +52,11 @@ Toggle({ styleName: "label", onMark: "AÇIK", offMark: "KAPALI", width: 92 }); /
 Toggle({ styleName: "badge", animated: 0 });    // No motion
 
 Started Date: August 2025
-Developer: Bugra Ozden
-Email: bugra.ozden@gmail.com
 Webpage: https://bug7a.github.io/js-components/
+
+Copyright 2020-2026 Bugra Ozden <bugra.ozden@gmail.com> (https://bug7a.github.io/)
+Licensed under the Apache License, Version 2.0
+SPDX-License-Identifier: Apache-2.0
 
 */
 
@@ -60,6 +75,7 @@ const ToggleDefaults = {
     offMark: "", // Shows when off
     markPlace: "track", // "track": on the free side of the track, "knob": in the knob (Only at create time)
     animated: 1, // 1: small motions of a toggle with marks. (box.setAnimated(0/1))
+    focusRingColor: "", // the ring of the keyboard focus. "": the ring of basic.js
     markStyle: {
         size: 16, // px: a check or a cross
         lineWidth: 3.5, // of a check or a cross, on a 24 px grid
@@ -67,7 +83,7 @@ const ToggleDefaults = {
         color: Black(0.5), // off
         selectedColor: White(0.95), // on
     },
-    onChange: function(ui) {},
+    onChange: function(self) {}, // self.value changed (a click, a key, setValue()). Not at create time, not with setValue(value, 1)
     backgroundStyle: { // The track
         color: "whitesmoke", // off
         selectedColor: "#689BD2", // on
@@ -84,19 +100,33 @@ const ToggleDefaults = {
         shadow: "none", // off
         selectedShadow: "-1px 0px 4px rgba(0, 0, 0, 0.15)", // on
     },
-    styleName: "modern", // "modern", "classic", "float", "round", "slim", "outline", "square", "tick", "badge", "label" or a name added to Toggle.styles
+    styleName: "ozden", // "ozden", "ozdenDark", "light", "dark", "classic", "float", "round", "slim", "outline", "square", "tick", "badge", "label", "minimal", "minimalDark" or a name added to Toggle.styles
     style: {}, // WHY: the look is in the params above; the packages are packages of params (see Toggle.styles).
 };
 
 const Toggle = function(params = {}) {
+
+    // WHY copies: a page gives the same styles to many toggles ({ ...DARK_TOGGLE }); the merges below and
+    //      setBackgroundSelectedColor() wrote into them, so one toggle changed the others.
+    ["backgroundStyle", "buttonStyle", "markStyle"].forEach(function(name) {
+        if (params[name]) params[name] = Object.assign({}, params[name]);
+    });
+    // WHY: a page that gives its own line of the track (borderColor) keeps it when on too, as before: the line
+    //      of a package when on (ozden: selectedBorderColor) is for the colors of that package.
+    const ownStyle = params.backgroundStyle || {};
+    const keepsOwnLine = (ownStyle.borderColor !== undefined && ownStyle.selectedBorderColor === undefined);
 
     // Merge style package: your params > Toggle.styles[styleName] (a package of params) > ToggleDefaults
     basic.applyStylePackage(params, Toggle.styles, ToggleDefaults);
 
     // Merge params:
     mergeIntoIfMissing(params, ToggleDefaults);
+    if (keepsOwnLine) params.backgroundStyle.selectedBorderColor = ""; // ("": the line of borderColor)
 
     // Edit params, if needed:
+    // WHY: a switch keeps its size in a row: a narrow row made it narrower than its knob needs (the knob is placed
+    //      for its width). A page can give shrink: 1.
+    if (params.shrink === undefined) params.shrink = 0;
     params.color = "transparent";
     params.clickable = 1;
     params.clipContent = 0;
@@ -126,13 +156,15 @@ const Toggle = function(params = {}) {
     const HIDDEN_MARK_TURN = 90; // deg: a mark in the knob
     const HIDDEN_MARK_SHIFT = 6; // px: a mark on the track stays behind the knob that leaves
     const HOVER_ICON_SCALE = 1.1;
-    const HOVER_TEXT_SCALE = 1.05;
     const PRESSED_KNOB_SCALE_X = 1.1;
     const PRESSED_KNOB_SCALE_Y = 0.92;
 
     // *** PRIVATE FUNCTIONS:
 
     const hasMarks = () => !!(box.onMark || box.offMark);
+
+    // WHY only a drawn mark (check, cross) moves: a small motion of a text (ON / OFF) looked like a fault.
+    const isMovingMark = (mark) => !!Toggle.MARK_PATHS[mark];
 
     const isMotionOn = function() {
         if (box.animated != 1 || !hasMarks()) return false;
@@ -145,7 +177,7 @@ const Toggle = function(params = {}) {
         const isOn = (box.state === "selected");
         const moved = `translateX(${isOn ? distance : 0}px)`;
         if (isPressed && isMotionOn()) return `${moved} scale(${PRESSED_KNOB_SCALE_X}, ${PRESSED_KNOB_SCALE_Y})`;
-        // WHY the old order here: animated: 0 writes the same text as before.
+        // WHY this order: with animated: 0 the transform text stays as it always was.
         return `scale(${isOn ? 1 : box.offButtonScale}) ${moved}`;
     };
 
@@ -155,10 +187,14 @@ const Toggle = function(params = {}) {
         return `translateX(${-direction * HIDDEN_MARK_SHIFT}px) scale(${HIDDEN_MARK_SCALE})`;
     };
 
-    const getShownMarkTransform = function(mark) {
+    const getShownMarkTransform = function() {
         if (box.secondState !== "mouseover") return "none";
-        const isIcon = !!Toggle.MARK_PATHS[mark];
-        return `scale(${isIcon ? HOVER_ICON_SCALE : HOVER_TEXT_SCALE})`;
+        return `scale(${HOVER_ICON_SCALE})`;
+    };
+
+    const getMarkTransform = function(mark, isShown, isOnMark) {
+        if (!isMovingMark(mark)) return "none";
+        return isShown ? getShownMarkTransform() : getHiddenMarkTransform(isOnMark);
     };
 
     // The look of the state of the marks. (Nothing when animated is off.)
@@ -166,8 +202,8 @@ const Toggle = function(params = {}) {
         box.button.css.transform = getKnobTransform();
         if (!isMotionOn()) return;
         const isOn = (box.state === "selected");
-        box.onMarkBox.css.transform = isOn ? getShownMarkTransform(box.onMark) : getHiddenMarkTransform(true);
-        box.offMarkBox.css.transform = isOn ? getHiddenMarkTransform(false) : getShownMarkTransform(box.offMark);
+        box.onMarkBox.css.transform = getMarkTransform(box.onMark, isOn, true);
+        box.offMarkBox.css.transform = getMarkTransform(box.offMark, !isOn, false);
     };
 
     const setPressed = function(value) {
@@ -180,9 +216,10 @@ const Toggle = function(params = {}) {
         const isOn = isMotionOn();
         if (!isOn && !wasAnimated) return;
         const transformMotion = isMarkInKnob ? SPRING_TIME + " " + SPRING_EASE : MOTION_TIME + " " + MOTION_EASE;
-        [box.onMarkBox, box.offMarkBox].forEach(function(markBox) {
-            markBox.setMotion(isOn ? `opacity ${MOTION_TIME} ${MOTION_EASE}, transform ${transformMotion}` : "none");
-            if (!isOn) markBox.css.transform = "none";
+        [[box.onMarkBox, box.onMark], [box.offMarkBox, box.offMark]].forEach(function([markBox, mark]) {
+            const isMoving = isOn && isMovingMark(mark);
+            markBox.setMotion(isMoving ? `opacity ${MOTION_TIME} ${MOTION_EASE}, transform ${transformMotion}` : "none");
+            if (!isMoving) markBox.css.transform = "none";
         });
         wasAnimated = isOn;
         paintMotion();
@@ -236,12 +273,14 @@ const Toggle = function(params = {}) {
         box.setValue((box.value === 1) ? 0 : 1);
     };
     
-    box.setValue = function(value) {
+    // silent: 1 -> onChange is not called.
+    box.setValue = function(value, silent = 0) {
 
+        if (value === box.value) return; // the same value: nothing to draw, no onChange
         box.value = value;
 
         box.setState((value === 1) ? "selected" : "normal");
-        box.onChange(box);
+        if (!silent) box.onChange(box);
 
     };
 
@@ -361,7 +400,8 @@ const Toggle = function(params = {}) {
     // *** OBJECT VIEW:
     box.cursor = "pointer";
     box.role = "switch";
-    box.setFocusRing();
+    box.setFocusRing(box.focusRingColor || undefined);
+    box.round = box.backgroundStyle.round; // WHY: the ring of the focus follows the shape of the track
     if(box.invertColor === 1) box.css.filter = "invert(100%)";
 
         // BOX: background
@@ -383,6 +423,7 @@ const Toggle = function(params = {}) {
     box.on("pointerdown", () => setPressed(true));
     ["pointerup", "pointerleave", "pointercancel"].forEach((name) => box.on(name, () => setPressed(false)));
     box.on("click", function(self, event) {
+        if (box.secondState === "disabled") return; // WHY: as the keys: a click from code or assistive tools
         box.switch();
     });
     box.on("keydown", function(self, event) {
@@ -391,10 +432,14 @@ const Toggle = function(params = {}) {
         event.preventDefault(); // WHY: Space would scroll the page.
         box.switch();
     });
+    // WHY the disabled check: a toggle disabled under the mouse (in its own onChange, while saving) was enabled again
+    //     by the next mouseout (clickable 0 itself fires one; on a phone: the next tap anywhere)
     box.on("mouseover", function(self, event) {
+        if (box.secondState === "disabled") return;
         box.setSecondState("mouseover");
     });
     box.on("mouseout", function(self, event) {
+        if (box.secondState === "disabled") return;
         box.setSecondState("normal");
     });
     box.onResize(function(self) {
@@ -424,9 +469,63 @@ Toggle.MARK_PATHS = {
 Toggle.styles = {
 
     // The look of ToggleDefaults: a whitesmoke track that turns blue, a small gray knob that grows when on.
-    modern: { style: {} },
+    // A darker line around the colored track when on (the light look had no clear edge when on);
+    // a page with its own line (borderColor) keeps it.
+    // WHY the two shadows of the knob when on (the white knob did not stand out on its track):
+    // the first falls only to the left, its negative spread keeps it inside the track. The second is the thin line
+    // around the knob, in the strength of the line of the track. A real border would be gray over the white knob (no
+    // sharper edge), and it would need a color for each state.
+    ozden: {
+        style: {},
+        height: 36,
+        width: 65,
+        onMark: "ON", // Shows when on: "check", "cross" or a text ("ON"). "": nothing
+        offMark: "OFF", // Shows when off
+        backgroundStyle: { selectedBorderColor: Black(0.2) }, // over the color: a darker line of it
+        buttonStyle: {
+            selectedShadow: "-4px 0px 6px -1px rgba(0, 0, 0, 0.5), 0px 0px 0px 1px rgba(0, 0, 0, 0.2)",
+        },
+    },
 
-    // The look of the old UIToggle (comp-m1/ui-toggle.js, javascript-mobile-app-template, a 600 px design):
+    // For a dark page: a black track that turns green, a soft knob (the dark card of toggle.htm).
+    ozdenDark: {
+        style: {},
+        height: 36,
+        width: 65,
+        onMark: "ON", // Shows when on: "check", "cross" or a text ("ON"). "": nothing
+        offMark: "OFF", // Shows when off
+        backgroundStyle: { color: "black", selectedColor: "#2C5A38", borderColor: White(0.25) },
+        buttonStyle: { color: White(0.25), selectedColor: White(0.75) },
+    },
+
+    // The light look of the kit (_designs/toggle.htm): a flat gray pill that turns to the accent, a white knob of the
+    // same size on and off with a soft shadow.
+    light: {
+        style: {},
+        width: 52,
+        height: 30,
+        spacing: 3,
+        offButtonScale: 1,
+        focusRingColor: "rgba(61, 122, 107, 0.5)",
+        markStyle: { size: 12, lineWidth: 3, fontSize: 11, color: Black(0.45), selectedColor: "#FFFFFF" },
+        backgroundStyle: { color: "#D4D5D1", selectedColor: "#3D7A6B", border: 0, borderColor: "transparent", selectedBorderColor: "", round: 100 },
+        buttonStyle: { color: "#FFFFFF", selectedColor: "#FFFFFF", round: 100, shadow: "0 1px 2px rgba(0, 0, 0, 0.25)", selectedShadow: "0 1px 2px rgba(0, 0, 0, 0.25)" },
+    },
+
+    // The dark look of the kit: the same shapes on a dark page, a dark gray pill and a light knob.
+    dark: {
+        style: {},
+        width: 52,
+        height: 30,
+        spacing: 3,
+        offButtonScale: 1,
+        focusRingColor: "rgba(101, 162, 147, 0.55)",
+        markStyle: { size: 12, lineWidth: 3, fontSize: 11, color: White(0.7), selectedColor: "#0F1F1B" },
+        backgroundStyle: { color: "#3A3A38", selectedColor: "#65A293", border: 0, borderColor: "transparent", selectedBorderColor: "", round: 100 },
+        buttonStyle: { color: "#CFCFCD", selectedColor: "#FFFFFF", round: 100, shadow: "0 1px 2px rgba(0, 0, 0, 0.5)", selectedShadow: "0 1px 2px rgba(0, 0, 0, 0.5)" },
+    },
+
+    // For a 600 px design:
     // a light gray track that turns blue, a white knob of the same size on and off; its shadow falls to the
     // middle of the track.
     classic: {
@@ -634,3 +733,24 @@ Toggle.styles = {
     },
 
 };
+
+// The minimal theme (_designs/minimal-theme.htm): a 28 x 16 track of a line, no fill; the 10 px knob is at the left in
+// the line color when off, at the right in ink with an ink line around the track when on.
+Toggle.createMinimalStyle = function (colors) {
+    return {
+        style: {},
+        width: 28,
+        height: 16,
+        spacing: 3, // WHY: a 10 px knob (16 - 2 x 3)
+        offButtonScale: 1,
+        focusRingColor: colors.focus,
+        backgroundStyle: { color: "transparent", selectedColor: "transparent", border: 1, borderColor: colors.line, selectedBorderColor: colors.ink, round: 100 },
+        buttonStyle: { color: colors.knob, selectedColor: colors.ink, border: 0, round: 100, shadow: "none", selectedShadow: "none" },
+        markStyle: { color: colors.knob, selectedColor: colors.ink },
+    };
+};
+// WHY a strong line: the line of the track shows the toggle (3:1 at least, as WCAG asks of a control)
+Toggle.MINIMAL_COLORS = { line: Black(0.45), knob: Black(0.45), ink: "#1F1F1F", focus: "#3D8BD9" };
+Toggle.styles.minimal = Toggle.createMinimalStyle(Toggle.MINIMAL_COLORS);
+Toggle.MINIMAL_DARK_COLORS = { line: White(0.42), knob: White(0.42), ink: "#EDEDEB", focus: "#7FB6DE" };
+Toggle.styles.minimalDark = Toggle.createMinimalStyle(Toggle.MINIMAL_DARK_COLORS);

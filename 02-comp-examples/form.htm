@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+
+        <title>Form JS Component</title>
+
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <!-- LIBRARY FILES -->
+        <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+        <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
+        <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../basic/scroll-bar.min.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- Tooltip: the hint of the passive send button (optional) -->
+        <script src="../comp/tooltip.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/text-field.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/email-field.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/text-area-field.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/form.js" type="text/javascript" charset="utf-8"></script>
+
+        <script>
+
+        /*
+        Form: a page-wide form that checks its fields.
+        - addTitle(obj), addInput(input), addDoubleInput(input1, input2): the fields are TextField, EmailField, TextAreaField...
+        - The send button is passive until every required field is valid; "2 missing entries" shows which ones.
+        - onSendClick(self, json): json is [{ key, type, titleText, value }, ...]
+        - showMessage({ ... }): the message over the form after sending.
+        More complete forms (mail, Supabase, conditional questions): 04-templates/web-forms/
+        */
+
+        const ACCENT_COLOR = "#65A293";
+
+        let form;
+
+        const start = function () {
+
+            page.color = "white";
+
+            // FORM:
+            form = Form({
+                minWidth: 500,
+                maxWidth: 700,
+                buttonColor: ACCENT_COLOR,
+                buttonText: "SEND",
+                allowHtml: 1, // the message after sending is HTML (showMessage)
+                onSendClick: function (self, json) {
+                    console.log(json);
+                    showThanks();
+                },
+            });
+
+            // LABEL: Title
+            Label({ text: "Contact Us", fontSize: 26, bold: 1 });
+            form.addTitle(that);
+
+            // LABEL: Description
+            Label({ text: "We usually answer in one day.", fontSize: 16, textColor: "#999999" });
+            form.addTitle(that);
+
+            // INPUT: Name, Email (side by side; under each other on a narrow page)
+            const nameInput = TextField({
+                key: "name",
+                styleName: "ozden",
+                titleText: "YOUR NAME",
+                placeholder: "Jack Brown",
+                required: 1,
+                maxLength: 50,
+            });
+            const emailInput = EmailField({
+                key: "email",
+                styleName: "ozden",
+                titleText: "YOUR EMAIL",
+                placeholder: "example@site.com",
+                required: 1,
+                maxLength: 50,
+            });
+            form.addDoubleInput(nameInput, emailInput);
+
+            // INPUT: Subject (optional)
+            const subjectInput = TextField({
+                key: "subject",
+                styleName: "ozden",
+                titleText: "SUBJECT",
+                placeholder: "Optional",
+                required: 0,
+                maxLength: 80,
+            });
+            form.addInput(subjectInput);
+
+            // TEXTAREA: Message
+            const messageInput = TextAreaField({
+                key: "message",
+                styleName: "ozden",
+                titleText: "MESSAGE",
+                placeholder: "How can we help you?",
+                minCharCount: 20,
+                warningText: "Please write at least 20 letters",
+            });
+            form.addInput(messageInput);
+
+        };
+
+        const showThanks = function () {
+            form.showMessage({
+                iconColor: "#3C8553", // the circle behind the check mark of Form (iconFile: your own picture)
+                messageText: "<b>Thank you!</b><br>Your message was sent.",
+                buttonText: "OKAY",
+                backgroundColor: "rgba(255, 255, 255, 0.92)",
+                onClose: function () {},
+            });
+        };
+
+        </script>
+
+    </head>
+    <body>
+    </body>
+</html>

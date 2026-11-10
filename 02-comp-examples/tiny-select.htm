@@ -1,85 +1,117 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        
-        <title>Tiny Select</title>
-        
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0"><!-- , user-scalable=no -->
 
-        <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
-        <link rel="preload" href="../basic/font/open-sans/OpenSans-Bold.ttf" as="font" crossorigin="anonymous">
-        <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
-        <script src="../basic/basic.js" type="text/javascript" charset="utf-8"></script>
+<head>
+    <title>TinySelect</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-        <script src="../comp/tiny-select.js" type="text/javascript" charset="utf-8"></script>
+    <!-- LIBRARY FILES -->
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Bold.ttf" as="font" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="../basic/basic.css">
+    <script src="../basic/basic.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../basic/scroll-bar.js" type="text/javascript" charset="utf-8"></script>
 
-        <script type="text/javascript">
+    <!-- COMPONENT FILES -->
+    <script src="../comp/tiny-select.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/scroll-area.js" type="text/javascript" charset="utf-8"></script>
 
-        let tinySelectA;
-        let tinySelectB;
-        
-        window.onload = function() {
+    <script>
 
-            // TINY SELECT: Minimal select text
-            tinySelectA = TinySelect({
-                left: 40,
-                top: 40,
-                title: "Theme",
-                list: [
-                    { id: "1", label: "(none)" },
-                    { id: "2", label: "Star Wars" },
-                    { id: "3", label: "Supernova" },
-                    { id: "4", label: "Metro" },
-                    { id: "5", label: "1990s" },
-                ],
-                selectedIndex: 2,
-            });
-            that.onSelect = function(index, id, label, title) {
-                console.log(`${title}: ${label} (${id})`);
-            };
+        /* Bismillah */
 
-            // TINY SELECT:
-            tinySelectB = TinySelect({
-                title: "Language",
-                label: "",
-                list: [
-                    { id: "1", label: "English" },
-                    { id: "2", label: "Spanish" },
-                    { id: "3", label: "French" },
-                    { id: "4", label: "Turkish" },
-                ],
-                selectedIndex: 3,
-            });
-            that.onSelect = function(index, id, label, title) {
-                console.log(`${title}: ${label} (${id})`);
-            };
+        // TinySelect (comp/tiny-select.js): a small choice in a line of text, a title and a list; the chosen one is
+        // written under them (onChange). Other functions: setList(list, selectedIndex), setSelectedIndex(),
+        // setTitleText(), setEnabled(), setColor().
 
-            // Put second object bottom of the previous object.
-            that.aline(prevThat, "bottom", 4, "left");
+        // *** THE COLORS AND SIZES OF THE PAGE
+        const PAGE_COLOR = "#F4F5F2";
+        const CARD_WIDTH = 420;
 
-            // OTHER Methods
-            /*
-            tinySelectA.setList([
-                    { id: "1", label: "English" },
-                    { id: "2", label: "Spanish" },
-                    { id: "3", label: "French" },
-                    { id: "4", label: "Turkish" },
-                ], 1);
-            tinySelectA.setSelectedIndex(2);
-            tinySelectA.setTitle("Diffrent");
-            tinySelectA.setDisabled(1);
-            tinySelectA.setColor("whitesmoke");
-            */
+        let lblChosen;
+
+        const start = function () {
+
+            page.color = PAGE_COLOR;
+
+            // SCROLL AREA: The page (comp/scroll-area.js)
+            ScrollArea({ align: "center top", gap: 20, padding: [16, 40] });
+
+                Label({ text: "TinySelect", fontSize: 24, bold: 1, textColor: Black(0.8) });
+
+                // CARD: Two choices and what to try
+                startCard("Click a choice: its list opens under it. The chosen one is written under them.");
+
+                    // TINY SELECT: Theme
+                    TinySelect({
+                        titleText: "Theme",
+                        list: [
+                            { value: "1", label: "(none)" },
+                            { value: "2", label: "Star Wars" },
+                            { value: "3", label: "Supernova" },
+                            { value: "4", label: "Metro" },
+                            { value: "5", label: "1990s" },
+                        ],
+                        selectedIndex: 2,
+                        onChange: showSelected,
+                    });
+
+                    // TINY SELECT: Language
+                    TinySelect({
+                        titleText: "Language",
+                        list: [
+                            { value: "1", label: "English" },
+                            { value: "2", label: "Spanish" },
+                            { value: "3", label: "French" },
+                            { value: "4", label: "Turkish" },
+                        ],
+                        selectedIndex: 3,
+                        onChange: showSelected,
+                    });
+
+                    // LABEL: The chosen one (onChange)
+                    lblChosen = Label({ text: "Chosen: -", fontSize: 13, textColor: Black(0.5) });
+
+                endCard();
+
+            endGroup();
 
         };
 
-        </script>
+        // *** OTHER FUNCTIONS:
 
-    </head>
-    <body>
-        
-        <!-- HTML content -->
-        
-    </body>
+        const showSelected = function (self) {
+            const item = self.getSelectedItem();
+            lblChosen.plainText = "Chosen: " + self.titleText + ": " + item.label + " (" + item.value + ")";
+        };
+
+        // GROUP: A white card with a line that says what to try
+        const startCard = function (text) {
+            VGroup({
+                width: CARD_WIDTH,
+                height: "auto",
+                align: "left top",
+                gap: 14,
+                padding: 24,
+                color: "white",
+                round: 10,
+                border: 1,
+                borderColor: Black(0.08),
+                css: { maxWidth: "100%" }, // WHY maxWidth: on a phone the card is as wide as the screen
+            });
+            Label({ text: text, fontSize: 13, textColor: Black(0.55) });
+        };
+
+        const endCard = function () {
+            endGroup();
+        };
+
+    </script>
+
+</head>
+
+<body>
+</body>
+
 </html>

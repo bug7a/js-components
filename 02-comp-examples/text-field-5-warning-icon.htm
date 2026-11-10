@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+
+        <title>TextField JS Component</title>
+
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"><!-- , user-scalable=no -->
+
+        <!-- LIBRARY FILES -->
+        <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+        <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
+        <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
+
+        <script src="../comp/tooltip.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/text-field.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/email-field.js" type="text/javascript" charset="utf-8"></script>
+
+        <script>
+
+        // The warning of a field: a colored ball (the default), the built-in icons, your own icons (warningBallType: "icon").
+
+        const start = function () {
+
+            page.color = "white";
+
+            // GROUP: The fields, one under the other, in the middle
+            VGroup({
+                gap: 20,
+            });
+
+                // INPUT: #1 Colored ball (default)
+                TextField({
+                    styleName: "modern",
+                    key: "1",
+                    required: 1,
+                    titleText: "COLOR BALL (DEFAULT)",
+                    placeholder: "Jack",
+                });
+
+                // INPUT: #2 Built-in icons
+                EmailField({
+                    styleName: "modern",
+                    key: "2",
+                    required: 1,
+                    titleText: "BUILT-IN ICON",
+                    placeholder: "example@site.com",
+                    warningText: "Invalid email format",
+                    warningBallType: "icon",
+                });
+
+                // INPUT: #3 Custom icons (image path or data URI)
+                EmailField({
+                    styleName: "modern",
+                    key: "3",
+                    required: 1,
+                    titleText: "CUSTOM ICON",
+                    placeholder: "example@site.com",
+                    warningText: "Invalid email format",
+                    warningBallType: "icon",
+                    warningIconSize: 22,
+                    requiredIconColor: "#588ABE",
+                    // requiredIconFile: "icons/required.svg",
+                    // warningIconFile: "icons/warning.svg",
+                });
+
+            endGroup();
+
+        };
+
+        </script>
+
+    </head>
+    <body>
+
+        <!-- HTML content -->
+
+    </body>
+</html>

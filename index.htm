@@ -3,14 +3,14 @@
 
 <head>
 
-    <title>JS Components – UI components for basic.js</title>
+    <title>OzdenUI – UI components for basic.js</title>
 
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Plain JavaScript UI components built with basic.js. Every component with a live example and its code.">
     <meta name="keywords" content="JavaScript components, UI components, vanilla JS UI, basic.js, component library, live examples, open source UI kit">
-    <meta name="author" content="Bugra Ozden">
-    <meta name="theme-color" content="#F4F4F1">
+    <meta name="author" content="Buğra Özden">
+    <meta name="theme-color" content="#F3F7F7">
 
     <meta name="robots" content="index, follow, max-image-preview:large">
 
@@ -27,8 +27,8 @@
 
     <!-- SOCIAL (link preview) -->
     <meta property="og:type" content="website">
-    <meta property="og:site_name" content="JS Components">
-    <meta property="og:title" content="JS Components – UI components for basic.js">
+    <meta property="og:site_name" content="OzdenUI">
+    <meta property="og:title" content="OzdenUI – UI components for basic.js">
     <meta property="og:description" content="Plain JavaScript UI components built with basic.js. Every component with a live example and its code.">
     <meta property="og:locale" content="en_US">
     <meta property="og:locale:alternate" content="tr_TR">
@@ -36,7 +36,7 @@
     <meta property="og:image" content="https://bug7a.github.io/js-components/index/og-image.jpg">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
-    <meta property="og:image:alt" content="JS Components – UI components for basic.js">
+    <meta property="og:image:alt" content="OzdenUI – UI components for basic.js">
     <meta name="twitter:card" content="summary_large_image">
 
     <!-- STRUCTURED DATA (schema.org) -->
@@ -44,7 +44,7 @@
     {
         "@context": "https://schema.org",
         "@type": "SoftwareSourceCode",
-        "name": "JS Components",
+        "name": "OzdenUI",
         "url": "https://bug7a.github.io/js-components/",
         "description": "Plain JavaScript UI components built with basic.js. Every component with a live example and its code.",
         "codeRepository": "https://github.com/bug7a/js-components",
@@ -56,7 +56,7 @@
             "en",
             "tr"
         ],
-        "keywords": "JavaScript UI components, vanilla JS, basic.js, component library, Tabs, Breadcrumbs, PageControl, SearchResults, ContextMenu, SelectBox, SelectDate, SelectTime, SelectColor, SelectFile, TagInput, Stepper, SortableList, RichTextEditor, LabelEditor",
+        "keywords": "JavaScript UI components, vanilla JS, basic.js, component library, Tabs, Breadcrumbs, PageControl, SearchResults, ContextMenu, SelectBox, DatePicker, TimePicker, ColorPicker, FilePicker, TagInput, Stepper, SortableList, RichTextEditor, LabelEditor",
         "author": {
             "@type": "Person",
             "name": "Buğra Özden",
@@ -135,50 +135,55 @@
         <div class="noscript-box">
             <div style="max-width: 760px; margin: 0 auto; text-align: left;">
                 <p><a href="?lang=tr" hreflang="tr" lang="tr" style="color: inherit;">Türkçe</a></p>
-                <h1>JS Components</h1>
+                <h1>OzdenUI</h1>
                 <p>Plain JavaScript UI components built with basic.js. Every component with a live example and its code.</p>
                 <h2>Forms &amp; Inputs</h2>
                 <ul>
-                    <li><a href="#/select-file" style="color: inherit;">SelectFile</a>: Drop zone and file dialog that lists the chosen files with image previews and sizes.</li>
+                    <li><a href="#/file-picker" style="color: inherit;">FilePicker</a>: Drop zone and file dialog that lists the chosen files with image previews and sizes.</li>
                     <li><a href="#/tag-input" style="color: inherit;">TagInput</a>: A field of chips for tags, keywords or e-mails, with suggestions, validation and paste splitting.</li>
                     <li><a href="#/stepper" style="color: inherit;">Stepper</a>: Number stepper with decimals, a unit, typed editing and hold-to-repeat buttons. A line around the buttons and a round look (ozden).</li>
-                    <li><a href="#/slider-field" style="color: inherit;">SliderField</a>: A slider in the shape of a field: the label at the left, the value at the right, step dots, drag, click to jump and typed editing.</li>
+                    <li><a href="#/slider-field" style="color: inherit;">SliderField</a>: A slider in the shape of a field: the label at the left, the value at the right, step dots, drag, click to jump and typed editing. The ozden look: a cyan fill with a white knob that never cuts a text.</li>
                     <li><a href="#/label-editor" style="color: inherit;">LabelEditor</a>: An object based editor: add labels, change their properties in a side panel, save the styles with a name and apply them to other labels.</li>
                     <li><a href="#/property-panel" style="color: inherit;">PropertyPanel</a>: A design tool style property inspector at the right side, built from a JSON: numbers, selects, segmented buttons, toggles and constraints, with change events.</li>
                     <li><a href="#/rich-text-editor" style="color: inherit;">RichTextEditor</a>: A simple rich text editor with a toolbar (bold, headings, lists, quote, link, undo), cleaned HTML output and a character limit.</li>
+                    <li><a href="#/code-editor" style="color: inherit;">CodeEditor</a>: A text editor for code: line numbers, colors for Python, JavaScript, JSON, HTML, CSS, SQL and Bash, indent keys, and a file of 100000 lines stays fast. Light and dark themes.</li>
                     <li><a href="#/sortable-list" style="color: inherit;">SortableList</a>: A list whose order is changed by drag and drop, the keyboard or up / down buttons, with locked rows.</li>
-                    <li><a href="#/input-b" style="color: inherit;">InputB</a>: Labeled text field with an icon, a unit, hints and validation; the base of the other *InputB fields.</li>
-                    <li><a href="#/email-input-b" style="color: inherit;">EmailInputB</a>: An InputB that checks e-mail addresses.</li>
-                    <li><a href="#/password-input-b" style="color: inherit;">PasswordInputB</a>: Password field with a show and hide button.</li>
-                    <li><a href="#/number-input-b" style="color: inherit;">NumberInputB</a>: An InputB that accepts only numbers.</li>
-                    <li><a href="#/phone-input-b" style="color: inherit;">PhoneInputB</a>: Phone number field with a country code; one example opens a country list.</li>
-                    <li><a href="#/currency-input-b" style="color: inherit;">CurrencyInputB</a>: Money field that formats the amount and shows its currency.</li>
-                    <li><a href="#/url-input-b" style="color: inherit;">URLInputB</a>: Web address field with a protocol selector.</li>
-                    <li><a href="#/textarea-b" style="color: inherit;">TextareaB</a>: Multi-line text field in the InputB style, with a character counter.</li>
+                    <li><a href="#/text-field" style="color: inherit;">TextField</a>: Labeled text field with an icon, a unit, hints and validation; the base of EmailField, PasswordField and the other fields.</li>
+                    <li><a href="#/email-field" style="color: inherit;">EmailField</a>: A TextField that checks e-mail addresses.</li>
+                    <li><a href="#/password-field" style="color: inherit;">PasswordField</a>: Password field with a show and hide button.</li>
+                    <li><a href="#/number-field" style="color: inherit;">NumberField</a>: A TextField that accepts only numbers.</li>
+                    <li><a href="#/phone-field" style="color: inherit;">PhoneField</a>: Phone number field with a country code; one example opens a country list.</li>
+                    <li><a href="#/currency-field" style="color: inherit;">CurrencyField</a>: Money field that formats the amount and shows its currency.</li>
+                    <li><a href="#/url-field" style="color: inherit;">UrlField</a>: Web address field with a protocol selector.</li>
+                    <li><a href="#/text-area-field" style="color: inherit;">TextAreaField</a>: Multi-line text field in the TextField style, with a character counter.</li>
                     <li><a href="#/search-input" style="color: inherit;">SearchInput</a>: Search field with a search icon and a clear button.</li>
-                    <li><a href="#/slider" style="color: inherit;">Slider</a>: Slider for choosing a value in a range, inspired by Material 3.</li>
+                    <li><a href="#/slider" style="color: inherit;">Slider</a>: Slider for choosing a value in a range, on a step. Looks: round (a thin track and a round white knob: the look of new pages), roundDark for a dark page, and classic (inspired by Material 3).</li>
+                    <li><a href="#/step-bar" style="color: inherit;">StepBar</a>: The steps of a job in a row: a cart, an address, a payment. A step that is behind has a check mark and can be clicked to go back, the step of now is filled. For a history of what happened: TimeLine. Light, dark and minimal looks.</li>
+                    <li><a href="#/range-slider" style="color: inherit;">RangeSlider</a>: A range of values on a thin bar: two knobs and the part between them: a price, the hours of a day. A step, the smallest distance, its own text in the bubble, the keyboard. Light and dark looks.</li>
                     <li><a href="#/numeric-keyboard" style="color: inherit;">NumericKeyboard</a>: Number keys on the screen for a PIN, an amount or a kiosk: two layouts, a hidden PIN, the keyboard of the computer too. The new version of UINumericKeyboard.</li>
                 </ul>
                 <h2>Selection</h2>
                 <ul>
-                    <li><a href="#/item-list" style="color: inherit;">ItemList</a>: A list of items with an icon, a title and a description (or your own rows): vertical, horizontal or grid, single or multiple selection, section titles, search and keyboard; a pressed flash and animated add / remove.</li>
+                    <li><a href="#/item-list" style="color: inherit;">ItemList</a>: A list of items with an icon, a title and a description (or your own rows): vertical, horizontal or grid, single or multiple selection, section titles, search and keyboard; a picture gallery; a pressed flash and animated add / remove.</li>
                     <li><a href="#/filters" style="color: inherit;">Filters</a>: A filter menu: a button and a panel with a search field, groups of check boxes, the number of the selected options and Clear all. In the page or as a popup.</li>
                     <li><a href="#/select-box" style="color: inherit;">SelectBox</a>: Dropdown select for single or multiple selection, with select all and clear.</li>
                     <li><a href="#/full-screen-select" style="color: inherit;">FullScreenSelect</a>: A select field whose list opens on the whole screen, with a search box: for phones and long lists. The new version of UISelectText.</li>
-                    <li><a href="#/select-date" style="color: inherit;">SelectDate</a>: Date picker as a popup or an always visible calendar, with a month and year view.</li>
-                    <li><a href="#/select-time" style="color: inherit;">SelectTime</a>: Time picker with scrollable hour and minute columns, as a popup or inline.</li>
-                    <li><a href="#/select-color" style="color: inherit;">SelectColor</a>: Color picker: a field that opens a palette, or an always visible palette.</li>
+                    <li><a href="#/date-picker" style="color: inherit;">DatePicker</a>: Date picker as a popup or an always visible calendar, with a month and year view.</li>
+                    <li><a href="#/time-picker" style="color: inherit;">TimePicker</a>: Time picker with scrollable hour and minute columns, as a popup or inline.</li>
+                    <li><a href="#/color-picker" style="color: inherit;">ColorPicker</a>: Color picker: a field that opens a palette, or an always visible palette.</li>
                     <li><a href="#/period-bar" style="color: inherit;">PeriodBar</a>: A month switcher: this month and the months before it in a white capsule, with round buttons and sliding months. For a mobile app with a 600 px design (page.fit(600, 800)): on a normal page its sizes are too big.</li>
-                    <li><a href="#/check-box" style="color: inherit;">CheckBox</a>: Check box with a label, drawn with code; classic, modern and dark style packages.</li>
+                    <li><a href="#/check-box" style="color: inherit;">CheckBox</a>: Check box with a label, drawn with code; classic, modern, dark, minimal and minimalDark style packages.</li>
                     <li><a href="#/radio-button" style="color: inherit;">RadioButton</a>: Radio buttons that work in groups, with keyboard support and style packages.</li>
-                    <li><a href="#/toggle" style="color: inherit;">Toggle</a>: On and off switch for light and dark pages. Many looks: modern, classic, the shapes float, round, slim, outline and square, and tick, badge and label with a check, a cross or a text.</li>
+                    <li><a href="#/toggle" style="color: inherit;">Toggle</a>: On and off switch for light and dark pages. Many looks: ozden (the default), light and dark (the look of the kit), classic, the shapes float, round, slim, outline and square, and tick, badge and label with a check, a cross or a text.</li>
                     <li><a href="#/tiny-select" style="color: inherit;">TinySelect</a>: Small inline select that fits into a sentence: Theme: Supernova.</li>
                 </ul>
                 <h2>Buttons &amp; Menus</h2>
                 <ul>
                     <li><a href="#/action-button" style="color: inherit;">ActionButton</a>: Round floating action button in the corner of the screen; it opens a menu of actions. The new version of UIActionButton.</li>
-                    <li><a href="#/context-menu" style="color: inherit;">ContextMenu</a>: A simple menu that opens at the mouse point, with text or icon items.</li>
-                    <li><a href="#/smart-button" style="color: inherit;">SmartButton</a>: The default button: an icon and a text (or one of them), ozden style packages, a waiting clock or dots while a job runs, and a two-click ask with a bubble.</li>
+                    <li><a href="#/context-menu" style="color: inherit;">ContextMenu</a>: A simple menu that opens at the mouse point, with text or icon items (SVG icons take the text color) and submenus.</li>
+                    <li><a href="#/menu-bar" style="color: inherit;">MenuBar</a>: The row of menus at the top of a window: File, Edit, View. Shortcuts, check marks, submenus and the arrow keys. Light and dark themes.</li>
+                    <li><a href="#/tool-bar" style="color: inherit;">ToolBar</a>: The row of small buttons of a window, under its menus: icons with a hint, lines between the groups, buttons that stay pressed, a button that opens a menu. What does not fit goes into a "..." menu. Shortcuts and the arrow keys. Light and dark themes.</li>
+                    <li><a href="#/smart-button" style="color: inherit;">SmartButton</a>: The default button: an icon and a text (or one of them; an empty text makes an icon button). The look in three steps: styleName (the template: ozden ... ozden4, pill, outlined, ozdenDark-4Dark, minimal, minimalDark), tone (white, cyan, orange, yellow, green, blue, and blueDark... for a dark page) and style (your own colors: the color and the color under the mouse; pressed, it gets darker by itself). A waiting clock or dots while a job runs, and a two-click ask with a bubble.</li>
                     <li><a href="#/hold-to-confirm-button" style="color: inherit;">HoldToConfirmButton</a>: A button that runs only after it is pressed and held; for risky actions like delete.</li>
                 </ul>
                 <h2>Navigation</h2>
@@ -192,43 +197,57 @@
                     <li><a href="#/bottom-bar" style="color: inherit;">BottomBar</a>: Mobile app bottom bar built from a JSON list of buttons, with badges; the name of the selected item next to it, over it for a moment or hidden, a color per item, keyboard ready.</li>
                     <li><a href="#/app-bar" style="color: inherit;">AppBar</a>: The top bar of a tab page of a mobile app: a title in the middle or at the left, a back and a menu button. For a mobile app with a 600 px design (page.fit(600, 800)): on a normal page its sizes are too big.</li>
                     <li><a href="#/page-header" style="color: inherit;">PageHeader</a>: The header of a page that slides in over the tabs of a mobile app: a small back link over a big title. For a mobile app with a 600 px design (page.fit(600, 800)): on a normal page its sizes are too big.</li>
-                    <li><a href="#/left-menu" style="color: inherit;">LeftMenu</a>: Icon side menu that opens on hover, or with a tap on touch screens.</li>
+                    <li><a href="#/left-menu" style="color: inherit;">LeftMenu</a>: Icon side menu that opens on hover, or with a tap on touch screens. Style packages: dark (default) and light (for a light page).</li>
                 </ul>
                 <h2>Data &amp; Charts</h2>
                 <ul>
-                    <li><a href="#/chart-box" style="color: inherit;">ChartBox</a>: Chart.js charts used like a basic.js object.</li>
+                    <li><a href="#/graph-box" style="color: inherit;">GraphBox</a>: Charts with no library: one file draws them as SVG. Line, area, bar, pie, doughnut, radar, scatter and bubble, with a tooltip, a legend, a table and its themes (light, dark, minimal).</li>
+                    <li><a href="#/canvas" style="color: inherit;">Canvas</a>: A place to draw on: lines, rectangles, circles, polygons, texts and pictures, each with a key; a click finds the shape, a shape can be dragged, free drawing with a pen, the drawing as a picture. Light and dark looks.</li>
                     <li><a href="#/gauge" style="color: inherit;">Gauge</a>: A value drawn on an arc: a full ring or a half arc.</li>
                     <li><a href="#/mini-graph-box" style="color: inherit;">MiniGraphBox</a>: Small KPI box with a title, a value, an icon and a live bar graph.</li>
                     <li><a href="#/spark-line-box" style="color: inherit;">SparkLineBox</a>: KPI box with a line graph, a trend badge, min/max dots and a hover tooltip.</li>
-                    <li><a href="#/time-line" style="color: inherit;">TimeLine</a>: A vertical time line: a dot for every item and a line between the dots.</li>
-                    <li><a href="#/data-table" style="color: inherit;">DataTable</a>: A table for short and middle lists: sorting, search, keyboard selection, your own cells and row updates by id. For very many rows: SmartTable.</li>
-                    <li><a href="#/smart-table" style="color: inherit;">SmartTable</a>: Virtual-scroll table for millions of rows, with filtering, sorting, custom cells and editing.</li>
+                    <li><a href="#/time-line" style="color: inherit;">TimeLine</a>: A vertical time line of what happened, and when: a dot for every item and a line between the dots; it grows with new items. For the steps of a job and the step of now: StepBar. Light, dark and minimal looks.</li>
+                    <li><a href="#/json-view" style="color: inherit;">JsonView</a>: A value of JSON as a tree: the answer of a server, a settings file. Keys and values in colors, the path of a row, right click to copy. A list of a million items opens at once. A text that is not JSON shows its error. Light and dark themes.</li>
+                    <li><a href="#/json-editor" style="color: inherit;">JsonEditor</a>: A list or an object of JSON written in a table: add, sort and drag rows; a switch, a color, a picture or a choice in a cell; a list in a cell opens as a table of its own. Paste from a spreadsheet, a JSON view, its own undo. In the page, or in a window with Apply. Light, dark and minimal themes.</li>
+                    <li><a href="#/markdown-view" style="color: inherit;">MarkdownView</a>: A text written in Markdown, drawn on the page: a report, the answer of an AI. Headings, lists, tables, pictures, code with colors and a button that copies it. A text is never read as HTML. A text that comes piece by piece. Light and dark themes.</li>
+                    <li><a href="#/chat-view" style="color: inherit;">ChatView</a>: A conversation with an AI: the messages of the user in bubbles, the answers drawn as Markdown, an answer that comes piece by piece and three dots while it is waited for, a field that grows, with Send and Stop. Light, dark and minimal themes.</li>
+                    <li><a href="#/log-view" style="color: inherit;">LogView</a>: The output of a program: colored lines with their time and level, following the last line. Fast output is drawn in batches. Light and dark themes.</li>
+                    <li><a href="#/data-table" style="color: inherit;">DataTable</a>: A table for lists up to about 2,000 rows: sorting, search, keyboard selection, your own cells and row updates by id. For more rows: SmartTable.</li>
+                    <li><a href="#/smart-table" style="color: inherit;">SmartTable</a>: Virtual-scroll table for millions of rows, with filtering, sorting, custom cells and editing. Style packages: light (default; its old name classic) and dark, the looks of DataTable, and green (the old look). A cut text shows all of it in a bubble.</li>
                     <li><a href="#/scrolling-text" style="color: inherit;">ScrollingText</a>: A one line text that slides to show its end when it does not fit: always, or only under the mouse.</li>
-                    <li><a href="#/tiny-table-m4" style="color: inherit;">TinyTable</a>: A light table for short lists: a colored title row, one line rows, a soft color under the mouse; scrolling rows. The new version of TinyTable (M1).</li>
+                    <li><a href="#/tiny-table-m4" style="color: inherit;">TinyTable</a>: A light table for short lists: a colored title row, one line rows (a long text slides under the mouse), a soft color under the mouse; scrolling rows. The new version of TinyTable (M1).</li>
                 </ul>
                 <h2>Overlays &amp; Feedback</h2>
                 <ul>
-                    <li><a href="#/progress-bar" style="color: inherit;">ProgressBar</a>: Horizontal progress bar with a title and a value text; determinate or indeterminate.</li>
+                    <li><a href="#/progress-bar" style="color: inherit;">ProgressBar</a>: Horizontal progress bar with a title and a value text; determinate or indeterminate. Two parts (70 + 5) in their own colors, moving stripes, limit lines and a dark track.</li>
                     <li><a href="#/toast" style="color: inherit;">Toast</a>: Short messages that come and go: success, error, loading, and actions like Undo.</li>
+                    <li><a href="#/status-bar" style="color: inherit;">StatusBar</a>: The thin bar at the bottom of a window: a short message that can go away by itself, a turning circle for a job, small parts that can be clicked. Light and dark themes.</li>
                     <li><a href="#/dialog" style="color: inherit;">Dialog</a>: A dialog over the page with fields and buttons: a button that asks again, a waiting button, keyboard; Dialog.confirm, alert and prompt. In development.</li>
                     <li><a href="#/notice" style="color: inherit;">Notice</a>: A short message in the middle of the screen over a soft cover: five types, an icon, a second line; it goes by itself. The new version of notice (M1).</li>
                     <li><a href="#/side-panel" style="color: inherit;">SidePanel</a>: A drawer that slides in from a side of the screen, or of a box like an app column, over the page.</li>
                     <li><a href="#/loading-screen" style="color: inherit;">LoadingScreen</a>: Full cover splash and loading screen with an icon, a title, a spinner and progress.</li>
-                    <li><a href="#/line-progress-bar" style="color: inherit;">LineProgressBar</a>: A progress bar drawn with thin vertical lines.</li>
+                    <li><a href="#/line-progress-bar" style="color: inherit;">LineProgressBar</a>: A progress bar drawn with vertical lines: thin, or thick with round ends; the value in a bubble with an arrow.</li>
                     <li><a href="#/tooltip" style="color: inherit;">Tooltip</a>: A hint bubble over an object: it follows the mouse or stays at the object, with an optional bordered arrow, always inside the screen; your own content in it, or a popover that stays and can be clicked.</li>
-                    <li><a href="#/badge" style="color: inherit;">BadgeV2</a>: Notification badge on an object: a dot, a number or custom content.</li>
+                    <li><a href="#/badge" style="color: inherit;">Badge</a>: Notification badge on an object: a dot or a number; 0 and 1 can be shown as numbers, and the dot and the number can have their own look; style packages ozden (the default), light and dark.</li>
                 </ul>
                 <h2>Pages &amp; Views</h2>
                 <ul>
+                    <li><a href="#/accordion" style="color: inherit;">Accordion</a>: Sections that fold: a title row and the objects under it, one or more open, with a note, an icon and the keyboard. A closed section keeps its objects. Light and dark themes.</li>
+                    <li><a href="#/grid-group" style="color: inherit;">GridGroup</a>: A group whose objects stand in columns and rows: a form of titles and fields, the keys of a calculator, tiles. Equal columns, px, parts of the room, an object over more than one cell.</li>
+                    <li><a href="#/scroll-area" style="color: inherit;">ScrollArea</a>: A box whose content scrolls, in one call: the page of a window, or a list between two bars (in a group it takes the room the other objects leave). The scroll bar of the kit; light, dark and minimal.</li>
+                    <li><a href="#/splitter" style="color: inherit;">Splitter</a>: Two areas with a line between them: a drag changes their sizes, side by side or one under the other. Keyboard, limits, sizes that follow the window. Light and dark themes.</li>
+                    <li><a href="#/image-view" style="color: inherit;">ImageView</a>: A place to look at a picture or a plot: zoom with the wheel or two fingers, move with a drag, a small toolbar. A plot that is drawn again does not blink. Light and dark themes.</li>
                     <li><a href="#/web-view" style="color: inherit;">WebView</a>: An iframe box with a loading spinner, errors, messages, scaled previews and a toolbar. The previews on this site use it.</li>
                     <li><a href="#/login-page" style="color: inherit;">LoginPage</a>: A ready login and sign up page with e-mail, password and social buttons.</li>
                     <li><a href="#/settings-row" style="color: inherit;">SettingsRow</a>: A row of a settings page: a title, a small text that fades in and out, and a control (a switch, a stepper) or an arrow at the right; bands between the groups. For a mobile app with a 600 px design (page.fit(600, 800)): on a normal page its sizes are too big.</li>
+                    <li><a href="#/form" style="color: inherit;">Form</a>: A page-wide form that checks its fields: the send button waits until every required field is valid; a message over the form after sending.</li>
                 </ul>
                 <h2>Effects &amp; Styles</h2>
                 <ul>
                     <li><a href="#/ui-effects" style="color: inherit;">UIEffects</a>: Press, hover and attention effects for any basic.js object: ripple, lift, tilt, spotlight and more.</li>
                     <li><a href="#/ui-standards" style="color: inherit;">UI Standards</a>: Design tokens and themes: colors, font sizes, corner radius and a light, dark or automatic theme.</li>
                     <li><a href="#/tap-effect" style="color: inherit;">TapEffect</a>: A soft circle where the screen is tapped, over everything; it never catches the tap. TapEffect.start() / stop(), also on a page fitted with page.fit().</li>
+                    <li><a href="#/minimal-accent" style="color: inherit;">MinimalAccent</a>: The minimal theme in a color of the page: MinimalAccent.addPackages("minimalBlue", "#2A78D6") gives every minimal component a light and a dark package in that color (an on toggle, a checked box, the selected tab, the main button). The lines and the texts stay as they are.</li>
                 </ul>
                 <p><a href="https://github.com/bug7a/js-components" style="color: inherit;">github.com/bug7a/js-components</a></p>
             </div>
