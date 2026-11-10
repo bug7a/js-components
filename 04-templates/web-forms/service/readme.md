@@ -101,7 +101,7 @@ const isSent = response.ok;
 ```
 
 `json` is the list the Form component gives to `onSendClick`:
-`[ { key, type, titleText, value }, ... ]`
+`[ { key, type, titleText, value }, ... ]` (a page made before v26.11 sends `inputValue`: it is read too)
 
 With files, post `FormData` instead:
 

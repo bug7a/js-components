@@ -3,7 +3,7 @@
 
 /*
 
-Form Mail Service - v26.09
+Form Mail Service - v26.11
 
 - Sends the data of a js-form page as an e-mail, with the same style as the forms.
 - Sends over SMTP with PHPMailer (the "PHPMailer" folder next to this file), so the server's
@@ -15,7 +15,7 @@ USAGE:
 3. Write that URL to the SERVICE_URL constant of the form page. Nothing else is needed.
 
 WHAT IT ACCEPTS:
-- application/json  : [ { key, type, titleText, value }, ... ]          (js-form Form JSON)
+- application/json  : [ { key, type, titleText, value }, ... ]          (js-form Form JSON; "inputValue" of older pages too)
                       { formName, formTitle, fields: [ ... ] }              (the same, with a title)
                       { first_name: "...", email: "..." }                   (a flat object)
 - multipart/form-data : a JSON string in a field (fields, formJSON, ticket, application...)
@@ -148,7 +148,7 @@ if ($_SERVER["REQUEST_METHOD"] === "GET") {
     answer(200, [
         "ok" => true,
         "service" => "js-form mail service",
-        "version" => "26.09",
+        "version" => "26.11",
         "php" => PHP_VERSION,
         "mailMethod" => MAIL_METHOD,
         "phpMailerFound" => file_exists(__DIR__ . "/PHPMailer/PHPMailer.php"),
@@ -474,6 +474,16 @@ function fieldTitle($field) {
 
 }
 
+// WHY: The pages published before the forms named it "value" still send "inputValue".
+function fieldValue($field) {
+
+    if (isset($field["value"])) return $field["value"];
+    if (isset($field["inputValue"])) return $field["inputValue"];
+
+    return "";
+
+}
+
 // Is the value empty? (0 and "0" are not empty.)
 function isEmptyValue($value) {
 
@@ -559,7 +569,7 @@ function findEmail($fields) {
 
         $type = isset($field["type"]) ? strtolower((string)$field["type"]) : "";
         $key = isset($field["key"]) ? strtolower((string)$field["key"]) : "";
-        $value = isset($field["value"]) ? $field["value"] : "";
+        $value = fieldValue($field);
 
         if (!is_string($value)) continue;
         if ($type !== "email" && strpos($key, "email") === false && strpos($key, "mail") === false) continue;
@@ -582,7 +592,7 @@ function findSummary($fields) {
         foreach ($fields as $field) {
             $key = isset($field["key"]) ? strtolower((string)$field["key"]) : "";
             if ($key !== strtolower($wanted)) continue;
-            $value = isset($field["value"]) ? $field["value"] : "";
+            $value = fieldValue($field);
             if (is_string($value) && trim($value) !== "") return shorten(trim($value), 60);
         }
     }
@@ -662,7 +672,7 @@ function buildHtmlMail($formTitle, $reference, $fields, $attachments) {
 
     foreach ($fields as $field) {
 
-        $value = isset($field["value"]) ? $field["value"] : "";
+        $value = fieldValue($field);
         $title = htmlspecialchars(fieldTitle($field), ENT_QUOTES, "UTF-8");
         $valueHtml = isEmptyValue($value) ? '<span style="color:' . LABEL_COLOR . ';">&mdash;</span>' : valueToHtml($value);
 
@@ -756,7 +766,7 @@ function buildTextMail($formTitle, $reference, $fields, $attachments) {
     $lines[] = str_repeat("-", 48);
 
     foreach ($fields as $field) {
-        $value = isset($field["value"]) ? $field["value"] : "";
+        $value = fieldValue($field);
         $lines[] = fieldTitle($field) . ":";
         $lines[] = isEmptyValue($value) ? "-" : valueToText($value);
         $lines[] = "";
