@@ -40,6 +40,8 @@ Options:
     --clip-text "t"   only the box around a title: the card or the group of the element whose text starts with
                       this text (its parent). With --clip and more --clip-text: the part that holds them all
     --before [commit] before | after in one picture, with labels (HEAD by default)
+    --live            the page through Live Server (port 5505, it must run), as VS Code shows it: with the reload
+                      script that it puts into the pages and the SVG files (not with --before)
     --join a b        no page: the pictures a and b side by side, a on the left (a path, or a name in _screenshots/;
                       .png, .jpg, .webp); --name: a-vs-b by default. Take the old state first with --name, then the new
                       one, then join them. The labels are as large as the pictures need (a picture of 2x pixels: 2x)
@@ -88,6 +90,7 @@ const OLD_PICTURE_AGE = 48 * 60 * 60 * 1000; // ms
 const CUT_TEXTS_SHOWN = 4; // texts written under a --cut line
 const OG_SIZE = { width: 1200, height: 630 }; // px: the picture of a link preview (og:image)
 const OG_QUALITY = 90; // of its JPEG
+const LIVE_SERVER = "http://127.0.0.1:5505"; // --live: the port of .vscode/settings.json
 
 // *** FILES:
 
@@ -593,6 +596,7 @@ const readOptions = function (args) {
         else if (arg === "--cut") options.isCut = true;
         else if (arg === "--name") options.name = args[++i];
         else if (arg === "--og") options.og = args[++i];
+        else if (arg === "--live") options.isLive = true;
         else if (arg === "--width") options.width = Number(args[++i]);
         else if (arg === "--height") options.height = Number(args[++i]);
         else if (arg === "--scale") { options.scale = Number(args[++i]); options.isScaleGiven = true; }
@@ -628,13 +632,15 @@ const main = async function () {
     if (!fs.existsSync(path.join(ROOT, pageFile))) throw new Error("No such page: " + pageFile);
     if (options.before && !isInCommit(options.before, pageFile)) throw new Error(pageFile + " is not in " + options.before);
     if (options.og && (options.before || options.clips.length)) throw new Error("--og is the first screen of the page now: not with --before or --clip");
+    if (options.isLive && options.before) throw new Error("--live shows the page now: not with --before");
 
     deleteOldPictures();
     fs.mkdirSync(SCREENSHOTS_FOLDER, { recursive: true });
 
     const server = await chrome.startServer({ commit: options.before, listFolders: true });
     const browser = await chrome.launchChrome();
-    const origin = "http://127.0.0.1:" + server.address().port;
+    // WHY --live: Live Server changes what it serves (its script), and a page can break only there
+    const origin = (options.isLive) ? LIVE_SERVER : "http://127.0.0.1:" + server.address().port;
     // WHY --og into the repository: the link preview is a file of the site (assets/og-image.jpg)
     const file = (options.og) ? path.resolve(ROOT, options.og)
         : path.join(SCREENSHOTS_FOLDER, todayText() + "-" + options.name + ".png");
