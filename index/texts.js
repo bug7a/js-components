@@ -33,7 +33,7 @@ const TEXTS = {
         navHandbook: "Handbook",
 
         // HERO
-        eyebrow: "BASIC.JS UI COMPONENTS",
+        eyebrow: "BUILT ON BASIC.JS",
         heroTitle: "UI components written in plain JavaScript",
         heroLead: "Every component below is a live example page: open one to use it and read its code side by side. Layout, style and behavior are together, in plain JavaScript.",
         statComponents: "components",
@@ -89,7 +89,7 @@ const TEXTS = {
         navHandbook: "El kitabı",
 
         // HERO
-        eyebrow: "BASIC.JS ARAYÜZ BİLEŞENLERİ",
+        eyebrow: "BASIC.JS ÜZERİNE KURULU",
         heroTitle: "Saf JavaScript ile yazılmış arayüz bileşenleri",
         heroLead: "Aşağıdaki her bileşen çalışan bir örnek sayfadır: birini açın, kullanın ve kodunu yan tarafta okuyun. Düzen, stil ve davranış bir arada, saf JavaScript ile.",
         statComponents: "bileşen",
