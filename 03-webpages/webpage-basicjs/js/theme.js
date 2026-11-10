@@ -23,8 +23,8 @@ const SITE = {
     DARK: "#0F1012",            // Koyu bölümler (hero, footer)
     DARK_SOFT: "#18191C",       // Koyu zemin üzerindeki kartlar
     // WHY these: the main action of the components (SmartButton tone "cyan": #5BBAC1, its hover, and #376265 of
-    //     "cyanDark" as the text): the buttons of the site are the button of the kit, and the logos are a deeper tone
-    //     of it (#2E8F97). Tried on 2026-11-09 with the teal #19B5AA, CSS turquoise and cadetblue (dark text on it 8.4 : 1).
+    //     "cyanDark" as the text): the buttons of the site are the button of the kit; the logo has a blue of its own
+    //     (#23ACCF). Tried on 2026-11-09 with the teal #19B5AA, CSS turquoise and cadetblue (dark text on it 8.4 : 1).
     ACCENT: "#5BBAC1",
     ACCENT_HOVER: "#50AEB5",
     ACCENT_TEXT: "#376265",     // The accent as a text on the light ground (6.2 : 1)
@@ -150,10 +150,10 @@ SITE.icon = function (name, color, size = 18, strokeWidth = 2) {
 
 };
 
-// ICON: Logo (356 x 83)
+// ICON: Logo (355 x 81)
 SITE.logo = function (height = 26) {
 
-    Icon({ width: Math.round(height * 356 / 83), height: height, color: "transparent" });
+    Icon({ width: Math.round(height * 355 / 81), height: height, color: "transparent" });
     that.load(CONFIG.logoFile);
     that.elem.title = CONFIG.brandName;
     that.elem.style.flexShrink = "0";

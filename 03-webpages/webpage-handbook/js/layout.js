@@ -80,8 +80,8 @@ Layout.createHeader = function () {
             Layout.logo.elem.style.cursor = "pointer";
             Layout.logo.elem.style.flexShrink = "0";
 
-                // ICON: Logo (356 x 83)
-                Layout.imgLogo = Icon({ width: 142, height: 33, color: "transparent" });
+                // ICON: Logo (355 x 81)
+                Layout.imgLogo = Icon({ width: 145, height: 33, color: "transparent" });
                 that.load(CONFIG.logoFile);
                 that.elem.title = CONFIG.brandName;
 
@@ -387,7 +387,7 @@ Layout.relayout = function () {
     Layout.headerRow.padding = [L.mobile ? 10 : 20, 0];
     Layout.headerRow.gap = L.mobile ? 6 : 10;
     Layout.btnMenu.visible = L.drawer ? 1 : 0;
-    Layout.imgLogo.width = L.mobile ? 103 : 142;
+    Layout.imgLogo.width = L.mobile ? 105 : 145;
     Layout.imgLogo.height = L.mobile ? 24 : 33;
     Layout.lblVersion.visible = (L.w >= 720 && basic.version) ? 1 : 0;
     Layout.headerSpacer.visible = L.mobile ? 0 : 1;

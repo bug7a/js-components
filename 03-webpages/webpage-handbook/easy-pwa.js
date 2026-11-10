@@ -114,7 +114,7 @@ SPDX-License-Identifier: Apache-2.0
         // OFFLINE FILES START
         offlineFiles: [
             "./",
-            "assets/basicjs-handbook.svg",
+            "assets/basicjs-ui-library.svg",
             "basic/LICENSE",
             "basic/basic.min.css",
             "basic/basic.min.js",

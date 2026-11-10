@@ -21,7 +21,7 @@ const CONFIG = {
 
     // *** BRAND:
     brandName: "basic.js",
-    logoFile: "assets/basicjs-ui-library-white-text.svg", // Logo (356 x 83), koyu zemin için yazıları beyaz kopyası / text made white for the dark background, relative to this page
+    logoFile: "assets/basicjs-ui-library-dark.svg", // Logo (355 x 81), koyu zemin için sürümü / its version for the dark background, relative to this page
 
     // *** PATHS: (Bu sayfaya göre)
     // Canlı örnekler buradaki basic/basic.min.js ile çalışır. (Site kendi içinden çalışır: basic/ ve comp/ bu klasörde,

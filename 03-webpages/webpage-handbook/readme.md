@@ -70,7 +70,7 @@ The order and the groups of the chapters in the menu: `js/config.js` → `chapte
 | `js/code-highlight.js` | JavaScript / HTML highlighter (a copy of `index/code-highlight.js` of the component site in the repository root). |
 | `js/code-block.js` | Code blocks: Copy, Run, editing, console. |
 | `js/doc-view.js` | Draws a chapter; "On this page", previous / next. |
-| `js/layout.js` | Top bar (logo `assets/basicjs-handbook.svg`), chapter list (drawer), search box. |
+| `js/layout.js` | Top bar (logo `assets/basicjs-ui-library.svg`: the logo of basic.js), chapter list (drawer), search box. |
 | `js/site.js` | `start()`, reading the files, routing, language, search index. |
 
 Components used: `WebView`, `SearchResults` and `Toast` (`comp/`, as `.min.js`) and `ScrollBar` (basic).
@@ -244,7 +244,7 @@ Bölümlerin menüdeki sırası ve grupları: `js/config.js` → `chapters`.
 | `js/code-highlight.js` | JavaScript / HTML renklendirici (ana dizindeki bileşen sitesinin `index/code-highlight.js` dosyasının kopyası). |
 | `js/code-block.js` | Kod blokları: Kopyala, Çalıştır, düzenleme, konsol. |
 | `js/doc-view.js` | Bölümü çizer; "Bu sayfada", önceki / sonraki. |
-| `js/layout.js` | Üst çubuk (logo `assets/basicjs-handbook.svg`), bölüm listesi (çekmece), arama kutusu. |
+| `js/layout.js` | Üst çubuk (logo `assets/basicjs-ui-library.svg`: basic.js'in logosu), bölüm listesi (çekmece), arama kutusu. |
 | `js/site.js` | `start()`, dosyaları okuma, adres yönlendirme, dil, arama dizini. |
 
 Kullanılan bileşenler: `WebView`, `SearchResults`, `Toast` (`comp/`, `.min.js`) ve `ScrollBar` (basic).
