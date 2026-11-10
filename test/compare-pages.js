@@ -6,7 +6,8 @@ COMPARE PAGES: does a page still work the same after a change?
 Every page is opened twice, as it is now and as it was in a git commit, and the two are compared:
 the DOM, a screenshot, the text after every press and every typed field, and the console. At 1280 and 390 px.
 The old page loads the old basic/ and comp/ too, so a change in a component is measured as well.
-In both pages the clock stands still at 6 Nov 2026 12:00 and Math.random gives the same numbers in every run.
+In both pages the clock stands still at 6 Nov 2026 12:00, a timer of 3 s or more never comes (a toast that closes by
+itself, a question of a button that is forgotten), and Math.random gives the same numbers in every run.
 
     node test/compare-pages.js                          the samples changed since the last commit,
                                                         and the samples that load a changed component
@@ -51,7 +52,9 @@ In both pages the clock stands still at 6 Nov 2026 12:00 and Math.random gives t
                                                         earlier state pressed (twice the time on a panel)
     node test/compare-pages.js --moving-clock ...       the clock of the pages goes on from 6 Nov 2026 12:00, for a
                                                         page that waits for the time to pass (without it Date.now()
-                                                        and new Date() give that moment all the time)
+                                                        and new Date() give that moment all the time, and a timer of
+                                                        3 s or more never comes)
+    node test/compare-pages.js --list ...               only the pages and states it would compare: no Chrome
 
 The results:
     SAME    no difference (a difference that goes away when the page is opened again was only timing)
@@ -102,6 +105,7 @@ const PRESS_WAIT = 90; // ms: after a press
 const TYPE_WAIT = 30; // ms: after typing in a field
 const END_WAIT = 200; // ms: before the last look at the DOM
 const LOAD_TIMEOUT = 30000; // ms (also of --wait-for)
+const LONG_TIMER = 3000; // ms: a timer of the page this long or longer never comes while the clock stands still
 const MAX_PRESSES = 60; // of a page (a table has very many rows)
 const OPENED_LEVELS = 2; // what a press opens is pressed too: a row of a list, a button of a dialog
 const TRIES = 3; // a real difference stays in every try
@@ -235,6 +239,24 @@ const preparePage = function (settings = {}) {
             return readNow();
         }
     };
+
+    // WHY: a thing that goes away by itself after some seconds (the question of a button with ask, a toast) went away
+    //     at another press in every run (LIVE). The time does not pass, so such a timer never comes; its id is still
+    //     a real one, for clearTimeout.
+    if (settings.isClockStopped) {
+        const realSetTimeout = window.setTimeout;
+        const realSetInterval = window.setInterval;
+        const doNothing = function () {};
+        const isLong = function (ms) { return Number(ms) >= settings.longTimer; };
+        window.setTimeout = function (fn, ms, ...args) {
+            if (isLong(ms)) return realSetTimeout.call(window, doNothing, ms);
+            return realSetTimeout.call(window, fn, ms, ...args);
+        };
+        window.setInterval = function (fn, ms, ...args) {
+            if (isLong(ms)) return realSetInterval.call(window, doNothing, ms);
+            return realSetInterval.call(window, fn, ms, ...args);
+        };
+    }
 
     const isPressable = function (elem) {
         if (elem.hasAttribute("role") || elem.hasAttribute("tabindex")) return true;
@@ -514,7 +536,7 @@ const runPage = async function (browser, url, size, steps) {
         await page.setRequestInterception(true);
         watchPage(page, log);
         await page.setViewport(size);
-        await page.evaluateOnNewDocument(preparePage, { isClockStopped: steps.isClockStopped });
+        await page.evaluateOnNewDocument(preparePage, { isClockStopped: steps.isClockStopped, longTimer: LONG_TIMER });
         if (steps.init) await page.evaluateOnNewDocument(steps.init);
         await page.goto(url, { waitUntil: "load", timeout: LOAD_TIMEOUT });
         if (steps.waitFor) await waitForReady(page, steps.waitFor);
@@ -1009,7 +1031,7 @@ const readWidth = function (text) {
 
 const readOptions = function (args) {
     const options = { base: "HEAD", isAll: false, isHelp: false, pages: [], widths: [], init: "", waitFor: "", runs: [],
-        isClockStopped: true, isPictureOnly: false, isPressAll: false };
+        isClockStopped: true, isPictureOnly: false, isPressAll: false, isList: false };
     for (let i = 0; i < args.length; i++) {
         if (args[i] === "--base") options.base = args[++i];
         else if (args[i] === "--init") options.init = args[++i] || "";
@@ -1019,6 +1041,7 @@ const readOptions = function (args) {
         else if (args[i] === "--picture-only") options.isPictureOnly = true;
         else if (args[i] === "--press-all") options.isPressAll = true;
         else if (args[i] === "--all") options.isAll = true;
+        else if (args[i] === "--list") options.isList = true;
         else if (args[i] === "--width") options.widths.push(readWidth(args[++i]));
         else if (args[i] === "--help") options.isHelp = true;
         // WHY: an option it does not know was taken for the name of a page, and nothing said so.
@@ -1143,6 +1166,11 @@ const main = async function () {
     const sizes = chooseSizes(options);
     if (pages.length === 0) {
         console.log("No sample is changed since " + options.base + ". Name the pages, or use --all.");
+        return 0;
+    }
+    if (options.isList) {
+        pages.forEach(function (pair) { console.log(describePair(pair)); });
+        console.log("\n" + pages.length + " states, at " + sizes.map(function (size) { return size.width; }).join(" and ") + " px");
         return 0;
     }
 
