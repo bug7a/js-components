@@ -168,6 +168,8 @@ const TextFieldDefaults = {
     //     choose, and the space at the start of the select sits right on it (with no ground it looked pushed in).
     selectStyle: {
         color: "rgba(0,0,0,0.05)",
+        round: 3,
+        spacing: 0, // px: between the select and the top and the bottom of the field (0: it fills the height of the field)
         invertIconColor: 0, // 1: a white arrow (on a dark field)
         listBackgroundColor: "whitesmoke",
         listTextColor: "rgba(0, 0, 0, 0.8)",
@@ -775,12 +777,14 @@ TextField.styles = {
         descriptionTextColor: Black(0.55),
         warningBallType: "icon",
         warningIconSize: 20,
+        eyeIconSize: 24, // PasswordField: the eye as wide as the marks (its picture is 20 px wide at 24)
         warningColor: "#E5885E",
         warningBorderColor: "#E5885E",
         requiredIconColor: Black(0.35),
         tooltipStyle: { color: "#FFFFFF", hintColor: "#FFFFFF", textColor: Black(0.88), border: 1, borderColor: Black(0.15), round: 6, fontSize: 13 },
         unitStyle: { padding: [10, 3], color: "#F2F3F0", textColor: Black(0.7), round: 6, fontSize: 13 },
-        selectStyle: { color: Black(0.04), invertIconColor: 0, listBackgroundColor: "#FFFFFF", listTextColor: Black(0.88), listOverTextColor: "#3D7A6B", listBorderColor: Black(0.12) },
+        // WHY spacing: the select is a chip on the field; the white of the field shows over and under it
+        selectStyle: { color: Black(0.04), round: 6, spacing: 6, invertIconColor: 0, listBackgroundColor: "#FFFFFF", listTextColor: Black(0.88), listOverTextColor: "#3D7A6B", listBorderColor: Black(0.12) },
     },
 
     // The dark look of the kit: the same shapes on the dark surface.
@@ -812,12 +816,13 @@ TextField.styles = {
         descriptionTextColor: White(0.5),
         warningBallType: "icon",
         warningIconSize: 20,
+        eyeIconSize: 24, // PasswordField: the eye as wide as the marks (its picture is 20 px wide at 24)
         warningColor: "#F0A07A",
         warningBorderColor: "#F0A07A",
         requiredIconColor: White(0.35),
         tooltipStyle: { color: "#2C2C2B", hintColor: "#2C2C2B", textColor: White(0.9), border: 1, borderColor: White(0.2), round: 6, fontSize: 13 },
         unitStyle: { padding: [10, 3], color: White(0.1), textColor: White(0.85), round: 6, fontSize: 13 },
-        selectStyle: { color: White(0.06), invertIconColor: 1, listBackgroundColor: "#2C2C2B", listTextColor: White(0.9), listOverTextColor: "#65A293", listBorderColor: White(0.12) },
+        selectStyle: { color: White(0.06), round: 6, spacing: 6, invertIconColor: 1, listBackgroundColor: "#2C2C2B", listTextColor: White(0.9), listOverTextColor: "#65A293", listBorderColor: White(0.12) },
     },
 
     // The first look (TextFieldDefaults): a light field with a line under it.

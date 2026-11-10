@@ -41,9 +41,8 @@ const UrlFieldDefaults = {
         selectedIndex: 3,
         paddingX: 0,
         arrowSize: 20,
-        fontSize: 20,
-        round: 3,
-        // NOTE: The colors come from selectStyle of TextField (its style packages); a color given here wins.
+        // NOTE: The colors, the round, the height (selectStyle) and the size of the text (inputFontSize) come from the
+        //       style package of TextField; a value given here wins.
     },
 };
 
@@ -64,12 +63,14 @@ const UrlField = function(params = {}) {
 
     // *** PRIVATE FUNCTIONS:
 
-    // The params of the protocol select: the colors of selectStyle (TextField) and the text color of the field,
+    // The params of the protocol select: the look of selectStyle (TextField) and the text color of the field,
     // then the tinySelectParams of the page over them.
     const getTinySelectParams = function() {
         const selectStyle = box.selectStyle;
-        const colorParams = {
+        const lookParams = {
+            fontSize: box.inputFontSize, // WHY: not 20 in every package: the 15 px text of light and dark
             color: selectStyle.color,
+            round: selectStyle.round,
             invertIconColor: selectStyle.invertIconColor,
             labelTextColor: box.inputTextColor, // WHY: not "#373836": dark on a dark package
             listBackgroundColor: selectStyle.listBackgroundColor,
@@ -77,7 +78,9 @@ const UrlField = function(params = {}) {
             listOverTextColor: selectStyle.listOverTextColor,
             listBorderColor: selectStyle.listBorderColor,
         };
-        const tinySelectParams = Object.assign(colorParams, box.tinySelectParams);
+        // WHY only with a spacing: without it the select keeps its own height, taller than the field, which cuts it
+        if (selectStyle.spacing > 0) lookParams.height = box.inputHeight - 2 * selectStyle.spacing;
+        const tinySelectParams = Object.assign(lookParams, box.tinySelectParams);
         const pageOnChange = tinySelectParams.onChange;
         // WHY: another protocol is another value, and onChange was not called: a form that listens to it missed it
         tinySelectParams.onChange = function(select) {
@@ -142,7 +145,7 @@ const UrlField = function(params = {}) {
             box.input = Input({
                 text: box.value,
                 minimal: 1,
-                fontSize: 20,
+                fontSize: box.inputFontSize,
                 height: 40,
                 color: "transparent",
                 width: "100%",

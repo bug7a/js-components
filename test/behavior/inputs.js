@@ -631,6 +631,32 @@ test("UrlField: another protocol calls onChange (not in an empty field)", async 
     empty.remove();
 });
 
+test("UrlField: the select of light is a chip on the field, the text has the size of the package", async function () {
+    // height, round, the text of the select, the text of the input
+    const sizes = ["light", "modern", "minimal"].map(function (styleName) {
+        const url = UrlField({ styleName: styleName, titleText: "Site" });
+        const select = url.tinySelect;
+        const size = [select.height, select.round, select.lblLabel.fontSize, url.input.fontSize].join(" ");
+        url.remove();
+        return size;
+    });
+    check("UrlField: the select of light is a chip on the field, the text has the size of the package",
+        sizes.join(" / ") === "32 6 15 15 / 50 3 20 20 / 50 3 13 13", sizes.join(" / "));
+});
+
+// *** PASSWORD FIELD (comp/password-field.js)
+
+test("PasswordField: the eye of light and dark is 24 px, the others by the height of the field", async function () {
+    const sizes = ["light", "dark", "modern", "minimal"].map(function (styleName) {
+        const password = PasswordField({ styleName: styleName, titleText: "Password" });
+        const size = password.btnShowPassword.width;
+        password.remove();
+        return size;
+    });
+    check("PasswordField: the eye of light and dark is 24 px, the others by the height of the field",
+        sizes.join(", ") === "24, 24, 32, 17", sizes.join(", "));
+});
+
 // *** TEXT AREA FIELD (comp/text-area-field.js)
 
 test("TextAreaField: setPlaceholder and setMaxLength change its textarea", async function () {

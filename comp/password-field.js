@@ -35,6 +35,7 @@ const PasswordFieldDefaults = {
     showShowPasswordButton: 1, // enable show/hide icon by default
     showPasswordIconFile: "data:image/svg+xml;utf8," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" preserveAspectRatio="none" fill="none" stroke="#141414" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 23C9 13 15.5 9.5 24 9.5S39 13 44.5 23C39 33 32.5 36.5 24 36.5S9 33 3.5 23Z"/><circle cx="24" cy="23" r="6.5"/></svg>'), // an eye (a page can give its own picture)
     hidePasswordIconFile: "data:image/svg+xml;utf8," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" preserveAspectRatio="none" fill="none" stroke="#141414" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 23C9 13 15.5 9.5 24 9.5S39 13 44.5 23C39 33 32.5 36.5 24 36.5S9 33 3.5 23Z"/><circle cx="24" cy="23" r="6.5"/><path d="M6 6.5L41 42"/></svg>'), // a crossed eye
+    eyeIconSize: "", // px: the size of the eye (both icons). "": by the height of the field (32; a small field less)
     showPasswordHintText: "Show Password",
     hidePasswordHintText: "Hide Password",
     minLength: 6,
@@ -141,7 +142,8 @@ const PasswordField = function(params = {}) {
         // ICON: Show / hide password button
         // WHY: a small field (minimal: 28 px) takes a smaller eye; the usual fields (40 px) keep 32
         const EYE_RATIO = 0.6;
-        const eyeSize = (box.inputHeight >= 40) ? 32 : Math.round(box.inputHeight * EYE_RATIO);
+        const fieldEyeSize = (box.inputHeight >= 40) ? 32 : Math.round(box.inputHeight * EYE_RATIO);
+        const eyeSize = box.eyeIconSize || fieldEyeSize;
         box.btnShowPassword = Icon({
             width: eyeSize,
             height: eyeSize,
