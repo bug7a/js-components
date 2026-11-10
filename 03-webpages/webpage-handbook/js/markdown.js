@@ -220,7 +220,8 @@ Markdown.tableHtml = function (rows) {
         return row.trim().replace(/^\|/, "").replace(/\|$/, "").split("|").map(function (cell) { return cell.trim(); });
     };
 
-    let html = "<table><thead><tr>";
+    // WHY the box: a wide table (Ex: the components for new pages) scrolls to the side on a phone, it is not cut
+    let html = "<div class=\"hb-table\"><table><thead><tr>";
     cells(rows[0]).forEach(function (cell) { html += "<th>" + Markdown.inline(cell) + "</th>"; });
     html += "</tr></thead><tbody>";
 
@@ -230,7 +231,7 @@ Markdown.tableHtml = function (rows) {
         html += "</tr>";
     });
 
-    return html + "</tbody></table>";
+    return html + "</tbody></table></div>";
 
 };
 

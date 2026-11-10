@@ -267,6 +267,7 @@ SITE.injectCss = function () {
         + ".hb-text ul, .hb-text ol { margin: 0px; padding-left: 24px; }"
         + ".hb-text li { margin: 6px 0px; padding-left: 2px; }"
         + ".hb-text li::marker { color: " + SITE.TEXT_FAINT + "; }"
+        + ".hb-text .hb-table { overflow-x: auto; pointer-events: auto; }"
         + ".hb-text table { border-collapse: collapse; width: 100%; font-size: 0.94em; }"
         + ".hb-text th, .hb-text td { border: 1px solid " + SITE.LINE + "; padding: 8px 10px; text-align: left; vertical-align: top; }"
         + ".hb-text th { background: " + SITE.SIDEBAR + "; font-family: opensans-bold; font-weight: normal; }"

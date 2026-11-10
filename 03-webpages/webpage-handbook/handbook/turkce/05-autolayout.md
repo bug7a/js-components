@@ -72,6 +72,7 @@ endGroup();
 - `align` (string, varsayılan: `"center"`) — İçeriklerin hizalanma yönü.
 - `gap` (number / string / array, varsayılan: `"0px"`) — Nesneler arası boşluk (piksel). `[x, y]`, kayan bir grupta (`wrap: 1`) iki yöne ayrı boşluk verir, `padding`'in sırasıyla: `gap: [8, 12]` bir satırdaki nesnelerin arası 8, satırların arası 12.
 - `padding` (number / array) — İç kenar boşluğu. Tek değer veya `[yatay, dikey]` şeklinde dizi.
+- `stretch` (boolean) — `true` ise genişliği (VGroup) ya da yüksekliği (HGroup) verilmemiş nesneler grubu enine doldurur: VGroup kadar geniş, HGroup satırı kadar yüksek olur (CSS `align-items: stretch`). Boyutu verilmiş nesne boyutunu korur. `group.stretch = 0`, `align`'ın verdiği yeri geri getirir.
 - `hug` (boolean) — `true` ise boyut içeriğe göre otomatik ayarlanır (`width/height: "auto"`); grup, içindeki nesneleri sarar.
 - `fit` (boolean) — `hug` parametresinin eski adı; ikisi de birebir aynı işi yapar ve sonradan ikisi de okunabilir (`group.hug`, `group.fit`). Yeni kodda `hug` tercih edin.
 - `flow` (string) — Akış yönü. HGroup: `"horizontal"`, VGroup: `"vertical"`. Otomatik ayarlanır.

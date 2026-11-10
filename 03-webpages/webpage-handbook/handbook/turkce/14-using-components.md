@@ -147,6 +147,7 @@ const selLanguage = SelectBox({
 - **`animated: 0`** hareket eden bir bileşenin hareketini durdurur. Sistem daha az hareket istediğinde de hareketi durur.
 - **Klavye:** bileşenler Tab, Enter, Boşluk ve ok tuşlarıyla çalışır. Bir ikon butonu (`labelText` olmadan) bir `ariaLabel` ister.
 - Bir alandan açılan liste ya da menü, bir `Dialog`'un üstüne kendiliğinden çıkar.
+- **Metinler yazıldığı gibi gösterilir:** `<b>` içeren bir `labelText` ya da `titleText` `<b>` olarak görünür; böylece bir kullanıcının yazdığı ad HTML olarak çalışamaz. Sayfanızın kendi HTML'i için bileşene `allowHtml: 1` verin.
 
 ---
 
@@ -159,7 +160,7 @@ Kitin yeni bir sayfa için bileşenleri ve açık ile koyu sayfadaki görünüş
 | Bir buton | `SmartButton` (`smart-button.js`) | `ozden` (varsayılan); ana iş için `tone: "cyan"` | `ozdenDark`; `tone: "cyanDark"` |
 | Bir arama kutusu | `SearchInput` (`search-input.js`) | `ozden` | `ozdenDark` |
 | İşaret kutusu, radyo butonu | `CheckBox` (`check-box.js`), `RadioButton` (`radio-button.js`) | `light` | `dark` |
-| Bir metin alanı | `TextField` (`text-field.js`) ve ondan yapılan alanlar: `EmailField`, `PasswordField`, `PhoneField`, `NumberField`, `CurrencyField`, `UrlField`, `TextAreaField` (her biri kendi dosyasında) | `ozden` | `ozdenDark` |
+| Bir metin alanı | `TextField` (`text-field.js`) ve ondan yapılan alanlar: `EmailField`, `PasswordField`, `PhoneField`, `NumberField`, `CurrencyField`, `UrlField`, `TextAreaField` (her biri kendi dosyasında) | `light` | `dark` |
 | Bir liste | `ItemList` (`item-list.js`) | `ozden` (varsayılan) | `ozdenDark` |
 | Açılır liste | `SelectBox` (`select-box.js`) | `light` | `dark` |
 | Büyük bir tablo | `SmartTable` (`smart-table.js`) | `light` | `dark` |
@@ -168,6 +169,7 @@ Kitin yeni bir sayfa için bileşenleri ve açık ile koyu sayfadaki görünüş
 | Bir baloncuk, bir açılır kutu | `Tooltip` (`tooltip.js`) | | |
 | Bir pencere | `Dialog` (`dialog.js`) | `ozden` (varsayılan) | `ozdenDark` |
 | Bir yükleme ekranı | `LoadingScreen` (`loading-screen.js`) | | |
+| Kayan bir sayfa ya da bölüm | `ScrollArea` (`scroll-area.js`): `ScrollArea({ gap: 20, padding: 40 })` ... `endGroup()`; bir grupta öteki nesnelerin bıraktığı yeri alır | `light` | `dark` |
 
 ---
 

@@ -147,6 +147,7 @@ const selLanguage = SelectBox({
 - **`animated: 0`** stops the motion of a component that moves. Its motion also stops when the system asks for less motion.
 - **The keyboard:** the components work with Tab, Enter, Space and the arrows. An icon button (no `labelText`) needs an `ariaLabel`.
 - A list or a menu that opens from a field goes over a `Dialog` by itself.
+- **Texts are shown as they are written:** a `labelText` or a `titleText` with `<b>` shows `<b>`, so a name a user typed can not run as HTML. For HTML of your own page, give the component `allowHtml: 1`.
 
 ---
 
@@ -159,7 +160,7 @@ The components of the kit for a new page, and their look on a light page and on 
 | A button | `SmartButton` (`smart-button.js`) | `ozden` (the default); `tone: "cyan"` for the main action | `ozdenDark`; `tone: "cyanDark"` |
 | A search box | `SearchInput` (`search-input.js`) | `ozden` | `ozdenDark` |
 | A check box, a radio button | `CheckBox` (`check-box.js`), `RadioButton` (`radio-button.js`) | `light` | `dark` |
-| A text field | `TextField` (`text-field.js`) and the fields made from it: `EmailField`, `PasswordField`, `PhoneField`, `NumberField`, `CurrencyField`, `UrlField`, `TextAreaField` (a file each) | `ozden` | `ozdenDark` |
+| A text field | `TextField` (`text-field.js`) and the fields made from it: `EmailField`, `PasswordField`, `PhoneField`, `NumberField`, `CurrencyField`, `UrlField`, `TextAreaField` (a file each) | `light` | `dark` |
 | A list | `ItemList` (`item-list.js`) | `ozden` (the default) | `ozdenDark` |
 | A dropdown | `SelectBox` (`select-box.js`) | `light` | `dark` |
 | A big table | `SmartTable` (`smart-table.js`) | `light` | `dark` |
@@ -168,6 +169,7 @@ The components of the kit for a new page, and their look on a light page and on 
 | A bubble, a popover | `Tooltip` (`tooltip.js`) | | |
 | A dialog | `Dialog` (`dialog.js`) | `ozden` (the default) | `ozdenDark` |
 | A loading screen | `LoadingScreen` (`loading-screen.js`) | | |
+| A page or a part that scrolls | `ScrollArea` (`scroll-area.js`): `ScrollArea({ gap: 20, padding: 40 })` ... `endGroup()`; in a group it takes the room the other objects leave | `light` | `dark` |
 
 ---
 

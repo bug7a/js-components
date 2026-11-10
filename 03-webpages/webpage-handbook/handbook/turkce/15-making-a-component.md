@@ -177,6 +177,7 @@ let box = startObject(params);
 - **Bir bileşen, bir dosya:** adıyla (`star-rating.js`), başında bir açıklama bloğuyla: adı ve sürümü, ne yaptığı, `USAGE` satırları.
 - **Bölümler** her bileşende aynı sıradadır: `// *** PRIVATE VARIABLES:`, `// *** PUBLIC VARIABLES:`, `// *** PRIVATE FUNCTIONS:`, `// *** PUBLIC FUNCTIONS:`, `// *** OBJECT VIEW:`, `// *** OBJECT INIT CODE:`, fonksiyondan sonra da `// *** STYLE PACKAGES:`.
 - **Varsayılan bir ikon dosyanın içinde bir SVG'dir** (`"data:image/svg+xml;utf8," + encodeURIComponent('<svg ...>')`); böylece dosyanın bir kopyası tek başına çalışır. Öteki dosyalar aynı adlı bir klasöre gider (`star-rating/`).
+- **Bir metin `plainText` ile yazılır** (`Label.text` HTML'dir). Bileşenin metinleri sayfanın HTML'i olabilecekse bir `allowHtml: 0` parametresi ve `text` ya da `plainText` yazan tek bir `setText(label, text)` olur (`comp/dialog.js`). `test/components-test.htm` her `...Text` parametresini denetler.
 
 ---
 

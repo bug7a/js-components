@@ -4,6 +4,12 @@ This document contains new features, updates, and changes added to the basic.js 
 
 ---
 
+## Version 26.11.10
+
+*   **`stretch: 1` of a group:** the objects without a width in a `VGroup` (without a height in an `HGroup`) fill the group across: `VGroup({ align: "left top", stretch: 1 })`. The short way of `css: { alignItems: "stretch" }`, which works as before. An object with a size keeps it. `group.stretch = 0` gives the place of `align` back. Reference: `basic/basic-what-is-new.md`.
+
+---
+
 ## Version 26.11.07
 
 *   **`border` and `round` take an array, like `padding`:** `border: [0, 0, 0, 1]` is a line at the bottom only (`[horizontal, vertical]` or `[left, top, right, bottom]`, the order of `padding`). `round: [12, 0]` rounds the two top corners (`[top, bottom]`), `round: [12, 12, 0, 12]` each corner on its own (`[topLeft, topRight, bottomRight, bottomLeft]`, clockwise as in CSS). `center()` counts the border of each side. A number works as before: fully compatible. Reference: `basic/basic-what-is-new.md`.
