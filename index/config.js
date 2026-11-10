@@ -21,7 +21,7 @@ const CONFIG = {
 
     // *** BRAND:
     brandName: "OzdenUI",
-    logoFile: "index/ozdenui-components.svg", // Header logo: OzdenUI COMPONENTS (393 x 83), relative to this page
+    logoFile: "index/ozdenui-components.svg", // Header logo: OzdenUI COMPONENTS (360 x 130), relative to this page
 
     // *** PATHS:
     // Deponun kök klasörü, bu sayfaya göre. Örnek sayfalar ve bileşen kodları buradan okunur.
