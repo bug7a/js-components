@@ -22,6 +22,8 @@ SCREENSHOT: one picture of a page (or of a part of it) for a report, in one comm
         --click "Your name" --type "Ada" --click "Save"     (the example runs in an iframe: it is searched too)
     node test/screenshot.js 04-templates/ozden-panel/index.htm --init "localStorage.setItem('appid_login', '{}')" \
         --run "openPageByKey('Reports')"                    (a page of the panel: it opens after its login)
+    node test/screenshot.js index.htm --og index/og-image.jpg
+                                                             the link preview of a site, made again
 
 Options:
     --init "code"     runs before the scripts of the page, in the page of --before too: a login that the page keeps
@@ -43,6 +45,9 @@ Options:
                       one, then join them. The labels are as large as the pictures need (a picture of 2x pixels: 2x)
     --label "text"    the label of a picture of --join, the left one first (its file name without the date by default)
     --name what       the file: _screenshots/YYYY-MM-DD-what.png (the name of the page by default)
+    --og file.jpg     the link preview of a site (og:image): the first screen of the page in a window of 1200 x 630,
+                      its scroll bars hidden, a JPEG into this file of the repository, not into _screenshots/ (not
+                      with --before or --clip)
     --width, --height the window (1280 x 800; a width under 500 is 844 high)
     --scale n         pixels per px (2 for a part, 1 for the whole window)
     --wait ms         after the load, after --run and after each --click and --type (600)
@@ -81,6 +86,8 @@ const DEFAULT_MARGIN = 12; // px around a clipped part
 const LOAD_TIMEOUT = 30000; // ms
 const OLD_PICTURE_AGE = 48 * 60 * 60 * 1000; // ms
 const CUT_TEXTS_SHOWN = 4; // texts written under a --cut line
+const OG_SIZE = { width: 1200, height: 630 }; // px: the picture of a link preview (og:image)
+const OG_QUALITY = 90; // of its JPEG
 
 // *** FILES:
 
@@ -387,6 +394,19 @@ const clipWithMargin = function (rect, margin, size) {
     return { x: left, y: top, width: right - left, height: bottom - top };
 };
 
+// Runs in the page (--og): hides the scroll bars at the right edge of the window, the narrow boxes that the ScrollBar
+// of basic.js draws (its bar and the dots at its ends). WHY: a link preview shows the page; a bar would be a stripe at
+// its edge.
+const hideScrollBars = function () {
+    const BAR_WIDTH = 12; // px at most: a bar, its track or a dot
+    const EDGE = 16; // px from the right edge of the window
+    document.querySelectorAll("div").forEach(function (elem) {
+        const rect = elem.getBoundingClientRect();
+        const isNarrow = (rect.width > 0 && rect.width <= BAR_WIDTH);
+        if (isNarrow && rect.right > window.innerWidth - EDGE) elem.style.visibility = "hidden";
+    });
+};
+
 const takePicture = async function (browser, url, options) {
     const context = await browser.createBrowserContext();
     try {
@@ -426,6 +446,10 @@ const takePicture = async function (browser, url, options) {
         const prints = await readPrints(page, options.prints, log);
         if (options.isCut) log.push(...describeCut(await page.evaluate(findCutTexts), options.width));
         if (options.isNoPicture) return { picture: null, log, prints };
+        if (options.og) {
+            await page.evaluate(hideScrollBars);
+            return { picture: await page.screenshot({ type: "jpeg", quality: OG_QUALITY }), log, prints };
+        }
         if (!options.clips.length) return { picture: await page.screenshot(), log, prints };
 
         let rect = await page.evaluate(findClipRect, options.clips, options.margin);
@@ -550,7 +574,7 @@ const todayText = function () {
 const readOptions = function (args) {
     const options = { page: "", init: "", run: "", actions: [], clips: [], prints: [], name: "", before: "", width: DEFAULT_WIDTH,
         height: 0, scale: 0, wait: DEFAULT_WAIT, margin: DEFAULT_MARGIN, isNoPicture: false, isHelp: false, join: [], labels: [],
-        isScaleGiven: false };
+        isScaleGiven: false, og: "" };
     for (let i = 0; i < args.length; i++) {
         const arg = args[i];
         const hasValue = (args[i + 1] !== undefined && !args[i + 1].startsWith("--"));
@@ -568,6 +592,7 @@ const readOptions = function (args) {
         else if (arg === "--no-picture") options.isNoPicture = true;
         else if (arg === "--cut") options.isCut = true;
         else if (arg === "--name") options.name = args[++i];
+        else if (arg === "--og") options.og = args[++i];
         else if (arg === "--width") options.width = Number(args[++i]);
         else if (arg === "--height") options.height = Number(args[++i]);
         else if (arg === "--scale") { options.scale = Number(args[++i]); options.isScaleGiven = true; }
@@ -575,6 +600,7 @@ const readOptions = function (args) {
         else if (arg === "--margin") options.margin = Number(args[++i]);
         else options.page = chrome.toPagePath(arg);
     }
+    if (options.og) Object.assign(options, OG_SIZE, { scale: 1 });
     if (!options.height) options.height = (options.width < PHONE_WIDTH) ? PHONE_HEIGHT : DEFAULT_HEIGHT;
     if (!options.scale) options.scale = (options.clips.length) ? 2 : 1;
     if (!options.name) options.name = path.basename(options.page.split(/[?#]/)[0]).replace(/\.html?$/i, "");
@@ -601,6 +627,7 @@ const main = async function () {
     const pageFile = options.page.split(/[?#]/)[0];
     if (!fs.existsSync(path.join(ROOT, pageFile))) throw new Error("No such page: " + pageFile);
     if (options.before && !isInCommit(options.before, pageFile)) throw new Error(pageFile + " is not in " + options.before);
+    if (options.og && (options.before || options.clips.length)) throw new Error("--og is the first screen of the page now: not with --before or --clip");
 
     deleteOldPictures();
     fs.mkdirSync(SCREENSHOTS_FOLDER, { recursive: true });
@@ -608,7 +635,9 @@ const main = async function () {
     const server = await chrome.startServer({ commit: options.before, listFolders: true });
     const browser = await chrome.launchChrome();
     const origin = "http://127.0.0.1:" + server.address().port;
-    const file = path.join(SCREENSHOTS_FOLDER, todayText() + "-" + options.name + ".png");
+    // WHY --og into the repository: the link preview is a file of the site (assets/og-image.jpg)
+    const file = (options.og) ? path.resolve(ROOT, options.og)
+        : path.join(SCREENSHOTS_FOLDER, todayText() + "-" + options.name + ".png");
     let hasError = false;
     const run = chrome.startRun("screenshot");
 
