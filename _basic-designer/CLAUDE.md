@@ -1,4 +1,4 @@
-# CLAUDE.md: Basic Designer
+# CLAUDE.md: basic.js Designer
 
 basic.js ile yazılmış bir sayfayı, kodu değiştirmeden bir tasarım aracında açan editör (`index.htm`). Ayrıntılı kullanım ve iç yapı `readme.md`'de. Bu dosya designer'ı geliştirmek içindir.
 

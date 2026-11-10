@@ -32,7 +32,7 @@ Options:
                       in localStorage
     --run "code"      runs in the page after it is loaded (await works): open a menu, a dialog, a state
     --wait-for "js"   after the load it waits until this JavaScript is true (30 s at most), then --run: a page that
-                      loads in parts (basic-designer: "BasicDesigner.state.rt"); in the page of --before too. Still
+                      loads in parts (basic.js Designer: "BasicDesigner.state.rt"); in the page of --before too. Still
                       not true: an error (exit code 1), and the picture shows where the page stopped
     --click "text"    a click of the mouse on the element that shows this text (or has it as its aria-label, title or
                       placeholder), in the page or in one of its iframes of the same origin, brought into the window
@@ -72,7 +72,7 @@ Options:
 It prints the file, and the errors of the page (exit code 1 when the page throws, or --clip or --click finds nothing).
 When another tool with Chrome runs at the same time (another session), it says so at the end (a NOTE).
 The pictures older than 48 hours in _screenshots/ are deleted first (never readme.md).
-The server lists a folder as Live Server does, so the Open Folder of basic designer works in it.
+The server lists a folder as Live Server does, so the Open Folder of basic.js Designer works in it.
 It needs Chrome and puppeteer-core, like compare-pages.js (CHROME_PATH for another place of Chrome).
 */
 

@@ -11,7 +11,7 @@ itself, a question of a button that is forgotten), and Math.random gives the sam
 
     node test/compare-pages.js                          the samples changed since the last commit,
                                                         and the samples that load a changed component
-                                                        (and basic-designer when it loads one: see below);
+                                                        (and basic.js Designer when it loads one: see below);
                                                         a change of basic/: the samples of a short list
                                                         (BASIC_SAMPLES) that load the changed file
     node test/compare-pages.js tabs.htm dialog.htm      these pages (of 02-comp-examples, or a path from the root)
@@ -34,11 +34,11 @@ itself, a question of a button that is forgotten), and Math.random gives the sam
                                                         that the page keeps in localStorage); with --run, in that order
     node test/compare-pages.js --wait-for "BasicDesigner.state.rt" --run "..." _basic-designer/index.htm
                                                         --wait-for: JavaScript that is true when the page is ready (a
-                                                        page that loads in parts: basic-designer and the page in its
+                                                        page that loads in parts: basic.js Designer and the page in its
                                                         iframe); after the load it waits for it (30 s at most), then
                                                         --run, in every state
     node test/compare-pages.js _basic-designer/index.htm
-                                                        basic-designer in its own way, also when it is found (it loads a
+                                                        basic.js Designer in its own way, also when it is found (it loads a
                                                         changed component): it waits for its page, then the picture
                                                         after the load, with a Box selected and with a Label selected
                                                         (only the picture: its own checks press it, audit/); with a
@@ -154,7 +154,7 @@ const deleteEmptyFolder = function () {
 
 // *** THE PAGES TO COMPARE:
 
-// basic-designer: a page that loads in parts (its page in an iframe: BasicDesigner.state.rt is set when it is ready).
+// basic.js Designer: a page that loads in parts (its page in an iframe: BasicDesigner.state.rt is set when it is ready).
 // The objects 2 and 5 of its first page (tabs.htm) are a Box and a Label: the panel of each.
 const DESIGNER = {
     page: "_basic-designer/index.htm",
@@ -183,8 +183,8 @@ const BASIC_SAMPLES = [
     "json-editor.htm", // a tree that opens
 ].map(function (name) { return SAMPLES_FOLDER + "/" + name; });
 
-// The samples changed since the commit, the samples (and basic-designer) that load a changed component, and for a
-// change of basic/ the ones of BASIC_SAMPLES (and basic-designer) that load the changed file.
+// The samples changed since the commit, the samples (and basic.js Designer) that load a changed component, and for a
+// change of basic/ the ones of BASIC_SAMPLES (and basic.js Designer) that load the changed file.
 const findChangedPages = function (base) {
     const changedFiles = readGitLines(["diff", "--name-only", base, "--", SAMPLES_FOLDER, "comp", "basic"]);
     const pages = new Set(changedFiles.filter(function (file) {
@@ -1051,7 +1051,7 @@ const readOptions = function (args) {
     return options;
 };
 
-// How a page is compared: as the options say, or basic-designer in its own way when they say nothing of it (no --run,
+// How a page is compared: as the options say, or basic.js Designer in its own way when they say nothing of it (no --run,
 // no --wait-for).
 const howToCompare = function (pair, options) {
     const isDesignerWay = (pair.newPath === DESIGNER.page && options.runs.length === 0 && !options.waitFor);

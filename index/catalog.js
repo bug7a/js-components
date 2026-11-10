@@ -13,7 +13,7 @@ COMPONENT:
     name: "Tabs",                           // Bileşenin adı (fonksiyon adı)
     cat: "navigation",                      // CATEGORIES anahtarı
     source: "comp/tabs.js",              // Bileşenin kaynak dosyası (deponun köküne göre)
-    deps: ["comp/tooltip.js"],              // (isteğe bağlı) Önce yüklenmesi gereken dosyalar; basic-designer'ın Components paneli
+    deps: ["comp/tooltip.js"],              // (isteğe bağlı) Önce yüklenmesi gereken dosyalar; basic.js Designer'ın Components paneli
                                             // bunları da yükler. Aynı liste test/components-test.htm'de de var.
     samples: ["02-comp-examples/tabs.htm"], // Örnek sayfalar. Başlık için: { file: "...", title: "..." }
     en: "...", tr: "...",                   // Kısa açıklama

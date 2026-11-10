@@ -2,7 +2,7 @@
 
 /*
 
-basic-designer: the rows of the Parameters view and their small editors
+basic.js Designer: the rows of the Parameters view and their small editors
 
 - A row: its name | its text field. The field stays a text that can be written; what it holds decides what is added to it
   (param-kinds.js): a color has its swatch at its start (as in the Box view), a switch or a button at its end.

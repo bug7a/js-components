@@ -1,6 +1,6 @@
-# basic designer — VS Code eklentisi (alfa, v0.0.8)
+# basic.js Designer — VS Code eklentisi (alfa, v0.0.9)
 
-basic.js ile yazılmış bir sayfayı VS Code içinde **basic designer** ile açar ve değişikliklerin prompt'unu
+basic.js ile yazılmış bir sayfayı VS Code içinde **basic.js Designer** ile açar ve değişikliklerin prompt'unu
 **Claude Code** ya da **Codex**'e gönderir.
 
 **Yapay zeka gerekir:** designer'da yapılan değişiklikler dosyaya kendiliğinden yazılmaz; dosyaları Claude Code
@@ -9,7 +9,7 @@ için gerekmez.
 
 ## Kullanım
 
-1. Explorer'da bir `.htm` / `.html` dosyasına sağ tıkla → **Open in basic designer**.
+1. Explorer'da bir `.htm` / `.html` dosyasına sağ tıkla → **Open in basic.js Designer**.
    (Açık bir `.htm` dosyasının sekmesine sağ tıklayınca da çıkar.) Sayfa designer'da, bir sekmede açılır.
    Aynı depodan başka bir sayfa aynı sekmeye yüklenir.
 2. Değişiklikleri yap (designer'ın kendisi gibi).
@@ -17,7 +17,7 @@ için gerekmez.
    VS Code'un üstünde iki seçim çıkar: **hangi yapay zeka** (yalnızca PATH'te bulunanlar seçilebilir) ve **model**
    (`Default` = CLI'nın kendi ayarı, listedekiler, ya da "Other model…").
    Son seçim en üstte "the last choice" olarak durur: bir tıkla aynısı.
-4. CLI, deponun kökünde, adı "basic designer → Claude Code" olan bir terminalde prompt ile başlar.
+4. CLI, deponun kökünde, adı "basic.js Designer → Claude Code" olan bir terminalde prompt ile başlar.
    Konuşmaya oradan devam edilir.
 5. **Kendiliğinden yeniden yükleme:** Send'den sonra sayfanın dosyaları (sayfa, scriptleri, CSS'leri) izlenir.
    Yapay zeka birini değiştirip 1,5 sn durunca designer sayfayı yeniden yükler; gönderilen değişiklikler artık
@@ -33,7 +33,7 @@ Designer'daki `dosya:satır` bağlantıları (alt çubuk, katmanlar) dosyayı ya
 
 - `lib/server.js`: deponun kökünü (`designerPath`'i bulunan ilk üst klasör) **yalnızca 127.0.0.1**'den, boş bir
   porttan veren küçük bir sunucu (GET/HEAD, kökün dışı yok, `no-store`). Designer ile sayfa aynı adresten gelmeli:
-  designer sayfanın içine erişir. Live Server gerekmez. "basic designer: Stop the page server" kapatır.
+  designer sayfanın içine erişir. Live Server gerekmez. "basic.js Designer: Stop the page server" kapatır.
 - `lib/webview.js`: webview yalnızca designer'ın iframe'i ve bir köprü: designer ↔ eklenti mesajları
   (`sendPrompt`, `openFile` / `status`, `load`).
 - `extension.js` istekleri (`type: "request"`, cevabı `type: "reply"` + `id`): `listFolder { folder }` → bir klasördeki
@@ -64,8 +64,8 @@ Designer'daki `dosya:satır` bağlantıları (alt çubuk, katmanlar) dosyayı ya
 
 ## Kurulum
 
-`basic-designer-0.0.8-alpha.vsix` (bu klasörde; alfa): Komut paleti → **Extensions: Install from VSIX…** ya da
-`code --install-extension basic-designer-0.0.8-alpha.vsix`
+`basic-designer-0.0.9-alpha.vsix` (bu klasörde; alfa): Komut paleti → **Extensions: Install from VSIX…** ya da
+`code --install-extension basic-designer-0.0.9-alpha.vsix`
 
 ## Sınırlar (deneme)
 

@@ -2,7 +2,7 @@
 
 /*
 
-basic-designer: what a parameter of a component holds
+basic.js Designer: what a parameter of a component holds
 
 - Every row of the Parameters view has a kind (color, number, list...), read from its name, its value, its default and
   the comment after it in XxxDefaults: variant: "underline", // "underline", "pill"

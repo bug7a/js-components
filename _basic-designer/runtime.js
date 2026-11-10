@@ -2,9 +2,9 @@
 
 /*
 
-basic-designer runtime - v0.1 (prototype)
+basic.js Designer runtime - v0.1 (prototype)
 
-- Loaded INSIDE the page that is designed (the iframe of basic-designer), right after basic.js
+- Loaded INSIDE the page that is designed (the iframe of basic.js Designer), right after basic.js
   and before the page code. The designer puts it there; the page itself is not changed.
 - It records where in the code every basic.js object was created:
   Basic_UIComponent sets this._type in its constructor (the first line for every object), so a
@@ -32,7 +32,7 @@ SPDX-License-Identifier: Apache-2.0
 (function () {
 
     if (typeof basic === "undefined" || typeof basic.start !== "function") {
-        console.warn("basic-designer: basic.js was not found before runtime.js.");
+        console.warn("basic.js Designer: basic.js was not found before runtime.js.");
         return;
     }
 

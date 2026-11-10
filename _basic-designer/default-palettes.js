@@ -1,6 +1,6 @@
 /* Bismillah */
 
-// DEFAULT PALETTES: the color groups that are always in the color picker of basic-designer (after "Used on this
+// DEFAULT PALETTES: the color groups that are always in the color picker of basic.js Designer (after "Used on this
 // page", the UI tokens and your own color groups). Made from the palettes of Bugra.
 // A color: [value, name]. The name is the hint of the swatch ("" -> only the value).
 // The order of a group is light to dark or by hue, so a color is found by its place.

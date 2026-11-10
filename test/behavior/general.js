@@ -608,7 +608,7 @@ test("WebView: a missing page of the same site calls onError (also a 404 page of
     view.remove();
 });
 
-// *** THE REVIEW OF comp/ (2026-11-05) - E: PropertyPanel (basic-designer) and UIEffects
+// *** THE REVIEW OF comp/ (2026-11-05) - E: PropertyPanel (basic.js Designer) and UIEffects
 
 test("PropertyPanel: a color typo in the RGB format of the picker does not throw, and a color can be typed again", async function () {
     const panel = PropertyPanel({ data: { sections: [{ key: "s", title: "S", items: [{ key: "fill", type: "color", label: "Fill", value: "#3871E0" }] }] } });

@@ -1,6 +1,6 @@
 /* Bismillah */
 
-// AUDIT of basic-designer (run in the designer page, with audit/audit.htm loaded):
+// AUDIT of basic.js Designer (run in the designer page, with audit/audit.htm loaded):
 //   1. readAudit(): the values of the panel against the real (computed) values of every object.
 //   2. runChangeAudit(): every property is changed as the panel does it; the value, the prompt line, undo,
 //      redo and the saved session (Revert all + apply) are checked. Results in window.AUDIT.

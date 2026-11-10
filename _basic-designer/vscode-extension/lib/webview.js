@@ -21,7 +21,7 @@ const webviewHtml = function (options) {
 </style>
 </head>
 <body>
-<iframe id="designer" title="basic designer" allow="clipboard-read; clipboard-write"></iframe>
+<iframe id="designer" title="basic.js Designer" allow="clipboard-read; clipboard-write"></iframe>
 <script nonce="${nonce}">
 (function () {
     const SETTINGS = ${settings};

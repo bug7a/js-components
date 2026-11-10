@@ -20,7 +20,7 @@ UI COMPONENT TEMPLATE
 -- A package is a package of params (basic.js v26.10.27): its keys fill the params you did not give, also the
    keys inside backgroundStyle and buttonStyle (Ex: the classic package with your own selectedColor).
 -- "float", "round", "slim", "outline", "square": other shapes, with their sizes, in soft colors
-   (the "Soft" palette of basic-designer). "float": a knob bigger than its track, "round": a big knob, "slim": a low
+   (the "Soft" palette of basic.js Designer). "float": a knob bigger than its track, "round": a big knob, "slim": a low
    track, "outline": a line around the track when off, "square": small corners.
 -- "tick", "badge", "label": with marks. "tick": a check or a cross on the track, "badge": in the knob, on a green or
    red track, "label": ON / OFF on the track, small corners.

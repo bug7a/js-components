@@ -1,7 +1,7 @@
 # _designs: taslak tasarımlar
 
 Bu klasörde **yalnızca taslak tasarımlar** durur (2026-10-30). Bir taslak, bir bileşenin bütün görünüşlerini ve
-bütün durumlarını yan yana gösteren sade bir sayfadır. basic designer'da açılıp gözle düzenlenir; sonra değişiklikler
+bütün durumlarını yan yana gösteren sade bir sayfadır. basic.js Designer'da açılıp gözle düzenlenir; sonra değişiklikler
 bileşene aktarılır. Amaç: tasarım yüzeyi basit ve kolay değişir kalsın, bileşenin kodundan ayrı dursun.
 
 ## Bir taslak nasıl olur
@@ -21,7 +21,7 @@ bileşene aktarılır. Amaç: tasarım yüzeyi basit ve kolay değişir kalsın,
 
 ## Açmak
 
-- VS Code: dosyaya sağ tık → **Open in basic designer** (eklenti: `_basic-designer/vscode-extension/basic-designer-0.0.8-alpha.vsix`,
+- VS Code: dosyaya sağ tık → **Open in basic.js Designer** (eklenti: `_basic-designer/vscode-extension/basic-designer-0.0.9-alpha.vsix`,
   alfa).
 - Tarayıcı (Live Server, port 5505):
   `http://127.0.0.1:5505/_basic-designer/index.htm?page=_designs/smart-button.htm`

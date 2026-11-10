@@ -2,7 +2,7 @@
 
 /*
 
-basic-designer - v0.1 (prototype)
+basic.js Designer - v0.1 (prototype)
 
 - Opens a basic.js page in an iframe, as it is (its own code runs), and shows:
   the layers (every basic.js object, nested, with a name), the selection on the canvas,
@@ -3344,7 +3344,7 @@ BasicDesigner.buildPrompt = function () {
     if (!objects.length && !BasicDesigner.hasPageChanges()) return "";
 
     const out = [];
-    out.push("Visual changes made in basic-designer on the page " + s.pagePath + ".");
+    out.push("Visual changes made in basic.js Designer on the page " + s.pagePath + ".");
     out.push("Apply them to the source code, in the style of the code around them. When a value comes from an expression, a loop, a helper function, a theme token or a component default, choose the right place (the page code, the component params or its style) and tell me what you changed. The notes are wishes: do what they ask.");
     const hasAutoNames = objects.some(BasicDesigner.isAutoName);
     if (hasAutoNames) out.push("Names like btn12 or box45 are automatic (the designer gave them): give each one a name that says what the object is (Ex: btnSave, cardProfile) and use it everywhere.");
@@ -5354,7 +5354,7 @@ BasicDesigner.buildTopBar = function () {
         });
 
         // LABEL: Name
-        ui.lblLogo = Label({ text: "basic designer", fontSize: 13, textColor: C.text, fontFamily: "opensans-bold" });
+        ui.lblLogo = Label({ text: "basic.js Designer", fontSize: 13, textColor: C.text, fontFamily: "opensans-bold" });
         ui.lblLogo.shrink = 0;
         ui.lblLogo.css = { marginRight: "8px" };
 
@@ -5521,7 +5521,7 @@ BasicDesigner.copyPrompt = function (btn) {
     });
 };
 
-// *** VS CODE: the designer in the webview of the basic designer extension (vscode-extension/). The webview
+// *** VS CODE: the designer in the webview of the basic.js Designer extension (vscode-extension/). The webview
 // passes the messages between the designer and the extension: "sendPrompt" (the extension asks for the AI and
 // the model, then starts its CLI in a terminal), "openFile" (the code at a line); back: "status", "load".
 
@@ -6177,7 +6177,7 @@ BasicDesigner.PAGE_NAME_PATTERN = /^[a-z0-9][a-z0-9\-_]*$/i;
 BasicDesigner.openNewPageDialog = function () {
     const C = BasicDesigner.colors;
     if (!BasicDesigner.isInVSCode) {
-        BasicDesigner.setStatus("New page needs basic designer in VS Code: a browser can not write a file.", "error");
+        BasicDesigner.setStatus("New page needs basic.js Designer in VS Code: a browser can not write a file.", "error");
         return;
     }
     if (!BasicDesigner.folder) {
@@ -6255,7 +6255,7 @@ BasicDesigner.sendWorkPrompt = function (prompt, browserHint) {
 // The rules of a design made by the AI (also the sizes: a small picture must not give a small design).
 BasicDesigner.DESIGN_RULES = [
     "- basic.js only (read context/basic-js-core.md and context/basic-js-code-rules.md): groups (VGroup / HGroup) for the layout, not absolute places; Label, Button, Input, Icon; no HTML markup, no CSS file.",
-    "- Only the look, no logic: it is designed further in basic-designer, then turned into a component. The page keeps a start() function and loads the source basic.js; give the objects names that say what they are (Ex: dialog, btnDelete).",
+    "- Only the look, no logic: it is designed further in basic.js Designer, then turned into a component. The page keeps a start() function and loads the source basic.js; give the objects names that say what they are (Ex: dialog, btnDelete).",
     "- Sizes: real, usable sizes, not the pixels of the picture. A small picture (a phone screenshot, a thumbnail) is scaled up so the controls get the standard sizes: a button or an input 50 px high with a 20 px text, a body text 16-20 px, a title 20-28 px, a touch area at least 44 px. When the sizes of the picture are already like these, follow the picture (its proportions, spaces and rounds).",
     "- Colors and sizes as named constants at the top. An icon as an inline SVG in a Label (stroke=\"currentColor\"), not a picture file, unless it is a photo. A plain button look: minimal: 1 with its own color, border and round.",
     "- The texts of the picture as they are.",
@@ -6281,7 +6281,7 @@ BasicDesigner.componentPrompt = function (name, note) {
     const lines = [];
     const changes = BasicDesigner.buildPrompt();
     if (changes) {
-        lines.push("First apply these visual changes of basic-designer, then make the component:", "", changes, "", "---", "");
+        lines.push("First apply these visual changes of basic.js Designer, then make the component:", "", changes, "", "---", "");
     }
     lines.push(
         "Turn the design on the page " + s.pagePath + " into a basic.js component named " + name + ".",

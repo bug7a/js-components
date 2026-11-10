@@ -1,7 +1,7 @@
 /* Bismillah */
 
 /*
-RUN AUDIT: the audits of basic-designer (audit-runner.js) from the terminal. The designer opens audit/audit.htm in
+RUN AUDIT: the audits of basic.js Designer (audit-runner.js) from the terminal. The designer opens audit/audit.htm in
 headless Chrome, with the plain server of the tests (test/_chrome.js). WHY not Live Server: it reloads the page when a
 file of the workspace changes, and a long audit stops in the middle.
 

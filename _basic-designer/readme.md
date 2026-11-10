@@ -1,4 +1,4 @@
-# basic-designer (prototip v0.1, 2026-10-22)
+# basic.js Designer (prototip v0.1, 2026-10-22)
 
 basic.js ile yazılmış bir sayfayı, kodu değiştirmeden bir tasarım aracında açar: katmanlar, seçim, özellik paneli, değişiklik listesi. Değişiklikler canlı sayfaya uygulanır, **dosyaya yazılmaz**. "Copy prompt" ile yapay zekaya `dosya:satır` bilgisiyle gönderilir.
 
@@ -12,7 +12,7 @@ http://127.0.0.1:5505/_basic-designer/index.htm?page=02-comp-examples/tabs.htm
 
 `page` = depo köküne göre sayfa yolu. Üstteki kutudan başka bir sayfa da yüklenebilir.
 
-VS Code'da (**Open in basic designer**, eklenti 0.0.8+) designer'ın açıldığı yer `basicDesigner.openIn` ayarıyla seçilir (2026-11-01): `newWindow` (varsayılan: kendi penceresinde; kod satırına git dendiğinde dosya ana pencerede açılır), `maximized` (bir sekme, düzenleyici alanı büyütülür ve yan çubuklar gizlenir), `tab` (eski hâli: kod dosyalarının arasında bir sekme).
+VS Code'da (**Open in basic.js Designer**, eklenti 0.0.8+) designer'ın açıldığı yer `basicDesigner.openIn` ayarıyla seçilir (2026-11-01): `newWindow` (varsayılan: kendi penceresinde; kod satırına git dendiğinde dosya ana pencerede açılır), `maximized` (bir sekme, düzenleyici alanı büyütülür ve yan çubuklar gizlenir), `tab` (eski hâli: kod dosyalarının arasında bir sekme).
 
 ## Kullanım
 

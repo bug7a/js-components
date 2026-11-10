@@ -2,9 +2,9 @@
 
 /*
 
-basic designer - VS Code extension - v0.0.1 (prototype)
+basic.js Designer - VS Code extension - v0.0.1 (prototype)
 
-- Explorer > right click an .htm / .html file > "Open in basic designer": the page opens in basic designer
+- Explorer > right click an .htm / .html file > "Open in basic.js Designer": the page opens in basic.js Designer
   (_basic-designer) in a webview. A small server (lib/server.js) gives the repository from 127.0.0.1,
   because the designer and the page must come from one origin.
 - "Send to AI" in the designer: a quick pick asks for the AI (Claude Code / Codex) and the model, the prompt
@@ -79,12 +79,12 @@ const design = async function (uri) {
     const editor = vscode.window.activeTextEditor;
     const fileUri = uri || (editor && editor.document.uri);
     if (!fileUri || fileUri.scheme !== "file") {
-        vscode.window.showErrorMessage("basic designer: right click an .htm file of the repository.");
+        vscode.window.showErrorMessage("basic.js Designer: right click an .htm file of the repository.");
         return;
     }
     const root = findRoot(fileUri.fsPath);
     if (!root) {
-        vscode.window.showErrorMessage("basic designer: " + settings().get("designerPath") + " was not found in a folder above " + path.basename(fileUri.fsPath) + ".");
+        vscode.window.showErrorMessage("basic.js Designer: " + settings().get("designerPath") + " was not found in a folder above " + path.basename(fileUri.fsPath) + ".");
         return;
     }
     const page = path.relative(root, fileUri.fsPath).split(path.sep).join("/");
@@ -125,7 +125,7 @@ const placeDesigner = async function () {
         if (openIn === "newWindow") await vscode.commands.executeCommand("workbench.action.moveEditorToNewWindow");
         if (openIn === "maximized") await vscode.commands.executeCommand("workbench.action.maximizeEditorHideSidebar");
     } catch (error) {
-        vscode.window.showWarningMessage("basic designer: could not open it as \"" + openIn + "\": " + error.message);
+        vscode.window.showWarningMessage("basic.js Designer: could not open it as \"" + openIn + "\": " + error.message);
     }
 };
 
@@ -228,7 +228,7 @@ const openFile = async function (root, place) {
             selection: new vscode.Range(position, position),
         });
     } catch (error) {
-        vscode.window.showErrorMessage("basic designer: could not open " + place.path + ": " + error.message);
+        vscode.window.showErrorMessage("basic.js Designer: could not open " + place.path + ": " + error.message);
     }
 };
 
@@ -266,7 +266,7 @@ const chooseAgentAndModel = async function () {
     if (!picked) return null;
     if (picked.choice) return picked.choice;
     if (!picked.isFound) {
-        vscode.window.showErrorMessage("basic designer: " + picked.label + " (" + settings().get(picked.agentKey + ".command") + ") was not found. Install its CLI, or set basicDesigner." + picked.agentKey + ".command.");
+        vscode.window.showErrorMessage("basic.js Designer: " + picked.label + " (" + settings().get(picked.agentKey + ".command") + ") was not found. Install its CLI, or set basicDesigner." + picked.agentKey + ".command.");
         return null;
     }
 
@@ -327,7 +327,7 @@ const sendPrompt = async function (message, root, panel) {
     // WHY: An instruction names the file from the terminal folder (the root): short, and no quotes in it.
     const promptPath = (isInRoot) ? path.relative(root, promptFile) : promptFile;
 
-    const terminalName = "basic designer → " + agent.name;
+    const terminalName = "basic.js Designer → " + agent.name;
     const terminal = vscode.window.createTerminal({ name: terminalName, cwd: root });
     const command = settings().get(choice.agentKey + ".command");
     terminal.show();
@@ -370,7 +370,7 @@ const activate = function (context) {
     context.subscriptions.push(vscode.commands.registerCommand("basicDesigner.stopServer", function () {
         Object.keys(designers).forEach(function (root) { designers[root].dispose(); });
         stopServers();
-        vscode.window.showInformationMessage("basic designer: the page server is stopped.");
+        vscode.window.showInformationMessage("basic.js Designer: the page server is stopped.");
     }));
 };
 

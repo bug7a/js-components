@@ -90,7 +90,7 @@ const toPagePath = function (name) {
     return SAMPLES_FOLDER + "/" + name;
 };
 
-// The folder page of Live Server: basic designer reads the links with a title and the icon-directory class.
+// The folder page of Live Server: basic.js Designer reads the links with a title and the icon-directory class.
 const folderListing = function (folderPath) {
     const entries = fs.readdirSync(folderPath, { withFileTypes: true }).filter(function (entry) {
         return entry.name.charAt(0) !== ".";
@@ -185,7 +185,7 @@ const sleep = function (ms) {
     return new Promise(function (resolve) { setTimeout(resolve, ms); });
 };
 
-// --wait-for of the tools: a page that loads in parts (basic-designer and the page in its iframe) is ready when this
+// --wait-for of the tools: a page that loads in parts (basic.js Designer and the page in its iframe) is ready when this
 // JavaScript is true. An error of it is "not yet" (a thing that is not made yet). false: still not true after timeout ms.
 const WAIT_FOR_INTERVAL = 100; // ms: how often it is asked
 const waitUntilTrue = async function (page, expression, timeout) {

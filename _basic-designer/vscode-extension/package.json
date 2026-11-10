@@ -1,8 +1,8 @@
 {
     "name": "basic-designer",
-    "displayName": "basic designer",
-    "description": "Open a basic.js page in basic designer (right click an .htm file > Open in basic designer) and change it visually. Changes are written to your files by Claude Code or Codex (one of them is needed).",
-    "version": "0.0.8",
+    "displayName": "basic.js Designer",
+    "description": "Open a basic.js page in basic.js Designer (right click an .htm file > Open in basic.js Designer) and change it visually. Changes are written to your files by Claude Code or Codex (one of them is needed).",
+    "version": "0.0.9",
     "publisher": "bugraozden",
     "license": "Apache-2.0",
     "engines": {
@@ -17,13 +17,13 @@
         "commands": [
             {
                 "command": "basicDesigner.design",
-                "title": "Open in basic designer",
-                "category": "basic designer"
+                "title": "Open in basic.js Designer",
+                "category": "basic.js Designer"
             },
             {
                 "command": "basicDesigner.stopServer",
                 "title": "Stop the page server",
-                "category": "basic designer"
+                "category": "basic.js Designer"
             }
         ],
         "menus": {
@@ -49,7 +49,7 @@
             ]
         },
         "configuration": {
-            "title": "basic designer",
+            "title": "basic.js Designer",
             "properties": {
                 "basicDesigner.designerPath": {
                     "type": "string",
@@ -112,7 +112,7 @@
                         "A tab, with the editor area maximized and the side bars hidden.",
                         "A tab among the code files (the old way)."
                     ],
-                    "description": "Where Open in basic designer opens the designer."
+                    "description": "Where Open in basic.js Designer opens the designer."
                 }
             }
         }

@@ -1762,7 +1762,7 @@ const PropertyPanel = function (params = {}) {
         });
 
         // WHY the shown text: the % field wrote the value at every blur, also with no change (and after Escape):
-        //     "transparent" became "rgba(0, 0, 0, 0)", "rgb(55, 56, 54)" "#373836", and basic-designer got a change
+        //     "transparent" became "rgba(0, 0, 0, 0)", "rgb(55, 56, 54)" "#373836", and basic.js Designer got a change
         //     the user did not make. The number field has the same check.
         alphaEl.addEventListener("blur", function () {
             const parts = splitAlpha(api.getValue());
