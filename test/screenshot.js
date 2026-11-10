@@ -31,6 +31,9 @@ Options:
     --init "code"     runs before the scripts of the page, in the page of --before too: a login that the page keeps
                       in localStorage
     --run "code"      runs in the page after it is loaded (await works): open a menu, a dialog, a state
+    --wait-for "js"   after the load it waits until this JavaScript is true (30 s at most), then --run: a page that
+                      loads in parts (basic-designer: "BasicDesigner.state.rt"); in the page of --before too. Still
+                      not true: an error (exit code 1), and the picture shows where the page stopped
     --click "text"    a click of the mouse on the element that shows this text (or has it as its aria-label, title or
                       placeholder), in the page or in one of its iframes of the same origin, brought into the window
     --type "text"     types the text with the keyboard into the field that has the focus (a --click on it before)
@@ -413,6 +416,13 @@ const hideScrollBars = function () {
     });
 };
 
+// --wait-for: a page that is not ready is still taken, with an error.
+const waitForReady = async function (page, expression, log) {
+    const isReady = await chrome.waitUntilTrue(page, expression, LOAD_TIMEOUT);
+    if (isReady) return;
+    log.push({ isError: true, text: "WAIT-FOR ERROR not true after " + (LOAD_TIMEOUT / 1000) + " s: " + expression });
+};
+
 const takePicture = async function (browser, url, options) {
     const context = await browser.createBrowserContext();
     try {
@@ -423,6 +433,7 @@ const takePicture = async function (browser, url, options) {
         watchPage(page, log);
         await page.setViewport({ width: options.width, height: options.height, deviceScaleFactor: options.scale });
         await page.goto(url, { waitUntil: "load", timeout: LOAD_TIMEOUT });
+        if (options.waitFor) await waitForReady(page, options.waitFor, log);
         await sleep(options.wait);
 
         if (options.run) {
@@ -580,7 +591,7 @@ const todayText = function () {
 const readOptions = function (args) {
     const options = { page: "", init: "", run: "", actions: [], clips: [], prints: [], name: "", before: "", width: DEFAULT_WIDTH,
         height: 0, scale: 0, wait: DEFAULT_WAIT, margin: DEFAULT_MARGIN, isNoPicture: false, isHelp: false, join: [], labels: [],
-        isScaleGiven: false, og: "" };
+        isScaleGiven: false, og: "", waitFor: "" };
     for (let i = 0; i < args.length; i++) {
         const arg = args[i];
         const hasValue = (args[i + 1] !== undefined && !args[i + 1].startsWith("--"));
@@ -589,6 +600,7 @@ const readOptions = function (args) {
         else if (arg === "--join") options.join = [args[++i], args[++i]];
         else if (arg === "--label") options.labels.push(args[++i]);
         else if (arg === "--init") options.init = args[++i];
+        else if (arg === "--wait-for") options.waitFor = args[++i];
         else if (arg === "--run") options.run = args[++i];
         else if (arg === "--click") options.actions.push({ kind: "click", text: args[++i] });
         else if (arg === "--type") options.actions.push({ kind: "type", text: args[++i] });

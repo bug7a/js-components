@@ -185,6 +185,20 @@ const sleep = function (ms) {
     return new Promise(function (resolve) { setTimeout(resolve, ms); });
 };
 
+// --wait-for of the tools: a page that loads in parts (basic-designer and the page in its iframe) is ready when this
+// JavaScript is true. An error of it is "not yet" (a thing that is not made yet). false: still not true after timeout ms.
+const WAIT_FOR_INTERVAL = 100; // ms: how often it is asked
+const waitUntilTrue = async function (page, expression, timeout) {
+    const isTrue = "(function () { try { return !!(" + expression + "); } catch (error) { return false; } })()";
+    try {
+        await page.waitForFunction(isTrue, { timeout: timeout, polling: WAIT_FOR_INTERVAL });
+        return true;
+    } catch (error) {
+        if (error.name === "TimeoutError") return false;
+        throw error;
+    }
+};
+
 // A page of the checks never opens a program of the computer. WHY: compare-pages pressed every button of the panel of
 //     04-templates, and every "Send an e-mail" (location.href = "mailto:...") opened a draft in Mail. A navigation to
 //     such an address is cancelled (the Navigation API sees location.href, a link and a form), a link of one is not
@@ -339,5 +353,5 @@ const startRun = function (tool) {
 module.exports = {
     ROOT, SAMPLES_FOLDER, OLD_PATH,
     runGit, readGitLines, isInCommit,
-    listSamples, toPagePath, startServer, launchChrome, guardPage, sleep, helpText, startRun,
+    listSamples, toPagePath, startServer, launchChrome, guardPage, sleep, waitUntilTrue, helpText, startRun,
 };

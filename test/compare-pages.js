@@ -10,6 +10,7 @@ In both pages the clock stands still at 6 Nov 2026 12:00 and Math.random gives t
 
     node test/compare-pages.js                          the samples changed since the last commit,
                                                         and the samples that load a changed component
+                                                        (and basic-designer when it loads one: see below)
     node test/compare-pages.js tabs.htm dialog.htm      these pages (of 02-comp-examples, or a path from the root)
     node test/compare-pages.js --all                    every sample (long)
     node test/compare-pages.js --base HEAD~3 tabs.htm   against another commit
@@ -33,6 +34,12 @@ In both pages the clock stands still at 6 Nov 2026 12:00 and Math.random gives t
                                                         page that loads in parts: basic-designer and the page in its
                                                         iframe); after the load it waits for it (30 s at most), then
                                                         --run, in every state
+    node test/compare-pages.js _basic-designer/index.htm
+                                                        basic-designer in its own way, also when it is found (it loads a
+                                                        changed component): it waits for its page, then the picture
+                                                        after the load, with a Box selected and with a Label selected
+                                                        (only the picture: its own checks press it, audit/); with a
+                                                        --run or a --wait-for of yours, in your way
     node test/compare-pages.js --picture-only draft.htm=copy.htm
                                                         only the picture after the load (and --run): no presses, no
                                                         typing, no DOM (the log stays); a draft of _designs/ and a copy
@@ -93,7 +100,6 @@ const PRESS_WAIT = 90; // ms: after a press
 const TYPE_WAIT = 30; // ms: after typing in a field
 const END_WAIT = 200; // ms: before the last look at the DOM
 const LOAD_TIMEOUT = 30000; // ms (also of --wait-for)
-const WAIT_FOR_INTERVAL = 100; // ms: how often --wait-for is asked
 const MAX_PRESSES = 60; // of a page (a table has very many rows)
 const OPENED_LEVELS = 2; // what a press opens is pressed too: a row of a list, a button of a dialog
 const TRIES = 3; // a real difference stays in every try
@@ -142,7 +148,19 @@ const deleteEmptyFolder = function () {
 
 // *** THE PAGES TO COMPARE:
 
-// The samples changed since the commit, and the samples that load a changed component.
+// basic-designer: a page that loads in parts (its page in an iframe: BasicDesigner.state.rt is set when it is ready).
+// The objects 2 and 5 of its first page (tabs.htm) are a Box and a Label: the panel of each.
+const DESIGNER = {
+    page: "_basic-designer/index.htm",
+    waitFor: "BasicDesigner.state.rt",
+    runs: [
+        "",
+        "BasicDesigner.select(BasicDesigner.state.rt.objects[2])",
+        "BasicDesigner.select(BasicDesigner.state.rt.objects[5])",
+    ],
+};
+
+// The samples changed since the commit, and the samples (and basic-designer) that load a changed component.
 const findChangedPages = function (base) {
     const changedFiles = readGitLines(["diff", "--name-only", base, "--", SAMPLES_FOLDER, "comp"]);
     const pages = new Set(changedFiles.filter(function (file) {
@@ -153,7 +171,7 @@ const findChangedPages = function (base) {
     });
     if (changedComponents.length === 0) return [...pages];
 
-    listSamples().forEach(function (page) {
+    listSamples().concat(DESIGNER.page).forEach(function (page) {
         const pageText = fs.readFileSync(path.join(ROOT, page), "utf8");
         const loadsChanged = changedComponents.some(function (file) { return pageText.includes("../" + file); });
         if (loadsChanged) pages.add(page);
@@ -448,14 +466,10 @@ const typeEverywhere = async function (page, fieldCount, lines, htmlAsText) {
     }
 };
 
-// --wait-for: an error of the JavaScript (a thing that is not made yet) is "not yet".
-const waitUntilTrue = async function (page, expression) {
-    const isTrue = "(function () { try { return !!(" + expression + "); } catch (error) { return false; } })()";
-    try {
-        await page.waitForFunction(isTrue, { timeout: LOAD_TIMEOUT, polling: WAIT_FOR_INTERVAL });
-    } catch (error) {
-        throw new Error("--wait-for is not true after " + (LOAD_TIMEOUT / 1000) + " s: " + expression);
-    }
+// --wait-for: a page that is never ready can not be compared.
+const waitForReady = async function (page, expression) {
+    const isReady = await chrome.waitUntilTrue(page, expression, LOAD_TIMEOUT);
+    if (!isReady) throw new Error("--wait-for is not true after " + (LOAD_TIMEOUT / 1000) + " s: " + expression);
 };
 
 // WHY a new context for every run: localStorage of one run (a login page) must not reach the next.
@@ -476,7 +490,7 @@ const runPage = async function (browser, url, size, steps) {
         await page.evaluateOnNewDocument(preparePage, { isClockStopped: steps.isClockStopped });
         if (steps.init) await page.evaluateOnNewDocument(steps.init);
         await page.goto(url, { waitUntil: "load", timeout: LOAD_TIMEOUT });
-        if (steps.waitFor) await waitUntilTrue(page, steps.waitFor);
+        if (steps.waitFor) await waitForReady(page, steps.waitFor);
         await sleep(LOAD_WAIT);
         if (steps.run) {
             await page.evaluate(steps.run);
@@ -987,17 +1001,26 @@ const readOptions = function (args) {
     return options;
 };
 
+// How a page is compared: as the options say, or basic-designer in its own way when they say nothing of it (no --run,
+// no --wait-for).
+const howToCompare = function (pair, options) {
+    const isDesignerWay = (pair.newPath === DESIGNER.page && options.runs.length === 0 && !options.waitFor);
+    if (isDesignerWay) return { runs: DESIGNER.runs, waitFor: DESIGNER.waitFor, isPictureOnly: true };
+    const runs = (options.runs.length > 0) ? options.runs : [""];
+    return { runs: runs, waitFor: options.waitFor, isPictureOnly: options.isPictureOnly };
+};
+
 const choosePages = function (options) {
     let pairs = options.pages;
     if (options.isAll) pairs = listSamples().map(toPagePair);
     else if (pairs.length === 0) pairs = findChangedPages(options.base).map(toPagePair);
-    // WHY one pair for each --run: each is a state of its own (a page of a panel), all of them in one browser.
-    const runs = (options.runs.length > 0) ? options.runs : [""];
     return pairs.flatMap(function (pair) {
-        return runs.map(function (run, index) {
-            const runName = (runs.length > 1) ? "run" + (index + 1) : "";
-            const steps = { init: options.init, waitFor: options.waitFor, run: run, isClockStopped: options.isClockStopped,
-                isPictureOnly: options.isPictureOnly, isPressOnce: !options.isPressAll };
+        const way = howToCompare(pair, options);
+        // WHY one pair for each --run: each is a state of its own (a page of a panel), all of them in one browser.
+        return way.runs.map(function (run, index) {
+            const runName = (way.runs.length > 1) ? "run" + (index + 1) : "";
+            const steps = { init: options.init, waitFor: way.waitFor, run: run, isClockStopped: options.isClockStopped,
+                isPictureOnly: way.isPictureOnly, isPressOnce: !options.isPressAll };
             return Object.assign({}, pair, { steps: steps, runName: runName });
         });
     });
