@@ -47,7 +47,7 @@ Options:
     --name what       the file: _screenshots/YYYY-MM-DD-what.png (the name of the page by default)
     --og file.jpg     the link preview of a site (og:image): the first screen of the page in a window of 1200 x 630,
                       its scroll bars hidden, a JPEG into this file of the repository, not into _screenshots/ (not
-                      with --before or --clip)
+                      with --before or --clip). With --height: a taller one (the picture of the README: 1250)
     --width, --height the window (1280 x 800; a width under 500 is 844 high)
     --scale n         pixels per px (2 for a part, 1 for the whole window)
     --wait ms         after the load, after --run and after each --click and --type (600)
@@ -600,7 +600,7 @@ const readOptions = function (args) {
         else if (arg === "--margin") options.margin = Number(args[++i]);
         else options.page = chrome.toPagePath(arg);
     }
-    if (options.og) Object.assign(options, OG_SIZE, { scale: 1 });
+    if (options.og) Object.assign(options, { width: OG_SIZE.width, height: options.height || OG_SIZE.height, scale: 1 });
     if (!options.height) options.height = (options.width < PHONE_WIDTH) ? PHONE_HEIGHT : DEFAULT_HEIGHT;
     if (!options.scale) options.scale = (options.clips.length) ? 2 : 1;
     if (!options.name) options.name = path.basename(options.page.split(/[?#]/)[0]).replace(/\.html?$/i, "");
