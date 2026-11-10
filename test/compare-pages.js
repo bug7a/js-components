@@ -10,7 +10,9 @@ In both pages the clock stands still at 6 Nov 2026 12:00 and Math.random gives t
 
     node test/compare-pages.js                          the samples changed since the last commit,
                                                         and the samples that load a changed component
-                                                        (and basic-designer when it loads one: see below)
+                                                        (and basic-designer when it loads one: see below);
+                                                        a change of basic/: the samples of a short list
+                                                        (BASIC_SAMPLES) that load the changed file
     node test/compare-pages.js tabs.htm dialog.htm      these pages (of 02-comp-examples, or a path from the root)
     node test/compare-pages.js --all                    every sample (long)
     node test/compare-pages.js --base HEAD~3 tabs.htm   against another commit
@@ -160,22 +162,47 @@ const DESIGNER = {
     ],
 };
 
-// The samples changed since the commit, and the samples (and basic-designer) that load a changed component.
+// A change of basic/: these samples, that use much of basic.js (nearly every sample loads it: --all, long).
+// WHY of both kinds: about half of the samples load basic.js, the others basic.min.js; a page comes when it loads the
+//     changed file (a change of basic.js with its min not made again changes no page of the min).
+const BASIC_SAMPLES = [
+    "minimal-theme.htm", // many components, light and dark
+    "text-field-8-light-dark.htm", // fields
+    "smart-button.htm", // buttons and icons
+    "item-list.htm", // a list
+    "select-box.htm", // a popup over the page
+    "dialog.htm", // overlays
+    "scroll-area.htm", // the ScrollArea and its bar (basic.min.js from here on)
+    "property-panel.htm", // a page made smaller (page.fit)
+    "tabs.htm",
+    "login-page.htm", // a whole page
+    "json-editor.htm", // a tree that opens
+].map(function (name) { return SAMPLES_FOLDER + "/" + name; });
+
+// The samples changed since the commit, the samples (and basic-designer) that load a changed component, and for a
+// change of basic/ the ones of BASIC_SAMPLES (and basic-designer) that load the changed file.
 const findChangedPages = function (base) {
-    const changedFiles = readGitLines(["diff", "--name-only", base, "--", SAMPLES_FOLDER, "comp"]);
+    const changedFiles = readGitLines(["diff", "--name-only", base, "--", SAMPLES_FOLDER, "comp", "basic"]);
     const pages = new Set(changedFiles.filter(function (file) {
         return file.startsWith(SAMPLES_FOLDER + "/") && file.endsWith(".htm");
     }));
     const changedComponents = changedFiles.filter(function (file) {
         return file.startsWith("comp/") && file.endsWith(".js");
     });
-    if (changedComponents.length === 0) return [...pages];
-
-    listSamples().concat(DESIGNER.page).forEach(function (page) {
-        const pageText = fs.readFileSync(path.join(ROOT, page), "utf8");
-        const loadsChanged = changedComponents.some(function (file) { return pageText.includes("../" + file); });
-        if (loadsChanged) pages.add(page);
+    const changedLibrary = changedFiles.filter(function (file) {
+        return file.startsWith("basic/") && /\.(js|css)$/.test(file);
     });
+
+    const addPagesThatLoad = function (candidates, files) {
+        if (files.length === 0) return;
+        candidates.forEach(function (page) {
+            const pageText = fs.readFileSync(path.join(ROOT, page), "utf8");
+            const loadsChanged = files.some(function (file) { return pageText.includes("../" + file); });
+            if (loadsChanged) pages.add(page);
+        });
+    };
+    addPagesThatLoad(listSamples().concat(DESIGNER.page), changedComponents);
+    addPagesThatLoad(BASIC_SAMPLES.concat(DESIGNER.page), changedLibrary);
     return [...pages];
 };
 

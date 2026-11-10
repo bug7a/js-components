@@ -26,7 +26,7 @@ Bir basic.js sayfasını görsel olarak düzenlemek: katmanlar, seçim, özellik
 ## Kalite
 
 - Büyük bir değişiklikten sonra denetim: `node _basic-designer/audit/run-audit.js` (adsız: hızlı denetimlerin hepsi; `editor manual` gibi adlar; `change` her özellik, ~8 dk; readme "Denetim"). Elle açılırsa **düz bir sunucuyla** (bağlantı düşürmeyen bir Node sunucusu: `python3 -m http.server` test sayfalarında bağlantı düşürdü), Live Server ile değil (dosya değişince sayfayı yeniden yükler, uzun test yarıda kalır).
-- Designer'ın kullandığı bir bileşen (PropertyPanel, TreeView...) değişince designer aynı kalmalı (kendi görünüşünü stilleriyle tutar: `BasicDesigner.panelStyle()`, `treeStyle()`): `node test/compare-pages.js` onu kendiliğinden de karşılaştırır (sayfasını bekler; yüklendiğinde, bir Box ve bir Label seçiliyken, yalnız resim); tek başına: `node test/compare-pages.js _basic-designer/index.htm` (sonuç SAME olmalı). Resmi: `node test/screenshot.js _basic-designer/index.htm --wait-for "BasicDesigner.state.rt" --run "..."`.
+- Designer'ın kullandığı bir bileşen (PropertyPanel, TreeView...) değişince designer aynı kalmalı (kendi görünüşünü stilleriyle tutar: `BasicDesigner.panelStyle()`, `treeStyle()`): `node test/compare-pages.js` onu kendiliğinden de karşılaştırır (yüklediği bir bileşen ya da `basic/` dosyası değişince) (sayfasını bekler; yüklendiğinde, bir Box ve bir Label seçiliyken, yalnız resim); tek başına: `node test/compare-pages.js _basic-designer/index.htm` (sonuç SAME olmalı). Resmi: `node test/screenshot.js _basic-designer/index.htm --wait-for "BasicDesigner.state.rt" --run "..."`.
 - Undo / redo, Revert all ve kayıtlı oturum her yeni özellikte çalışmalı.
 - Yeni bir özellik `readme.md`'ye yazılır.
 
