@@ -703,10 +703,9 @@
 
         // GROUP: Wrapping row for radio buttons and check boxes
         const createWrapGroup = function() {
-            const group = AutoLayout({
-                flow: "horizontal",
+            const group = HGroup({
                 align: "left top",
-                flexWrap: "wrap",
+                wrap: 1,
                 width: "100%",
                 height: "auto",
                 gap: 4,

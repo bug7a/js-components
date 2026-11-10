@@ -675,10 +675,9 @@
 
         // GROUP: Wrapping row for radio buttons and check boxes
         const createWrapGroup = function() {
-            const group = AutoLayout({
-                flow: "horizontal",
+            const group = HGroup({
                 align: "left top",
-                flexWrap: "wrap",
+                wrap: 1,
                 width: "100%",
                 height: "auto",
                 gap: 4,
@@ -798,9 +797,9 @@
             const lines = [
                 "BEGIN:VCALENDAR",
                 "VERSION:2.0",
-                "PRODID:-//JS Form//Appointment//EN",
+                "PRODID:-//Web Forms//Appointment//EN",
                 "BEGIN:VEVENT",
-                "UID:" + now.getTime() + "@js-form",
+                "UID:" + now.getTime() + "@web-forms",
                 "DTSTAMP:" + now.toISOString().replace(/[-:]/g, "").slice(0, 15) + "Z",
                 "DTSTART:" + toICSDate(booking.start),
                 "DTEND:" + toICSDate(booking.end),

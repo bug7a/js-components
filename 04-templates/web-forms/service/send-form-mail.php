@@ -5,7 +5,7 @@
 
 Form Mail Service - v26.11
 
-- Sends the data of a js-form page as an e-mail, with the same style as the forms.
+- Sends the data of a web-forms page as an e-mail, with the same style as the forms.
 - Sends over SMTP with PHPMailer (the "PHPMailer" folder next to this file), so the server's
   mail() function is not needed. MAIL_METHOD "mail" uses mail() instead. It needs PHP 7.4+.
 
@@ -15,7 +15,7 @@ USAGE:
 3. Write that URL to the SERVICE_URL constant of the form page. Nothing else is needed.
 
 WHAT IT ACCEPTS:
-- application/json  : [ { key, type, titleText, value }, ... ]          (js-form Form JSON; "inputValue" of older pages too)
+- application/json  : [ { key, type, titleText, value }, ... ]          (the JSON of the Form component; "inputValue" of older pages too)
                       { formName, formTitle, fields: [ ... ] }              (the same, with a title)
                       { first_name: "...", email: "..." }                   (a flat object)
 - multipart/form-data : a JSON string in a field (fields, formJSON, ticket, application...)
@@ -89,7 +89,7 @@ define("HONEYPOT_FIELD", "website");
 // One mail in this many seconds from the same IP. 0: off.
 define("RATE_LIMIT_SECONDS", 15);
 
-// Mail style. The default colors are the colors of the js-form pages.
+// Mail style. The default colors are the colors of the web-forms pages.
 define("ACCENT_COLOR", "#65A293");
 define("TEXT_COLOR", "#373836");
 define("LABEL_COLOR", "#999999");
@@ -147,7 +147,7 @@ if ($_SERVER["REQUEST_METHOD"] === "GET") {
 
     answer(200, [
         "ok" => true,
-        "service" => "js-form mail service",
+        "service" => "web-forms mail service",
         "version" => "26.11",
         "php" => PHP_VERSION,
         "mailMethod" => MAIL_METHOD,
@@ -345,7 +345,7 @@ if (MAIL_METHOD === "smtp") {
 
 if ($sendError !== "") {
     // WHY: The visitor does not need the SMTP details, but you do: they are in the PHP error log.
-    error_log("js-form mail service: " . $sendError);
+    error_log("web-forms mail service: " . $sendError);
     answer(500, ["ok" => false, "error" => "The mail could not be sent by the server." . (DEBUG_MODE ? " " . $sendError : "")]);
 }
 
@@ -416,7 +416,7 @@ function findSetupWarning() {
 
 }
 
-// Is it the JSON of a js-form Form? [ { key, ... }, ... ]
+// Is it the JSON of the Form component? [ { key, ... }, ... ]
 function isJsonFieldList($data) {
 
     if (!is_array($data) || count($data) === 0) return false;
@@ -653,7 +653,7 @@ function checkRateLimit() {
     $ip = isset($_SERVER["REMOTE_ADDR"]) ? $_SERVER["REMOTE_ADDR"] : "";
     if ($ip === "") return;
 
-    $file = sys_get_temp_dir() . "/js-form-mail-" . md5($ip) . ".txt";
+    $file = sys_get_temp_dir() . "/web-forms-mail-" . md5($ip) . ".txt";
     $last = @file_get_contents($file);
 
     if ($last !== false && (time() - (int)$last) < RATE_LIMIT_SECONDS) {
@@ -820,7 +820,7 @@ function createSmtpMailer() {
     $mail->Timeout = 20; // WHY: The default is 300 seconds; the form would wait that long for a wrong host.
     $mail->CharSet = "UTF-8";
     $mail->Encoding = "base64";
-    $mail->XMailer = "js-form mail service";
+    $mail->XMailer = "web-forms mail service";
 
     if (!SMTP_VERIFY_CERTIFICATE) {
         $mail->SMTPOptions = ["ssl" => ["verify_peer" => false, "verify_peer_name" => false, "allow_self_signed" => true]];
@@ -896,7 +896,7 @@ function sendMail($to, $subject, $htmlBody, $textBody, $fromEmail, $fromName, $r
     $headers[] = "MIME-Version: 1.0";
     $headers[] = "From: " . encodeHeaderText($fromName) . " <" . $fromEmail . ">";
     if ($replyTo !== "") $headers[] = "Reply-To: " . $replyTo;
-    $headers[] = "X-Mailer: js-form mail service";
+    $headers[] = "X-Mailer: web-forms mail service";
     $headers[] = "Content-Type: multipart/mixed; boundary=\"" . $boundaryMixed . "\"";
 
     // BODY:

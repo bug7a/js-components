@@ -1,6 +1,6 @@
 # Form Mail Service
 
-`send-form-mail.php` sends the data of a js-form page to your e-mail address, with the same style as the
+`send-form-mail.php` sends the data of a web-forms page to your e-mail address, with the same style as the
 forms. No database: it needs PHP 7.4+ and a mail account on your hosting. It logs in to that account over
 **SMTP** with [PHPMailer](https://github.com/PHPMailer/PHPMailer) (the `PHPMailer` folder, v7.1.1, LGPL), so
 the PHP `mail()` function of the server does not have to be open.
@@ -23,7 +23,7 @@ the PHP `mail()` function of the server does not have to be open.
 2. Upload the file **and the `PHPMailer` folder** next to it. Ex: `https://your-site.com/service/send-form-mail.php`
    (`service/PHPMailer/PHPMailer.php`, `SMTP.php`, `Exception.php`)
 
-3. Open the form page (`contact-form.htm`, `order-form.htm`, ...) and write that address to `SERVICE_URL`:
+3. Open the form page (`contact-form-to-mail.htm`, `order-form.htm`, ...) and write that address to `SERVICE_URL`:
 
    ```js
    const SERVICE_URL = "https://your-site.com/service/send-form-mail.php";
@@ -34,7 +34,7 @@ That is all. Nothing else in the form page has to change.
 **Check the service:** open the address in a browser. A running service answers with JSON:
 
 ```json
-{ "ok": true, "service": "js-form mail service", "php": "8.2.0", "mailMethod": "smtp",
+{ "ok": true, "service": "web-forms mail service", "version": "26.11", "php": "8.2.0", "mailMethod": "smtp",
   "phpMailerFound": true, "mailFunction": false, "toEmailSet": true, "setupError": "", "setupWarning": "" }
 ```
 
@@ -64,7 +64,7 @@ All of them are at the top of the file, above the `SETTINGS END` line.
 | `MAX_FILE_SIZE`, `MAX_FILE_COUNT`, `MAX_TOTAL_FILE_SIZE`, `$ALLOWED_FILE_TYPES` | Limits of the uploaded files. |
 | `HONEYPOT_FIELD` | A field that must stay empty. If a bot fills it the mail is not sent, but the answer is still "ok". |
 | `RATE_LIMIT_SECONDS` | One mail in this many seconds from the same IP. `0`: off. |
-| `ACCENT_COLOR`, `TEXT_COLOR`, `LOGO_URL`... | The style of the mail. The defaults are the colors of the js-form pages. |
+| `ACCENT_COLOR`, `TEXT_COLOR`, `LOGO_URL`... | The style of the mail. The defaults are the colors of the web-forms pages. |
 | `SHOW_TECHNICAL_INFO` | Writes date, reference, page address, IP and browser to the end of the mail. |
 
 ## What the mail looks like
@@ -78,7 +78,7 @@ attached to the mail. Every mail also has a plain text version.
 
 | Form | What it sends |
 |---|---|
-| `basic-form.htm`, `contact-form.htm` | JSON |
+| `contact-form-to-mail.htm` | JSON |
 | `dark-contact-form.htm` | JSON (the contact form on a dark page, with a topic question) |
 | `appointment-form.htm`, `order-form.htm` | JSON |
 | `feedback-form.htm` | JSON + screenshots |
@@ -86,7 +86,7 @@ attached to the mail. Every mail also has a plain text version.
 | `support-ticket-form.htm` | JSON + attachments, and shows the ticket number from the answer |
 | `event-registration-form.htm` | JSON + student ID files |
 
-`contact-form.htm` posts to Supabase by default. To send the mail instead, write the address to
+`contact-form-to-supabase.htm` posts to Supabase by default. To send the mail instead, write the address to
 `SERVICE_URL` and use `sendFormToMailService(json)` in `onSendClick`.
 
 ## Using it in your own form

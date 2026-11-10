@@ -619,8 +619,7 @@
         // GROUP: One product row: name, description, price, quantity stepper, line total
         const createProductRow = function(product, field) {
 
-            const row = AutoLayout({
-                flow: "horizontal",
+            const row = HGroup({
                 align: "left center",
                 width: "100%",
                 height: "auto",
@@ -914,10 +913,9 @@
 
         // GROUP: Wrapping row for radio buttons and check boxes
         const createWrapGroup = function() {
-            const group = AutoLayout({
-                flow: "horizontal",
+            const group = HGroup({
                 align: "left top",
-                flexWrap: "wrap",
+                wrap: 1,
                 width: "100%",
                 height: "auto",
                 gap: 4,
