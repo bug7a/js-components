@@ -113,7 +113,7 @@ This handbook exemplifies how you can use the library most efficiently, from bas
 6. **Practical Information (Tips & Tricks):**
    CSS/interface tactics that might feel complex like casting a shadow on a component or adding a gradient in the UI, but are single-line lifesavers via the library (`09-useful-examples.md`).
 7. **Components:**
-   Using the ready components of the JS-Component Kit (`14-using-components.md`) and writing a component of your own (`15-making-a-component.md`).
+   Using the ready components of OzdenUI (`14-using-components.md`) and writing a component of your own (`15-making-a-component.md`).
 
 Also, to quickly look at the latest developments and fresh methods added to the library, you can review the **`00-what-is-new.md`** release notes.
 

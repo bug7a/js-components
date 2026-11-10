@@ -1,6 +1,6 @@
 # basic.js — Making a Component
 
-A component is a function that makes a `Box`, puts its parts in it and gives the box back. A page then uses it like any object of basic.js (`14-using-components.md`). This chapter makes one: `StarRating`, a row of stars that the user clicks to give a rating. The components of the JS-Component Kit are written the same way; the full starting point of the kit is its `_component-template.js`.
+A component is a function that makes a `Box`, puts its parts in it and gives the box back. A page then uses it like any object of basic.js (`14-using-components.md`). This chapter makes one: `StarRating`, a row of stars that the user clicks to give a rating. The components of OzdenUI are written the same way; the full starting point of the kit is its `_component-template.js`.
 
 ---
 

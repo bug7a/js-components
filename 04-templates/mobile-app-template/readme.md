@@ -1,6 +1,6 @@
 # Mobile App Templates
 
-Ready-made mobile apps built with [basic.js](../../basic/) and the JS-Component Kit. Pick the template closest to your
+Ready-made mobile apps built with [basic.js](../../basic/) and OzdenUI. Pick the template closest to your
 app, copy it, and change its settings, data and pages. There is no build step: the app is plain HTML and JavaScript, and
 Capacitor or Cordova wraps it into an Android or iOS app.
 

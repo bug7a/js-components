@@ -18,7 +18,7 @@ This file gives Claude Code guidance for working in this repository. It holds th
 
 ## What this is
 
-**JS-Component Kit**: UI components, samples and app templates built on **basic.js** (`basic/basic.js`), a small, dependency-free library by Bugra Ozden: the whole UI in plain JavaScript, DOM objects made directly, no HTML markup, no CSS authoring, no virtual DOM. Apache 2.0.
+**OzdenUI**: UI components, samples and app templates built on **basic.js** (`basic/basic.js`), a small, dependency-free library by Bugra Ozden: the whole UI in plain JavaScript, DOM objects made directly, no HTML markup, no CSS authoring, no virtual DOM. Apache 2.0.
 
 There is **no build system, package.json, bundler, linter or test runner**. Every page is a standalone `.htm` file that loads scripts with `<script src>`; open it in a browser. Live Server is on port 5505 (`.vscode/settings.json`).
 

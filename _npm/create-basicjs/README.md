@@ -1,6 +1,6 @@
 # create-basicjs
 
-Create a project with [basic.js](https://bug7a.github.io/basic.js/) and the JS-Component Kit, ready to build with AI tools.
+Create a project with [basic.js](https://bug7a.github.io/basic.js/) and OzdenUI, ready to build with AI tools.
 
 ```sh
 npm create basicjs@latest my-app

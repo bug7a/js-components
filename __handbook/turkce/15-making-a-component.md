@@ -1,6 +1,6 @@
 # basic.js — Bileşen Yazmak (Making a Component)
 
-Bileşen, bir `Box` yapan, parçalarını içine koyan ve kutuyu döndüren bir fonksiyondur. Bir sayfa onu basic.js'in herhangi bir nesnesi gibi kullanır (`14-using-components.md`). Bu bölüm bir tane yapar: `StarRating`, kullanıcının tıklayarak puan verdiği bir sıra yıldız. JS-Component Kit'in bileşenleri de aynı yolla yazılır; kitin tam başlangıç noktası `_component-template.js` dosyasıdır.
+Bileşen, bir `Box` yapan, parçalarını içine koyan ve kutuyu döndüren bir fonksiyondur. Bir sayfa onu basic.js'in herhangi bir nesnesi gibi kullanır (`14-using-components.md`). Bu bölüm bir tane yapar: `StarRating`, kullanıcının tıklayarak puan verdiği bir sıra yıldız. OzdenUI'ın bileşenleri de aynı yolla yazılır; kitin tam başlangıç noktası `_component-template.js` dosyasıdır.
 
 ---
 

@@ -1,6 +1,6 @@
 # basic.js — Bileşenleri Kullanmak (Using Components)
 
-Bileşen, basic.js ile yapılmış hazır bir sayfa parçasıdır: ikonlu bir buton, başlıklı bir metin alanı, bir liste, bir pencere. JS-Component Kit'in bileşenleri `comp/` klasöründedir, her biri tek bir `.js` dosyasıdır; kataloğu hepsini gösterir: https://bug7a.github.io/js-components/
+Bileşen, basic.js ile yapılmış hazır bir sayfa parçasıdır: ikonlu bir buton, başlıklı bir metin alanı, bir liste, bir pencere. OzdenUI'ın bileşenleri `comp/` klasöründedir, her biri tek bir `.js` dosyasıdır; kataloğu hepsini gösterir: https://bug7a.github.io/js-components/
 
 Bu bölüm hepsinde ortak olanı anlatır. Bir bileşenin kendi parametreleri dosyasının başında ve örnek sayfasındadır. Kendi bileşeninizi yazmak için: `15-making-a-component.md`.
 

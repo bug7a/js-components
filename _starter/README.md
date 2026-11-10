@@ -1,6 +1,6 @@
 # My App
 
-A web app made with [basic.js](https://bug7a.github.io/basic.js/) and the JS-Component Kit. The whole interface is written in plain JavaScript.
+A web app made with [basic.js](https://bug7a.github.io/basic.js/) and OzdenUI. The whole interface is written in plain JavaScript.
 
 ## Run it
 

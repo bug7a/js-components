@@ -1,9 +1,9 @@
-# JS-Component Kit
+# OzdenUI
 
 > **Design with code. See it work right away.**
 > UI components, samples and app templates for building web interfaces in plain JavaScript, with layout, style and behavior in one place.
 
-JS-Component Kit is built on [**basic.js**](https://bug7a.github.io/basic.js/), a small, dependency-free library that creates DOM objects directly from JavaScript. You add a `<script>` tag, write a few lines and open the page in a browser.
+OzdenUI is built on [**basic.js**](https://bug7a.github.io/basic.js/), a small, dependency-free library that creates DOM objects directly from JavaScript. You add a `<script>` tag, write a few lines and open the page in a browser.
 
 **[Browse the components](https://bug7a.github.io/js-components/)** · **[Handbook](https://bug7a.github.io/basic.js-handbook/)** · **[basic.js](https://bug7a.github.io/basic.js/)**
 
@@ -58,7 +58,7 @@ Nearly 70 components. Every one has a live example with its code in the [compone
 
 ---
 
-## Why JS-Component Kit?
+## Why OzdenUI?
 
 * **Readable code:** The code for a screen follows the layout of the screen, so you can understand it at a glance.
 * **Small learning curve:** If you know JavaScript, a handful of concepts are enough to start: `Box`, `Label`, `Button`, `AutoLayout` and `that`.

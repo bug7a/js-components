@@ -1,6 +1,6 @@
 # basic.js — Using Components
 
-A component is a ready part of a page made with basic.js: a button with an icon, a text field with a title, a list, a dialog. The components of the JS-Component Kit are in its `comp/` folder, one `.js` file each, and its catalog shows them all: https://bug7a.github.io/js-components/
+A component is a ready part of a page made with basic.js: a button with an icon, a text field with a title, a list, a dialog. The components of OzdenUI are in its `comp/` folder, one `.js` file each, and its catalog shows them all: https://bug7a.github.io/js-components/
 
 This chapter is what all of them share. The params of one component are at the top of its file and on its sample page. To write a component of your own: `15-making-a-component.md`.
 
