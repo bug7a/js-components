@@ -28,6 +28,11 @@ In both pages the clock stands still at 6 Nov 2026 12:00 and Math.random gives t
     node test/compare-pages.js --init "localStorage.setItem('appid_login', '{}')" ...
                                                         --init: JavaScript before the scripts of the page (a login
                                                         that the page keeps in localStorage); with --run, in that order
+    node test/compare-pages.js --wait-for "BasicDesigner.state.rt" --run "..." _basic-designer/index.htm
+                                                        --wait-for: JavaScript that is true when the page is ready (a
+                                                        page that loads in parts: basic-designer and the page in its
+                                                        iframe); after the load it waits for it (30 s at most), then
+                                                        --run, in every state
     node test/compare-pages.js --picture-only draft.htm=copy.htm
                                                         only the picture after the load (and --run): no presses, no
                                                         typing, no DOM (the log stays); a draft of _designs/ and a copy
@@ -87,7 +92,8 @@ const LOAD_WAIT = 900; // ms: after the load event, for the first animations of 
 const PRESS_WAIT = 90; // ms: after a press
 const TYPE_WAIT = 30; // ms: after typing in a field
 const END_WAIT = 200; // ms: before the last look at the DOM
-const LOAD_TIMEOUT = 30000; // ms
+const LOAD_TIMEOUT = 30000; // ms (also of --wait-for)
+const WAIT_FOR_INTERVAL = 100; // ms: how often --wait-for is asked
 const MAX_PRESSES = 60; // of a page (a table has very many rows)
 const OPENED_LEVELS = 2; // what a press opens is pressed too: a row of a list, a button of a dialog
 const TRIES = 3; // a real difference stays in every try
@@ -442,9 +448,20 @@ const typeEverywhere = async function (page, fieldCount, lines, htmlAsText) {
     }
 };
 
+// --wait-for: an error of the JavaScript (a thing that is not made yet) is "not yet".
+const waitUntilTrue = async function (page, expression) {
+    const isTrue = "(function () { try { return !!(" + expression + "); } catch (error) { return false; } })()";
+    try {
+        await page.waitForFunction(isTrue, { timeout: LOAD_TIMEOUT, polling: WAIT_FOR_INTERVAL });
+    } catch (error) {
+        throw new Error("--wait-for is not true after " + (LOAD_TIMEOUT / 1000) + " s: " + expression);
+    }
+};
+
 // WHY a new context for every run: localStorage of one run (a login page) must not reach the next.
-// steps: { init, run, isClockStopped }: JavaScript before the scripts of the page, and after its load (the same in the
-// old page); isClockStopped: the time of the page does not move (the default; --moving-clock: it goes on).
+// steps: { init, waitFor, run, isClockStopped }: JavaScript before the scripts of the page, true when it is ready, and
+// after its load (the same in the old page); isClockStopped: the time of the page does not move (the default;
+// --moving-clock: it goes on).
 // Also { pressedBefore, pressedNow } (not with --press-all): the keys of the objects the earlier states pressed (they
 // are not pressed), and the set the keys of the ones this run presses go into (stepsOfState()).
 const runPage = async function (browser, url, size, steps) {
@@ -459,6 +476,7 @@ const runPage = async function (browser, url, size, steps) {
         await page.evaluateOnNewDocument(preparePage, { isClockStopped: steps.isClockStopped });
         if (steps.init) await page.evaluateOnNewDocument(steps.init);
         await page.goto(url, { waitUntil: "load", timeout: LOAD_TIMEOUT });
+        if (steps.waitFor) await waitUntilTrue(page, steps.waitFor);
         await sleep(LOAD_WAIT);
         if (steps.run) {
             await page.evaluate(steps.run);
@@ -949,11 +967,12 @@ const readWidth = function (text) {
 };
 
 const readOptions = function (args) {
-    const options = { base: "HEAD", isAll: false, isHelp: false, pages: [], widths: [], init: "", runs: [],
+    const options = { base: "HEAD", isAll: false, isHelp: false, pages: [], widths: [], init: "", waitFor: "", runs: [],
         isClockStopped: true, isPictureOnly: false, isPressAll: false };
     for (let i = 0; i < args.length; i++) {
         if (args[i] === "--base") options.base = args[++i];
         else if (args[i] === "--init") options.init = args[++i] || "";
+        else if (args[i] === "--wait-for") options.waitFor = args[++i] || "";
         else if (args[i] === "--run") options.runs.push(args[++i] || "");
         else if (args[i] === "--moving-clock") options.isClockStopped = false;
         else if (args[i] === "--picture-only") options.isPictureOnly = true;
@@ -977,8 +996,8 @@ const choosePages = function (options) {
     return pairs.flatMap(function (pair) {
         return runs.map(function (run, index) {
             const runName = (runs.length > 1) ? "run" + (index + 1) : "";
-            const steps = { init: options.init, run: run, isClockStopped: options.isClockStopped, isPictureOnly: options.isPictureOnly,
-                isPressOnce: !options.isPressAll };
+            const steps = { init: options.init, waitFor: options.waitFor, run: run, isClockStopped: options.isClockStopped,
+                isPictureOnly: options.isPictureOnly, isPressOnce: !options.isPressAll };
             return Object.assign({}, pair, { steps: steps, runName: runName });
         });
     });
