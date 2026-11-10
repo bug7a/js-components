@@ -9,9 +9,11 @@ SCREENSHOT: one picture of a page (or of a part of it) for a report, in one comm
     node test/screenshot.js _basic-designer/index.htm --run "BasicDesigner.openFolderDialog()" --clip "[role=dialog]"
     node test/screenshot.js tabs.htm --before                the page of the last commit left, the page now right
     node test/screenshot.js tabs.htm --before HEAD~2 --name tabs-fix
+    node test/screenshot.js _screenshots/try.htm --before    a page outside git (a page of yours to try a component):
+                                                             the same page with basic/ and comp/ of the commit | now
     node test/screenshot.js --join 2026-11-09-hero-old.png 2026-11-09-hero-new.png --label "before: amber" \
-        --label "after: teal" --name hero-colors             two pictures of yours side by side, with labels: a page
-                                                             outside git (--before can not read its old version)
+        --label "after: teal" --name hero-colors             two pictures of yours side by side, with labels (Ex: a
+                                                             page outside git that changed itself)
     node test/screenshot.js stepper.htm --print "document.title" --print "page.width" --no-picture
     node test/screenshot.js stepper.htm --width 390 --cut --no-picture
                                                              is anything cut on a phone? (the texts; exit code 1)
@@ -39,7 +41,8 @@ Options:
                       window (lower in a ScrollArea) is scrolled into it; a taller one makes the window taller
     --clip-text "t"   only the box around a title: the card or the group of the element whose text starts with
                       this text (its parent). With --clip and more --clip-text: the part that holds them all
-    --before [commit] before | after in one picture, with labels (HEAD by default)
+    --before [commit] before | after in one picture, with labels (HEAD by default). A page that is not in the
+                      commit (outside git, or new) is the page now in both, with basic/ and comp/ of the commit
     --live            the page through Live Server (port 5505, it must run), as VS Code shows it: with the reload
                       script that it puts into the pages and the SVG files (not with --before)
     --join a b        no page: the pictures a and b side by side, a on the left (a path, or a name in _screenshots/;
@@ -523,7 +526,7 @@ const sideBySide = async function (browser, sides, scale) {
     }
 };
 
-// *** JOIN: two pictures of yours side by side (a page outside git, where --before can not read the old version).
+// *** JOIN: two pictures of yours side by side (Ex: a page outside git that changed itself).
 
 // A picture by a path (from the working folder or the repository) or by its name in _screenshots/
 const findPicture = function (name) {
@@ -630,7 +633,9 @@ const main = async function () {
     // WHY # too: a page of the catalog is index.htm#/text-field
     const pageFile = options.page.split(/[?#]/)[0];
     if (!fs.existsSync(path.join(ROOT, pageFile))) throw new Error("No such page: " + pageFile);
-    if (options.before && !isInCommit(options.before, pageFile)) throw new Error(pageFile + " is not in " + options.before);
+    // WHY no stop: a page that is not in the commit is served from the folder under the old path too (readOldFile), so
+    //     its basic/ and comp/ are the ones of the commit: a page made to try a component shows its change
+    const isPageInCommit = !options.before || isInCommit(options.before, pageFile);
     if (options.og && (options.before || options.clips.length)) throw new Error("--og is the first screen of the page now: not with --before or --clip");
     if (options.isLive && options.before) throw new Error("--live shows the page now: not with --before");
 
@@ -653,7 +658,8 @@ const main = async function () {
         if (options.before) {
             const before = await takePicture(browser, origin + OLD_PATH + "/" + options.page, options);
             if (!options.isNoPicture) {
-                const sides = [{ picture: before.picture, label: "before (" + options.before + ")" }, { picture: after.picture, label: "after (now)" }];
+                const beforeLabel = (isPageInCommit) ? "before (" + options.before + ")" : "before (basic/, comp/ of " + options.before + ")";
+                const sides = [{ picture: before.picture, label: beforeLabel }, { picture: after.picture, label: "after (now)" }];
                 picture = await sideBySide(browser, sides, options.scale);
             }
             printLog("before: ", before.log);
