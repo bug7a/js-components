@@ -83,7 +83,10 @@ const listSamples = function () {
 
 // A name of a sample ("tabs.htm") or a path from the root ("04-templates/web-forms/order-form.htm")
 const toPagePath = function (name) {
-    if (name.includes("/") || fs.existsSync(path.join(ROOT, name))) return name;
+    // WHY the file without its ?query / #hash: index.htm?lang=tr is a page of the root too (it was looked for in
+    //     02-comp-examples)
+    const file = name.split(/[?#]/)[0];
+    if (file.includes("/") || fs.existsSync(path.join(ROOT, file))) return name;
     return SAMPLES_FOLDER + "/" + name;
 };
 
