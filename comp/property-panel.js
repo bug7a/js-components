@@ -6,7 +6,9 @@ PropertyPanel - v26.09
 
 UI COMPONENT TEMPLATE
 - A property inspector at the right side of the screen, like the "Design" panel of design tools.
-  Full height, 240 px wide (width), one dark style.
+  Full height, 240 px wide (width), in the dark look of the kit: its warm dark, fields with a thin line, the
+  accent #65A293, the titles of the sections in small capitals and a line under the chosen tab (style.tab.look:
+  "pill" puts a field behind it; style.sectionTitle.uppercase: 0 writes the titles as they are).
 - Built from a JSON (data): header tabs, a title with action icons, and sections of items.
   footer: one more section, fixed at the bottom (out of the scrolling part). Ex: a note field.
   A section with mark: 1 has a line in the accent color at its left (style.panel.markWidth): a place the eye
@@ -67,9 +69,9 @@ UI COMPONENT TEMPLATE
 USAGE:
 const panel = PropertyPanel({
     data: {
-        tabs: [{ key: "design", text: "Design" }, { key: "prototype", text: "Prototype" }],
-        activeTab: "design",
-        title: "Text",
+        tabs: [{ key: "properties", text: "Properties" }, { key: "events", text: "Events" }],
+        activeTab: "properties",
+        title: "Label",
         sections: [
             { key: "position", title: "Position", items: [
                 [{ key: "x", type: "number", label: "Position", prefix: "X", value: 396 },
@@ -107,8 +109,8 @@ const PropertyPanelDefaults = {
                      // lets the user pick a color itself and calls done("#RRGGBB") (done("") : nothing was picked)
     style: {
         panel: {
-            color: "#2C2C2C",
-            dividerColor: "#444444",
+            color: "#1F1F1E", // The warm dark of the kit (its dark packages)
+            dividerColor: "#30302E",
             markWidth: 3, // A section with mark: 1: a line in the accent color at its left
             markOpacity: 0.65, // WHY: mixed with the panel, it stays calm
             headerHeight: 48,
@@ -124,51 +126,60 @@ const PropertyPanelDefaults = {
             itemHeight: 24,
         },
         text: {
-            color: "#FFFFFF",
-            softColor: "#A5A5A5", // Captions, inactive tabs, prefixes
-            disabledColor: "#6E6E6E",
+            color: "#EDEDEB",
+            softColor: "#9A9A97", // Captions, inactive tabs, prefixes
+            disabledColor: "#62625F",
             fontSize: 12,
             captionSize: 11,
             titleSize: 13,
-            sectionTitleSize: 12,
+            sectionTitleSize: 11,
+        },
+        sectionTitle: { // The title of a section (not the title of the panel)
+            textColor: "#C9C9C6",
+            uppercase: 1, // 0: as it is written
+            letterSpacing: 0.6, // px
+        },
+        tab: {
+            look: "underline", // "underline": a line in the accent under the chosen tab; "pill": a field behind it
         },
         field: {
-            color: "#383838",
-            hoverBorderColor: "#4D4D4D",
-            focusBorderColor: "#0C8CE9",
-            round: 5,
+            color: "#292928",
+            borderColor: "#373735", // The line of a field at rest ("": none)
+            hoverBorderColor: "#575755",
+            focusBorderColor: "#65A293",
+            round: 7,
         },
         segmented: {
-            selectedColor: "#2C2C2C",
-            selectedBorderColor: "#5C5C5C",
-            hoverColor: "#434343",
+            selectedColor: "#2E3D39", // A tint of the accent
+            selectedBorderColor: "#4F7D71",
+            hoverColor: "#333331",
         },
         button: {
-            hoverColor: "#383838",
-            activeColor: "#34435A", // toggle on
-            activeIconColor: "#7CC4F8",
-            iconColor: "#E6E6E6",
+            hoverColor: "#2E2E2D",
+            activeColor: "#2E3D39", // toggle on: a tint of the accent
+            activeIconColor: "#8CC7B8",
+            iconColor: "#D6D6D3",
         },
         accent: {
-            color: "#0C8CE9", // Constraints lines, menu hover
+            color: "#65A293", // The accent of the kit: constraints lines, the chosen place, the focus
         },
         menu: {
-            color: "#1E1E1E",
-            borderColor: "#3A3A3A",
-            hoverColor: "#0C8CE9",
-            textColor: "#FFFFFF",
-            round: 8,
+            color: "#232322",
+            borderColor: "#383836",
+            hoverColor: "#333331", // The row under the mouse is lighter (the text keeps its color)
+            textColor: "#EDEDEB",
+            round: 10,
             rowHeight: 26,
             maxHeight: 320,
-            shadow: "0 8px 24px rgba(0, 0, 0, 0.45)",
+            shadow: "0 8px 24px rgba(0, 0, 0, 0.5)",
         },
         constraints: {
-            frameColor: "#555555", // The inner frame of the constraints picture
+            frameColor: "#4A4A48", // The inner frame of the constraints picture
         },
         alignGrid: {
-            cellColor: "#6E6E6E", // The empty square of a place
-            hoverColor: "#A5A5A5",
-            selectedColor: "#0C8CE9", // The filled square of the chosen place (the accent)
+            cellColor: "#62625F", // The empty square of a place
+            hoverColor: "#9A9A97",
+            selectedColor: "#65A293", // The filled square of the chosen place (the accent)
         },
         textarea: {
             lineHeight: 17,
@@ -189,14 +200,14 @@ const PropertyPanelDefaults = {
         },
         empty: { // data.empty: the page in the middle (Ex: nothing is selected)
             iconSize: 26,
-            iconColor: "#A5A5A5",
-            iconBoxColor: "#383838",
+            iconColor: "#9A9A97",
+            iconBoxColor: "#292928",
             iconBoxRound: 16,
         },
         swatch: {
             size: 14,
             borderColor: "rgba(255, 255, 255, 0.25)",
-            emptyColor: "#555555", // The line of an empty (transparent) color
+            emptyColor: "#575755", // The line of an empty (transparent) color
         },
         scrollBar: { // basic/scroll-bar.js (ScrollBar) parameters of the panel
             bar_color: "#FFFFFF",
@@ -326,11 +337,11 @@ const PropertyPanel = function (params = {}) {
         });
     };
 
-    // Border of a field: focus, hover (when enabled) or none.
+    // Border of a field: focus, hover (when enabled) or its line at rest.
     const paintField = function (field, state) {
         if (state.isFocus) setBorder(field, _s.field.focusBorderColor);
         else if (state.isHover && state.enabled) setBorder(field, _s.field.hoverBorderColor);
-        else setBorder(field, "");
+        else setBorder(field, _s.field.borderColor || "");
     };
 
     const precisionOf = function (item) {
@@ -2848,6 +2859,7 @@ const PropertyPanel = function (params = {}) {
                 round: _s.field.round,
             });
             group.shrink = 0;
+            if (isSelect) setBorder(group, _s.field.borderColor || "");
             group.role = (isSelect) ? "radiogroup" : "group";
             group.aria = { label: item.hint || item.label || item.key };
 
@@ -3093,7 +3105,16 @@ const PropertyPanel = function (params = {}) {
     const buildTitleRow = function (text, actions, sectionKey, isMainTitle) {
         let lbl = null;
         HGroup({ width: "100%", height: (isMainTitle) ? 32 : 24, align: "left center", gap: 2, color: "transparent" });
-            lbl = textLabel("", { fontSize: (isMainTitle) ? _t.titleSize : _t.sectionTitleSize, bold: 1, flex: 1, height: 24, plainText: text || "" });
+            const st = _s.sectionTitle;
+            lbl = textLabel("", {
+                fontSize: (isMainTitle) ? _t.titleSize : _t.sectionTitleSize,
+                textColor: (isMainTitle) ? _t.color : (st.textColor || _t.color),
+                bold: 1,
+                flex: 1,
+                height: 24,
+                plainText: text || "",
+            });
+            if (!isMainTitle && st.uppercase) lbl.css = { textTransform: "uppercase", letterSpacing: st.letterSpacing + "px" };
             (actions || []).forEach(function (action) {
                 applyVisible(registerItem(Object.assign({ type: "iconButton", accent: 0 }, action), sectionKey));
             });
@@ -3136,8 +3157,10 @@ const PropertyPanel = function (params = {}) {
 
     const paintTab = function (key) {
         const isActive = (key === box.data.activeTab);
+        const isPill = (_s.tab.look === "pill");
         const lbl = tabLabels[key];
-        lbl.color = (isActive) ? _s.field.color : "transparent";
+        lbl.color = (isActive && isPill) ? _s.field.color : "transparent";
+        lbl.boxShadow = (isActive && !isPill) ? "inset 0 -2px 0 " + _s.accent.color : "none";
         lbl.textColor = (isActive) ? _t.color : _t.softColor;
         lbl.bold = isActive;
         lbl.aria = { selected: (isActive) ? "true" : "false" };
@@ -3167,8 +3190,10 @@ const PropertyPanel = function (params = {}) {
 
                 (data.tabs || []).forEach(function (tab) {
                     // LABEL: Tab
-                    const lbl = textLabel("", { height: 28, plainText: tab.text || tab.key });
-                    lbl.round = _s.field.round;
+                    // WHY as high as the header (underline): its line lies on the line under the header
+                    const isPill = (_s.tab.look === "pill");
+                    const lbl = textLabel("", { height: (isPill) ? 28 : "100%", plainText: tab.text || tab.key });
+                    if (isPill) lbl.round = _s.field.round;
                     lbl.clickable = 1;
                     lbl.cursor = "pointer";
                     lbl.css = { padding: "0px 10px", outline: "none" };

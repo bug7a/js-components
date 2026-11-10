@@ -8680,15 +8680,21 @@ BasicDesigner.panelStyle = function () {
     return {
         // WHY: headerHeight: the top of the panel lines up with the top bar. paddingRight: the same space as at the left
         //      (the panel is 8 px wider for it: rightWidth).
+        // WHY the rest: the designer keeps its own look (the titles as written, a field behind the chosen tab, fields
+        //      with no line at rest, round 5, its grays) where the panel has the look of the kit
         panel: { headerHeight: BasicDesigner.config.topHeight, paddingRight: 16, color: C.bar, dividerColor: C.line },
-        text: { softColor: C.soft, disabledColor: C.dim },
-        field: { color: C.field, hoverBorderColor: C.fieldBorder, focusBorderColor: C.accent },
+        text: { color: C.text, softColor: C.soft, disabledColor: C.dim, sectionTitleSize: 12 },
+        sectionTitle: { textColor: C.text, uppercase: 0, letterSpacing: 0 },
+        tab: { look: "pill" },
+        field: { color: C.field, borderColor: "", hoverBorderColor: C.fieldBorder, focusBorderColor: C.accent, round: 5 },
         segmented: { selectedColor: C.bar, selectedBorderColor: C.fieldBorderStrong, hoverColor: C.fieldHover },
-        button: { hoverColor: C.field, activeColor: C.selectedRow, activeIconColor: C.accentLight },
+        button: { hoverColor: C.field, activeColor: C.selectedRow, activeIconColor: C.accentLight, iconColor: "#E6E6E6" },
         accent: { color: C.accent },
-        menu: { color: C.menu, borderColor: C.line, hoverColor: C.accent },
-        alignGrid: { selectedColor: C.accent },
+        menu: { color: C.menu, borderColor: C.line, hoverColor: C.accent, textColor: C.text, round: 8, shadow: "0 8px 24px rgba(0, 0, 0, 0.45)" },
+        constraints: { frameColor: "#555555" },
+        alignGrid: { selectedColor: C.accent, cellColor: "#6E6E6E", hoverColor: "#A5A5A5" },
         empty: { iconColor: C.soft, iconBoxColor: C.field },
+        swatch: { emptyColor: "#555555" },
     };
 };
 

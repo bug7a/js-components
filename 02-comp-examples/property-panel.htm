@@ -26,30 +26,30 @@
         const logLines = [];
         const MAX_LOG_LINES = 10;
         const MIN_PAGE_WIDTH = 720; // px: the canvas and the panel need it; a narrower window (a phone) shows the page smaller
+        const CANVAS_COLOR = "#161615";
+        const SELECTION_COLOR = "#65A293";
 
         // The JSON of the panel. Every item: type, key, value and its own settings.
         const PANEL_DATA = {
             tabs: [
-                { key: "design", text: "Design" },
-                { key: "prototype", text: "Prototype" },
+                { key: "properties", text: "Properties" },
+                { key: "events", text: "Events" },
             ],
-            activeTab: "design",
+            activeTab: "properties",
             headerItem: {
-                key: "zoom",
+                key: "device",
                 type: "select",
-                value: 72,
+                value: "desktop",
                 options: [
-                    { value: 50, text: "50%" },
-                    { value: 72, text: "72%" },
-                    { value: 100, text: "100%" },
-                    { value: 200, text: "200%" },
+                    { value: "desktop", text: "Desktop" },
+                    { value: "tablet", text: "Tablet" },
+                    { value: "phone", text: "Phone" },
                 ],
             },
-            title: "Text",
+            title: "Label",
             titleActions: [
-                { key: "createComponent", icon: "component", hint: "Create component" },
-                { key: "copyLink", icon: "link", hint: "Copy link" },
-                { key: "inspect", icon: "target", hint: "Inspect" },
+                { key: "duplicate", icon: "copy", hint: "Duplicate" },
+                { key: "remove", icon: "trash", hint: "Remove" },
                 { key: "more", icon: "more", hint: "More" },
             ],
             sections: [
@@ -81,10 +81,10 @@
                             { key: "absolute", type: "iconButton", icon: "frame", toggle: 1, value: true, hint: "Absolute position" },
                         ],
                         [
-                            { key: "constraints", type: "constraints", label: "Constraints", value: { horizontal: "left", vertical: "top" } },
+                            { key: "constraints", type: "constraints", label: "Anchors", value: { horizontal: "left", vertical: "top" } },
                         ],
                         [
-                            { key: "rotation", type: "number", label: "Rotation", icon: "angle", value: 0, unit: "°", min: -360, max: 360 },
+                            { key: "rotation", type: "number", label: "Rotate", icon: "angle", value: 0, unit: "°", min: -360, max: 360 },
                             {
                                 key: "transform", type: "segmented",
                                 options: [
@@ -97,11 +97,11 @@
                     ],
                 },
                 {
-                    key: "layout",
-                    title: "Layout",
+                    key: "size",
+                    title: "Size",
                     items: [
                         {
-                            key: "resizing", type: "segmented", label: "Resizing", span: 2, value: "autoWidth",
+                            key: "resizing", type: "segmented", label: "Sizing", span: 2, value: "autoWidth",
                             options: [
                                 { value: "autoWidth", icon: "hugWidth", hint: "Auto width" },
                                 { value: "autoHeight", icon: "fixedWidth", hint: "Auto height" },
@@ -109,31 +109,30 @@
                             ],
                         },
                         [
-                            { key: "w", type: "number", label: "Dimensions", prefix: "W", value: 31, min: 1, enabled: 0 },
-                            { key: "h", type: "number", prefix: "H", value: 23, min: 1, enabled: 0 },
+                            { key: "w", type: "number", label: "Width", prefix: "W", value: 40, min: 1, enabled: 0 },
+                            { key: "h", type: "number", label: "Height", prefix: "H", value: 22, min: 1, enabled: 0 },
                             { key: "clipContent", type: "iconButton", icon: "clip", toggle: 1, value: false, accent: 0, hint: "Clip content" },
                         ],
                     ],
                 },
                 {
-                    key: "appearance",
-                    title: "Appearance",
+                    key: "style",
+                    title: "Style",
                     actions: [
                         { key: "visible", icon: "eye", iconActive: "eyeOff", toggle: 1, value: false, hint: "Hide" },
-                        { key: "blendMode", icon: "drop", hint: "Blend mode" },
                     ],
                     items: [
                         [
                             { key: "opacity", type: "number", label: "Opacity", icon: "opacity", value: 100, unit: "%", min: 0, max: 100 },
-                            { key: "radius", type: "number", label: "Corner radius", icon: "radius", value: 0, min: 0, enabled: 0 },
+                            { key: "radius", type: "number", label: "Round", icon: "radius", value: 0, min: 0, enabled: 0 },
                         ],
                     ],
                 },
                 {
-                    key: "typography",
-                    title: "Typography",
+                    key: "text",
+                    title: "Text",
                     actions: [
-                        { key: "textStyles", icon: "styles", hint: "Text styles" },
+                        { key: "wrap", icon: "wrap", toggle: 1, value: false, hint: "Wrap the text" },
                     ],
                     items: [
                         { key: "fontFamily", type: "select", span: 2, value: "Open Sans", options: ["Open Sans", "Istok Web", "Inter", "Georgia", "Courier New"] },
@@ -162,7 +161,7 @@
                                     { value: "bottom", icon: "textBottom", hint: "Bottom" },
                                 ],
                             },
-                            { key: "typeDetails", type: "iconButton", icon: "sliders", hint: "Type details" },
+                            { key: "textDetails", type: "iconButton", icon: "sliders", hint: "More text settings" },
                         ],
                     ],
                 },
@@ -175,20 +174,20 @@
             page.fit(MIN_PAGE_WIDTH);
             page.onResize(function () { page.fit(MIN_PAGE_WIDTH); });
 
-            page.color = "#1E1E1E";
+            page.color = CANVAS_COLOR;
 
             // BOX: Canvas (the left part of the screen)
-            canvas = startBox(0, 0, "calc(100% - 240px)", "100%", { color: "#1E1E1E" });
+            canvas = startBox(0, 0, "calc(100% - 240px)", "100%", { color: CANVAS_COLOR });
             canvas.clipContent = 1;
 
                 // LABEL: The selected text object
                 lblText = Label({
                     left: 396,
                     top: 668,
-                    text: "Text",
+                    text: "Hello",
                     fontSize: 16,
-                    textColor: "#FFFFFF",
-                    css: { outline: "1px solid #0C8CE9", transformOrigin: "center", whiteSpace: "nowrap" },
+                    textColor: "#EDEDEB",
+                    css: { outline: "1px solid " + SELECTION_COLOR, transformOrigin: "center", whiteSpace: "nowrap" },
                 });
 
                 // LABEL: Log of the changes

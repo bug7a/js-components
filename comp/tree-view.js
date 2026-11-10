@@ -1135,7 +1135,7 @@ TreeView.styles = {
         scrollBar: { bar_color: "#9A9A98", bar_mouseOverColor: "#6A6A68", bar_width: 4, bar_round: 3, bar_opacity: 0.4, bar_mouseOverOpacity: 0.9, bar_padding: 2 },
     },
 
-    // Dark theme, same colors as PropertyPanel (the layers of a design tool).
+    // Dark theme: the grays and the blue of a design tool (its layers).
     dark: {
         box: { color: "#2C2C2C", border: 0, borderColor: "transparent", round: 0, padding: [4, 4] },
         row: { height: 24, fontSize: 12, textColor: "#E6E6E6", indent: 12, paddingLeft: 2, paddingRight: 8, gap: 6, round: 4 },
