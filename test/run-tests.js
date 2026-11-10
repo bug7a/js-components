@@ -17,8 +17,8 @@ RUN TESTS: the self-checking test pages from the terminal, one after the other.
 It prints the title of every page ("... - ALL PASS" or "... - 2 FAILED") and the lines of what failed or warned, and
 the errors of the page that no check of it saw (PAGE ERROR: an exception; ERROR EVENT: an error event of the window,
 as a ResizeObserver loop).
-Then the catalog (not with --commit): every sample of 02-comp-examples is a sample in index/catalog.js, and every
-sample named there is a file.
+Then the catalog (not with --commit): every sample of 02-comp-examples is a sample in index/catalog.js, every
+sample named there is a file, and every key of its FEATURED list (the first cards of the home page) is a component.
 The exit code is 1 when a page failed or did not finish, 2 when the tool itself could not run.
 It needs Chrome and puppeteer-core, like compare-pages.js (CHROME_PATH for another place of Chrome).
 WHY one page at a time: the pages measure sizes and times; two pages side by side made each other slow. When another
@@ -110,6 +110,8 @@ const readOptions = function (args) {
 
 const CATALOG_FILE = "index/catalog.js";
 const CATALOG_SAMPLE = /"(02-comp-examples\/[\w.-]+\.htm)"/g;
+const CATALOG_KEY = /\bkey: "([\w-]+)", name:/g; // a component (a category has no name)
+const CATALOG_FEATURED = /CATALOG\.FEATURED = \[([^\]]*)\]/;
 
 // The samples of the folder that the catalog does not name, and the ones it names that are not files.
 // WHY: a new or renamed sample was left out of the catalog again and again (tabs-2, form, text-field-6 / 7...).
@@ -119,19 +121,25 @@ const checkCatalog = function () {
     const samples = chrome.listSamples();
     const notNamed = samples.filter(function (page) { return !named.has(page); });
     const notFiles = [...named].filter(function (page) { return !samples.includes(page); });
-    return { notNamed, notFiles };
+    // WHY: a renamed or removed component would leave the home page with one card less, in silence
+    const keys = new Set(Array.from(catalog.matchAll(CATALOG_KEY), function (match) { return match[1]; }));
+    const featured = catalog.match(CATALOG_FEATURED);
+    const featuredKeys = (featured) ? Array.from(featured[1].matchAll(/"([\w-]+)"/g), function (match) { return match[1]; }) : [];
+    const notComponents = featuredKeys.filter(function (key) { return !keys.has(key); });
+    return { notNamed, notFiles, notComponents };
 };
 
 const printCatalog = function () {
     const result = checkCatalog();
-    const problemCount = result.notNamed.length + result.notFiles.length;
+    const problemCount = result.notNamed.length + result.notFiles.length + result.notComponents.length;
     if (problemCount === 0) {
-        console.log("Catalog: every sample is in " + CATALOG_FILE + " - ALL PASS");
+        console.log("Catalog: every sample is in " + CATALOG_FILE + ", every featured key is a component - ALL PASS");
         return true;
     }
     console.log("Catalog: " + problemCount + " FAILED");
     result.notNamed.forEach(function (page) { console.log("  ✗ not in " + CATALOG_FILE + ": " + page); });
     result.notFiles.forEach(function (page) { console.log("  ✗ in " + CATALOG_FILE + ", no such file: " + page); });
+    result.notComponents.forEach(function (key) { console.log("  ✗ in CATALOG.FEATURED, no such component: " + key); });
     return false;
 };
 

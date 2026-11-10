@@ -47,6 +47,10 @@ const TEXTS = {
         noResult: "No component matches your search.",
         clearSearch: "Clear the search",
 
+        // FEATURED
+        featuredTitle: "Featured",
+        featuredNote: "Our picks to start with",
+
         // CARD
         examples: "examples",
         openExample: "Open the example",
@@ -102,6 +106,10 @@ const TEXTS = {
         allCategories: "Tümü",
         noResult: "Aramanıza uyan bir bileşen yok.",
         clearSearch: "Aramayı temizle",
+
+        // FEATURED
+        featuredTitle: "Öne çıkanlar",
+        featuredNote: "Başlamak için seçtiklerimiz",
 
         // CARD
         examples: "örnek",

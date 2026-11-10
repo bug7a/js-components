@@ -46,6 +46,16 @@ CATALOG.CATEGORIES = [
     { key: "styles", en: "Effects & Styles", tr: "Efekt ve Stil" },
 ];
 
+// *** FEATURED: (Ana sayfada listenin en başında, bu sırayla: "Tümü" sekmesinde ve arama yokken)
+// The components shown first on the home page, in this order (on the "All" tab, with no search).
+// WHY 12: every row is full with 4, 3, 2 or 1 cards in a row (the widths of the page).
+// node test/run-tests.js checks that every key is a component.
+CATALOG.FEATURED = [
+    "graph-box", "smart-table", "property-panel", "smart-button",
+    "code-editor", "text-field", "toggle", "rich-text-editor",
+    "json-editor", "gauge", "item-list", "login-page",
+];
+
 // *** COMPONENTS:
 CATALOG.COMPONENTS = [
     {
@@ -699,6 +709,11 @@ CATALOG.getCategory = function (key) {
 // Bir kategorinin bileşenleri: listedeki sırayla. (Yeni bileşenler listenin başına.)
 CATALOG.getByCategory = function (catKey) {
     return CATALOG.COMPONENTS.filter(function (comp) { return comp.cat === catKey; });
+};
+
+// Öne çıkanlar: FEATURED sırasıyla. (Bileşen olmayan bir anahtar atlanır.)
+CATALOG.getFeatured = function () {
+    return CATALOG.FEATURED.map(function (key) { return CATALOG.find(key); }).filter(function (comp) { return comp !== null; });
 };
 
 CATALOG.countSamples = function () {
