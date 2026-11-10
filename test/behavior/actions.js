@@ -682,23 +682,6 @@ test("MenuBar: the arrow keys go between the menus (a disabled one is passed), E
     bar.remove();
 });
 
-test("MenuBar: Enter on a title opens it (also after a mouse click on an item of it)", async function () {
-    const bar = MenuBar({ menus: makeTestMenus() });
-    await wait(30);
-    const file = bar.menuList[0];
-    mouseClick(file.title.elem);
-    // The press on an item is inside the menu: the menu stays open until its click.
-    file.contextMenu.elem.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, button: 0, pointerId: 1 }));
-    file.contextMenu.clickItem(0);
-    const closed = file.contextMenu.isOpen() == 0;
-    file.title.elem.click(); // WHY: Enter and Space make a click with detail 0.
-    const opened = file.contextMenu.isOpen() == 1 && file.contextMenu.hasActive() == 1;
-    check("MenuBar: Enter on a title opens it (also after a mouse click on an item of it)", closed && opened, closed + " " + opened);
-    bar.remove();
-});
-
-test("MenuBar: an item gives onClick its item and its menu; a disabled one does not run; the list of the page does not change", async function () {
-    const clicks = [];
 test("MenuBar: the mouse leaves the focus alone when a menu closes (the ring of the keyboard does not show)", async function () {
     const bar = MenuBar({ menus: makeTestMenus() });
     await wait(30);
@@ -717,6 +700,23 @@ test("MenuBar: the mouse leaves the focus alone when a menu closes (the ring of 
     bar.remove();
 });
 
+test("MenuBar: Enter on a title opens it (also after a mouse click on an item of it)", async function () {
+    const bar = MenuBar({ menus: makeTestMenus() });
+    await wait(30);
+    const file = bar.menuList[0];
+    mouseClick(file.title.elem);
+    // The press on an item is inside the menu: the menu stays open until its click.
+    file.contextMenu.elem.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, button: 0, pointerId: 1 }));
+    file.contextMenu.clickItem(0);
+    const closed = file.contextMenu.isOpen() == 0;
+    file.title.elem.click(); // WHY: Enter and Space make a click with detail 0.
+    const opened = file.contextMenu.isOpen() == 1 && file.contextMenu.hasActive() == 1;
+    check("MenuBar: Enter on a title opens it (also after a mouse click on an item of it)", closed && opened, closed + " " + opened);
+    bar.remove();
+});
+
+test("MenuBar: an item gives onClick its item and its menu; a disabled one does not run; the list of the page does not change", async function () {
+    const clicks = [];
     let itemClicks = 0;
     const menus = makeTestMenus();
     menus[0].items[0].onClick = function (self, item, menu) { itemClicks += (self === bar && item.key === "save" && menu.key === "file") ? 1 : 0; };
