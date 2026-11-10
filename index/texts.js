@@ -23,7 +23,7 @@ const TEXTS = {
 
     en: {
         htmlLang: "en",
-        pageTitle: "JS Components – UI components for basic.js",
+        pageTitle: "OzdenUI – UI components for basic.js",
         pageDescription: "Plain JavaScript UI components built with basic.js. Every component with a live example and its code.",
         languageButton: "TR",
         languageHint: "Türkçe",
@@ -79,7 +79,7 @@ const TEXTS = {
 
     tr: {
         htmlLang: "tr",
-        pageTitle: "JS Components – basic.js arayüz bileşenleri",
+        pageTitle: "OzdenUI – basic.js arayüz bileşenleri",
         pageDescription: "basic.js ile, saf JavaScript ile yazılmış arayüz bileşenleri. Her bileşen, çalışan örneği ve koduyla.",
         languageButton: "EN",
         languageHint: "English",

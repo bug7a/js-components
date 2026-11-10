@@ -20,7 +20,7 @@ SPDX-License-Identifier: Apache-2.0
 const CONFIG = {
 
     // *** BRAND:
-    brandName: "JS Components",
+    brandName: "OzdenUI",
     logoFile: "index/ozdenui-components.svg", // Header logo: OzdenUI COMPONENTS (393 x 83), relative to this page
 
     // *** PATHS:
