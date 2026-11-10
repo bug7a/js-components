@@ -120,10 +120,12 @@ HomeView.createHeader = function () {
 
     HomeView.startContent({ flow: "horizontal", height: 76, align: "left center", gap: 12 });
 
-        // ICON: Logo (351 x 83: the paper boat, basicUI, COMPONENTS)
+        // ICON: Logo (393 x 83: the paper boat, OzdenUI, COMPONENTS)
+        // WHY lower on a phone: 44 px high, it pushed the language button out of a 390 px screen
+        const logoHeight = L.mobile ? 39 : 44;
         Icon({
-            width: 186,
-            height: 44,
+            width: Math.round(logoHeight * 393 / 83),
+            height: logoHeight,
             color: "transparent",
         });
         that.load(CONFIG.logoFile);
