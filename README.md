@@ -89,7 +89,7 @@ The newer components come with ready-made looks. Pick one with `styleName` (`Tab
 
 ## Getting Started
 
-A new project, ready to build with AI tools:
+A new project with basic.js and every OzdenUI component (`_basic/comp/`), ready to build with AI tools:
 
 ```sh
 npm create basicjs@latest my-app
