@@ -53,7 +53,7 @@
         const runTests = async function () {
 
             // *** LIBRARY INFO
-            check("basic.version", basic.version === "26.11.07", basic.version);
+            check("basic.version", basic.version === "26.11.10", basic.version);
             check("basic.library", basic.library === "basic.js", basic.library);
             check("basic.isReady", basic.isReady === 1);
 
@@ -596,6 +596,34 @@
             endGroup();
             check("gap: a number in the props (as before)", numberGroup.elem.style.gap === "9px" && numberGroup.gap === "9px", numberGroup.gap);
             numberGroup.remove();
+
+            // *** v26.11.10: stretch: 1 of a group
+            const stretchColumn = createIn(page, function () {
+                const group = VGroup({ width: 120, height: "auto", align: "left top", stretch: 1 });
+                    Label({ text: "auto" });
+                    Box({ width: 40, height: 20 });
+                endGroup();
+                return group;
+            });
+            const [autoItem, fixedItem] = stretchColumn.children;
+            check("stretch: 1 in a VGroup: an item without a width fills the group, a width stays",
+                autoItem.elem.offsetWidth === 120 && fixedItem.elem.offsetWidth === 40 && stretchColumn.stretch === 1,
+                autoItem.elem.offsetWidth + ", " + fixedItem.elem.offsetWidth);
+            stretchColumn.stretch = 0;
+            const alignBack = stretchColumn.elem.style.alignItems;
+            stretchColumn.stretch = 1;
+            stretchColumn.align = "center top";
+            check("group.stretch = 0 gives the place of align back; align and flow keep stretch",
+                alignBack === "flex-start" && stretchColumn.elem.style.alignItems === "stretch", alignBack);
+            stretchColumn.remove();
+            const stretchRow = createIn(page, function () {
+                const group = HGroup({ width: 200, height: 60, stretch: 1 });
+                    Label({ text: "row" });
+                endGroup();
+                return group;
+            });
+            check("stretch: 1 in an HGroup: an item without a height fills the row", stretchRow.children[0].elem.offsetHeight === 60, stretchRow.children[0].elem.offsetHeight);
+            stretchRow.remove();
 
             // *** v26.11.05: basic.zIndexAbove, remove() cleans what the removed components own
             const layerBox = createIn(page, function () { return Box(0, 0, 50, 50); }); // WHY page: a layer is a direct child of page

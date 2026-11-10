@@ -2,12 +2,16 @@
 
 /*
 
-basic.js (v26.11.07) A lightweight JavaScript library for building web-based applications with simple code. No need to write HTML or CSS — just use basic JavaScript.
+basic.js (v26.11.10) A lightweight JavaScript library for building web-based applications with simple code. No need to write HTML or CSS — just use basic JavaScript.
 - Project Site: https://bug7a.github.io/basic.js/
 
-v26.11.07 is v26.09.18 plus the additions below. Every page and component written for the
+v26.11.10 is v26.09.18 plus the additions below. Every page and component written for the
 previous versions works unchanged (same defaults, same DOM), except the global names moved under
 basic.* in v26.10.25 (see below).
+
+WHAT IS NEW IN v26.11.10 (see basic/basic-what-is-new.md):
+- Groups:     stretch: 1: the items without a width (VGroup) / a height (HGroup) fill the group across
+              (css: { alignItems: "stretch" } in short); group.stretch = 0 / 1 after creation
 
 WHAT IS NEW IN v26.11.07 (see basic/basic-what-is-new.md):
 - Props:      border and round take an array too, like padding: border [x, y] / [left, top, right, bottom],
@@ -77,7 +81,7 @@ SPDX-License-Identifier: Apache-2.0
 "use strict";
 const basic = {};
 
-basic.version = "26.11.07";
+basic.version = "26.11.10";
 basic.library = "basic.js";
 basic.isReady = 0; // 1 after the page object is created (before start() runs).
 
@@ -3501,6 +3505,7 @@ const FLEX_ACCESSORS = {
             this._align = align;
             applyFlexAlign(this.elem.style, align, this.elem.style.flexDirection == "row");
             if (this._justify) this.elem.style.justifyContent = getJustifyContent(this._justify); // v26.09.18: justify wins
+            if (this._stretch) this.elem.style.alignItems = "stretch"; // WHY: flow and align write alignItems again.
         }
     },
     // WHY a number reads as its text ("8px"): basic.js has always read it so. An array reads as it was given, as padding.
@@ -3534,6 +3539,23 @@ const FLEX_ACCESSORS = {
         set: function(justify) {
             this._justify = justify;
             this.elem.style.justifyContent = getJustifyContent(justify);
+        }
+    },
+    // (v26.11.10) stretch: 1 -> the items without a width (VGroup) / a height (HGroup) fill the group across.
+    // 0 gives the cross place of align back.
+    stretch: {
+        get: function() {
+            return this._stretch || 0;
+        },
+        set: function(stretch) {
+            this._stretch = (stretch) ? 1 : 0;
+            if (this._stretch) {
+                this.elem.style.alignItems = "stretch";
+                return;
+            }
+            const alignStyles = {};
+            applyFlexAlign(alignStyles, this._align, this.elem.style.flexDirection == "row");
+            this.elem.style.alignItems = alignStyles.alignItems;
         }
     },
 };
@@ -3593,6 +3615,12 @@ const startFlexBox = function(p1 = {}, p2, p3, p4, p5) {
     if (props.justify) {
         box._justify = props.justify;
         props.justifyContent = getJustifyContent(props.justify);
+    }
+
+    // STRETCH (v26.11.10): the cross axis of align is "stretch" (css: { alignItems: "stretch" } in short).
+    if (props.stretch) {
+        box._stretch = 1;
+        props.alignItems = "stretch";
     }
 
     if (typeof props.gap == "number") {

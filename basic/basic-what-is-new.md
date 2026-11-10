@@ -10,6 +10,25 @@ Naming rule for the additions: no new globals (one exception, the user's choice 
 
 ---
 
+## v26.11.10 (2026-11-10)
+
+### `stretch: 1` of a group
+
+The user's choice (2026-11-10). 56 files wrote `css: { alignItems: "stretch" }` on a group, because `align` gives
+only the left, the middle or the right of the cross axis. Now the group takes it as a prop:
+
+```javascript
+VGroup({ align: "left top", gap: 8, stretch: 1 });   // the items without a width are as wide as the group
+HGroup({ height: 44, stretch: 1 });                  // the items without a height are as high as the row
+```
+
+- Only an item whose cross size is not given (`auto`) is stretched: `width: 200` or `width: "100%"` stays as it is.
+- `group.stretch = 0` gives the cross place of `align` back; `group.stretch` reads 0 / 1. `align` and `flow`
+  keep it (they write `alignItems` again).
+- `css: { alignItems: "stretch" }` works as before; nothing in the repository was switched to the new prop.
+
+---
+
 ## v26.11.07 (2026-11-07)
 
 ### `border` and `round` take an array, like `padding`
