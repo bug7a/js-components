@@ -1,5 +1,5 @@
-- The pictures of fruids/, categories/ (but coffee-cup.png) and cards/ were drawn for this kit (2026-11-09); they
-  are not from flaticon.
+- The pictures of fruids/, categories/ (but coffee-cup.png) and cards/ were drawn for this kit (2026-11-09; 12 more
+  plants of cards/ on 2026-11-10); they are not from flaticon.
 
 
 - Icons used in this project are downloaded from the flaticon site.
