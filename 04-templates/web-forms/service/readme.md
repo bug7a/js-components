@@ -127,7 +127,8 @@ then created from the field names (`first_name` → `First Name`).
 | Success | `{ "ok": true, "reference": "MSG-482913" }` with HTTP 200 |
 | Error | `{ "ok": false, "error": "..." }` with HTTP 400 / 403 / 405 / 413 / 415 / 429 / 500 |
 
-`reference` is the number written in the mail. Send `referencePrefix` to change the `MSG` part.
+`reference` is the number written in the mail. Send `referencePrefix` to change the `MSG` part, or send
+`reference` when the page shows a number of its own (an order number): the mail then uses that number.
 (`ticketNumber` is the same value, for the older form pages.)
 
 ## If the mail does not arrive

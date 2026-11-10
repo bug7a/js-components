@@ -951,6 +951,7 @@
             const formData = new FormData();
             formData.append("formName", FORM_NAME);
             formData.append("formTitle", FORM_MAIL_TITLE);
+            formData.append("reference", orderNumber); // The mail names the number the visitor sees.
             formData.append("fields", JSON.stringify(json));
             if (isShown(studentIdField)) {
                 // WHY: The name ends with "[]", so every file arrives on the server, not only the last one.

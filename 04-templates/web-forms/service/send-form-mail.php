@@ -19,7 +19,7 @@ WHAT IT ACCEPTS:
                       { formName, formTitle, fields: [ ... ] }              (the same, with a title)
                       { first_name: "...", email: "..." }                   (a flat object)
 - multipart/form-data : a JSON string in a field (fields, formJSON, ticket, application...)
-                        + the uploaded files + formName / formTitle / referencePrefix
+                        + the uploaded files + formName / formTitle / referencePrefix / reference
   NOTE: Send more than one file with a name that ends with "[]". Ex: "attachments[]"
 
 WHAT IT ANSWERS (always JSON):
@@ -177,6 +177,7 @@ $isJsonPost = (strpos($contentType, "application/json") !== false);
 $formName = "";
 $formTitle = "";
 $referencePrefix = "MSG";
+$ownReference = ""; // The number the page shows (an order number): the mail uses it in place of a new one.
 $fields = [];
 $honeypotValue = "";
 
@@ -199,12 +200,13 @@ if ($isJsonPost) {
         $formName = isset($data["formName"]) ? (string)$data["formName"] : "";
         $formTitle = isset($data["formTitle"]) ? (string)$data["formTitle"] : "";
         if (isset($data["referencePrefix"])) $referencePrefix = (string)$data["referencePrefix"];
+        if (isset($data["reference"])) $ownReference = (string)$data["reference"];
         if (isset($data[HONEYPOT_FIELD])) $honeypotValue = (string)$data[HONEYPOT_FIELD];
 
         if (isset($data["fields"]) && isJsonFieldList($data["fields"])) {
             $fields = $data["fields"];
         } else {
-            $fields = fieldsFromFlatData($data, ["formName", "formTitle", "referencePrefix", HONEYPOT_FIELD]);
+            $fields = fieldsFromFlatData($data, ["formName", "formTitle", "referencePrefix", "reference", HONEYPOT_FIELD]);
         }
 
     }
@@ -215,9 +217,10 @@ if ($isJsonPost) {
     if (isset($_POST["formName"])) $formName = (string)$_POST["formName"];
     if (isset($_POST["formTitle"])) $formTitle = (string)$_POST["formTitle"];
     if (isset($_POST["referencePrefix"])) $referencePrefix = (string)$_POST["referencePrefix"];
+    if (isset($_POST["reference"])) $ownReference = (string)$_POST["reference"];
     if (isset($_POST[HONEYPOT_FIELD])) $honeypotValue = (string)$_POST[HONEYPOT_FIELD];
 
-    $usedKeys = ["formName", "formTitle", "referencePrefix", HONEYPOT_FIELD];
+    $usedKeys = ["formName", "formTitle", "referencePrefix", "reference", HONEYPOT_FIELD];
 
     // The form JSON is in one of the fields. (fields, formJSON, ticket, application, registration...)
     foreach ($_POST as $postKey => $postValue) {
@@ -314,6 +317,10 @@ $reference = strtoupper(cleanHeader($referencePrefix !== "" ? $referencePrefix :
 $reference = preg_replace("/[^A-Z0-9\-]/", "", $reference);
 if ($reference === "") $reference = "MSG";
 $reference .= "-" . str_pad((string)random_int(100000, 999999), 6, "0", STR_PAD_LEFT);
+
+// WHY: The visitor sees the number of the page (ORD-..., EVT-...): the mail must name the same one.
+$ownReference = substr(preg_replace("/[^A-Za-z0-9\-]/", "", $ownReference), 0, 40);
+if ($ownReference !== "") $reference = $ownReference;
 
 $replyTo = findEmail($fields);
 $subject = SUBJECT_PREFIX . $formTitle . " - " . $reference;

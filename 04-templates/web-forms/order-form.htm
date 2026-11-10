@@ -1079,7 +1079,7 @@
                     const response = await fetch(SERVICE_URL, {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ formName: FORM_NAME, formTitle: FORM_MAIL_TITLE, fields: json }),
+                        body: JSON.stringify({ formName: FORM_NAME, formTitle: FORM_MAIL_TITLE, reference: order.number, fields: json }),
                     });
                     result = (response.ok) ? "sent" : "error";
                 }
