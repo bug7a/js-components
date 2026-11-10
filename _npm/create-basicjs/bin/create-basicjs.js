@@ -5,6 +5,7 @@
 // npm create basicjs@latest my-app -- --template shop
 // npx create-basicjs@latest update      (in a project: replaces only _basic/)
 
+const crypto = require("crypto");
 const fs = require("fs");
 const path = require("path");
 
@@ -78,6 +79,35 @@ const create = function (options) {
     console.log("Open the folder in an AI coding tool and describe your app. To publish: node _basic/tools/build.js");
 };
 
+// The AGENTS.md of the published versions (0.1.1 - 0.1.4), as a new project got it (sha256).
+// WHY: an update replaced only _basic/, so an AGENTS.md nobody changed kept the names of an older kit
+//      (styleName: "primary", ozdenType1, AutoLayout) next to a _basic/ that has them no more.
+const OLD_AGENTS_HASHES = [
+    "2898b4e7a3e2b04754073f611bf26c13e8b2e5685c50582f10d1ae1f066ff8ba",
+    "ad7764b34b6f3e8d33fd89b2b0238102ff78e5613916e2fe1e3d999efd64c6e0",
+    "3092379ec5e7219f20dc64b6a69ac688c06b79d8c46d966977a2706d637b6811",
+];
+
+const hashOf = function (text) {
+    return crypto.createHash("sha256").update(text).digest("hex");
+};
+
+// An AGENTS.md as an older version gave it is replaced; one the user changed stays, the new one goes next to it.
+const updateAgents = function () {
+    const agentsFile = path.resolve("AGENTS.md");
+    const newText = fs.readFileSync(path.join(STARTER, "AGENTS.md"), "utf8");
+    if (!fs.existsSync(agentsFile)) return;
+    const text = fs.readFileSync(agentsFile, "utf8");
+    if (text === newText) return;
+    if (OLD_AGENTS_HASHES.indexOf(hashOf(text)) > -1) {
+        fs.writeFileSync(agentsFile, newText);
+        console.log("AGENTS.md updated (you had not changed it).");
+        return;
+    }
+    fs.writeFileSync(path.resolve("AGENTS.new.md"), newText);
+    console.log("AGENTS.md was not changed: yours is different. The one of this version is AGENTS.new.md: take what you need, then delete it.");
+};
+
 const update = function () {
     const basicFolder = path.resolve("_basic");
     if (!fs.existsSync(basicFolder)) stop("There is no _basic folder here: run this in a project.");
@@ -93,10 +123,7 @@ const update = function () {
     fs.rmSync(basicFolder, { recursive: true, force: true });
     fs.renameSync(newFolder, basicFolder);
     console.log("_basic/ updated: " + oldVersion + " -> " + VERSION);
-    const agentsFile = path.resolve("AGENTS.md");
-    if (fs.existsSync(agentsFile) && fs.readFileSync(agentsFile, "utf8") !== fs.readFileSync(path.join(STARTER, "AGENTS.md"), "utf8")) {
-        console.log("AGENTS.md was not changed: yours is different from the one in this version.");
-    }
+    updateAgents();
     console.log("Check your app after an update: node _basic/tools/check.js");
 };
 

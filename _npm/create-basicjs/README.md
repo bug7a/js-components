@@ -23,7 +23,7 @@ npm create basicjs@latest -- --list
 | :--- | :--- |
 | `node _basic/tools/check.js` | Opens the app in Chrome or Edge at a phone and a desktop width and lists errors, missing files, and things that leave the screen or are cut |
 | `node _basic/tools/build.js` | Makes the ready site in `dist/` |
-| `npx create-basicjs@latest update` | Replaces only `_basic/` |
+| `npx create-basicjs@latest update` | Replaces `_basic/`, and `AGENTS.md` when you did not change it (a changed one stays: the new one is written next to it as `AGENTS.new.md`) |
 
 It needs Node.js 18 or newer. The app itself has no dependencies.
 
