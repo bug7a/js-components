@@ -25,6 +25,9 @@ SCREENSHOT: one picture of a page (or of a part of it) for a report, in one comm
     node test/screenshot.js 04-templates/ozden-panel/index.htm --init "localStorage.setItem('appid_login', '{}')" \
         --run "openPageByKey('Reports')"                    (a page of the panel: it opens after its login)
     node test/screenshot.js index.htm --og index/og-image.jpg
+    node test/screenshot.js https://bug7a.github.io/basic.js/ --width 390
+                                                             a published page, as it is on the web (Ex: after GitHub
+                                                             Pages built it; not with --before or --live)
                                                              the link preview of a site, made again
 
 Options:
@@ -92,11 +95,13 @@ const PHONE_HEIGHT = 844;
 const DEFAULT_WAIT = 600; // ms: the first animations of a page, the motion of a menu
 const DEFAULT_MARGIN = 12; // px around a clipped part
 const LOAD_TIMEOUT = 30000; // ms
+const PICTURES_TIMEOUT = 10000; // ms: the pictures of a page of the web
 const OLD_PICTURE_AGE = 48 * 60 * 60 * 1000; // ms
 const CUT_TEXTS_SHOWN = 4; // texts written under a --cut line
 const OG_SIZE = { width: 1200, height: 630 }; // px: the picture of a link preview (og:image)
 const OG_QUALITY = 90; // of its JPEG
 const LIVE_SERVER = "http://127.0.0.1:5505"; // --live: the port of .vscode/settings.json
+const WEB_ADDRESS = /^https?:\/\//i; // a page given by its address is opened from the web
 
 // *** FILES:
 
@@ -416,6 +421,18 @@ const hideScrollBars = function () {
     });
 };
 
+// A page of the web: the pictures in the window are waited for. WHY: a picture its code set after the load (the logo of
+// a site) came later than the load event, and the picture showed an empty place. (Not "networkidle0": a page with a
+// slider never went quiet. Not every picture: on a slow network those far below kept the picture waiting.)
+const SEEN_PICTURES_LOADED_JS = "Array.from(document.images).every(function (i) {" +
+    " const box = i.getBoundingClientRect();" +
+    " const isSeen = box.bottom > 0 && box.top < innerHeight && box.right > 0 && box.left < innerWidth;" +
+    " return !isSeen || !i.getAttribute('src') || i.complete; })";
+const waitForPictures = async function (page, log) {
+    const isDone = await chrome.waitUntilTrue(page, SEEN_PICTURES_LOADED_JS, PICTURES_TIMEOUT);
+    if (!isDone) log.push({ text: "some pictures in the window were still coming after " + (PICTURES_TIMEOUT / 1000) + " s" });
+};
+
 // --wait-for: a page that is not ready is still taken, with an error.
 const waitForReady = async function (page, expression, log) {
     const isReady = await chrome.waitUntilTrue(page, expression, LOAD_TIMEOUT);
@@ -433,6 +450,7 @@ const takePicture = async function (browser, url, options) {
         watchPage(page, log);
         await page.setViewport({ width: options.width, height: options.height, deviceScaleFactor: options.scale });
         await page.goto(url, { waitUntil: "load", timeout: LOAD_TIMEOUT });
+        if (options.isWebPage) await waitForPictures(page, log);
         if (options.waitFor) await waitForReady(page, options.waitFor, log);
         await sleep(options.wait);
 
@@ -617,7 +635,7 @@ const readOptions = function (args) {
         else if (arg === "--scale") { options.scale = Number(args[++i]); options.isScaleGiven = true; }
         else if (arg === "--wait") options.wait = Number(args[++i]);
         else if (arg === "--margin") options.margin = Number(args[++i]);
-        else options.page = chrome.toPagePath(arg);
+        else options.page = (WEB_ADDRESS.test(arg)) ? arg : chrome.toPagePath(arg);
     }
     if (options.og) Object.assign(options, { width: OG_SIZE.width, height: options.height || OG_SIZE.height, scale: 1 });
     if (!options.height) options.height = (options.width < PHONE_WIDTH) ? PHONE_HEIGHT : DEFAULT_HEIGHT;
@@ -642,9 +660,13 @@ const main = async function () {
         return 0;
     }
 
+    // WHY: a published site (GitHub Pages) can break where the folder works: its paths, its files, what Jekyll left
+    const isWebPage = WEB_ADDRESS.test(options.page);
+    if (isWebPage && (options.before || options.isLive)) throw new Error("An address is the page as it is on the web: not with --before or --live");
+    options.isWebPage = isWebPage;
     // WHY # too: a page of the catalog is index.htm#/text-field
     const pageFile = options.page.split(/[?#]/)[0];
-    if (!fs.existsSync(path.join(ROOT, pageFile))) throw new Error("No such page: " + pageFile);
+    if (!isWebPage && !fs.existsSync(path.join(ROOT, pageFile))) throw new Error("No such page: " + pageFile);
     // WHY no stop: a page that is not in the commit is served from the folder under the old path too (readOldFile), so
     //     its basic/ and comp/ are the ones of the commit: a page made to try a component shows its change
     const isPageInCommit = !options.before || isInCommit(options.before, pageFile);
@@ -665,7 +687,8 @@ const main = async function () {
     const run = chrome.startRun("screenshot");
 
     try {
-        const after = await takePicture(browser, origin + "/" + options.page, options);
+        const address = (isWebPage) ? options.page : origin + "/" + options.page;
+        const after = await takePicture(browser, address, options);
         let picture = after.picture;
         if (options.before) {
             const before = await takePicture(browser, origin + OLD_PATH + "/" + options.page, options);
