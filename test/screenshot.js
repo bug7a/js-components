@@ -502,7 +502,10 @@ const takePicture = async function (browser, url, options) {
             rect = await page.evaluate(findClipRect, options.clips, options.margin);
         }
         const clip = clipWithMargin(rect, options.margin, size);
-        return { picture: await page.screenshot({ clip }), log, prints };
+        // WHY captureBeyondViewport false (puppeteer: true with a clip): the part is in the window already. A capture
+        //     beyond the window laid the page out again, and a part in a ScrollArea came out moved: a popover opened by
+        //     --click was another part of the page, a card taller than the window lost its title.
+        return { picture: await page.screenshot({ clip, captureBeyondViewport: false }), log, prints };
     } finally {
         await context.close();
     }
