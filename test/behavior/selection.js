@@ -520,6 +520,14 @@ test("Toggle: selectedBorderColor is the line of the track when on, and it goes 
     toggle.remove();
 });
 
+test("Toggle ozdenDark: the OFF mark is light on the black track (it was black on black)", async function () {
+    const toggle = Toggle({ left: 20, top: 100, styleName: "ozdenDark", value: 0 });
+    const offLabel = toggle.offMarkBox.children[0];
+    const row = [offLabel.elem.textContent, offLabel.textColor];
+    toggle.remove();
+    check("Toggle ozdenDark: the OFF mark is light on the black track (it was black on black)", row.join(" ") === "OFF " + White(0.6), row.join(" "));
+});
+
 test("Toggle ozden: a darker line around the track when on (65 x 36, a round knob)", async function () {
     const toggle = Toggle({ left: 20, top: 100, value: 1 });
     const on = { width: toggle.button.width, height: toggle.button.height, line: toggle.background.borderColor };

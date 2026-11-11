@@ -496,6 +496,7 @@ Toggle.styles = {
         offMark: "OFF", // Shows when off
         backgroundStyle: { color: "black", selectedColor: "#2C5A38", borderColor: White(0.25) },
         buttonStyle: { color: White(0.25), selectedColor: White(0.75) },
+        markStyle: { color: White(0.6) }, // WHY: OFF on the black track; the black of the default was not seen
     },
 
     // The light look of the kit (_designs/toggle.htm): a flat gray pill that turns to the accent, a white knob of the
