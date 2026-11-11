@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <title>OzdenUI gallery</title>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- LIBRARY FILES -->
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Bold.ttf" as="font" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="../basic/basic.css">
+    <script src="../basic/basic.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../basic/scroll-bar.js" type="text/javascript" charset="utf-8"></script>
+
+    <!-- COMPONENT FILES (a component after the ones it uses) -->
+    <script src="../comp/tooltip.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/smart-button.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/check-box.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/toggle.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/radio-button.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/search-input.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/item-list.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/select-box.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/slider-field.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/slider.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/progress-bar.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/log-view.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/splitter.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/tabs.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/text-field.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/email-field.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/password-field.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/number-field.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/tiny-select.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/url-field.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/phone-field.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/currency-field.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/text-area-field.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/stepper.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/step-bar.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/range-slider.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/date-picker.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/time-picker.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/color-picker.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/grid-group.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/sortable-list.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/web-view.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/code-editor.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/scroll-area.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/markdown-view.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/chat-view.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/canvas.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/context-menu.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/smart-table.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/image-view.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/graph-box.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/tree-view.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/accordion.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/json-view.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/json-editor.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/file-picker.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/menu-bar.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/tool-bar.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/status-bar.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/dialog.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/toast.js" type="text/javascript" charset="utf-8"></script>
+
+    <script>
+
+    /* Bismillah */
+
+    // The components of the kit on one page: two columns of cards between a MenuBar, a ToolBar and a StatusBar.
+    // The line at the bottom says what was changed last. The Dark / Light button of the ToolBar draws the page
+    // again in the other theme (gallery.htm#dark opens it dark). A component takes the look of its theme from its
+    // styleName: themed("light", "dark") gives the first name on a light page, the second on a dark one.
+
+    // *** THE COLORS AND SIZES OF THE PAGE
+    const LIGHT_COLORS = { page: "#F4F5F7", card: "#FFFFFF", text: Black(0.8), soft: "#5A6270", line: "#E1E3E6" };
+    const DARK_COLORS = { page: "#141413", card: "#232322", text: White(0.86), soft: White(0.6), line: White(0.12) };
+    const LIGHT_BUBBLE_LOOK = { color: "#FFFFFF", textColor: Black(0.85), border: 1, borderColor: Black(0.12), shadow: "0 10px 30px " + Black(0.12) };
+    const DARK_BUBBLE_LOOK = { color: "#2A2A29", textColor: White(0.86), border: 1, borderColor: White(0.14), shadow: "0 10px 30px " + Black(0.4) };
+    const POPOVER_SIZES = { round: 10, padding: [16, 14], contentGap: 10 };
+    const LIGHT_POPOVER_LOOK = Object.assign({}, LIGHT_BUBBLE_LOOK, POPOVER_SIZES);
+    const DARK_POPOVER_LOOK = Object.assign({}, DARK_BUBBLE_LOOK, POPOVER_SIZES);
+    const CARD_WIDTH = 440;
+    const PAGE_SIDE_SPACE = 16; // px at the sides of the cards (a phone)
+    const BUBBLE_TIME = 1500; // ms: the bubble of "A bubble" goes by itself
+
+    // *** THE DATA OF THE COMPONENTS
+    const PEOPLE = [
+        { id: 1, name: "Ayşe Yılmaz", city: "İstanbul", age: 34 },
+        { id: 2, name: "Mehmet Kaya", city: "Ankara", age: 41 },
+        { id: 3, name: "Zeynep Demir", city: "İzmir", age: 28 },
+        { id: 4, name: "Can Öztürk", city: "Bursa", age: 52 },
+    ];
+    const PEOPLE_COLUMNS = [
+        { name: "Name", dataTitle: "name", dataType: "string", width: 180, sortable: 1 },
+        { name: "City", dataTitle: "city", dataType: "string", width: 120, sortable: 1 },
+        { name: "Age", dataTitle: "age", dataType: "integer", width: 70, sortable: 1 },
+    ];
+    const PICTURE = "data:image/svg+xml;utf8," + encodeURIComponent(
+        '<svg xmlns="http://www.w3.org/2000/svg" width="320" height="200"><rect width="320" height="200" fill="#DCEFF1"/>'
+        + '<circle cx="160" cy="100" r="60" fill="#5BBAC1"/><\/svg>'
+    );
+
+    // A small picture made here (an SVG): a ground and a sun
+    const pictureOf = function (groundColor, sunColor) {
+        const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200">'
+            + '<rect width="200" height="200" fill="' + groundColor + '"/>'
+            + '<circle cx="100" cy="90" r="46" fill="' + sunColor + '"/>'
+            + '<rect y="150" width="200" height="50" fill="' + sunColor + '" opacity="0.5"/><\/svg>';
+        return "data:image/svg+xml;utf8," + encodeURIComponent(svg);
+    };
+
+    const PICTURES = [
+        { key: "sea", text: "Sea", iconFile: pictureOf("#DCEFF1", "#3F8D94") },
+        { key: "sun", text: "Sun", iconFile: pictureOf("#FBEBD3", "#E0913A") },
+        { key: "wood", text: "Wood", iconFile: pictureOf("#E3EEDC", "#5E8C4A") },
+    ];
+    const CODE = 'def hello(name):\n    print("Hello", name)  # a comment\n\nhello("world")\n';
+    const PRODUCTS = [
+        { name: "Honey", price: 150, in_stock: true },
+        { name: "Olive oil", price: 420, in_stock: false },
+        { name: "Tea", price: 95, in_stock: true },
+    ];
+    // A page of HTML with its own script: a click sends a message to this page (onMessage of the WebView)
+    const WEB_PAGE = '<body style="margin: 16px; font: 15px -apple-system, \'Segoe UI\', sans-serif">'
+        + '<p style="margin: 0 0 12px">An HTML page with its own script.<\/p><button id="send">Send to the page<\/button>'
+        + '<script>let count = 0; send.onclick = function () { parent.postMessage({ count: ++count }, "*"); };<\/script><\/body>';
+    const MARKDOWN_NOTE = [
+        "### A small report",
+        "",
+        "The **sales** went up. Read the [notes](https://example.com/notes).",
+        "",
+        "| Product | Total |",
+        "|:---|---:|",
+        "| Honey | 3,150 TL |",
+        "",
+        "- [x] Write it",
+        "- [ ] Send it",
+        "",
+        "```python",
+        "total = sum(rows)",
+        "```",
+        "",
+    ].join("\n");
+
+    // *** THE STATE OF THE PAGE
+    let theme = (location.hash === "#dark") ? "dark" : "light";
+    let colors = LIGHT_COLORS;
+    let pageGroup = null;
+    let statusBar = null;
+    let logView = null;
+
+    // The look of the theme of the page: themed("ozden", "ozdenDark")
+    const themed = function (lightValue, darkValue) {
+        return (theme === "dark") ? darkValue : lightValue;
+    };
+
+    const start = function () {
+        drawPage();
+    };
+
+    // The window: a MenuBar, a ToolBar, the cards in a ScrollArea and a StatusBar
+    const drawPage = function () {
+
+        colors = themed(LIGHT_COLORS, DARK_COLORS);
+        page.color = colors.page;
+
+        pageGroup = VGroup({ align: "left top", gap: 0, clipContent: 0 });
+
+            MenuBar({
+                styleName: themed("light", "dark"),
+                shrink: 0,
+                menus: [
+                    { text: "File", items: [
+                        { text: "New", shortcut: "Ctrl+N", onClick: function () { tell("New was chosen."); } },
+                        "-",
+                        { text: "Recent", items: ["a.txt", "b.txt"] },
+                    ] },
+                    { text: "View", items: [{ text: "Word wrap", key: "wrap", checked: 1, onClick: toggleWrap }] },
+                    { text: "Help", items: [{ text: "About", onClick: function () { tell("About was chosen."); } }] },
+                ],
+            });
+
+            ToolBar({
+                styleName: themed("light", "dark"),
+                onClick: tellTool,
+                items: [
+                    { key: "new", icon: "new", hint: "New" },
+                    { key: "save", icon: "save", hint: "Save" },
+                    "-",
+                    { key: "bold", icon: "bold", hint: "Bold", toggle: 1 },
+                    { key: "left", icon: "alignLeft", hint: "Align left", group: "align", checked: 1 },
+                    { key: "right", icon: "alignRight", hint: "Align right", group: "align" },
+                    "-",
+                    { key: "insert", text: "Insert", items: ["A picture", "A table"] },
+                    " ",
+                    { key: "theme", text: themed("Dark", "Light") }, // the other theme
+                    { key: "run", icon: "play", text: "Run", shortcut: "F9" },
+                ],
+            });
+
+            // SCROLL AREA: The cards (the room between the bars)
+            ScrollArea({ styleName: themed("light", "dark"), align: "center top", gap: 20, padding: [PAGE_SIDE_SPACE, 30] });
+                drawCards();
+            endGroup();
+
+            statusBar = StatusBar({
+                styleName: themed("light", "dark"),
+                shrink: 0,
+                messageText: "Change something.",
+                items: ["UTF-8", { key: "count", text: "50 components" }],
+            });
+
+        endGroup();
+
+    };
+
+    // The other theme: the page is drawn again, as at the start
+    const switchTheme = function () {
+        theme = (theme === "dark") ? "light" : "dark";
+        Tooltip.closePopover();
+        pageGroup.remove(); // WHY at once: a ToolBar or a MenuBar may be removed in the onClick of its item
+        drawPage();
+    };
+
+    const tell = function (text) {
+        statusBar.setMessageText(text);
+    };
+
+    const tellTool = function (bar, item) {
+        if (item.key === "theme") {
+            switchTheme();
+            return;
+        }
+        tell((item.hint || item.text) + ", pressed: " + bar.getCheckedKeys().join(", "));
+    };
+
+    // View > Word wrap: the long lines of the LogView go on to the next line, or are cut
+    const toggleWrap = function (bar, item) {
+        const isWrapped = !basic.isOn(item.checked);
+        logView.setWrapLines(isWrapped ? 1 : 0);
+        bar.setItemChecked("wrap", isWrapped ? 1 : 0);
+        tell("Word wrap: " + isWrapped);
+    };
+
+    const tellSize = function (radio) {
+        tell("Size: " + radio.value);
+    };
+
+    const tellCell = function () {
+        tell("A cell was clicked.");
+    };
+
+    // "{:,.0f} TL": the numbers of the RangeSlider and of the GraphBox
+    const formatLira = function (value) {
+        return value.toLocaleString("en-US", { maximumFractionDigits: 0 }) + " TL";
+    };
+
+    // onChange of the JsonEditor: the whole value, a list of products
+    const countProducts = function (editor, products) {
+        const inStock = products.filter(function (product) { return product.in_stock; }).length;
+        tell("Products: " + products.length + ", " + inStock + " in stock");
+    };
+
+    const askDelete = function () {
+        Dialog.confirm({
+            styleName: themed("ozden", "ozdenDark"),
+            titleText: "Delete it?",
+            messageText: "The file will be deleted.",
+            confirmText: "Delete",
+            danger: 1,
+        }).then(function (isConfirmed) {
+            tell(isConfirmed ? "Deleted." : "Not deleted.");
+        });
+    };
+
+    // GROUP: A card with a title; the objects after it go under the title. endCard() closes it.
+    const startCard = function (titleText) {
+        VGroup({
+            width: CARD_WIDTH,
+            height: "auto",
+            align: "left top",
+            gap: 14,
+            padding: 20,
+            color: colors.card,
+            round: 12,
+            clipContent: 0,
+            css: { maxWidth: "100%" }, // WHY: on a phone the card is as wide as the screen
+        });
+        Label({ text: titleText, fontSize: 13, bold: 1, textColor: colors.soft });
+    };
+
+    const endCard = function () {
+        endGroup();
+    };
+
+    // The cards, in two columns
+    const drawCards = function () {
+
+        Label({ text: "OzdenUI: the components", fontSize: 24, bold: 1, textColor: colors.text });
+
+        // WHY one row of two columns: a new row started under the taller column and left an empty area beside the
+        //     shorter one. A new card goes into the shorter column. On a phone the columns go one under the other.
+        HGroup({ width: "100%", height: "auto", align: "center top", gap: 20, wrap: 1, clipContent: 0 });
+
+            // GROUP: The first column
+            VGroup({ width: CARD_WIDTH, height: "auto", align: "left top", gap: 20, clipContent: 0, css: { maxWidth: "100%" } });
+
+                startCard("SmartButton");
+                    HGroup({ hug: 1, align: "left center", gap: 8, wrap: 1, clipContent: 0 });
+                        SmartButton({
+                            styleName: themed("ozden", "ozdenDark"),
+                            tone: themed("cyan", "cyanDark"),
+                            labelText: "Save",
+                            onClick: function () { Toast.success("Saved.", { theme: themed("light", "dark") }); },
+                        });
+                        SmartButton({
+                            styleName: themed("ozden", "ozdenDark"),
+                            labelText: "Cancel",
+                            onClick: function () { tell("Cancel was clicked."); },
+                        });
+                        SmartButton({
+                            styleName: themed("ozden", "ozdenDark"),
+                            tone: themed("orange", "orangeDark"),
+                            labelText: "Delete",
+                            onClick: askDelete,
+                        });
+                    endGroup();
+                endCard();
+
+                startCard("CheckBox, Toggle, RadioButton");
+                    CheckBox({
+                        styleName: themed("light", "dark"),
+                        labelText: "Remember me",
+                        checked: 1,
+                        onChange: function (self) { tell("Remember me: " + basic.isOn(self.checked)); },
+                    });
+                    HGroup({ hug: 1, gap: 10, align: "left center", clipContent: 0 });
+                        Toggle({
+                            styleName: themed("ozden", "ozdenDark"),
+                            value: 1,
+                            onChange: function (self) { tell("Notifications: " + basic.isOn(self.value)); },
+                        });
+                        Label({ text: "Notifications", fontSize: 15, textColor: colors.text });
+                    endGroup();
+                    HGroup({ hug: 1, gap: 18, clipContent: 0 });
+                        RadioButton({ styleName: themed("light", "dark"), group: "size", value: "S", labelText: "S", onChange: tellSize });
+                        RadioButton({ styleName: themed("light", "dark"), group: "size", value: "M", labelText: "M", checked: 1, onChange: tellSize });
+                        RadioButton({ styleName: themed("light", "dark"), group: "size", value: "L", labelText: "L", onChange: tellSize });
+                    endGroup();
+                endCard();
+
+                startCard("SelectBox, SliderField");
+                    SelectBox({
+                        styleName: themed("light", "dark"),
+                        options: ["İstanbul", "Ankara", "İzmir", "Bursa"],
+                        value: "Ankara",
+                        width: "100%",
+                        onChange: function (self) { tell("City: " + self.value); },
+                    });
+                    SliderField({
+                        styleName: themed("light", "dark"),
+                        labelText: "Volume",
+                        value: 6,
+                        minValue: 0,
+                        maxValue: 10,
+                        width: "100%",
+                        onChangeEnd: function (self) { tell("Volume: " + self.value); },
+                    });
+                endCard();
+
+                startCard("ProgressBar");
+                    const progressBar = ProgressBar({ styleName: themed("light", "dark"), titleText: "Uploading", value: 40, width: "100%" });
+                    HGroup({ hug: 1, gap: 8, clipContent: 0 });
+                        SmartButton({ styleName: themed("ozden", "ozdenDark"), labelText: "+10", onClick: function () { progressBar.addValue(10); } });
+                        SmartButton({ styleName: themed("ozden", "ozdenDark"), labelText: "Reset", onClick: function () { progressBar.setValue(0); } });
+                    endGroup();
+                endCard();
+
+                startCard("LogView");
+                    logView = LogView({
+                        styleName: themed("light", "dark"),
+                        height: 170,
+                        lines: [
+                            { text: "Started", level: "info" },
+                            { text: "14 files found", level: "success" },
+                            { text: "A file is very large", level: "warn" },
+                            { text: "A file can not be read", level: "error" },
+                        ],
+                    });
+                    SmartButton({ styleName: themed("ozden", "ozdenDark"), labelText: "Write a line", onClick: function () { logView.info("A new line"); } });
+                endCard();
+
+                startCard("Splitter");
+                    startBox({ width: "100%", height: 120, color: "transparent", border: 1, borderColor: colors.line, round: 8 });
+                        const split = Splitter({ styleName: themed("light", "dark"), firstSize: "40%" });
+                        createIn(split.first, function () {
+                            Label({ text: "Drag the line", fontSize: 14, textColor: colors.soft, padding: 10 });
+                        });
+                        createIn(split.second, function () {
+                            Label({ text: "The other area", fontSize: 14, textColor: colors.soft, padding: 10 });
+                        });
+                    endBox();
+                endCard();
+
+                startCard("Tabs");
+                    const tabs = Tabs({
+                        styleName: themed("light", "dark"),
+                        width: "100%",
+                        panels: 1,
+                        tabs: ["General", "Advanced"],
+                        onChange: function (self) { tell("Tab: " + self.value); },
+                    });
+                    tabs.startPanel("General");
+                        Label({ text: "The general settings.", fontSize: 14, textColor: colors.text });
+                    tabs.endPanel();
+                    tabs.startPanel("Advanced");
+                        Label({ text: "The advanced settings.", fontSize: 14, textColor: colors.text });
+                    tabs.endPanel();
+                endCard();
+
+                startCard("TextField, EmailField, PasswordField, NumberField");
+                    TextField({
+                        styleName: themed("light", "dark"),
+                        titleText: "Name",
+                        placeholder: "Ada",
+                        width: "100%",
+                        onChange: function (self) { tell("Name: " + self.getValue()); },
+                    });
+                    EmailField({ styleName: themed("light", "dark"), titleText: "E-mail", required: 0, width: "100%" });
+                    PasswordField({ styleName: themed("light", "dark"), titleText: "Password", required: 0, width: "100%" });
+                    NumberField({
+                        styleName: themed("light", "dark"),
+                        titleText: "Count",
+                        value: "3",
+                        placeholder: "",
+                        width: "100%",
+                        onChange: function (self) { tell("Count: " + self.getValue()); },
+                    });
+                endCard();
+
+                startCard("SearchInput, Slider, Stepper");
+                    SearchInput({
+                        styleName: themed("ozden", "ozdenDark"),
+                        width: "100%",
+                        onChange: function (self) { tell("Search: " + self.getValue()); },
+                    });
+                    Slider({
+                        styleName: themed("round", "roundDark"),
+                        value: 30,
+                        width: "100%",
+                        onChangeEnd: function (self) { tell("Slider: " + self.value); },
+                    });
+                    Stepper({
+                        styleName: themed("light", "dark"),
+                        value: 2,
+                        minValue: 0,
+                        maxValue: 10,
+                        onChange: function (self) { tell("Stepper: " + self.value); },
+                    });
+                endCard();
+
+                startCard("StepBar");
+                    StepBar({
+                        styleName: themed("light", "dark"),
+                        steps: ["Cart", "Address", "Payment"],
+                        currentStep: 1,
+                        onStepClick: function (self, index) {
+                            self.setStep(index);
+                            tell("Step: " + (index + 1));
+                        },
+                    });
+                endCard();
+
+                startCard("RangeSlider");
+                    RangeSlider({
+                        styleName: themed("round", "roundDark"),
+                        lowValue: 200,
+                        highValue: 800,
+                        maxValue: 1000,
+                        step: 50,
+                        width: "100%",
+                        formatValue: formatLira,
+                        onChangeEnd: function (self) { tell("Range: " + self.lowValue + " - " + self.highValue); },
+                    });
+                endCard();
+
+                startCard("DatePicker, TimePicker, ColorPicker");
+                    HGroup({ hug: 1, align: "left center", gap: 10, wrap: 1, clipContent: 0 });
+                        DatePicker({
+                            styleName: themed("light", "dark"),
+                            date: "2026-11-20",
+                            width: 140,
+                            onChange: function (self) { tell("Date: " + self.value); },
+                        });
+                        TimePicker({
+                            styleName: themed("light", "dark"),
+                            time: "19:30",
+                            width: 110,
+                            onChange: function (self) { tell("Time: " + self.value); },
+                        });
+                        ColorPicker({
+                            styleName: themed("light", "dark"),
+                            selectedColor: "#3871E0",
+                            width: 130,
+                            onChange: function (self) { tell("Color: " + self.value); },
+                        });
+                    endGroup();
+                endCard();
+
+                startCard("GridGroup");
+                    const grid = GridGroup({ columns: 3, gap: 8, clipContent: 0 });
+                        SmartButton({ styleName: themed("ozden", "ozdenDark"), labelText: "Cell 1", width: "100%", onClick: tellCell });
+                        SmartButton({ styleName: themed("ozden", "ozdenDark"), labelText: "Cell 2", width: "100%", onClick: tellCell });
+                        SmartButton({ styleName: themed("ozden", "ozdenDark"), labelText: "Cell 3", width: "100%", onClick: tellCell });
+                        const btnCell4 = SmartButton({ styleName: themed("ozden", "ozdenDark"), labelText: "Cell 4", width: "100%", onClick: tellCell });
+                        grid.place(btnCell4, { columnSpan: 2 });
+                        SmartButton({ styleName: themed("ozden", "ozdenDark"), labelText: "Cell 5", width: "100%", onClick: tellCell });
+                        SmartButton({ styleName: themed("ozden", "ozdenDark"), labelText: "Cell 6", width: "100%", onClick: tellCell });
+                    endGroup();
+                endCard();
+
+                startCard("UrlField, PhoneField, CurrencyField");
+                    UrlField({
+                        styleName: themed("light", "dark"),
+                        titleText: "Site",
+                        required: 0,
+                        width: "100%",
+                        tinySelectParams: { selectedIndex: 1 }, // https://
+                        onChange: function (self) { tell("Site: " + self.getValue()); },
+                    });
+                    PhoneField({
+                        styleName: themed("light", "dark"),
+                        titleText: "Phone",
+                        required: 0,
+                        width: "100%",
+                        onChange: function (self) { tell("Phone: " + self.getValue()); },
+                    });
+                    CurrencyField({
+                        styleName: themed("light", "dark"),
+                        titleText: "Price",
+                        unitText: "$",
+                        placeholder: "",
+                        width: "100%",
+                        onChange: function (self) { tell("Price: " + self.getValueAsNumber()); },
+                    });
+                endCard();
+
+                startCard("SortableList");
+                    SortableList({
+                        styleName: themed("light", "dark"),
+                        items: ["Sales", "Stock", { key: "pay", text: "Payments", description: "Every Monday" }],
+                        width: "100%",
+                        height: "auto",
+                        onChange: function (self) { tell("Order: " + self.getKeys().join(", ")); },
+                    });
+                endCard();
+
+                startCard("WebView");
+                    WebView({
+                        htmlText: WEB_PAGE,
+                        width: "100%",
+                        height: 110,
+                        onMessage: function (self, data) { tell("WebView: " + data.count); },
+                    });
+                endCard();
+
+                startCard("ChatView");
+                    ChatView({
+                        styleName: themed("light", "dark"),
+                        width: "100%",
+                        height: 300,
+                        messages: [{ role: "user", text: "Hello!" }, "Hi! **How** can I help?"],
+                        onSend: function (self, text) { self.addMessage("You wrote: " + text); },
+                    });
+                endCard();
+
+            endGroup();
+
+            // GROUP: The second column
+            VGroup({ width: CARD_WIDTH, height: "auto", align: "left top", gap: 20, clipContent: 0, css: { maxWidth: "100%" } });
+
+                startCard("TextAreaField");
+                    TextAreaField({
+                        styleName: themed("light", "dark"),
+                        titleText: "Note",
+                        placeholder: "Write something...",
+                        required: 0,
+                        minCharCount: 0,
+                        showCount: 0,
+                        warningText: "",
+                        width: "100%",
+                        height: 110,
+                        onChange: function (self) { tell("Note: " + self.getValue().length + " letters"); },
+                    });
+                endCard();
+
+                startCard("ItemList");
+                    ItemList({
+                        styleName: themed("ozden", "ozdenDark"),
+                        items: [
+                            { key: "a", text: "Apples", description: "Red" },
+                            { key: "p", text: "Pears", description: "Green" },
+                            { key: "g", text: "Grapes", description: "Purple" },
+                        ],
+                        width: "100%",
+                        height: 170,
+                        onChange: function (self) { tell("Fruit: " + self.getSelectedKeys().join(", ")); },
+                    });
+                endCard();
+
+                startCard("ItemList: pictures");
+                    ItemList({
+                        styleName: themed("gallery", "galleryDark"),
+                        items: PICTURES,
+                        layout: "grid",
+                        width: "100%",
+                        height: "auto",
+                        selectedKeys: ["sun"],
+                        style: { tile: { width: 120, iconSize: 104 } }, // WHY: three in the row of this card
+                        onChange: function (self) { tell("Picture: " + self.getSelectedKeys().join(", ")); },
+                    });
+                endCard();
+
+                startCard("Canvas");
+                    const board = Canvas({
+                        styleName: themed("light", "dark"),
+                        width: "100%",
+                        height: 170,
+                        onShapeMove: function (self, shape) { tell("Moved: " + shape.key); },
+                        onClick: function (self, x, y, shape) { tell("Canvas: " + (shape ? shape.key : "empty")); },
+                    });
+                    board.addRect(0, 125, CARD_WIDTH, 45, { fill: "#E3EEDC", key: "ground" });
+                    board.addPolygon([[20, 125], [80, 55], [140, 125]], { fill: "#9DBE8C", key: "hill" });
+                    board.addLine(170, 150, 330, 150, { color: "#5E8C4A", lineWidth: 3, dash: [8, 5], key: "path" });
+                    board.addCircle(300, 55, 24, { fill: "#E0913A", draggable: 1, key: "sun" });
+                    board.addText(16, 12, "Drag the sun", { fontSize: 15, bold: 1, key: "title" });
+                endCard();
+
+                startCard("SmartTable");
+                    SmartTable({
+                        styleName: themed("light", "dark"),
+                        titleDataList: PEOPLE_COLUMNS,
+                        itemDataList: PEOPLE,
+                        fitLineCount: 1,
+                        style: { width: "100%", height: 230 },
+                        onSelect: function (self, row) { tell("Row: " + row.name); },
+                    });
+                endCard();
+
+                startCard("ImageView");
+                    ImageView({
+                        styleName: themed("light", "dark"),
+                        height: 170,
+                        imageFile: PICTURE,
+                        enlargeToFit: 1,
+                        altText: "A circle on a square",
+                    });
+                endCard();
+
+                startCard("CodeEditor");
+                    CodeEditor({ styleName: themed("light", "dark"), height: 150, language: "python", value: CODE });
+                endCard();
+
+                startCard("GraphBox");
+                    GraphBox({
+                        theme: themed("light", "dark"),
+                        type: "bar",
+                        labels: ["Jan", "Feb", "Mar", "Apr"],
+                        values: [1200, 1900, 700, 1500],
+                        width: "100%",
+                        height: 210,
+                        formatValue: formatLira,
+                        onClick: function (self, item) { tell("Bar: " + item.label); },
+                    });
+                endCard();
+
+                startCard("TreeView, ContextMenu");
+                    const tree = TreeView({
+                        styleName: themed("light", "dark"),
+                        items: [
+                            { key: "photos", text: "photos", expanded: 1, children: ["sea.jpg", "hill.jpg"] },
+                            { key: "notes", text: "notes.txt", description: "4 KB" },
+                        ],
+                        width: "100%",
+                        height: 130,
+                        onSelect: function (self, node) { tell("Node: " + node.text); },
+                    });
+                    // WHY own: a menu is made on the page (over everything); it goes with the tree
+                    tree.own(ContextMenu({
+                        styleName: themed("light", "dark"),
+                        target: tree,
+                        items: [
+                            { text: "Open them all", onClick: function () { tree.expandAll(); } },
+                            "-",
+                            { text: "Close them all", onClick: function () { tree.collapseAll(); } },
+                        ],
+                    }));
+                endCard();
+
+                startCard("Tooltip");
+                    HGroup({ hug: 1, align: "left center", gap: 8, wrap: 1, clipContent: 0 });
+                        const btnHint = SmartButton({ styleName: themed("ozden", "ozdenDark"), labelText: "A hint" });
+                        Tooltip({ target: btnHint, hintText: "A hint on the button" });
+                        const btnBubble = SmartButton({
+                            styleName: themed("ozden", "ozdenDark"),
+                            labelText: "A bubble",
+                            onClick: function () {
+                                const bubble = Tooltip.show(btnBubble, "It goes by itself.", themed(LIGHT_BUBBLE_LOOK, DARK_BUBBLE_LOOK));
+                                bubble.after(BUBBLE_TIME, function () { bubble.remove(); });
+                            },
+                        });
+                        const btnPopover = SmartButton({ styleName: themed("ozden", "ozdenDark"), labelText: "A popover" });
+                        Tooltip({
+                            target: btnPopover,
+                            trigger: "click",
+                            hintPosition: "bottom",
+                            look: themed(LIGHT_POPOVER_LOOK, DARK_POPOVER_LOOK),
+                            content: function (bubble) {
+                                Label({ text: "It stays, and holds objects.", fontSize: 14, textColor: colors.text });
+                            },
+                        });
+                    endGroup();
+                endCard();
+
+                startCard("Accordion");
+                    const folds = Accordion({
+                        styleName: themed("light", "dark"),
+                        sections: [{ key: "more", text: "More settings", description: "2", opened: 1 }, "Closed at the start"],
+                        onToggle: function (self) { tell("Open: " + self.getOpenKeys().join(", ")); },
+                    });
+                    folds.startSection("more");
+                        CheckBox({ styleName: themed("light", "dark"), labelText: "Save it by itself", checked: 1 });
+                    folds.endSection();
+                    folds.startSection("Closed at the start");
+                        Label({ text: "It was made while it was closed.", fontSize: 14, textColor: colors.soft });
+                    folds.endSection();
+                endCard();
+
+                startCard("MarkdownView");
+                    MarkdownView({
+                        styleName: themed("light", "dark"),
+                        height: 250,
+                        markdownText: MARKDOWN_NOTE,
+                        onLinkClick: function (self, address) { tell("Link: " + address); },
+                        style: { box: { color: "transparent" }, page: { padding: [0, 0] } },
+                    });
+                endCard();
+
+                startCard("JsonView");
+                    JsonView({
+                        styleName: themed("light", "dark"),
+                        height: 170,
+                        value: { status: "ok", count: 2, users: [{ name: "Ada", active: true }] },
+                        expandLevel: 2,
+                        onSelect: function (self, entry) { tell("Path: " + entry.pathText); },
+                        style: { box: { color: "transparent" } },
+                    });
+                endCard();
+
+                startCard("JsonEditor");
+                    JsonEditor({ styleName: themed("light", "dark"), height: 340, value: PRODUCTS, titleText: "Products", onChange: countProducts });
+                endCard();
+
+                startCard("FilePicker");
+                    FilePicker({
+                        styleName: themed("light", "dark"),
+                        width: "100%",
+                        zoneHeight: 110,
+                        multiple: 1,
+                        onChange: function (self) { tell("Files: " + self.getFiles().length); },
+                    });
+                endCard();
+
+            endGroup();
+
+        endGroup();
+
+    };
+
+    </script>
+</head>
+
+<body></body>
+
+</html>
