@@ -127,6 +127,17 @@ test("SmartButton: a held Enter presses once", async function () {
     button.remove();
 });
 
+// 2026-11-11 (the user): a key of a calculator clicked with the mouse kept the focus, and Enter ("=") pressed it again
+test("SmartButton: a click of the mouse does not take the focus, enabled or not", async function () {
+    const buttons = [SmartButton({ labelText: "Go" }), SmartButton({ labelText: "Off", enabled: 0 })];
+    buttons.forEach(function (button) {
+        const press = new MouseEvent("mousedown", { bubbles: true, cancelable: true, button: 0 });
+        button.elem.dispatchEvent(press);
+        check("SmartButton: the mousedown of " + button.labelText + " is stopped (the browser gives it no focus)", press.defaultPrevented === true, press.defaultPrevented);
+        button.remove();
+    });
+});
+
 // 2026-11-05 (the user): the Save button of a dialog turned from blue to gray when the dialog opened
 test("SmartButton: a state set while it is made is drawn at once (no move from its first look); a later change moves", async function () {
     const button = SmartButton({ labelText: "Save", tone: "cyan" });
