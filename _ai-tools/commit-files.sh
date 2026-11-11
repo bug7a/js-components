@@ -135,7 +135,8 @@ if [ "$HAS_SHARED_CHANGES" = 1 ]; then
     fi
 fi
 
-TEMP_DIR="$(mktemp -d -t commit-files)"
+# WHY a template with X: the mktemp of Linux (GNU) stops on "-t name" without them; this form works on macOS too
+TEMP_DIR="$(mktemp -d "${TMPDIR:-/tmp}/commit-files.XXXXXX")" || exit 2
 trap 'rm -rf "$TEMP_DIR"' EXIT
 export GIT_INDEX_FILE="$TEMP_DIR/index"
 git read-tree "$START_HEAD"
