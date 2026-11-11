@@ -829,14 +829,22 @@ test("Slider: on a zoomed page (page.fit) the thumb goes as far as the mouse", a
 test("Slider: the round package gives a knob; the page keeps its params and the packages do not change", async function () {
     const round = Slider({ styleName: "round", style: { thumb: { width: 30, height: 30 } } });
     const tomato = Slider({ styleName: "round", trackColor: "tomato" });
-    const classic = Slider({});
+    const split = Slider({});
     const knob = getSliderThumb(round).firstElementChild.getBoundingClientRect();
-    const line = getSliderThumb(classic).firstElementChild.getBoundingClientRect();
-    const row = [knob.width, knob.height, line.width, line.height, round.trackHeight, tomato.trackColor, classic.trackHeight, Slider.styles.round.style.thumb.width, Slider.styles.classic.thumb.width];
+    const line = getSliderThumb(split).firstElementChild.getBoundingClientRect();
+    const row = [knob.width, knob.height, line.width, line.height, round.trackHeight, tomato.trackColor, split.trackHeight, Slider.styles.round.style.thumb.width, Slider.styles.split.thumb.width];
     round.remove();
     tomato.remove();
-    classic.remove();
+    split.remove();
     check("Slider: the round package gives a knob; the page keeps its params and the packages do not change", row.join(" ") === "30 30 4 44 6 tomato 16 24 4", row.join(" "));
+});
+
+test("Slider: splitDark is the split shape in the colors of a dark page", async function () {
+    const slider = Slider({ styleName: "splitDark" });
+    const line = getSliderThumb(slider).firstElementChild.getBoundingClientRect();
+    const row = [line.width, line.height, slider.trackHeight, slider.trackColor, slider.trackBackgroundColor, slider.thumbColor];
+    slider.remove();
+    check("Slider: splitDark is the split shape in the colors of a dark page", row.join(" ") === "4 44 16 #5BBAC1 rgba(255,255,255,0.12) rgba(255,255,255,0.85)", row.join(" "));
 });
 
 test("Slider: minValue, maxValue and step: the value stays in the range and on a step (setValue, a drag, the setters)", async function () {
@@ -1073,6 +1081,17 @@ test("SearchInput ozden: the clear icon in the middle of the face of the box (it
 });
 
 // *** STEPPER (comp/stepper.js)
+
+test("Stepper: ozdenDark is the ozden shape in the colors of a dark page", async function () {
+    const ozden = Stepper({ styleName: "ozden", value: 5, minValue: 1, maxValue: 10 });
+    const ozdenDark = Stepper({ styleName: "ozdenDark", value: 5, minValue: 1, maxValue: 10 });
+    const button = ozden.btnPlus.elem.getBoundingClientRect();
+    const darkButton = ozdenDark.btnPlus.elem.getBoundingClientRect();
+    const row = [ozdenDark.width, ozdenDark.height, darkButton.width === button.width, darkButton.height === button.height, ozdenDark.btnPlus.color, ozdenDark.lblValue.textColor];
+    ozden.remove();
+    ozdenDark.remove();
+    check("Stepper: ozdenDark is the ozden shape in the colors of a dark page", row.join(" ") === "150 50 true true #232322 rgba(255, 255, 255, 0.88)", row.join(" "));
+});
 
 test("Stepper: style.button.border draws a line around the buttons (none by default)", async function () {
     const lined = Stepper({ style: { button: { border: 1, borderColor: "rgb(255, 0, 0)" } } });

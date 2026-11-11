@@ -18,8 +18,8 @@ UI COMPONENT TEMPLATE
 - A line around the buttons: style.button.border and borderColor (0 and "transparent" by default: no line).
 - style.button.opacity (1) / disabledOpacity: a button that can / can not be clicked (at min / max). fadeDuration:
   the time of the fade between them (s). 0: at once (the default).
-- Style packages: "light" (default; the old name "classic" works too), "modern", "dark", "ozden". Select with styleName. (Stepper.styles)
--- "ozden": for a 600 px design.
+- Style packages: "light" (default; the old name "classic" works too), "modern", "dark", "ozden", "ozdenDark". Select with styleName. (Stepper.styles)
+-- "ozden": for a 600 px design. "ozdenDark": ozden on a dark page.
    It is a package of params (basic.js v26.10.27): it also gives the size, 150 x 50.
 
 USAGE:
@@ -65,7 +65,7 @@ const StepperDefaults = {
     onChange: function (self) { }, // self.value
     onMinReached: function (self) { }, // Called when the value arrives at min
     onMaxReached: function (self) { }, // Called when the value arrives at max
-    styleName: "light", // "light" ("classic": its old name), "modern", "dark", "ozden", "minimal", "minimalDark" or a name added to Stepper.styles
+    styleName: "light", // "light" ("classic": its old name), "modern", "dark", "ozden", "ozdenDark", "minimal", "minimalDark" or a name added to Stepper.styles
     style: { // Light style package (default)
         box: {
             color: White(1),
@@ -697,6 +697,32 @@ Stepper.styles = {
             },
             value: { fontSize: 22, textColor: "rgba(0, 0, 0, 0.8)", fontFamily: "" },
             input: { textColor: "rgba(0, 0, 0, 0.8)" },
+        },
+    },
+
+    // ozden on a dark page: the same shape; the buttons in the ground of a dark card with a light line (on such a
+    // card they are rings, as the white buttons of ozden on white), a light value.
+    ozdenDark: {
+        width: 150,
+        height: 50, // WHY: 42 px buttons (50 - 2 x padding)
+        style: {
+            box: { color: "transparent", border: 0, round: 100, padding: 4 },
+            button: {
+                width: 42,
+                color: "#232322",
+                hoverColor: "#2E2E2D",
+                activeColor: "#393938",
+                border: 1,
+                borderColor: "rgba(255, 255, 255, 0.8)",
+                round: 21,
+                iconColor: "rgba(255, 255, 255, 0.7)",
+                iconSize: 24, // WHY: a + 16 px long, with a 2.7 px line
+                opacity: 0.9, // the line and the icon are a little softer
+                disabledOpacity: 0.4,
+                fadeDuration: 0.2,
+            },
+            value: { fontSize: 22, textColor: "rgba(255, 255, 255, 0.88)", fontFamily: "" },
+            input: { color: "rgba(255, 255, 255, 0.06)", textColor: "rgba(255, 255, 255, 0.88)" },
         },
     },
 

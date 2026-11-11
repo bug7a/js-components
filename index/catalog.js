@@ -193,11 +193,11 @@ CATALOG.COMPONENTS = [
         source: "comp/stepper.js",
         samples: [
             { file: "02-comp-examples/stepper.htm", title: "Basic" },
-            { file: "02-comp-examples/stepper-2.htm", title: "ozden, a line around the buttons" },
+            { file: "02-comp-examples/stepper-2.htm", title: "ozden, ozdenDark, a line around the buttons" },
             { file: "02-comp-examples/minimal-theme.htm", title: "Minimal theme (minimal, minimalDark)" },
         ],
-        en: "Number stepper with decimals, a unit, typed editing and hold-to-repeat buttons. A line around the buttons and a round look (ozden).",
-        tr: "Ondalık, birim, elle yazma ve basılı tutunca tekrarlayan düğmeleriyle sayı seçici. Düğmelerin çevresinde çizgi ve yuvarlak görünüm (ozden).",
+        en: "Number stepper with decimals, a unit, typed editing and hold-to-repeat buttons. A line around the buttons and a round look (ozden; ozdenDark on a dark page).",
+        tr: "Ondalık, birim, elle yazma ve basılı tutunca tekrarlayan düğmeleriyle sayı seçici. Düğmelerin çevresinde çizgi ve yuvarlak görünüm (ozden; koyu sayfada ozdenDark).",
     },
     {
         key: "slider-field", name: "SliderField", cat: "inputs",
@@ -599,11 +599,11 @@ CATALOG.COMPONENTS = [
         source: "comp/slider.js",
         samples: [
             { file: "02-comp-examples/slider.htm", title: "round (the model page)" },
-            { file: "02-comp-examples/slider-2-classic.htm", title: "classic (Material 3)" },
+            { file: "02-comp-examples/slider-2-split.htm", title: "split (Material 3), splitDark" },
             { file: "02-comp-examples/minimal-theme.htm", title: "Minimal theme (minimal, minimalDark)" },
         ],
-        en: "Slider for choosing a value in a range, on a step. Looks: round (a thin track and a round white knob: the look of new pages), roundDark for a dark page, and classic (inspired by Material 3).",
-        tr: "Bir aralıktan, adım adım değer seçmek için kaydırıcı. Görünümler: round (ince bir ray ve yuvarlak beyaz bir tutamaç: yeni sayfaların görünümü), koyu sayfa için roundDark ve classic (Material 3'ten esinlenildi).",
+        en: "Slider for choosing a value in a range, on a step. Looks: round (a thin track and a round white knob: the look of new pages), roundDark for a dark page, and split (inspired by Material 3; splitDark for a dark page).",
+        tr: "Bir aralıktan, adım adım değer seçmek için kaydırıcı. Görünümler: round (ince bir ray ve yuvarlak beyaz bir tutamaç: yeni sayfaların görünümü), koyu sayfa için roundDark ve split (Material 3'ten esinlenildi; koyu sayfa için splitDark).",
     },
     {
         key: "step-bar", name: "StepBar", cat: "navigation",
