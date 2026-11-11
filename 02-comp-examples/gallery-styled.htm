@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 
-    <title>OzdenUI gallery</title>
+    <title>OzdenUI gallery: chosen looks</title>
 
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -71,14 +71,41 @@
 
     /* Bismillah */
 
-    // The components of the kit on one page: two columns of cards between a MenuBar, a ToolBar and a StatusBar.
-    // The line at the bottom says what was changed last. The Dark / Light button of the ToolBar draws the page
-    // again in the other theme (gallery.htm#dark opens it dark). A component takes the look of its theme from its
-    // styleName: themed("light", "dark") gives the first name on a light page, the second on a dark one.
+    // The components of the kit on one page, with looks and a color chosen by the page: two columns of cards between
+    // a MenuBar, a ToolBar and a StatusBar. The ItemList, the TextAreaField, the Slider and the Stepper take another
+    // package (styleName); every part with a color of its own (a check box, a bar, a chosen row, a field with the
+    // focus, a chart...) takes the main color of the page (LIGHT_MAIN, DARK_MAIN: the cyan of the kit); a mark on that
+    // color (a tick, a text, an icon) is dark, as the text of the cyan Save button. Another color: change the tones of
+    // LIGHT_MAIN and DARK_MAIN.
+    // The line at the bottom says what was changed last. The Dark / Light button of the ToolBar draws the page again
+    // in the other theme (gallery-styled.htm#dark opens it dark): themed("light", "dark") gives the first value on a
+    // light page, the second on a dark one.
 
     // *** THE COLORS AND SIZES OF THE PAGE
     const LIGHT_COLORS = { page: "#F4F5F7", card: "#FFFFFF", text: Black(0.8), soft: "#5A6270", line: "#E1E3E6" };
     const DARK_COLORS = { page: "#141413", card: "#232322", text: White(0.86), soft: White(0.6), line: White(0.12) };
+    // The main color of the page and its tones
+    const LIGHT_MAIN = {
+        color: "#5BBAC1", // a fill, a line, a mark
+        onColor: Black(0.75), // a tick, a text or an icon on that color: the text of the Save button (white was too soft)
+        hover: "#50AEB5", // under the mouse (as the Save button)
+        strong: "#1F7A83", // a text or a thin mark: readable on the card
+        tint: "#DBF0F1", // a chosen ground: a row, the filled part of a field
+        tintHover: "#C6E7EA", // the tint under the mouse and while it is dragged
+        soft: "#EDF7F8", // a soft ground: a row under the mouse, a field with the focus
+        ring: "rgba(91, 186, 193, 0.5)", // the ring of the keyboard focus
+    };
+    // WHY the same cyan: the dark looks of the kit keep it too (the roundDark Slider); the tones go dark
+    const DARK_MAIN = {
+        color: "#5BBAC1",
+        onColor: Black(0.75),
+        hover: "#6FC6CD",
+        strong: "#6FC6CD",
+        tint: "#2F4445",
+        tintHover: "#345052",
+        soft: "#293232",
+        ring: "rgba(91, 186, 193, 0.5)",
+    };
     const LIGHT_BUBBLE_LOOK = { color: "#FFFFFF", textColor: Black(0.85), border: 1, borderColor: Black(0.12), shadow: "0 10px 30px " + Black(0.12) };
     const DARK_BUBBLE_LOOK = { color: "#2A2A29", textColor: White(0.86), border: 1, borderColor: White(0.14), shadow: "0 10px 30px " + Black(0.4) };
     const POPOVER_SIZES = { round: 10, padding: [16, 14], contentGap: 10 };
@@ -150,6 +177,7 @@
     // *** THE STATE OF THE PAGE
     let theme = (location.hash === "#dark") ? "dark" : "light";
     let colors = LIGHT_COLORS;
+    let main = LIGHT_MAIN;
     let pageGroup = null;
     let statusBar = null;
     let logView = null;
@@ -167,6 +195,7 @@
     const drawPage = function () {
 
         colors = themed(LIGHT_COLORS, DARK_COLORS);
+        main = themed(LIGHT_MAIN, DARK_MAIN);
         page.color = colors.page;
 
         pageGroup = VGroup({ align: "left top", gap: 0, clipContent: 0 });
@@ -337,20 +366,45 @@
                         styleName: themed("light", "dark"),
                         labelText: "Remember me",
                         checked: 1,
+                        style: { checkedMark: { color: main.color, borderColor: main.color }, tick: { color: main.onColor } },
                         onChange: function (self) { tell("Remember me: " + basic.isOn(self.checked)); },
                     });
                     HGroup({ hug: 1, gap: 10, align: "left center", clipContent: 0 });
                         Toggle({
                             styleName: themed("ozden", "ozdenDark"),
                             value: 1,
+                            backgroundStyle: { selectedColor: main.color },
+                            markStyle: { selectedColor: main.onColor },
                             onChange: function (self) { tell("Notifications: " + basic.isOn(self.value)); },
                         });
                         Label({ text: "Notifications", fontSize: 15, textColor: colors.text });
                     endGroup();
                     HGroup({ hug: 1, gap: 18, clipContent: 0 });
-                        RadioButton({ styleName: themed("light", "dark"), group: "size", value: "S", labelText: "S", onChange: tellSize });
-                        RadioButton({ styleName: themed("light", "dark"), group: "size", value: "M", labelText: "M", checked: 1, onChange: tellSize });
-                        RadioButton({ styleName: themed("light", "dark"), group: "size", value: "L", labelText: "L", onChange: tellSize });
+                        RadioButton({
+                            styleName: themed("light", "dark"),
+                            group: "size",
+                            value: "S",
+                            labelText: "S",
+                            style: { checkedMark: { borderColor: main.color }, dot: { color: main.color } },
+                            onChange: tellSize,
+                        });
+                        RadioButton({
+                            styleName: themed("light", "dark"),
+                            group: "size",
+                            value: "M",
+                            labelText: "M",
+                            checked: 1,
+                            style: { checkedMark: { borderColor: main.color }, dot: { color: main.color } },
+                            onChange: tellSize,
+                        });
+                        RadioButton({
+                            styleName: themed("light", "dark"),
+                            group: "size",
+                            value: "L",
+                            labelText: "L",
+                            style: { checkedMark: { borderColor: main.color }, dot: { color: main.color } },
+                            onChange: tellSize,
+                        });
                     endGroup();
                 endCard();
 
@@ -369,12 +423,23 @@
                         minValue: 0,
                         maxValue: 10,
                         width: "100%",
+                        style: {
+                            fill: { color: main.tint, hoverColor: main.tintHover, activeColor: main.tintHover },
+                            handle: { color: main.strong, hoverColor: main.strong, activeColor: main.strong },
+                            boxFocus: { borderColor: main.strong, ringColor: main.ring },
+                        },
                         onChangeEnd: function (self) { tell("Volume: " + self.value); },
                     });
                 endCard();
 
                 startCard("ProgressBar");
-                    const progressBar = ProgressBar({ styleName: themed("light", "dark"), titleText: "Uploading", value: 40, width: "100%" });
+                    const progressBar = ProgressBar({
+                        styleName: themed("light", "dark"),
+                        titleText: "Uploading",
+                        value: 40,
+                        width: "100%",
+                        style: { bar: { color: main.color } },
+                    });
                     HGroup({ hug: 1, gap: 8, clipContent: 0 });
                         SmartButton({ styleName: themed("ozden", "ozdenDark"), labelText: "+10", onClick: function () { progressBar.addValue(10); } });
                         SmartButton({ styleName: themed("ozden", "ozdenDark"), labelText: "Reset", onClick: function () { progressBar.setValue(0); } });
@@ -429,16 +494,18 @@
                         titleText: "Name",
                         placeholder: "Ada",
                         width: "100%",
+                        focusBackBorderColor: main.color,
                         onChange: function (self) { tell("Name: " + self.getValue()); },
                     });
-                    EmailField({ styleName: themed("light", "dark"), titleText: "E-mail", required: 0, width: "100%" });
-                    PasswordField({ styleName: themed("light", "dark"), titleText: "Password", required: 0, width: "100%" });
+                    EmailField({ styleName: themed("light", "dark"), titleText: "E-mail", required: 0, width: "100%", focusBackBorderColor: main.color });
+                    PasswordField({ styleName: themed("light", "dark"), titleText: "Password", required: 0, width: "100%", focusBackBorderColor: main.color });
                     NumberField({
                         styleName: themed("light", "dark"),
                         titleText: "Count",
                         value: "3",
                         placeholder: "",
                         width: "100%",
+                        focusBackBorderColor: main.color,
                         onChange: function (self) { tell("Count: " + self.getValue()); },
                     });
                 endCard();
@@ -450,13 +517,15 @@
                         onChange: function (self) { tell("Search: " + self.getValue()); },
                     });
                     Slider({
-                        styleName: themed("round", "roundDark"),
+                        styleName: themed("split", "splitDark"),
                         value: 30,
                         width: "100%",
+                        trackColor: main.color,
+                        thumbColor: main.strong,
                         onChangeEnd: function (self) { tell("Slider: " + self.value); },
                     });
                     Stepper({
-                        styleName: themed("light", "dark"),
+                        styleName: themed("ozden", "ozdenDark"),
                         value: 2,
                         minValue: 0,
                         maxValue: 10,
@@ -469,6 +538,9 @@
                         styleName: themed("light", "dark"),
                         steps: ["Cart", "Address", "Payment"],
                         currentStep: 1,
+                        style: {
+                            colors: { done: main.color, doneText: main.onColor, current: main.color, currentText: main.onColor, hover: main.tint },
+                        },
                         onStepClick: function (self, index) {
                             self.setStep(index);
                             tell("Step: " + (index + 1));
@@ -485,6 +557,7 @@
                         step: 50,
                         width: "100%",
                         formatValue: formatLira,
+                        style: { track: { fillColor: main.color } },
                         onChangeEnd: function (self) { tell("Range: " + self.lowValue + " - " + self.highValue); },
                     });
                 endCard();
@@ -505,7 +578,7 @@
                         });
                         ColorPicker({
                             styleName: themed("light", "dark"),
-                            selectedColor: "#3871E0",
+                            selectedColor: main.color,
                             width: 130,
                             onChange: function (self) { tell("Color: " + self.value); },
                         });
@@ -530,6 +603,8 @@
                         titleText: "Site",
                         required: 0,
                         width: "100%",
+                        focusBackBorderColor: main.color,
+                        selectStyle: { listOverTextColor: main.strong },
                         tinySelectParams: { selectedIndex: 1 }, // https://
                         onChange: function (self) { tell("Site: " + self.getValue()); },
                     });
@@ -538,6 +613,7 @@
                         titleText: "Phone",
                         required: 0,
                         width: "100%",
+                        focusBackBorderColor: main.color,
                         onChange: function (self) { tell("Phone: " + self.getValue()); },
                     });
                     CurrencyField({
@@ -546,6 +622,7 @@
                         unitText: "$",
                         placeholder: "",
                         width: "100%",
+                        focusBackBorderColor: main.color,
                         onChange: function (self) { tell("Price: " + self.getValueAsNumber()); },
                     });
                 endCard();
@@ -574,6 +651,11 @@
                         styleName: themed("light", "dark"),
                         width: "100%",
                         height: 300,
+                        style: {
+                            field: { focusBorderColor: main.color },
+                            button: { color: main.color, iconColor: main.onColor },
+                            focus: { ringColor: main.ring },
+                        },
                         messages: [{ role: "user", text: "Hello!" }, "Hi! **How** can I help?"],
                         onSend: function (self, text) { self.addMessage("You wrote: " + text); },
                     });
@@ -586,7 +668,7 @@
 
                 startCard("TextAreaField");
                     TextAreaField({
-                        styleName: themed("light", "dark"),
+                        styleName: themed("modern", "modernDark"),
                         titleText: "Note",
                         placeholder: "Write something...",
                         required: 0,
@@ -595,13 +677,15 @@
                         warningText: "",
                         width: "100%",
                         height: 110,
+                        focusLineColor: main.color,
+                        focusBackgroundColor: main.soft,
                         onChange: function (self) { tell("Note: " + self.getValue().length + " letters"); },
                     });
                 endCard();
 
                 startCard("ItemList");
                     ItemList({
-                        styleName: themed("ozden", "ozdenDark"),
+                        styleName: themed("light", "dark"),
                         items: [
                             { key: "a", text: "Apples", description: "Red" },
                             { key: "p", text: "Pears", description: "Green" },
@@ -609,6 +693,11 @@
                         ],
                         width: "100%",
                         height: 170,
+                        style: {
+                            selected: { color: main.tint },
+                            check: { color: main.color, iconColor: main.onColor },
+                            focus: { ringColor: main.ring },
+                        },
                         onChange: function (self) { tell("Fruit: " + self.getSelectedKeys().join(", ")); },
                     });
                 endCard();
@@ -621,7 +710,10 @@
                         width: "100%",
                         height: "auto",
                         selectedKeys: ["sun"],
-                        style: { tile: { width: 120, iconSize: 104 } }, // WHY: three in the row of this card
+                        style: {
+                            tile: { width: 120, iconSize: 104 }, // WHY: three in the row of this card
+                            selected: { color: main.soft, borderColor: main.color },
+                        },
                         onChange: function (self) { tell("Picture: " + self.getSelectedKeys().join(", ")); },
                     });
                 endCard();
@@ -647,7 +739,7 @@
                         titleDataList: PEOPLE_COLUMNS,
                         itemDataList: PEOPLE,
                         fitLineCount: 1,
-                        style: { width: "100%", height: 230 },
+                        style: { width: "100%", height: 230, highlightItemCellColor: main.soft, selectedItemCellColor: main.tint },
                         onSelect: function (self, row) { tell("Row: " + row.name); },
                     });
                 endCard();
@@ -675,6 +767,7 @@
                         width: "100%",
                         height: 210,
                         formatValue: formatLira,
+                        style: { colors: { colors: [main.color] } },
                         onClick: function (self, item) { tell("Bar: " + item.label); },
                     });
                 endCard();
@@ -733,7 +826,12 @@
                         onToggle: function (self) { tell("Open: " + self.getOpenKeys().join(", ")); },
                     });
                     folds.startSection("more");
-                        CheckBox({ styleName: themed("light", "dark"), labelText: "Save it by itself", checked: 1 });
+                        CheckBox({
+                            styleName: themed("light", "dark"),
+                            labelText: "Save it by itself",
+                            checked: 1,
+                            style: { checkedMark: { color: main.color, borderColor: main.color }, tick: { color: main.onColor } },
+                        });
                     folds.endSection();
                     folds.startSection("Closed at the start");
                         Label({ text: "It was made while it was closed.", fontSize: 14, textColor: colors.soft });
@@ -762,7 +860,14 @@
                 endCard();
 
                 startCard("JsonEditor");
-                    JsonEditor({ styleName: themed("light", "dark"), height: 340, value: PRODUCTS, titleText: "Products", onChange: countProducts });
+                    JsonEditor({
+                        styleName: themed("light", "dark"),
+                        height: 340,
+                        value: PRODUCTS,
+                        titleText: "Products",
+                        style: { colors: { accent: main.color, accentHover: main.hover, accentText: main.strong } },
+                        onChange: countProducts,
+                    });
                 endCard();
 
                 startCard("FilePicker");
@@ -771,6 +876,7 @@
                         width: "100%",
                         zoneHeight: 110,
                         multiple: 1,
+                        style: { zoneDragOver: { color: main.soft, borderColor: main.color }, icon: { dragOverColor: main.color } },
                         onChange: function (self) { tell("Files: " + self.getFiles().length); },
                     });
                 endCard();
