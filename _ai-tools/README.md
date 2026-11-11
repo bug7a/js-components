@@ -1,11 +1,13 @@
 # _ai-tools: the helper scripts of the AI sessions
 
-The scripts that make the work of an AI session in this repository easier: they are for the sessions, not for the pages
-of the kit. A tool that people use too goes into the repository (`test/`, the root). In git since 2026-11-08, so a
-session has them wherever the repository is (another computer, a session in the cloud).
+The scripts that make the work of an AI session in this repository easier, whatever the tool (Claude Code reads
+`CLAUDE.md`; Codex, Cursor, GitHub Copilot... read `AGENTS.md`, which sends them to `CLAUDE.md` and here): they are for
+the sessions, not for the pages of the kit. A tool that people use too goes into the repository (`test/`, the root). In
+git since 2026-11-08, so a session has them wherever the repository is (another computer, a session in the cloud).
 
 - **Small:** only scripts and this README. What a script makes (a version of a file, a picture, a log) goes into the
-  scratchpad of the session, never here; `.gitignore` of this folder keeps everything else out.
+  scratchpad of the session (a temporary folder outside the repository), never here; `.gitignore` of this folder keeps
+  everything else out.
 - **A script** has the house header (`# Bismillah`, its name and version, the license block) and its usage at the top.
 - **Run from the root** of the repository.
 
@@ -28,3 +30,12 @@ from edit_text import load, save, replace
 text = replace(load("comp/form.js"), "onSendClick: function(json) {},", "onSendClick: function(self, json) {},")
 save("comp/form.js", text)
 ```
+
+## In another repository
+
+The scripts work in any git repository as they are (Apache 2.0, as the whole repository): copy this folder into its root
+and run them from there (bash 3.2 or newer, python3). `commit-files.sh` and `version-of.py` are for a folder in which
+more than one AI session works at the same time; `edit_text.py`, `cut-sheet.py` and `figma-logo.py` help in any project.
+Only two scripts name files of this repository: the shared files in `SHARED_DOCS` and `sharedKind()` of
+`commit-files.sh` and in `DOCS_BY_LINE` of `version-of.py`, and the hint about a test page at the end of
+`commit-files.sh`. Put the shared files of the other repository there; a name it does not have changes nothing.
