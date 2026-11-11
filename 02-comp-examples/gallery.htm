@@ -690,16 +690,15 @@
                         height: 130,
                         onSelect: function (self, node) { tell("Node: " + node.text); },
                     });
-                    // WHY own: a menu is made on the page (over everything); it goes with the tree
-                    tree.own(ContextMenu({
+                    ContextMenu({
                         styleName: themed("light", "dark"),
-                        target: tree,
+                        target: tree, // the menu goes with the tree
                         items: [
                             { text: "Open them all", onClick: function () { tree.expandAll(); } },
                             "-",
                             { text: "Close them all", onClick: function () { tree.collapseAll(); } },
                         ],
-                    }));
+                    });
                 endCard();
 
                 startCard("Tooltip");

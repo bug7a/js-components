@@ -12,6 +12,8 @@ UI COMPONENT TEMPLATE
 - "-" in the item list adds a separator line.
 - Closes on: item click, click outside, Escape, mouse wheel outside, page resize, window blur.
 - Keyboard: ArrowUp/ArrowDown to move, Enter or Space to click, Escape to close.
+- The menu is made on the page (over everything), not in the group where ContextMenu() is called. A menu with one
+  target is removed with it; a menu of a list, of attachTo() or of openAt() is removed by the page (or obj.own(menu)).
 - Submenus: an item with items: [...] has a › at its end. Its menu opens at its side on
   hover, a click, Enter or ArrowRight (at the left when there is no room). ArrowLeft or Escape closes only the
   submenu. A click on an item of a submenu closes every menu and calls onClick(self, item, index) of the menu
@@ -57,7 +59,7 @@ SPDX-License-Identifier: Apache-2.0
 const ContextMenuDefaults = {
     key: "0",
     items: [], // [{ text, key, iconFile, enabled, data, onClick }, "-", "Text"]
-    target: null, // An object (or a list of objects). The menu opens on it with the trigger.
+    target: null, // An object (or a list of objects). The menu opens on it with the trigger. One object: the menu is removed with it.
     trigger: "contextmenu", // "contextmenu": Right click, "click": Left click
     minWidth: 180,
     maxWidth: 320, // Long texts are cut with "...". 0: No limit.
@@ -888,6 +890,9 @@ const ContextMenu = function (params = {}) {
     if (box.target) {
         const targets = Array.isArray(box.target) ? box.target : [box.target];
         targets.forEach(function (obj) { box.attachTo(obj, box.trigger); });
+        // WHY: the menu is on the page, not in the group of its target, so it stayed when the target was removed (a
+        //      page that draws its window again left one at every drawing). A list keeps it: one of its rows can go.
+        if (!Array.isArray(box.target)) box.target.own(box);
     }
 
     endObject(box);

@@ -115,6 +115,22 @@ test("ContextMenu: an SVG icon takes the color of the text of its item", async f
     ui.menu.remove();
 });
 
+test("ContextMenu: a menu with one target is removed with its target; a menu of a list stays when a row goes", async function () {
+    const group = VGroup({ width: 200, height: "auto" });
+        const tree = Box({ width: 200, height: 40 });
+        const rowA = Box({ width: 200, height: 20 });
+        const rowB = Box({ width: 200, height: 20 });
+    endGroup();
+    const treeMenu = ContextMenu({ target: tree, items: ["Open"] });
+    const rowMenu = ContextMenu({ target: [rowA, rowB], items: ["Delete"] });
+    rowA.remove();
+    const isRowMenuKept = rowMenu.elem.isConnected;
+    group.remove();
+    const isTreeMenuGone = !treeMenu.elem.isConnected;
+    check("ContextMenu: a menu with one target is removed with its target; a menu of a list stays when a row goes", isTreeMenuGone && isRowMenuKept, "the menu of the tree removed: " + isTreeMenuGone + ", the menu of the rows kept: " + isRowMenuKept);
+    rowMenu.remove();
+});
+
 // *** SMART BUTTON (comp/smart-button.js)
 
 test("SmartButton: a held Enter presses once", async function () {
