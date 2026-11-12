@@ -51,7 +51,7 @@ Do not use or update files prefixed with `delete-` (obsolete). `unfinished-` fil
 
 ## Pictures, 3D and voice
 
-Pictures that must be drawn go to the Codex CLI. **Ask before making one: only about 2 a day.** Prefer SVG / CSS or existing assets when they fit. Blender for 3D and realistic shots, Kokoro `af_heart` for short narrations, Chatterbox for trailers. Read `/Users/bugraozden/my-computer/prompt/media.md` before this kind of work.
+Pictures that must be drawn go to Gemini (Nano Banana): `python3 ~/my-computer/prompt/tools/gemini-image.py "<prompt>" -o out.png`. **Ask before making one: each is paid.** Prefer SVG / CSS or existing assets when they fit. Blender for 3D and realistic shots, Kokoro `af_heart` for short narrations, Chatterbox for trailers. Read `/Users/bugraozden/my-computer/prompt/media.md` before this kind of work.
 
 ## Core basic.js concepts
 
