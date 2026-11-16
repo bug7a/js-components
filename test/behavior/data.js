@@ -152,6 +152,30 @@ test("SmartTable: the column chip is at the right end of the filter box; the tex
     narrowTable.remove();
 });
 
+test("SmartTable: in a group the next object stands after its scroll buttons (a width in px, and a table that takes the room that is left)", async function () {
+    const NAME = "SmartTable: in a group the next object stands after its scroll buttons (a width in px, and a table that takes the room that is left)";
+    const group = HGroup({ width: 700, height: "auto", align: "left top", gap: 0 });
+        const fixedTable = SmartTable({ itemLineCount: 2, style: { width: 260, height: "auto" } });
+        const fixedNext = Box({ width: 40, height: 40, color: "red" });
+        const growingTable = SmartTable({ itemLineCount: 2, style: { width: "auto", height: "auto" } });
+        growingTable.css = { flex: "1 1 0", minWidth: "0" };
+        const growingNext = Box({ width: 40, height: 40, color: "blue" });
+    endGroup();
+    const percentTable = SmartTable({ itemLineCount: 2, style: { width: "100%", height: "auto" } });
+    await wait(100);
+    const right = function (obj) { return Math.round(obj.elem.getBoundingClientRect().right); };
+    const left = function (obj) { return Math.round(obj.elem.getBoundingClientRect().left); };
+    const result = {
+        fixed: left(fixedNext) - right(fixedTable.btnScrollUp),
+        growing: left(growingNext) - right(growingTable.btnScrollUp),
+        lastEnd: right(growingNext) - right(group),
+        percentMargin: percentTable.css.marginRight,
+    };
+    check(NAME, result.fixed >= 0 && result.growing >= 0 && result.lastEnd <= 0 && !result.percentMargin, JSON.stringify(result));
+    group.remove();
+    percentTable.remove();
+});
+
 // *** GRAPH BOX (comp/graph-box.js)
 
 // The middle of the place of a value, on the screen. (The text of the axis has the same x.)
