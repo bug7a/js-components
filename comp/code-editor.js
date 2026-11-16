@@ -7,7 +7,8 @@ CodeEditor - v26.11
 UI COMPONENT
 - A text editor for code: line numbers, colors by language, the line of the cursor. A long line does not wrap: the
   view scrolls sideways.
-- Languages: "python", "javascript", "json", "html", "css", "sql", "bash", "text". CodeEditor.languages takes your own.
+- Languages: "python", "javascript", "go", "json", "html", "css", "sql", "bash", "text". CodeEditor.languages takes
+  your own.
 - The typing is the <textarea> of the browser: selection, copy, paste, undo and the input of every language work as
   they do everywhere. The colors are drawn behind it, only for the lines that are seen, so a file of 100000 lines stays
   fast.
@@ -872,6 +873,17 @@ CodeEditor.languages = {
         multiLineStrings: ["`"],
         keywords: ["async", "await", "break", "case", "catch", "class", "const", "continue", "default", "delete", "do", "else", "export", "extends", "false", "finally", "for", "function", "if", "import", "in", "instanceof", "let", "new", "null", "of", "return", "static", "super", "switch", "this", "throw", "true", "try", "typeof", "undefined", "var", "void", "while", "yield"],
         builtins: ["Array", "Boolean", "Date", "Error", "JSON", "Map", "Math", "Number", "Object", "Promise", "RegExp", "Set", "String", "console", "document", "window"],
+        callWords: 1,
+        indentAfter: "{[(",
+    },
+
+    go: {
+        lineComment: "//",
+        blockComment: ["/*", "*/"],
+        strings: ['"', "'", "`"],
+        multiLineStrings: ["`"],
+        keywords: ["break", "case", "chan", "const", "continue", "default", "defer", "else", "fallthrough", "false", "for", "func", "go", "goto", "if", "import", "interface", "iota", "map", "nil", "package", "range", "return", "select", "struct", "switch", "true", "type", "var"],
+        builtins: ["any", "append", "bool", "byte", "cap", "clear", "close", "complex", "copy", "delete", "error", "float32", "float64", "int", "int8", "int16", "int32", "int64", "len", "make", "max", "min", "new", "panic", "print", "println", "recover", "rune", "string", "uint", "uint8", "uint16", "uint32", "uint64", "uintptr"],
         callWords: 1,
         indentAfter: "{[(",
     },

@@ -1429,6 +1429,16 @@ const editorKey = function (editor, name, extra) {
     return event;
 };
 
+test("CodeEditor: Go is a language: its words, a call, a comment, and a raw string of many lines", async function () {
+    const line = kindsOf("go", 'func add(a int) string { return name(nil) } // sum');
+    const isLine = line === "keyword:func function:add builtin:int builtin:string keyword:return function:name keyword:nil comment:// sum";
+    const opening = partsOf("go", "text := `first");
+    const closing = partsOf("go", "second` + x", opening.state);
+    const isRaw = opening.state === "`" && closing.state === null && closing.parts[0][0] === "string" && closing.parts[0][1] === "second`";
+    check("CodeEditor: Go is a language: its words, a call, a comment, and a raw string of many lines",
+        isLine && isRaw, [isLine, line, isRaw, opening.state, closing.state].join(" | "));
+});
+
 test("CodeEditor: the colors of a line by its language; a string or a comment of many lines goes on in the next line", async function () {
     const python = kindsOf("python", 'def add(a, b=1):  # sum "x"');
     const isPython = python === 'keyword:def function:add number:1 comment:# sum "x"';

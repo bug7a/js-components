@@ -14,8 +14,8 @@ UI COMPONENT
   remotePictures: 1. A picture of the page and a data: address are always drawn.
 - A text that comes piece by piece: appendText(). Only the blocks that changed are drawn again, and the view follows the end
   until the reader scrolls up.
-- Code: a button copies it. comp/code-editor.js, when it is loaded, gives it colors: "python", "javascript", "json", "html",
-  "css", "sql", "bash" (and "py", "js", "sh"...).
+- Code: a button copies it. comp/code-editor.js, when it is loaded, gives it colors: "python", "javascript", "go", "json",
+  "html", "css", "sql", "bash" (and "py", "js", "sh"...).
 - height: a number or "100%": the text scrolls inside it (basic/scroll-bar.js when it is loaded). "auto": it grows with its text.
 - A click on a link: onLinkClick when it is given, else a new tab. A link to "#a-heading" goes to that heading of the text.
 - Style packages: "light" (default), "dark". Select with styleName (MarkdownView.styles), or later with setTheme().
@@ -591,6 +591,7 @@ MarkdownView.LANGUAGE_NAMES = {
     py: "python", python3: "python",
     js: "javascript", jsx: "javascript", ts: "javascript", tsx: "javascript", typescript: "javascript", node: "javascript",
     sh: "bash", shell: "bash", zsh: "bash", console: "bash",
+    golang: "go",
     htm: "html", xml: "html", svg: "html",
 };
 MarkdownView.MAX_COLORED_LETTERS = 200000; // WHY: A longer code stays plain: a stream must not wait for the colors.
