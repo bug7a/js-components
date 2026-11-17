@@ -13,6 +13,9 @@
 #   --title   a part of the title of the window to find (the program sets it)
 #   --wait    seconds after the window is found, before the picture (default 2.5)
 #   --env     NAME=value for the program (more than one: --env twice)
+#   --no-hide the program is started as it is, not hidden: a program whose own window is the window (WebView2 of
+#             OzdenUI for Go). WHY: a hidden start hides the first window of the program too; it is there so the
+#             console of a script (ruby.exe) does not show. Build such a program with -ldflags -H=windowsgui.
 # Before a picture of a browser window: say so to the user (a window opens on the screen of winpc for a few seconds).
 # The picture holds only the window, never the whole screen. Nothing is left on winpc: the task is removed.
 #
@@ -24,7 +27,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 set -e
-TITLE=""; OUT=""; DIR=""; EXE=""; ARGS=""; WAIT="2.5"; ENVS=""
+TITLE=""; OUT=""; DIR=""; EXE=""; ARGS=""; WAIT="2.5"; ENVS=""; HIDE="1"
 while [ $# -gt 0 ]; do
     case "$1" in
         --title) TITLE="$2"; shift 2 ;;
@@ -34,6 +37,7 @@ while [ $# -gt 0 ]; do
         --args) ARGS="$2"; shift 2 ;;
         --wait) WAIT="$2"; shift 2 ;;
         --env) ENVS="$ENVS$2"$'\n'; shift 2 ;;
+        --no-hide) HIDE="0"; shift ;;
         *) echo "unknown option: $1 (see the top of $0)" >&2; exit 2 ;;
     esac
 done
@@ -48,7 +52,7 @@ REMOTE='claude\winpc-window'
 
 # The settings of this run, read by the script on winpc
 {
-    echo "title=$TITLE"; echo "dir=$DIR"; echo "exe=$EXE"; echo "args=$ARGS"; echo "wait=$WAIT"
+    echo "title=$TITLE"; echo "dir=$DIR"; echo "exe=$EXE"; echo "args=$ARGS"; echo "wait=$WAIT"; echo "hide=$HIDE"
     printf '%s' "$ENVS" | sed '/^$/d; s/^/env=/'
 } > "$WORK/settings.txt"
 
@@ -77,6 +81,7 @@ public class WinpcWindow { [DllImport("user32.dll")] public static extern bool S
 $startArgs = @{ FilePath = $settings.exe; WorkingDirectory = $settings.dir; PassThru = $true; WindowStyle = "Hidden";
     RedirectStandardOutput = "$here\out.txt"; RedirectStandardError = "$here\err.txt" }
 if ($settings.args) { $startArgs.ArgumentList = $settings.args }
+if ($settings.hide -eq "0") { $startArgs.Remove("WindowStyle") }
 $program = Start-Process @startArgs
 $window = $null
 for ($i = 0; $i -lt 80 -and -not $window; $i++) {
