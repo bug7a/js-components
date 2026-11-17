@@ -13,6 +13,8 @@
 #   --title   a part of the title of the window to find (the program sets it)
 #   --wait    seconds after the window is found, before the picture (default 2.5)
 #   --env     NAME=value for the program (more than one: --env twice)
+#   --keys    keys typed into the window before the picture (SendKeys: {ENTER}, {TAB}, ^a = Ctrl+A; + ^ % ~ ( ) { }
+#             are special: {+}). --keys-after: after the picture (Ex: {ENTER} that closes a dialog).
 #   --no-hide the program is started as it is, not hidden: a program whose own window is the window (WebView2 of
 #             OzdenUI for Go). WHY: a hidden start hides the first window of the program too; it is there so the
 #             console of a script (ruby.exe) does not show. Build such a program with -ldflags -H=windowsgui.
@@ -27,7 +29,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 set -e
-TITLE=""; OUT=""; DIR=""; EXE=""; ARGS=""; WAIT="2.5"; ENVS=""; HIDE="1"
+TITLE=""; OUT=""; DIR=""; EXE=""; ARGS=""; WAIT="2.5"; ENVS=""; HIDE="1"; KEYS=""; KEYS_AFTER=""
 while [ $# -gt 0 ]; do
     case "$1" in
         --title) TITLE="$2"; shift 2 ;;
@@ -38,6 +40,8 @@ while [ $# -gt 0 ]; do
         --wait) WAIT="$2"; shift 2 ;;
         --env) ENVS="$ENVS$2"$'\n'; shift 2 ;;
         --no-hide) HIDE="0"; shift ;;
+        --keys) KEYS="$2"; shift 2 ;;
+        --keys-after) KEYS_AFTER="$2"; shift 2 ;;
         *) echo "unknown option: $1 (see the top of $0)" >&2; exit 2 ;;
     esac
 done
@@ -52,7 +56,7 @@ REMOTE='claude\winpc-window'
 
 # The settings of this run, read by the script on winpc
 {
-    echo "title=$TITLE"; echo "dir=$DIR"; echo "exe=$EXE"; echo "args=$ARGS"; echo "wait=$WAIT"; echo "hide=$HIDE"
+    echo "title=$TITLE"; echo "dir=$DIR"; echo "exe=$EXE"; echo "args=$ARGS"; echo "wait=$WAIT"; echo "hide=$HIDE"; echo "keys=$KEYS"; echo "keysafter=$KEYS_AFTER"
     printf '%s' "$ENVS" | sed '/^$/d; s/^/env=/'
 } > "$WORK/settings.txt"
 
@@ -75,6 +79,21 @@ using System; using System.Runtime.InteropServices;
 public class WinpcWindow { [DllImport("user32.dll")] public static extern bool SetProcessDPIAware();
  [DllImport("user32.dll")] public static extern bool GetWindowRect(IntPtr h, out Box r);
  [DllImport("user32.dll")] public static extern bool SetForegroundWindow(IntPtr h);
+ [DllImport("user32.dll")] static extern bool EnumWindows(EnumProc f, IntPtr p);
+ [DllImport("user32.dll")] static extern bool IsWindowVisible(IntPtr h);
+ [DllImport("user32.dll", CharSet = CharSet.Unicode)] static extern int GetWindowText(IntPtr h, System.Text.StringBuilder s, int n);
+ [DllImport("user32.dll")] public static extern uint GetWindowThreadProcessId(IntPtr h, out uint id);
+ delegate bool EnumProc(IntPtr h, IntPtr p);
+ public static IntPtr Found; public static string FoundTitle;
+ // WHY every window and not the main window of a process: a dialog of a program is not the main window of its process
+ public static int Find(string part) { Found = IntPtr.Zero; int count = 0; EnumWindows((h, p) => {
+   if (!IsWindowVisible(h)) return true; var text = new System.Text.StringBuilder(512); GetWindowText(h, text, 512);
+   if (text.ToString().Contains(part)) { count++; if (Found == IntPtr.Zero) { Found = h; FoundTitle = text.ToString(); } } return true; }, IntPtr.Zero); return count; }
+ [DllImport("user32.dll", CharSet = CharSet.Unicode)] static extern int GetClassName(IntPtr h, System.Text.StringBuilder s, int n);
+ // WHY the class: Windows Terminal is one process with many windows, so a count of processes misses a new console
+ public static int Consoles() { int count = 0; EnumWindows((h, p) => { if (!IsWindowVisible(h)) return true;
+   var name = new System.Text.StringBuilder(256); GetClassName(h, name, 256); var c = name.ToString();
+   if (c == "ConsoleWindowClass" || c == "CASCADIA_HOSTING_WINDOW_CLASS") count++; return true; }, IntPtr.Zero); return count; }
  public struct Box { public int Left, Top, Right, Bottom; } }
 "@
 [WinpcWindow]::SetProcessDPIAware() | Out-Null
@@ -82,19 +101,23 @@ $startArgs = @{ FilePath = $settings.exe; WorkingDirectory = $settings.dir; Pass
     RedirectStandardOutput = "$here\out.txt"; RedirectStandardError = "$here\err.txt" }
 if ($settings.args) { $startArgs.ArgumentList = $settings.args }
 if ($settings.hide -eq "0") { $startArgs.Remove("WindowStyle") }
+$consoleQuery = { [WinpcWindow]::Consoles() }
+$consolesBefore = & $consoleQuery  # WHY: the console of this script itself (Windows Terminal ignores -WindowStyle Hidden)
 $program = Start-Process @startArgs
-$window = $null
-for ($i = 0; $i -lt 80 -and -not $window; $i++) {
+$handle = [IntPtr]::Zero
+for ($i = 0; $i -lt 80 -and $handle -eq [IntPtr]::Zero; $i++) {
     Start-Sleep -Milliseconds 250
-    $window = Get-Process | Where-Object { $_.MainWindowTitle -like "*$($settings.title)*" } | Select-Object -First 1
+    if ([WinpcWindow]::Find($settings.title) -gt 0) { $handle = [WinpcWindow]::Found }
 }
-if (-not $window) { "no window with the title '$($settings.title)' in 20 s" | Out-File $log -Append -Encoding utf8 } else {
-    "window: $($window.ProcessName) '$($window.MainWindowTitle)' after $($i * 250) ms" | Out-File $log -Append -Encoding utf8
+if ($handle -eq [IntPtr]::Zero) { "no window with the title '$($settings.title)' in 20 s" | Out-File $log -Append -Encoding utf8 } else {
+    $ownerId = [uint32]0; [WinpcWindow]::GetWindowThreadProcessId($handle, [ref]$ownerId) | Out-Null
+    "window: $((Get-Process -Id $ownerId).ProcessName) '$([WinpcWindow]::FoundTitle)' after $($i * 250) ms" | Out-File $log -Append -Encoding utf8
     Start-Sleep -Milliseconds ([int]([double]$settings.wait * 1000))
-    [WinpcWindow]::SetForegroundWindow($window.MainWindowHandle) | Out-Null
+    [WinpcWindow]::SetForegroundWindow($handle) | Out-Null
     Start-Sleep -Milliseconds 400
+    if ($settings.keys) { [System.Windows.Forms.SendKeys]::SendWait($settings.keys); Start-Sleep -Milliseconds 800; "keys sent" | Out-File $log -Append -Encoding utf8 }
     $r = New-Object WinpcWindow+Box
-    [WinpcWindow]::GetWindowRect($window.MainWindowHandle, [ref]$r) | Out-Null
+    [WinpcWindow]::GetWindowRect($handle, [ref]$r) | Out-Null
     $w = $r.Right - $r.Left; $h = $r.Bottom - $r.Top
     $area = [System.Windows.Forms.Screen]::PrimaryScreen.WorkingArea
     "place: $($r.Left),$($r.Top), size $w x $h; its middle $($r.Left + $w / 2),$($r.Top + $h / 2); the middle of the screen $($area.Width / 2),$($area.Height / 2)" | Out-File $log -Append -Encoding utf8
@@ -102,11 +125,21 @@ if (-not $window) { "no window with the title '$($settings.title)' in 20 s" | Ou
     $graphics = [System.Drawing.Graphics]::FromImage($bitmap)
     $graphics.CopyFromScreen($r.Left, $r.Top, 0, 0, $bitmap.Size)
     $bitmap.Save("$here\window.png")
+    # WHY: a program without a console (-H windowsgui, pythonw, rubyw) that starts powershell shows its console window
+    "new console windows: $((& $consoleQuery) - $consolesBefore)" | Out-File $log -Append -Encoding utf8
     $graphics.Dispose(); $bitmap.Dispose()
+    if ($settings.keysafter) {
+        [WinpcWindow]::SetForegroundWindow($handle) | Out-Null
+        Start-Sleep -Milliseconds 300
+        [System.Windows.Forms.SendKeys]::SendWait($settings.keysafter); "keys after the picture sent" | Out-File $log -Append -Encoding utf8
+    }
 }
 $program.WaitForExit(30000) | Out-Null
 "program ended: $($program.HasExited)" | Out-File $log -Append -Encoding utf8
-"windows left with that title: $(@(Get-Process | Where-Object { $_.MainWindowTitle -like "*$($settings.title)*" }).Count)" | Out-File $log -Append -Encoding utf8
+# WHY: a program that did not close itself (a dialog waits for a person) must not stay on the screen of the user
+if (-not $program.HasExited) { taskkill /T /F /PID $program.Id | Out-Null; "program and its children stopped" | Out-File $log -Append -Encoding utf8 }
+Start-Sleep -Milliseconds 500
+"windows left with that title: $([WinpcWindow]::Find($settings.title))" | Out-File $log -Append -Encoding utf8
 "done" | Out-File $log -Append -Encoding utf8
 PS1
 
