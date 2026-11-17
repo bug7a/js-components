@@ -7,8 +7,8 @@ CodeEditor - v26.11
 UI COMPONENT
 - A text editor for code: line numbers, colors by language, the line of the cursor. A long line does not wrap: the
   view scrolls sideways.
-- Languages: "python", "javascript", "go", "json", "html", "css", "sql", "bash", "text". CodeEditor.languages takes
-  your own.
+- Languages: "python", "javascript", "go", "ruby", "json", "html", "css", "sql", "bash", "text". CodeEditor.languages
+  takes your own.
 - The typing is the <textarea> of the browser: selection, copy, paste, undo and the input of every language work as
   they do everywhere. The colors are drawn behind it, only for the lines that are seen, so a file of 100000 lines stays
   fast.
@@ -848,6 +848,204 @@ CodeEditor.tokenizeHtml = function (text, state) {
     return { parts: parts, state: openState };
 };
 
+// Ruby has its own parts: :symbols, font_size: values, @variables, #{} in a string, %w[] lists, heredocs and
+// =begin comments. state: "=end" (a =begin comment), "<<~END" or "<<END" (a heredoc and the word that ends it;
+// "~": that word may be indented), "%]" (a %w[ list and its closing letter).
+CodeEditor.RUBY_CLOSERS = { "[": "]", "(": ")", "{": "}", "<": ">" };
+CodeEditor.RUBY_HEREDOC = /^<<([~-]?)(["'`]?)([A-Za-z_]\w*)\2/;
+CodeEditor.RUBY_PERCENT = /^%([wWiIqQ]?)([[({<|!\/])/;
+CodeEditor.RUBY_SYMBOL = /^:[\p{L}_][\p{L}\p{N}_]*[?!]?/u;
+CodeEditor.RUBY_VARIABLE = /^(@@?|\$)[\p{L}_][\p{L}\p{N}_]*/u;
+
+CodeEditor.tokenizeRuby = function (text, state) {
+    const definition = CodeEditor.languages.ruby;
+    CodeEditor.prepareDefinition(definition);
+    const parts = [];
+    const add = function (kind, value) {
+        if (value.length === 0) return;
+        const last = parts[parts.length - 1];
+        if (last && last[0] === kind) last[1] += value;
+        else parts.push([kind, value]);
+    };
+    let index = 0;
+    let openState = state;
+    let heredocState = null; // WHY: the text of a heredoc starts on the next line, the rest of this line is code
+    let previousWord = "";
+
+    // A "..." or `...` string: the code in #{} is colored as code. Returns the index after it, -1: it goes on.
+    const readInterpolated = function (from, mark) {
+        let start = from;
+        let at = from + 1;
+        while (at < text.length) {
+            if (text[at] === "\\") {
+                at += 2;
+                continue;
+            }
+            if (text[at] === mark) {
+                add("string", text.slice(start, at + 1));
+                return at + 1;
+            }
+            const close = (text.startsWith("#{", at)) ? CodeEditor.findRubyBraceEnd(text, at + 2) : -1;
+            if (close < 0) {
+                at++;
+                continue;
+            }
+            add("string", text.slice(start, at));
+            add("variable", "#{");
+            CodeEditor.tokenizeRuby(text.slice(at + 2, close), null).parts.forEach(function (part) { add(part[0], part[1]); });
+            add("variable", "}");
+            at = close + 1;
+            start = at;
+        }
+        add("string", text.slice(start));
+        return -1;
+    };
+
+    // WHAT IS STILL OPEN from the lines before
+    if (openState === "=end") {
+        add("comment", text);
+        return { parts: parts, state: (/^=end\b/.test(text)) ? null : "=end" };
+    }
+    if (openState && openState.startsWith("<<")) {
+        const isIndented = (openState[2] === "~");
+        const endWord = openState.slice((isIndented) ? 3 : 2);
+        const isEnd = ((isIndented) ? text.trim() : text) === endWord;
+        add("string", text);
+        return { parts: parts, state: (isEnd) ? null : openState };
+    }
+    if (openState && openState.startsWith("%")) {
+        const end = CodeEditor.findStringEnd(text, 0, openState[1]);
+        if (end < 0) {
+            add("string", text);
+            return { parts: parts, state: openState };
+        }
+        add("string", text.slice(0, end));
+        index = end;
+        openState = null;
+    }
+    if (/^=begin\b/.test(text)) {
+        add("comment", text);
+        return { parts: parts, state: "=end" };
+    }
+
+    while (index < text.length) {
+        const rest = text.slice(index);
+        const letter = text[index];
+        const before = text.slice(0, index).trimEnd();
+        const isAfterValue = /[\p{L}\p{N}_)\]}]$/u.test(before); // WHY: "a %(b)" is a remainder after a value
+
+        if (letter === "#") {
+            add("comment", rest);
+            break;
+        }
+
+        if (letter === '"' || letter === "`") {
+            const end = readInterpolated(index, letter);
+            if (end < 0) break;
+            index = end;
+            continue;
+        }
+
+        if (letter === "'") {
+            const end = CodeEditor.findStringEnd(text, index + 1, "'");
+            const stop = (end < 0) ? text.length : end;
+            add("string", text.slice(index, stop));
+            index = stop;
+            continue;
+        }
+
+        const percent = CodeEditor.RUBY_PERCENT.exec(rest);
+        if (percent && (percent[1] || !isAfterValue)) {
+            const closer = CodeEditor.RUBY_CLOSERS[percent[2]] || percent[2];
+            const end = CodeEditor.findStringEnd(text, index + percent[0].length, closer);
+            if (end < 0) {
+                add("string", rest);
+                openState = "%" + closer;
+                break;
+            }
+            add("string", text.slice(index, end));
+            index = end;
+            continue;
+        }
+
+        const heredoc = CodeEditor.RUBY_HEREDOC.exec(rest);
+        const isHeredoc = heredoc && (heredoc[1] || /^[A-Z_]+$/.test(heredoc[3])); // WHY: "list <<item" appends
+        if (isHeredoc) {
+            add("string", heredoc[0]);
+            if (!heredocState) heredocState = "<<" + ((heredoc[1]) ? "~" : "") + heredoc[3];
+            index += heredoc[0].length;
+            continue;
+        }
+
+        if (rest.startsWith("::")) {
+            add("", "::");
+            index += 2;
+            continue;
+        }
+
+        const isAfterWord = (index > 0 && CodeEditor.WORD_LETTER.test(text[index - 1]));
+        const symbol = (isAfterWord) ? null : CodeEditor.RUBY_SYMBOL.exec(rest); // WHY: "puts :name", not "a:b"
+        if (symbol) {
+            add("property", symbol[0]);
+            index += symbol[0].length;
+            continue;
+        }
+
+        const variable = CodeEditor.RUBY_VARIABLE.exec(rest);
+        if (variable) {
+            add("variable", variable[0]);
+            index += variable[0].length;
+            continue;
+        }
+
+        const numberMatch = (isAfterWord) ? null : CodeEditor.NUMBER.exec(rest);
+        if (numberMatch) {
+            add("number", numberMatch[0]);
+            index += numberMatch[0].length;
+            continue;
+        }
+
+        const wordMatch = CodeEditor.WORD.exec(rest);
+        if (wordMatch) {
+            const mark = /^[?!](?!=)/.exec(rest.slice(wordMatch[0].length)); // empty?, save!
+            const word = wordMatch[0] + ((mark) ? mark[0] : "");
+            const after = rest.slice(word.length);
+            const kind = CodeEditor.kindOfRubyWord(word, after, previousWord, definition);
+            const value = (kind === "property") ? word + ":" : word;
+            add(kind, value);
+            index += value.length;
+            previousWord = word;
+            continue;
+        }
+
+        add("", letter);
+        index++;
+    }
+
+    return { parts: parts, state: openState || heredocState };
+};
+
+// The index of the "}" that closes a #{ (from: after it). -1: not on this line.
+CodeEditor.findRubyBraceEnd = function (text, from) {
+    let depth = 1;
+    for (let at = from; at < text.length; at++) {
+        if (text[at] === "{") depth++;
+        if (text[at] === "}") depth--;
+        if (depth === 0) return at;
+    }
+    return -1;
+};
+
+// The kind of a Ruby word: font_size: is a named value, the word after def a function, a capital a constant.
+CodeEditor.kindOfRubyWord = function (word, restOfLine, previousWord, definition) {
+    if (/^:(?!:)/.test(restOfLine)) return "property";
+    if (definition.keywordSet.has(word)) return "keyword";
+    if (definition.builtinSet.has(word)) return "builtin";
+    if (previousWord === "def" || /^\(/.test(restOfLine)) return "function";
+    if (/^\p{Lu}/u.test(word)) return "builtin";
+    return "";
+};
+
 // *** LANGUAGES:
 CodeEditor.languages = {
 
@@ -886,6 +1084,14 @@ CodeEditor.languages = {
         builtins: ["any", "append", "bool", "byte", "cap", "clear", "close", "complex", "copy", "delete", "error", "float32", "float64", "int", "int8", "int16", "int32", "int64", "len", "make", "max", "min", "new", "panic", "print", "println", "recover", "rune", "string", "uint", "uint8", "uint16", "uint32", "uint64", "uintptr"],
         callWords: 1,
         indentAfter: "{[(",
+    },
+
+    ruby: {
+        tokenize: CodeEditor.tokenizeRuby,
+        lineComment: "#", // WHY: Ctrl + / comments the lines out with it
+        keywords: ["BEGIN", "END", "__FILE__", "__LINE__", "__method__", "alias", "and", "attr_accessor", "attr_reader", "attr_writer", "begin", "break", "case", "class", "def", "defined?", "do", "else", "elsif", "end", "ensure", "extend", "false", "for", "if", "in", "include", "lambda", "loop", "module", "next", "nil", "not", "or", "prepend", "private", "proc", "protected", "public", "raise", "redo", "require", "require_relative", "rescue", "retry", "return", "self", "super", "then", "true", "undef", "unless", "until", "when", "while", "yield"],
+        builtins: ["Array", "Float", "Hash", "Integer", "String", "format", "gets", "print", "printf", "puts", "rand", "sleep", "sprintf"],
+        indentAfter: "{[(|",
     },
 
     json: {

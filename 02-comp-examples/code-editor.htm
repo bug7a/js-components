@@ -69,6 +69,53 @@
                 "    return label;",
                 "};",
             ],
+            go: [
+                "// A small program: the sum of a list",
+                "package main",
+                "",
+                'import "fmt"',
+                "",
+                "func total(values []float64) float64 {",
+                "    sum := 0.0",
+                "    for _, value := range values {",
+                "        sum += value",
+                "    }",
+                "    return sum",
+                "}",
+                "",
+                "func main() {",
+                '    fmt.Println("Total:", total([]float64{12.5, 7, 0x10}))',
+                "}",
+            ],
+            ruby: [
+                "# A small program: the sum of a list",
+                'require "json"',
+                "",
+                "PRICES = [12.5, 7, 0x10, 1_000].freeze",
+                "",
+                "class Cart",
+                "  attr_reader :items",
+                "",
+                "  def initialize(items, tax: 0.18)",
+                "    @items = items",
+                "    @tax = tax",
+                "  end",
+                "",
+                "  def total",
+                "    (@items.sum * (1 + @tax)).round(2)",
+                "  end",
+                "end",
+                "",
+                "=begin",
+                "More than one line",
+                "of a comment.",
+                "=end",
+                "cart = Cart.new(PRICES, tax: 0.2)",
+                'puts "Total: #{cart.total}" unless cart.items.empty?',
+                "note = <<~TEXT",
+                "  Thank you, #{ENV[\"USER\"]}.",
+                "TEXT",
+            ],
             json: [
                 "{",
                 '    "name": "basicjs",',
@@ -112,7 +159,7 @@
             ],
         };
 
-        const LANGUAGE_NAMES = { python: "Python", javascript: "JavaScript", json: "JSON", html: "HTML", css: "CSS", sql: "SQL", bash: "Bash" };
+        const LANGUAGE_NAMES = { python: "Python", javascript: "JavaScript", go: "Go", ruby: "Ruby", json: "JSON", html: "HTML", css: "CSS", sql: "SQL", bash: "Bash" };
 
         let editors = [];
 

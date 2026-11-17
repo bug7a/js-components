@@ -402,8 +402,8 @@ CATALOG.COMPONENTS = [
             { file: "02-comp-examples/code-editor-2.htm", title: "A small code editor: MenuBar, Splitter, TreeView, CodeEditor, LogView and StatusBar" },
             { file: "02-comp-examples/gallery-styled.htm", title: "Gallery" },
         ],
-        en: "A text editor for code: line numbers, colors for Python, JavaScript, JSON, HTML, CSS, SQL and Bash, indent keys, and a file of 100000 lines stays fast. Light and dark themes.",
-        tr: "Kod için metin düzenleyici: satır numaraları; Python, JavaScript, JSON, HTML, CSS, SQL ve Bash için renkler; girinti tuşları; 100000 satırlık dosyada bile hızlı. Aydınlık ve karanlık tema.",
+        en: "A text editor for code: line numbers, colors for Python, JavaScript, Go, Ruby, JSON, HTML, CSS, SQL and Bash, indent keys, and a file of 100000 lines stays fast. Light and dark themes.",
+        tr: "Kod için metin düzenleyici: satır numaraları; Python, JavaScript, Go, Ruby, JSON, HTML, CSS, SQL ve Bash için renkler; girinti tuşları; 100000 satırlık dosyada bile hızlı. Aydınlık ve karanlık tema.",
     },
     {
         key: "image-view", name: "ImageView", cat: "pages",

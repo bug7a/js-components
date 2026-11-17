@@ -1439,6 +1439,23 @@ test("CodeEditor: Go is a language: its words, a call, a comment, and a raw stri
         isLine && isRaw, [isLine, line, isRaw, opening.state, closing.state].join(" | "));
 });
 
+test("CodeEditor: Ruby is a language: its words, a symbol, a named value, #{} in a string, a heredoc and a =begin comment", async function () {
+    const line = kindsOf("ruby", 'def total(items, font_size: 12) = @count + PRICES.size(:all) # sum');
+    const isLine = line === "keyword:def function:total property:font_size: number:12 variable:@count builtin:PRICES function:size property::all comment:# sum";
+    const text = kindsOf("ruby", 'puts "Hi #{name}!"');
+    const isText = text === 'builtin:puts string:"Hi  variable:#{ variable:} string:!"';
+    const heredoc = partsOf("ruby", "text = <<~TEXT.strip");
+    const heredocLine = partsOf("ruby", "  first", heredoc.state);
+    const heredocEnd = partsOf("ruby", "  TEXT", heredocLine.state);
+    const isHeredoc = heredoc.state === "<<~TEXT" && heredocLine.parts[0][0] === "string" && heredocEnd.state === null;
+    const opening = partsOf("ruby", "=begin");
+    const inside = partsOf("ruby", "a note", opening.state);
+    const closing = partsOf("ruby", "=end", inside.state);
+    const isComment = opening.state === "=end" && inside.parts[0][0] === "comment" && closing.state === null;
+    check("CodeEditor: Ruby is a language: its words, a symbol, a named value, #{} in a string, a heredoc and a =begin comment",
+        isLine && isText && isHeredoc && isComment, [isLine, line, isText, text, isHeredoc, heredoc.state, isComment].join(" | "));
+});
+
 test("CodeEditor: the colors of a line by its language; a string or a comment of many lines goes on in the next line", async function () {
     const python = kindsOf("python", 'def add(a, b=1):  # sum "x"');
     const isPython = python === 'keyword:def function:add number:1 comment:# sum "x"';
