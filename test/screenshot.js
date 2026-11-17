@@ -68,7 +68,8 @@ Options:
     --cut             the texts cut at this width, after --run: by the left edge of the window or of a box of the
                       page (a card narrower than what is in it): they can not be reached; by the right edge of a box
                       (a title wider than its card, a label narrower than its text), with no "..." (an ellipsis is
-                      on purpose): its end can not be read; so exit code 1. And the ones that go out on the right of
+                      on purpose), or of the window (a word that does not break, in a box that fits): its end can not
+                      be read; so exit code 1. And the ones that go out on the right of
                       the window (a note: a carousel or a bar of tabs does it on purpose). A text in a part that
                       scrolls to the side is not counted
 
@@ -293,8 +294,8 @@ const readPrints = async function (page, expressions, log) {
 };
 
 // Runs in the page (--cut): the texts cut by the left edge of a box of the page (a card narrower than what is in it)
-// or of the window, the ones cut by the right edge of a box with no ellipsis, and the ones that go out on the right
-// of the window. A text in a part that scrolls to the side is not counted: it can be reached.
+// or of the window, the ones cut by the right edge of a box with no ellipsis or of the window (the words of a text
+// whose box fits), and the boxes that go out on the right of the window. A text in a part that scrolls to the side is not counted: it can be reached.
 const findCutTexts = function () {
     const width = window.innerWidth;
     const EDGE = 2; // px over an edge that are not counted (a rounding)
@@ -335,7 +336,7 @@ const findCutTexts = function () {
         const style = getComputedStyle(elem);
         return [style.maskImage, style.webkitMaskImage].some(function (mask) { return mask && mask !== "none"; });
     };
-    const found = { windowLeft: [], boxLeft: [], boxRight: [], right: [] };
+    const found = { windowLeft: [], windowRight: [], boxLeft: [], boxRight: [], right: [] };
     document.querySelectorAll("body *").forEach(function (elem) {
         const text = ownTextOf(elem);
         if (!text) return;
@@ -368,6 +369,11 @@ const findCutTexts = function () {
         });
         if (isCutByABox) found.boxLeft.push(shortText);
         else if (rect.left < -EDGE && rect.right > SEEN && nearest.left <= 0.5) found.windowLeft.push(shortText);
+        // WHY by its words: a heading whose box fits the window wrote a word that does not break (a no-break space)
+        //     past the right edge of the window, and the page does not scroll to the side
+        const isCutByTheWindow = !isCutOnPurpose && !isCutOnTheRight && nearest.right >= width - 0.5 &&
+            textRect.right > width + EDGE && textRect.left < width - SEEN && rect.right <= width + EDGE;
+        if (isCutByTheWindow) found.windowRight.push(shortText);
         const isOutOnTheRight = (rect.right > width + EDGE && rect.left < width - SEEN && nearest.right >= width - 0.5);
         if (isOutOnTheRight) found.right.push(shortText);
     });
@@ -388,6 +394,7 @@ const describeCut = function (cut, width) {
         lines.push({ isError: isError, text: title + texts.length + " texts " + where + ": " + listOf(texts) });
     };
     add(cut.windowLeft, "by the left edge of the window", true);
+    add(cut.windowRight, "by the right edge of the window", true);
     add(cut.boxLeft, "by the left edge of a box", true);
     add(cut.boxRight, "by the right edge of a box (no \"...\")", true);
     add(cut.right, "go out on the right", false);
