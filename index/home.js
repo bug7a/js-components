@@ -85,6 +85,7 @@ HomeView.build = function () {
 
             endGroup();
 
+            HomeView.createFamily();
             HomeView.createFooter();
 
         endGroup();
@@ -633,13 +634,80 @@ HomeView.createEmptyState = function () {
 
 };
 
+// *** FAMILY: the logos of the family of OzdenUI side by side, each a link to its site (this site is not a link).
+// WHY over the footer and not in it: the footer has its own words, and a line of links there left them no room.
+HomeView.FAMILY_HEIGHT = 46;
+HomeView.FAMILY_PHONE_HEIGHT = 38;
+HomeView.FAMILY_FADED = 0.72; // the other logos are a little softer until the mouse is on them
+
+// The width and the height are the viewBox of each drawing, so the logos keep their shape at one height
+HomeView.FAMILY = [
+    { key: "components", name: "OzdenUI Components", file: "index/ozdenui-components.svg", width: 360, height: 130, url: "" },
+    { key: "python", name: "OzdenUI for Python", file: "index/family/ozdenui-python.svg", width: 362, height: 130, url: "https://bug7a.github.io/ozdenui-python/" },
+    { key: "go", name: "OzdenUI for Go", file: "index/family/ozdenui-go.svg", width: 342, height: 132, url: "https://bug7a.github.io/ozdenui-go/" },
+    { key: "ruby", name: "OzdenUI for Ruby", file: "index/family/ozdenui-ruby.svg", width: 364, height: 130, url: "https://bug7a.github.io/ozdenui-ruby/" },
+];
+
+HomeView.createFamily = function () {
+
+    const mobile = SITE.L.mobile;
+    const height = mobile ? HomeView.FAMILY_PHONE_HEIGHT : HomeView.FAMILY_HEIGHT;
+
+    VGroup({ width: "100%", height: "auto", align: "center top", gap: 0, padding: [SITE.L.gutter, mobile ? 28 : 40] });
+    that.elem.style.marginTop = "40px";
+    that.elem.style.borderTop = "1px solid " + SITE.LINE;
+
+        HGroup({ width: "100%", height: "auto", align: "center center", gap: mobile ? [28, 22] : 56, wrap: 1 });
+        that.clipContent = 0;
+            HomeView.FAMILY.forEach(function (member) {
+                HomeView.createFamilyLogo(member, height);
+            });
+        endGroup();
+
+    endGroup();
+
+};
+
+// ICON: One logo; a link to its site in a new tab (the logo of this site has no address)
+HomeView.createFamilyLogo = function (member, height) {
+
+    const logo = Icon({ width: Math.round(height * member.width / member.height), height: height, color: "transparent" });
+    logo.load(member.file);
+    logo.elem.title = member.name;
+    logo.elem.style.flexShrink = "0";
+
+    if (!member.url) {
+        logo.aria = { label: member.name, current: "page" };
+        return logo;
+    }
+
+    logo.role = "link";
+    logo.aria = { label: member.name };
+    logo.tabIndex = 0;
+    logo.elem.style.cursor = "pointer";
+    logo.opacity = HomeView.FAMILY_FADED;
+    logo.setMotion("opacity 0.2s");
+    logo.setFocusRing();
+
+    const open = function () { window.open(member.url, "_blank", "noopener"); };
+
+    logo.on("mouseenter", function () { logo.opacity = 1; });
+    logo.on("mouseleave", function () { logo.opacity = HomeView.FAMILY_FADED; });
+    logo.on("click", open);
+    logo.on("keydown", function (self, event) {
+        if (event.key == "Enter") open();
+    });
+
+    return logo;
+
+};
+
 // *** FOOTER:
 HomeView.createFooter = function () {
 
     const T = SITE.T;
 
     VGroup({ width: "100%", height: "auto", align: "center top", gap: 0, padding: [SITE.L.gutter, 0] });
-    that.elem.style.marginTop = "40px";
     that.elem.style.borderTop = "1px solid " + SITE.LINE;
 
         HomeView.startContent({ flow: "horizontal", align: "left center", gap: 16, padding: [0, 28], wrap: 1 });
