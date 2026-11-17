@@ -2,7 +2,7 @@
 <html lang="en">
     <head>
 
-        <title>Slider JS Component</title>
+        <title>Slider - split</title>
 
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -18,7 +18,8 @@
 
         <script>
 
-        // Slider (comp/slider.js) in its classic look (inspired by Material 3): two sliders, one with its own track. New pages use "round": slider.htm.
+        // Slider (comp/slider.js) in its split look (inspired by Material 3): two sliders, one with its own track, and
+        // "splitDark" on a dark band. New pages use "round": slider.htm.
 
         const start = function () {
 
@@ -54,6 +55,37 @@
                     value: random(0,100),
                 });
 
+                // SPACING
+                Box({
+                    height: 20,
+                    color: "transparent",
+                });
+
+                // GROUP: A dark band
+                VGroup({
+                    width: "auto",
+                    height: "auto",
+                    align: "left top",
+                    gap: 8,
+                    padding: [16, 14],
+                    color: "#232322",
+                    round: 12,
+                });
+
+                    Label({
+                        text: "styleName: \"splitDark\" (a dark page)",
+                        fontSize: 14,
+                        textColor: White(0.75),
+                    });
+
+                    // SLIDER: C
+                    const sliderC = Slider({
+                        styleName: "splitDark",
+                        value: random(0,100),
+                    });
+
+                endGroup();
+
             endGroup();
 
             // GROUP: Top left buttons
@@ -66,11 +98,13 @@
                 createPageButton("Set Random Values", function () {
                     sliderA.setValue(random(0,100));
                     sliderB.setValue(random(0,100));
+                    sliderC.setValue(random(0,100));
                 });
 
                 createPageButton("Show Values", function () {
                     sliderA.showValue();
                     sliderB.showValue();
+                    sliderC.showValue();
                 });
 
             endGroup();

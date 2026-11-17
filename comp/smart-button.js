@@ -36,7 +36,8 @@ The other samples: smart-button-alternatif.htm (pill and outlined with the color
 - HEIGHT: 44 by default (40 looked narrow); every template, pill and outlined too. An icon on
   top of a text makes it "auto" (as high as its padding and content).
 - KEYBOARD AND ACCESSIBILITY: role "button", Tab reaches it, Enter / Space press it (Space when it goes up), a focus
-  ring only for the keyboard; ariaLabel for a button with only an icon (else labelText is read).
+  ring only for the keyboard; a click of the mouse does not take the focus (as the buttons of macOS: Enter and Space
+  stay with the page or the field that had them); ariaLabel for a button with only an icon (else labelText is read).
 - setEnabled(0): no click, no hover, out of the Tab order (aria-disabled): a flat light gray button, a faint edge, no
   bottom line, the text and the icon faint gray (the same for every color; chosen on
   experimental/smart-button-bench.htm).
@@ -651,6 +652,9 @@ const SmartButton = function (params = {}) {
         render();
     });
     box.on("mousedown", function (self, event) {
+        // WHY: a button clicked with the mouse kept the focus, and a later Enter pressed it again (a calculator that
+        //      takes Enter as "=" pressed the clicked key too). The focus stays where it was.
+        event.preventDefault();
         if (!canPress() || event.button !== 0) return; // WHY: a right click gives no click
         isPressed = 1;
         render();

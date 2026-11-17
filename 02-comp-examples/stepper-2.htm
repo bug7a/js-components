@@ -2,7 +2,7 @@
 <html lang="en">
 
 <head>
-    <title>Stepper: ozden and the button line</title>
+    <title>Stepper: ozden, ozdenDark and the button line</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
@@ -20,7 +20,7 @@
 
         /* Bismillah */
 
-        // The "ozden" package of Stepper and
+        // The "ozden" package of Stepper, its dark twin "ozdenDark" and
         // style.button.border / borderColor (a line around the buttons) on the other packages.
 
         // *** VARIABLES:
@@ -79,9 +79,25 @@
 
                 endCard();
 
-                // SAMPLE 3: The line around the buttons
+                // SAMPLE 3: ozdenDark
                 startCard(
-                    "3. style.button.border and borderColor",
+                    "3. styleName: \"ozdenDark\"",
+                    "ozden on a dark page: the same shape, the buttons in the ground of a dark card with a light line."
+                );
+
+                    // GROUP: Dark background
+                    HGroup({ width: "100%", height: "auto", align: "left center", gap: 16, wrap: 1, padding: 16, color: "#232322", round: 10 });
+
+                        Stepper({ styleName: "ozdenDark", value: 1, minValue: 1, maxValue: 10 });
+                        Stepper({ styleName: "ozdenDark", value: 5, minValue: 1, maxValue: 10 });
+
+                    endGroup();
+
+                endCard();
+
+                // SAMPLE 4: The line around the buttons
+                startCard(
+                    "4. style.button.border and borderColor",
                     "A line around the buttons, on any package. (0 and \"transparent\" by default: no line)"
                 );
 
@@ -111,8 +127,8 @@
 
                 endCard();
 
-                // SAMPLE 4: classic, to compare
-                startCard("4. classic (the default), to compare", "No line around the buttons, no fade.");
+                // SAMPLE 5: classic, to compare
+                startCard("5. classic (the default), to compare", "No line around the buttons, no fade.");
 
                     HGroup({ width: "100%", height: "auto", align: "left center", gap: 16, wrap: 1 });
                         Stepper({ value: 1, minValue: 1, maxValue: 10 });

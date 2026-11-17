@@ -52,6 +52,9 @@ SPDX-License-Identifier: Apache-2.0
   with no language keeps "tr-TR". Ex: "en-US" -> 12,499, "tr-TR" -> 12.499. setLocale(locale).
 - wheelScroll: 1: the mouse wheel scrolls the rows of the table (the page does not move). The default 0: the wheel scrolls the page; the rows move with the scroll bar and its buttons.
 -- smartTable.setWheelScroll(1) turns it on later.
+- The scroll buttons stand right of the table, outside its box (22 px: getVerticalScrollWidth()). The table keeps that
+  room: a width in percent is that much narrower, another width has a margin at its right, so in a group the next
+  object stands after the buttons. A table with a place of its own (left, top): leave the room yourself.
 - allowHtml: 0 (default): the values of the cells are written as plain text (a name or a title a user wrote does not
   run as HTML). 1: the values are written as HTML (Ex: "<b>12</b>"). Your own values written with cell.label.text in
   createCellView / updateCellView are not touched.
@@ -1363,12 +1366,16 @@ const SmartTable = function (params = {}) {
         // WHY: a number (width: 800) made .includes throw.
         const isPercent = typeof width === "string" && width.includes("%");
 
+        // The vertical scroll stands right of the table, outside its box: the table keeps that room for it.
         if (!isPercent) {
+            // WHY a margin: in a group the next object stood on the scroll (a table that takes the room that is
+            //     left, a table of 600 px next to a chart). A table with a place of its own is not moved by it.
             box.width = width;
+            box.css = { marginRight: box.getVerticalScrollWidth() + "px" };
             return;
         }
 
-        // A percent width leaves room for the vertical scroll at the right side.
+        if (box.css.marginRight) box.css = { marginRight: "" }; // a width in px before
         box.width = "calc(" + width + " - " + box.getVerticalScrollWidth() + "px)";
 
     };
