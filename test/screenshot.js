@@ -51,7 +51,7 @@ Options:
                       commit (outside git, or new) is the page now in both, with basic/ and comp/ of the commit
     --live            the page through Live Server (port 5505, it must run), as VS Code shows it: with the reload
                       script that it puts into the pages and the SVG files (not with --before)
-    --join a b        no page: the pictures a and b side by side, a on the left (a path, or a name in _screenshots/;
+    --join a b [c...] no page: the pictures side by side, a on the left (a path, or a name in _screenshots/;
                       .png, .jpg, .webp); --name: a-vs-b by default. Take the old state first with --name, then the new
                       one, then join them. The labels are as large as the pictures need (a picture of 2x pixels: 2x)
     --label "text"    the label of a picture of --join, the left one first (its file name without the date by default)
@@ -565,7 +565,7 @@ const sideBySide = async function (browser, sides, scale) {
     }
 };
 
-// *** JOIN: two pictures of yours side by side (Ex: a page outside git that changed itself).
+// *** JOIN: two pictures of yours or more side by side (Ex: a page outside git that changed itself).
 
 // A picture by a path (from the working folder or the repository) or by its name in _screenshots/
 const findPicture = function (name) {
@@ -584,14 +584,14 @@ const nameOfPicture = function (file) {
 
 const joinPictures = async function (options) {
     const names = options.join.filter(function (name) { return name && !name.startsWith("--"); });
-    if (names.length !== 2) throw new Error("--join takes two pictures: --join a.png b.png");
+    if (names.length < 2) throw new Error("--join takes two pictures or more: --join a.png b.png [c.png ...]");
     // WHY read first: the old pictures of _screenshots/ are deleted below, and a picture to join may be one of them
     const sides = names.map(function (name, index) {
         const found = findPicture(name);
         return { picture: fs.readFileSync(found.file), type: found.type, file: found.file,
             label: options.labels[index] || nameOfPicture(found.file) };
     });
-    const name = options.name || nameOfPicture(sides[0].file) + "-vs-" + nameOfPicture(sides[1].file);
+    const name = options.name || sides.map(function (side) { return nameOfPicture(side.file); }).join("-vs-");
     deleteOldPictures();
     fs.mkdirSync(SCREENSHOTS_FOLDER, { recursive: true });
     const file = path.join(SCREENSHOTS_FOLDER, todayText() + "-" + name + ".png");
@@ -625,7 +625,10 @@ const readOptions = function (args) {
         const hasValue = (args[i + 1] !== undefined && !args[i + 1].startsWith("--"));
         if (arg === "--help") options.isHelp = true;
         else if (arg === "--before") options.before = (hasValue) ? args[++i] : "HEAD";
-        else if (arg === "--join") options.join = [args[++i], args[++i]];
+        else if (arg === "--join") {
+            options.join = [];
+            while (args[i + 1] !== undefined && !args[i + 1].startsWith("--")) options.join.push(args[++i]);
+        }
         else if (arg === "--label") options.labels.push(args[++i]);
         else if (arg === "--init") options.init = args[++i];
         else if (arg === "--wait-for") options.waitFor = args[++i];
