@@ -49,9 +49,9 @@ There is **no build system, package.json, bundler, linter or test runner**. Ever
 
 Do not use or update files prefixed with `delete-` (obsolete). `unfinished-` files are work in progress.
 
-## Pictures, 3D and voice
+## Pictures, music, 3D and voice
 
-Pictures that must be drawn go to Gemini (Nano Banana): `python3 ~/my-computer/prompt/tools/gemini-image.py "<prompt>" -o out.png`. **Ask before making one: each is paid.** Prefer SVG / CSS or existing assets when they fit. Blender for 3D and realistic shots, Kokoro `af_heart` for short narrations, Chatterbox for trailers. Read `/Users/bugraozden/my-computer/prompt/media.md` before this kind of work.
+Pictures, music and sound effects that must be made go to the Codex CLI (the call: `media.md` below). Gemini (`gemini-image.py`, paid per picture) only when the user says so. Prefer SVG / CSS or existing assets when they fit. Blender for 3D and realistic shots, Kokoro `af_heart` for short narrations, Chatterbox for trailers. Read `/Users/bugraozden/my-computer/prompt/media.md` before this kind of work.
 
 ## Core basic.js concepts
 
