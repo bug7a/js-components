@@ -3,6 +3,7 @@
 
 // npm create basicjs@latest my-app
 // npm create basicjs@latest my-app -- --template shop
+// npm create basicjs@latest my-app -- --template tauri   (a desktop app: a whole project of its own)
 // npx create-basicjs@latest update      (in a project: replaces only _basic/)
 
 const crypto = require("crypto");
@@ -12,6 +13,8 @@ const path = require("path");
 const PACKAGE = path.resolve(__dirname, "..");
 const STARTER = path.join(PACKAGE, "payload", "starter");
 const TEMPLATES = path.join(PACKAGE, "payload", "templates");
+// WHY a folder of its own: these are whole projects (a desktop app with its Rust side), not pages over the starter
+const PROJECTS = path.join(PACKAGE, "payload", "projects");
 const VERSION = JSON.parse(fs.readFileSync(path.join(PACKAGE, "package.json"), "utf8")).version;
 const DEFAULT_FOLDER = "my-app";
 
@@ -19,6 +22,7 @@ const HELP = `create-basicjs ${VERSION}
 
   npm create basicjs@latest my-app                   a new project
   npm create basicjs@latest my-app -- --template shop  a project from a template
+  npm create basicjs@latest my-app -- --template tauri a desktop app (Tauri 2 and Rust)
   npm create basicjs@latest -- --list                the templates
   npx create-basicjs@latest update                   in a project: replaces only _basic/
 `;
@@ -28,8 +32,13 @@ const stop = function (text) {
     process.exit(1);
 };
 
+const foldersOf = function (folder) {
+    if (!fs.existsSync(folder)) return [];
+    return fs.readdirSync(folder, { withFileTypes: true }).filter((entry) => entry.isDirectory()).map((entry) => entry.name);
+};
+
 const templateNames = function () {
-    return fs.readdirSync(TEMPLATES, { withFileTypes: true }).filter((entry) => entry.isDirectory()).map((entry) => entry.name);
+    return foldersOf(TEMPLATES).concat(foldersOf(PROJECTS));
 };
 
 const readArguments = function () {
@@ -63,10 +72,27 @@ const addTemplate = function (target, name) {
     fs.cpSync(from, target, { recursive: true, force: true });
 };
 
+// A whole project (Ex: tauri): its own files only, no starter under it
+const createProject = function (folder, target, name) {
+    fs.cpSync(path.join(PROJECTS, name), target, { recursive: true });
+    // WHY: npm leaves a .gitignore out of a package
+    ["gitignore", path.join("src-tauri", "gitignore")].forEach(function (fileName) {
+        const file = path.join(target, fileName);
+        if (fs.existsSync(file)) fs.renameSync(file, path.join(path.dirname(file), ".gitignore"));
+    });
+    console.log("Ready: " + folder + " (template: " + name + ")");
+    console.log("\n  cd " + folder + "\n  cargo tauri dev\n");
+    console.log("It needs Rust and the Tauri CLI once: README.md, \"What you need\". The rules for an AI coding tool: AGENTS.md");
+};
+
 const create = function (options) {
     const folder = options.folder || DEFAULT_FOLDER;
     const target = path.resolve(folder);
     if (fs.existsSync(target) && fs.readdirSync(target).length) stop(folder + " is not empty: choose another folder.");
+    if (options.template && fs.existsSync(path.join(PROJECTS, options.template))) {
+        createProject(folder, target, options.template);
+        return;
+    }
 
     fs.cpSync(STARTER, target, { recursive: true });
     fs.renameSync(path.join(target, "gitignore"), path.join(target, ".gitignore")); // WHY: npm leaves a .gitignore out of a package

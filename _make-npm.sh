@@ -3,7 +3,8 @@
 # Bismillah
 #
 # Makes the npm package create-basicjs in _dist/create-basicjs/ (2026-11-02, the user): _npm/create-basicjs/, the
-# starter (./_make-starter.sh) and the mobile templates with their paths for the root of a project.
+# starter (./_make-starter.sh) and the mobile templates with their paths for the root of a project, and the desktop
+# app of 04-templates/tauri-starter as a whole project of its own (its _make-repo.sh).
 # It never publishes. To publish, raise the version in _npm/create-basicjs/package.json, run this, then (from this
 # folder: bin/verify-package.js stops a publish from _npm/create-basicjs/):
 #   cd _dist/create-basicjs && npm publish --access public
@@ -107,6 +108,18 @@ const start = function () {
 };
 `);
 NODE
+
+# The desktop app (npm create basicjs@latest my-app -- --template tauri): the files of its public repository
+# WHY the test: the folder is not in git until the template is published, so a clone of this repository has none
+TAURI="$OUT/payload/projects/tauri"
+if [ -x "$REPO/04-templates/tauri-starter/_make-repo.sh" ]; then
+    "$REPO/04-templates/tauri-starter/_make-repo.sh" "$TAURI" > /dev/null
+    # WHY: npm leaves a .gitignore out of a package (the command puts the dot back)
+    mv "$TAURI/.gitignore" "$TAURI/gitignore"
+    mv "$TAURI/src-tauri/.gitignore" "$TAURI/src-tauri/gitignore"
+else
+    echo "No 04-templates/tauri-starter: the package has no tauri template."
+fi
 
 find "$OUT" -name '.DS_Store' -delete
 echo "Done: $OUT ($(du -sh "$OUT" | cut -f1))"

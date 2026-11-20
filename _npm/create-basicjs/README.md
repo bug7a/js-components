@@ -17,6 +17,16 @@ npm create basicjs@latest my-shop -- --template shop     # shop, booking, coffee
 npm create basicjs@latest -- --list
 ```
 
+A desktop app (Tauri 2: a basic.js page and a Rust side; it needs Rust and the Tauri CLI):
+
+```sh
+npm create basicjs@latest my-app -- --template tauri
+cd my-app
+cargo tauri dev
+```
+
+Its documents: [basic.js for Tauri](https://bug7a.github.io/basicjs-tauri-template/).
+
 ## Tools in a project
 
 | Command | What it does |
