@@ -51,7 +51,7 @@ Do not use or update files prefixed with `delete-` (obsolete). `unfinished-` fil
 
 ## Pictures, music, 3D and voice
 
-Pictures, music and sound effects that must be made go to the Codex CLI (the call: `media.md` below). Gemini (`gemini-image.py`, paid per picture) only when the user says so. Prefer SVG / CSS or existing assets when they fit. Blender for 3D and realistic shots, Kokoro `af_heart` for short narrations, Chatterbox for trailers. Read `/Users/bugraozden/my-computer/prompt/media.md` before this kind of work.
+Pictures that must be drawn go to the Codex CLI (`~/my-computer/prompt/tools/codex-image.py`); Gemini pictures (`gemini-image.py`, paid) only when the user says so. Music and sound effects: the Gemini API (Codex has no audio model). Prefer SVG / CSS or existing assets when they fit. Blender for 3D and realistic shots, Kokoro `af_heart` for short narrations, Chatterbox for trailers. Read `/Users/bugraozden/my-computer/prompt/media.md` before this kind of work.
 
 ## Core basic.js concepts
 
