@@ -14,9 +14,14 @@ Usage (from the root of the repository):
     --fit 441         the longer side of the drawing in it (px)
     --join 24         parts closer than this (px) are one picture (a loose petal, the steam of a cup)
     --preview p.png   the pictures on a light and on a dark ground, to check them
+    --ground auto     a sheet drawn on a flat key color (Gemini draws no transparency: ask for a magenta #FF00FF
+                      ground; a green #00FF00 one for a sheet with no green): that color is made transparent first,
+                      also in the closed gaps, and taken out of the soft edges; "auto" reads it from the corners, or
+                      a color "#FF00FF"
 
 The parts are found by the alpha of the sheet: a sheet with an opaque ground is not cut (draw it again with a
-transparent ground). When the parts are not as many as the names, it lists them and stops.
+transparent ground, or give its color with --ground). When the parts are not as many as the names, it lists them and
+stops.
 
 Started Date: November 2026
 Webpage: https://bug7a.github.io/js-components/
@@ -40,6 +45,10 @@ EDGE = 2  # px around a part: its soft edge
 LIGHT_GROUND = (255, 255, 255)
 DARK_GROUND = (30, 30, 30)
 SKIP = "-"
+KEY_SOLID = 20  # of 255: a pixel with this much of the key color or less is the drawing itself
+KEY_NOISE = 20  # of 255: the ground has about this much less of the key color than its own color
+SAMPLE_RADIUS = 4  # px: a blend is a blend of the ground and one of the clean colors this near it
+CORNER_PATCH = 16  # px: the squares in the corners the color of the ground is read from
 
 
 def read_options():
@@ -51,12 +60,64 @@ def read_options():
     parser.add_argument("--fit", type=int, default=441)
     parser.add_argument("--join", type=int, default=24)
     parser.add_argument("--preview", default="")
+    parser.add_argument("--ground", default="")
     return parser.parse_args()
 
 
 def has_transparent_ground(alpha):
     corners = [alpha[0, 0], alpha[0, -1], alpha[-1, 0], alpha[-1, -1]]
     return max(corners) < 255
+
+
+def ground_color(pixels, ground):
+    """The color of the ground: the one given, or the middle color of the corners."""
+    if ground != "auto":
+        value = ground.lstrip("#")
+        return np.array([int(value[index:index + 2], 16) for index in (0, 2, 4)], dtype=float)
+    patch = CORNER_PATCH
+    corners = [pixels[:patch, :patch], pixels[:patch, -patch:], pixels[-patch:, :patch], pixels[-patch:, -patch:]]
+    return np.median(np.concatenate([corner[..., :3].reshape(-1, 3) for corner in corners]), axis=0)
+
+
+def blend_of(colors, ground, drawing):
+    """How much of drawing each color holds over the ground (0-1), and how far the color is from that blend."""
+    toward = drawing - ground
+    share = np.clip(((colors - ground) * toward).sum(axis=2) / np.maximum((toward ** 2).sum(axis=2), 1), 0, 1)
+    miss = ((colors - ground - share[..., None] * toward) ** 2).sum(axis=2)
+    return share, miss
+
+
+def key_out_ground(pixels, ground):
+    """The flat key color made transparent. A pixel with no key in it (and none next to it) is the drawing; any other
+    pixel is a blend of the ground and the clean color near it that explains it best: it takes that color, and its
+    share as the alpha."""
+    # WHY the key (how much the key channels, R and B of magenta, stand above the others) and not the distance to the
+    # ground: a thin gap between two leaves is never the ground color, but it still holds magenta
+    # WHY a pixel next to a key is not clean: yellow with some magenta in it has no key yet (an orange rim)
+    # WHY the clean color that explains it best, not the nearest one: the outline is 2-3 px, so the nearest clean
+    # color is often the fill behind it (a green or light rim around the dark outline)
+    colors = pixels[..., :3].astype(float)
+    is_key_channel = ground > 128
+    key = colors[..., is_key_channel].min(axis=2) - colors[..., ~is_key_channel].max(axis=2)
+    is_clean = ndimage.binary_erosion(key <= KEY_SOLID)
+    rows, columns = ndimage.distance_transform_edt(~is_clean, return_distances=False, return_indices=True)
+    best_color = colors[rows, columns]
+    best_share, best_miss = blend_of(colors, ground, best_color)
+    for down in range(-SAMPLE_RADIUS, SAMPLE_RADIUS + 1):
+        for across in range(-SAMPLE_RADIUS, SAMPLE_RADIUS + 1):
+            candidate = np.roll(colors, (down, across), axis=(0, 1))
+            share, miss = blend_of(colors, ground, candidate)
+            is_better = np.roll(is_clean, (down, across), axis=(0, 1)) & (miss < best_miss)
+            best_color[is_better] = candidate[is_better]
+            best_share[is_better] = share[is_better]
+            best_miss[is_better] = miss[is_better]
+    ground_key = ground[is_key_channel].min() - ground[~is_key_channel].max() - KEY_NOISE
+    alpha = np.where(is_clean, 1.0, best_share)
+    alpha[key >= ground_key] = 0
+    keyed = np.empty_like(pixels)
+    keyed[..., :3] = np.where(is_clean[..., None], colors, best_color).round().astype(np.uint8)
+    keyed[..., 3] = (alpha * 255).round().astype(np.uint8)
+    return keyed
 
 
 def find_groups(alpha, join):
@@ -135,9 +196,12 @@ def write_preview(pictures, file, size):
 def main():
     options = read_options()
     pixels = np.array(Image.open(options.sheet).convert("RGBA"))
+    if options.ground:
+        pixels = key_out_ground(pixels, ground_color(pixels, options.ground))
     alpha = pixels[..., 3]
     if not has_transparent_ground(alpha):
-        sys.exit("The ground of the sheet is not transparent: draw it again with a transparent ground.")
+        sys.exit("The ground of the sheet is not transparent: draw it again with a transparent ground, or give its "
+                 "color with --ground.")
     regions, groups, specks = find_groups(alpha, options.join)
     groups = in_reading_order(groups)
     for speck in specks:
