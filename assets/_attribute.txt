@@ -1,7 +1,7 @@
 - The pictures of fruids/, categories/ (but coffee-cup.png) and cards/ were drawn for this kit (2026-11-09; 12 more
   plants of cards/ on 2026-11-10); they are not from flaticon.
-- The pictures of plants/ were drawn for the kit with the Gemini API (2026-11-24): plants in the blue and yellow of
-  Python, for the logo of OzdenUI for Python.
+- The pictures of plants/ were drawn for the kit with the Gemini API (2026-11-24): candidates for the logos of the
+  OzdenUI family (Python, Ruby, Rust / Tauri, Go, Game UI, ESP32, Jupyter), each in the color of its product.
 
 
 - Icons used in this project are downloaded from the flaticon site.
