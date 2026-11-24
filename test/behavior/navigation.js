@@ -213,6 +213,36 @@ test("BottomBar: an item is a button; Enter chooses it like a click", async func
     bar.remove();
 });
 
+test("BottomBar: the name of the selected item is in the middle of the selected box, not higher", async function () {
+    const bar = BottomBar({ bottom: 0, items: BOTTOM_BAR_ITEMS });
+    await wait(50);
+    const labelRect = bar.itemObjList[0].label.elem.getBoundingClientRect();
+    const boxRect = bar.selectedBox.elem.getBoundingClientRect();
+    const centerGap = (labelRect.top + labelRect.height / 2) - (boxRect.top + boxRect.height / 2);
+    check("BottomBar: the name of the selected item is in the middle of the selected box, not higher", Math.abs(centerGap) < 1, "center gap: " + centerGap);
+    bar.remove();
+});
+
+test("BottomBar: the first view does not move, also when a name gets wider later (a font that loads late); a click moves", async function () {
+    const MOTION_ON_TIME = 100; // ms: setMotion() is on after 40 ms
+    const bar = BottomBar({ bottom: 0, items: BOTTOM_BAR_ITEMS });
+    await wait(MOTION_ON_TIME);
+    let movesBefore = 0;
+    let movesAfter = 0;
+    let isClicked = 0;
+    bar.elem.addEventListener("transitionrun", function () {
+        if (isClicked) movesAfter++;
+        else movesBefore++;
+    });
+    bar.itemObjList[0].label.plainText = "Home Page";
+    await wait(MOTION_ON_TIME);
+    isClicked = 1;
+    bar.itemObjList[1].icon.elem.click();
+    await wait(MOTION_ON_TIME);
+    check("BottomBar: the first view does not move, also when a name gets wider later (a font that loads late); a click moves", movesBefore === 0 && movesAfter > 0, "moves before the click: " + movesBefore + ", after it: " + movesAfter);
+    bar.remove();
+});
+
 test("Badge: showZero shows 0, dotForOne: 0 shows 1 as a number; the defaults are as before", async function () {
     const holder = Box(0, 0, 60, 60);
     const badge = createIn(holder, function () { return Badge({ value: 0, showZero: 1, dotForOne: 0 }); });

@@ -28,6 +28,7 @@ THE SPACE AFTER THE NAME: layout.labelEndSpace (and the empty side of an icon bo
   the name, so the selected box looks even at both ends.
 KEYBOARD AND SCREEN READERS: every item is a button named by its text ("Tab 1"... without a text); the Tab key
   reaches it, Enter / Space choose it like a click.
+MOTION: the first view shows at once (also a selectByIndex() of the page at start); a change after it moves.
 
 USAGE:
 const bar = BottomBar({
@@ -152,13 +153,14 @@ const BottomBar = function (params = {}) {
     const BAR_WIDTH = 350; // The first width of the bar; refresh() gives it the width of its items.
     const SELECTED_BOX_WIDTH = 142; // The first width; refresh() sets it around the selected item.
     const LABEL_FIRST_LEFT = 12;
-    const LABEL_RAISE = 2; // px above the center line: it looks centered next to the icon.
     const HOVER_ICON_OPACITY = 0.5;
     const REFRESH_DELAY = 3; // ms: many changes in a row make one refresh.
     const stillClipContent = box.clipContent; // WHY: "float" lets the pill stand over the bar; another mode puts it back.
     let isFloatLabelWaiting = 1; // 1: the next refresh() shows the name over the selected item (the first view, a selection)
     let isFloatLabelPlaced = 0;
     let cancelFloatLabelHide = null; // The cancel function of the timer that fades the name out (box.after)
+    let isFirstView = 1; // 1: refresh() places the bar at once, without motion
+    let isPlaced = 0; // 1: refresh() placed the items once
 
     // *** PUBLIC VARIABLES:
     box.itemObjList = [];
@@ -325,8 +327,29 @@ const BottomBar = function (params = {}) {
         if (box.lblFloat) box.clipContent = stillClipContent; // "float" was on before
     };
 
+    // THE FIRST VIEW: the bar shows at once; only a change after it moves.
+    // WHY: On a slow load the first refresh() came after setMotion() was on, and so did the ones after it (the width of
+    //      a name is known only after it is drawn): the bar grew and the items slid in.
+    const stopMotions = function () {
+        box.innerBox.dontMotion();
+        box.selectedBox.dontMotion();
+        box.itemObjList.forEach(function (item) {
+            item.icon.dontMotion();
+            item.icon.i1.dontMotion();
+            item.icon.i2.dontMotion();
+            item.label.dontMotion();
+        });
+        if (box.lblFloat) box.lblFloat.dontMotion();
+    };
+
+    // A change after the bar is placed moves; one before it (Ex: the page selects its tab at start) is the first view.
+    const endFirstView = function () {
+        if (isPlaced) isFirstView = 0;
+    };
+
     // The user chose an item: a click, Enter or Space.
     const selectByUser = function (itemView, index) {
+        endFirstView();
         box.selectedIndex = index;
         isFloatLabelWaiting = 1;
         box.onItemClick(box, itemView, index);
@@ -438,8 +461,6 @@ const BottomBar = function (params = {}) {
         setText(itemView.label, itemData.text);
         itemView.label.css = { whiteSpace: "nowrap" }; // WHY: A name of two words broke while the bar was growing.
         box.innerBox.add(itemView.label);
-        itemView.label.center("top");
-        itemView.label.top -= LABEL_RAISE;
         itemView.label.setMotion("left 0.3s, opacity 0.3s");
         itemView.label.aria = { hidden: true }; // WHY: The text is the name of the button of the item (its icon box).
         itemView.label.onResize(box.refreshOneTime); // WHY: The width of the label is known only after it is drawn.
@@ -472,11 +493,13 @@ const BottomBar = function (params = {}) {
     // USAGE: bar.setBadge(1, 5)
 
     box.selectNone = function () {
+        endFirstView();
         box.selectedIndex = -1;
         box.refreshOneTime();
     };
 
     box.selectByIndex = function (index) {
+        endFirstView();
         box.selectedIndex = index;
         isFloatLabelWaiting = 1; // The name shows over it ("float").
         box.refreshOneTime();
@@ -484,6 +507,7 @@ const BottomBar = function (params = {}) {
     // USAGE: get: bar.selectedIndex, set: bar.selectByIndex(2)
 
     box.setLabelMode = function (mode) {
+        endFirstView();
         box.labelMode = mode;
         applyLabelMode();
         box.refreshOneTime();
@@ -497,12 +521,14 @@ const BottomBar = function (params = {}) {
         const _barPadding = getBarPadding();
         let _currentLeft = _barPadding;
 
+        if (isFirstView) stopMotions();
         if (box.selectedIndex == -1) box.selectedBox.opacity = 0;
 
         box.itemObjList.forEach((item, index) => {
             const isSelected = (index == box.selectedIndex);
             item.icon.left = _currentLeft;
             item.label.left = getLabelLeft(item, isSelected);
+            item.label.center("top"); // WHY here: its height changes when its font loads (onResize calls refresh).
             paintItem(item, isSelected);
             if (isSelected) placeSelectedBox(item);
             _currentLeft += getItemWidth(item, isSelected) + _layout.itemSpacing;
@@ -513,6 +539,8 @@ const BottomBar = function (params = {}) {
         box.innerBox.center();
 
         refreshFloatLabel();
+        if (isFirstView) void box.innerBox.elem.offsetHeight; // WHY: The places are drawn now: a page busy for 40 ms drew them after dontMotion() ended.
+        isPlaced = 1;
 
     };
 
