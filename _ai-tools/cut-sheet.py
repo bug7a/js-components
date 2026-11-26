@@ -18,6 +18,9 @@ Usage (from the root of the repository):
                       ground; a green #00FF00 one for a sheet with no green): that color is made transparent first,
                       also in the closed gaps, and taken out of the soft edges; "auto" reads it from the corners, or
                       a color "#FF00FF"
+    --ground light    a sheet on a white or near-white ground (a model that draws no key color): the ground and the
+                      closed gaps of it made transparent by how far each pixel is from it; a light part inside a
+                      picture that is not a gap (a white flower) stays
 
 The parts are found by the alpha of the sheet: a sheet with an opaque ground is not cut (draw it again with a
 transparent ground, or give its color with --ground). When the parts are not as many as the names, it lists them and
@@ -45,6 +48,10 @@ EDGE = 2  # px around a part: its soft edge
 LIGHT_GROUND = (255, 255, 255)
 DARK_GROUND = (30, 30, 30)
 SKIP = "-"
+LIGHT_NEAR = 14  # color distance: a pixel this near the light ground or nearer is the ground
+LIGHT_SOLID = 200  # color distance: a pixel this far from the light ground or farther is the drawing
+LIGHT_GAP_AREA = 60  # px: a closed light gap larger than this is the ground (a smaller one is a highlight)
+LIGHT_EDGE = 2  # px: the soft edge of the ground next to the drawing
 KEY_SOLID = 20  # of 255: a pixel with this much of the key color or less is the drawing itself
 KEY_NOISE = 20  # of 255: the ground has about this much less of the key color than its own color
 SAMPLE_RADIUS = 4  # px: a blend is a blend of the ground and one of the clean colors this near it
@@ -118,6 +125,33 @@ def key_out_ground(pixels, ground):
     keyed[..., :3] = np.where(is_clean[..., None], colors, best_color).round().astype(np.uint8)
     keyed[..., 3] = (alpha * 255).round().astype(np.uint8)
     return keyed
+
+
+def light_out_ground(pixels):
+    """A white or near-white ground made transparent: the ground reached from the edges of the sheet and its closed
+    gaps; in the soft edge next to it, the alpha by the distance to the ground and the ground taken out of the color."""
+    # WHY not key_out_ground: its key is how much some channels stand above the others; a light ground has no such
+    # channel (a JPEG sheet on #F6FBFC, 2026-11-26)
+    # WHY a gap counts by its size: the gap between a stem and a leaf is ground, the shine of a berry is not
+    colors = pixels[..., :3].astype(float)
+    is_bright = colors.min(axis=2) > 225
+    if not is_bright.any():
+        sys.exit("--ground light: no light ground on the sheet.")
+    ground = np.median(colors[is_bright], axis=0)
+    distance = np.sqrt(((colors - ground) ** 2).sum(axis=2))
+    regions, count = ndimage.label(distance < LIGHT_NEAR + 8)
+    edges = np.concatenate([regions[0], regions[-1], regions[:, 0], regions[:, -1]])
+    areas = ndimage.sum(np.ones_like(distance), regions, index=np.arange(count + 1))
+    is_ground_region = areas > LIGHT_GAP_AREA
+    is_ground_region[edges] = True
+    is_ground_region[0] = False
+    is_ground = ndimage.binary_dilation(is_ground_region[regions], iterations=LIGHT_EDGE)
+    alpha = np.where(is_ground, np.clip((distance - LIGHT_NEAR) / (LIGHT_SOLID - LIGHT_NEAR), 0, 1), 1.0)
+    unblended = (colors - (1 - alpha[..., None]) * ground) / np.maximum(alpha, 1e-3)[..., None]
+    lighted = np.empty_like(pixels)
+    lighted[..., :3] = np.clip(unblended, 0, 255).round().astype(np.uint8)
+    lighted[..., 3] = (alpha * 255).round().astype(np.uint8)
+    return lighted
 
 
 def find_groups(alpha, join):
@@ -196,7 +230,9 @@ def write_preview(pictures, file, size):
 def main():
     options = read_options()
     pixels = np.array(Image.open(options.sheet).convert("RGBA"))
-    if options.ground:
+    if options.ground == "light":
+        pixels = light_out_ground(pixels)
+    elif options.ground:
         pixels = key_out_ground(pixels, ground_color(pixels, options.ground))
     alpha = pixels[..., 3]
     if not has_transparent_ground(alpha):
