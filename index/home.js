@@ -643,7 +643,7 @@ HomeView.FAMILY_FADED = 0.72; // the other logos are a little softer until the m
 // The width and the height are the viewBox of each drawing, so the logos keep their shape at one height
 HomeView.FAMILY = [
     { key: "components", name: "OzdenUI Components", file: "index/ozdenui-components.svg", width: 360, height: 130, url: "" },
-    { key: "python", name: "OzdenUI for Python", file: "index/family/ozdenui-python.svg", width: 362, height: 130, url: "https://bug7a.github.io/ozdenui-python/" },
+    { key: "python", name: "OzdenUI for Python", file: "index/family/ozdenui-python.svg", width: 380, height: 130, url: "https://bug7a.github.io/ozdenui-python/" },
     { key: "go", name: "OzdenUI for Go", file: "index/family/ozdenui-go.svg", width: 342, height: 132, url: "https://bug7a.github.io/ozdenui-go/" },
     { key: "ruby", name: "OzdenUI for Ruby", file: "index/family/ozdenui-ruby.svg", width: 364, height: 130, url: "https://bug7a.github.io/ozdenui-ruby/" },
 ];
